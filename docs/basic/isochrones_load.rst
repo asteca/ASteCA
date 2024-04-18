@@ -93,7 +93,7 @@ The effective lambda values represent the effective central/midpoint wavelength 
 filter. These values are available for example in the
 `CMD service <http://stev.oapd.inaf.it/cgi-bin/cmd>`_.
 
-See :ref:`isochrones_api` for more information on the arguments of the
+See :py:mod:`asteca.isochrones` for more information on the arguments of the
 :class:`isochrones` class.
 
 Please `contact me <gabrielperren@gmail.com>`_ if you have any issues with the loading

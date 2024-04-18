@@ -3,7 +3,7 @@
 Synthetic clusters
 ##################
 
-The :ref:`synthetic_api` class allows generating synthetic clusters from:
+The :py:mod:`asteca.synthetic` class allows generating synthetic clusters from:
 
 1. An :class:`isochrones` object
 2. A :class:`cluster` object
@@ -34,7 +34,7 @@ and the differential reddening (these two last processes are optional).
 
 The basic example above uses the default values for these three processes, but
 they can be modified by the user at this stage via their arguments. These arguments
-are (also see :ref:`synthetic_api`):
+are (also see :py:mod:`asteca.synthetic`):
 
 .. code-block:: console
 
@@ -45,10 +45,10 @@ are (also see :ref:`synthetic_api`):
 
 
 The ``IMF_name`` and ``max_mass`` arguments are used to generate random mass samples from
-a an IMF. This step is performed when the :class:`synthetic` object is created instead
-of every time a new synthetic cluster is generated, to improve the performance of the
-code. The ``IMF_name`` argument must be one of those available in :ref:`synthetic_api`.
-Currently these are associated to the following IMFs:
+a an IMF. This step is performed when the :py:mod:`asteca.synthetic` object is created
+instead of every time a new synthetic cluster is generated, to improve the performance
+of the code. The ``IMF_name`` argument must be one of those available in
+:py:mod:`asteca.synthetic`. Currently these are associated to the following IMFs:
 
 .. figure:: ../_static/IMFs.png
     :scale: 35%

@@ -92,3 +92,8 @@ TOC
    tutorials/quickstart
 
 
+.. toctree::
+   :maxdepth: 1
+   :caption: API Reference
+
+   autoapi/asteca/index

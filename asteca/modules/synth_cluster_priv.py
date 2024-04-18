@@ -130,8 +130,7 @@ def get_3p_pars(mag_x, y, mags):
 
 
 def add_binarity(self) -> np.ndarray:
-    """
-    For each theoretical isochrone defined.
+    """For each theoretical isochrone defined.
         1. Draw random secondary masses for *all* stars.
         2. Interpolate magnitude values for these masses
         3. Calculate the magnitudes for the binary system.
@@ -192,11 +191,11 @@ def add_binarity(self) -> np.ndarray:
 
 
 def extinction_coeffs(self) -> list:
-    """
-    Obtain extinction coefficients for all the observed filters and colors,
+    """Obtain extinction coefficients for all the observed filters and colors,
     in the order in which they are stored in theor_tracks.
 
     ext_coefs = [ec_mag, ec_col1, ...]
+
     """
     print("Obtaining extinction coefficients")
 
@@ -220,8 +219,7 @@ def extinction_coeffs(self) -> list:
 
 
 def sample_imf(self, Nmets: int, Nages: int) -> list:
-    """
-    Returns the number of stars per interval of mass for the selected IMF.
+    """Returns the number of stars per interval of mass for the selected IMF.
 
     Parameters
     ----------
@@ -238,6 +236,7 @@ def sample_imf(self, Nmets: int, Nages: int) -> list:
       cumulative sum of those masses.
       One list per metallicity and age values defined is returned. This is to add some
       variety to the sampled IMF.
+
     """
     print(f"Sampling selected IMF ({self.IMF_name})")
     inv_cdf = invTrnsfSmpl(self.IMF_name)
@@ -254,9 +253,9 @@ def sample_imf(self, Nmets: int, Nages: int) -> list:
 
 
 def randVals(self) -> dict:
-    """
-    Generate lists of random values used by the synthetic cluster generating
+    """Generate lists of random values used by the synthetic cluster generating
     function.
+
     """
     # This is the maximum number of stars that will ever be interpolated into
     # an isochrone
@@ -277,7 +276,7 @@ def randVals(self) -> dict:
 
 
 def qDistribution(M1: np.ndarray, gamma: [float, str], seed: int) -> np.ndarray:
-    """
+    """Distribution of q=m2/m1 for binary systems
     float : Power-law distribution with shape parameter 'gamma'. Not mass
     dependent.
     D&K : Distribution of mass-ratios versus primary masses
@@ -286,6 +285,7 @@ def qDistribution(M1: np.ndarray, gamma: [float, str], seed: int) -> np.ndarray:
     Use 'gamma + 1' in the power-law distribution below because in D&K this
     distribution is defined as f(q)~q^gamma, while numpy's distribution is
     defined as a*x^(a-1).
+
     """
     N = M1.size
 
@@ -378,9 +378,8 @@ def qDistribution(M1: np.ndarray, gamma: [float, str], seed: int) -> np.ndarray:
 
 
 def mag_combine(m1: np.ndarray, m2: np.ndarray) -> np.ndarray:
-    """
-    Combine two magnitudes. This is a faster re-ordering of the standard
-    formula:
+    """Combine two magnitudes.
+    This is a faster re-ordering of the standard formula:
 
     -2.5 * np.log10(10 ** (-0.4 * m1) + 10 ** (-0.4 * m2))
 
@@ -391,8 +390,7 @@ def mag_combine(m1: np.ndarray, m2: np.ndarray) -> np.ndarray:
 
 
 def ccm_model(mw: float) -> list:
-    """
-    Cardelli, Clayton, and Mathis (1989 ApJ. 345, 245) model for extinction
+    """Cardelli, Clayton, and Mathis (1989 ApJ. 345, 245) model for extinction
     coefficients with updated coefficients for near-UV from O'Donnell
     (1994, ApJ, 422, 158).
 
@@ -405,6 +403,7 @@ def ccm_model(mw: float) -> list:
     There appears to be an error in the Far-UV range in the original IDL
     routine where the maximum inverse wavelength is 11 and it should be 10
     according to Cardelli et al. 1989 (pag 251, Eq (5,a,b)).
+
     """
 
     if 0.3 <= mw < 1.1:
@@ -455,8 +454,7 @@ def ccm_model(mw: float) -> list:
 def properModel(
     met_age_dict: dict, fix_params: dict, fit_params: dict
 ) -> tuple[float, float, float, float, float, float, float, int, int, int, int]:
-    """
-    Define the 'proper' model with values for (z, a) taken from its grid,
+    """Define the 'proper' model with values for (z, a) taken from its grid,
     and filled values for those parameters that are fixed.
 
     Parameters
@@ -503,8 +501,7 @@ def properModel(
 
 
 def zaWAverage(theor_tracks, met_age_dict, m_ini_idx, z_model, a_model, ml, mh, al, ah):
-    """
-    Generate a new "weighted" isochrone from the four closest points in the
+    """Generate a new "weighted" isochrone from the four closest points in the
     (z, a) grid.
 
     theor_tracks = [m1, m2, .., mN]
@@ -521,6 +518,7 @@ def zaWAverage(theor_tracks, met_age_dict, m_ini_idx, z_model, a_model, ml, mh, 
     It is important that the returned isochrone is a *copy* of the
     theor_tracks[mx][ax] array if no averaging is done. Otherwise the
     'theor_tracks' are modified.
+
     """
 
     # If (z, a) are both fixed, just return the single processed isochrone

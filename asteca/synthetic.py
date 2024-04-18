@@ -13,9 +13,9 @@ from .modules import mass_binary as mb
 class synthetic:
     r"""Define a ``synthetic`` object.
 
-    Use the isochrones loaded in the :class:`isochrones` object to generate a
-    :class:`synthetic` object. This object is used to generate synthetic clusters
-    given a :class:`cluster` object  and a set of input fundamental parameters
+    Use the isochrones loaded in the :py:mod:`asteca.isochrones` object to generate a
+    :py:mod:`asteca.synthetic` object. This object is used to generate synthetic clusters
+    given a :py:mod:`asteca.cluster` object  and a set of input fundamental parameters
     (metallicity, age, distance, extinction, etc.).
 
     See the :ref:`synth_clusters` section for more details.
@@ -23,7 +23,7 @@ class synthetic:
     Parameters
     ----------
     isochs : :class:`isochrones`
-         :doc:`isochrones` object with the loaded files for the theoretical isochrones.
+         :py:mod:`asteca.isochrones` object with the loaded files for the theoretical isochrones.
     IMF_name : str, {"salpeter_1955", "kroupa_2001", "chabrier_2014"}, default="chabrier_2014"
         Name of the initial mass function used to populate the isochrones.
     max_mass : int, default=100_000
@@ -102,28 +102,30 @@ class synthetic:
         print("Synthetic clusters object generated\n")
 
     def calibrate(self, cluster, fix_params: dict = {}, z_to_FeH: float | None = None):
-        r"""Calibrate a :class:`synthetic` object based on a :class:`cluster` object
-        and a dictionary of fixed fundamental parameters (``fix_params``).
+        r"""Calibrate a :py:mod:`asteca.synthetic` object based on a
+        :py:mod:`asteca.cluster` object and a dictionary of fixed fundamental parameters
+        (``fix_params``).
 
         Use the data obtained from your observed cluster stored in the
-        :class:`cluster` object, to calibrate a :class:`synthetic` object. Additionally,
-        a dictionary of fixed fundamental parameters (metallicity, age, distance,
-        extinction, etc.) can be passed.
+        :py:mod:`asteca.cluster` object, to calibrate a :py:mod:`asteca.synthetic`
+        object. Additionally, a dictionary of fixed fundamental parameters 
+        (metallicity, age, distance, extinction, etc.) can be passed.
 
         See the :ref:`synth_clusters` section for more details.
 
         Parameters
         ----------
-        cluster : :class:`cluster`
-             :doc:`cluster` object with the processed data from your observed cluster.
+        cluster : :py:mod:`asteca.cluster`
+             :py:mod:`asteca.cluster` object with the processed data from your observed
+             cluster.
         fix_params : dict, optional, default={}
             Dictionary with the values for the fixed parameters (if any).
         z_to_FeH : float, optional, default=None
             If ``None``, the default ``z`` values (defined when loading the isochrones
-            via the :class:`isochrones` object) will be used to generate the synthetic
-            clusters. If ``float``, it must represent the solar metallicity for these
-            isochrones. The metallicity values will then be converted to ``[FeH]``
-            values, to be used by the :meth:`synthetic.generate()` method.
+            via the :py:mod:`asteca.isochrones` object) will be used to generate the
+            synthetic clusters. If ``float``, it must represent the solar metallicity
+            for these isochrones. The metallicity values will then be converted to
+            ``[FeH]`` values, to be used by the :meth:`synthetic.generate()` method.
 
         """
         # Used by the mass and binary probability estimation
@@ -190,15 +192,16 @@ class synthetic:
         r"""Generate a synthetic cluster.
 
         The synthetic cluster is generated according to the parameters given in
-        the ``fit_params`` dictionary and the already calibrated :class:`synthetic`
-        object.
+        the ``fit_params`` dictionary and the already calibrated
+        :py:mod:`asteca.synthetic` object.
 
         Parameters
         ----------
         fit_params : dict
             Dictionary with the values for the fundamental parameters that were **not**
-            included in the ``fix_params`` dictionary when the :class:`synthetic`
-            object was calibrated (``synthetic.calibrate()`` method).
+            included in the ``fix_params`` dictionary when the
+            :py:mod:`asteca.synthetic` object was calibrated 
+            (:meth:`synthetic.calibrate()` method).
 
         Returns
         -------
@@ -284,8 +287,9 @@ class synthetic:
         ----------
         fit_params : dict
             Dictionary with the values for the fundamental parameters that were **not**
-            included in the ``fix_params`` dictionary when the :class:`synthetic`
-            object was calibrated (``synthetic.calibrate()`` method).
+            included in the ``fix_params`` dictionary when the
+            :py:mod:`asteca.synthetic` object was calibrated
+            (:meth:`synthetic.calibrate()` method).
         ax : matplotlib.axis, optional, default=None
             Matplotlib axis where to draw the plot.
         isochplot : bool, default=False
@@ -356,8 +360,9 @@ class synthetic:
         ----------
         model : dict
             Dictionary with the values for the fundamental parameters that were **not**
-            included in the ``fix_params`` dictionary when the :class:`synthetic`
-            object was calibrated (``synthetic.calibrate()`` method).
+            included in the ``fix_params`` dictionary when the
+            :py:mod:`asteca.synthetic` object was calibrated 
+            (:meth:`synthetic.calibrate()` method).
         model_std : dict
             Dictionary with the standard deviations for the fundamental parameters in
             the ``model`` argument.

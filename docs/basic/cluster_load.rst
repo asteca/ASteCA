@@ -20,9 +20,9 @@ The first step is to load the file as a `pandas DataFrame
     df = pd.read_csv("path_to_cluster_file")
 
 
-After this, you can define a :class:`cluster` object (see: :ref:`cluster_api`) simply
-by passing the dataframe and the the column names in your data file for the IDs, right
-ascension, declination, magnitude, color, and their respective uncertainties.
+After this, you can define a :class:`cluster` object (see: :py:mod:`asteca.cluster`)
+simply by passing the dataframe and the the column names in your data file for the IDs,
+right ascension, declination, magnitude, color, and their respective uncertainties.
 
 .. code-block:: python
 

@@ -9,14 +9,13 @@
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath("../../"))
 # import asteca
 # __version__ = asteca.__version__
 
-
+# Read version from pyproject.toml
 with open("../pyproject.toml", encoding="utf-8") as pyproject_toml:
     __version__ = (
         next(line for line in pyproject_toml if line.startswith("version"))
@@ -53,9 +52,21 @@ extensions = [
 ]
 
 autoapi_dirs = ['../asteca']
-# autoapi_generate_api_docs = False
+# autoapi_options = ["imported-members", "show-inheritance", "inherited-members"]
+# autoapi_ignore = ["_*"]
+# autoapi_add_toctree_entry = False
+# autoapi_keep_files = True
 
-# pip install sphinx-math-dollar
+
+# Hide private files
+def skip_submodules(app, what, name, obj, skip, options):
+    if what in ("package", "function") or name.startswith('_'):
+        skip = True
+    return skip
+def setup(sphinx):
+    sphinx.connect("autoapi-skip-member", skip_submodules)
+
+
 # https://www.sympy.org/sphinx-math-dollar/
 mathjax3_config = {
     "tex": {
