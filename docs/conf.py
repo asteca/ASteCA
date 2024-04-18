@@ -54,14 +54,21 @@ extensions = [
 autoapi_dirs = ['../asteca']
 # autoapi_options = ["imported-members", "show-inheritance", "inherited-members"]
 # autoapi_ignore = ["_*"]
-# autoapi_add_toctree_entry = False
-# autoapi_keep_files = True
+autoapi_add_toctree_entry = False
+autoapi_keep_files = True
+# autoapi_own_page_level = "attribute"
 
 
 # Hide private files
 def skip_submodules(app, what, name, obj, skip, options):
-    if what in ("package", "function") or name.startswith('_'):
+    if what in ("package", "function", "attribute"):
         skip = True
+    if what == "method":  # Skip private methods
+        if name.split('.')[-1].startswith("_"):
+            skip = True
+    # if skip is False:
+    #     print(what, ",", name, ",", obj)
+    #     # breakpoint()
     return skip
 def setup(sphinx):
     sphinx.connect("autoapi-skip-member", skip_submodules)

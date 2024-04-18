@@ -115,7 +115,7 @@ class synthetic:
 
         Parameters
         ----------
-        cluster : :py:mod:`asteca.cluster`
+        cluster : :class:`cluster`
              :py:mod:`asteca.cluster` object with the processed data from your observed
              cluster.
         fix_params : dict, optional, default={}

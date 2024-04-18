@@ -9,7 +9,7 @@ class isochrones:
     r"""Define an ``isochrones`` object.
 
     This object contains the loaded theoretical isochrones used by the
-    :class:`synthetic` class to generate synthetic clusters.
+    :py:mod:`asteca.synthetic` class to generate synthetic clusters.
 
     Parameters
     ----------
