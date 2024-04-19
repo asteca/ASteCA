@@ -16,12 +16,12 @@ extinction, distance, metallicity, age, binarity, mass, etc..
 
 .. important::
    Version 0.5.0 was a mayor re-write of **ASteCA**. In previous versions **ASteCA** was
-   a large script and from this version onward it is a proper Python package.
-   Many of the features that were previously available were removed at least
-   temporarily, to concentrate on the fundamental parameters estimation.
+   a large script, from this version onward it is a proper Python package.
+   Many of the features that were previously available were removed (at least
+   temporarily) to concentrate on the fundamental parameters estimation.
    Feel free to `contact me`_ if you have questions about using this code in your
    research, and please `open a new issue`_ in the code's repository if you find
-   something either wrong or missing.
+   something either wrong, confusing or missing.
 
 Install with:
 
