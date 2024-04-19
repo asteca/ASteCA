@@ -1,12 +1,24 @@
 .. :changelog:
 
 
-`[v0.5.0] <https://github.com/asteca/asteca/releases/tag/v0.5.0>`__ - 2024-04-19
+`[v0.5.1] <https://github.com/asteca/asteca/releases/tag/v0.5.1>`__ - 2024-04-19
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-Major update, **ASteCA** is now a proper Python package that can be installed with
-`pip install asteca`.
+- Skip hidden files when reading isochrones (`551 <https://github.com/asteca/ASteCA/issues/551>`_)
 
+
+
+`[v0.5.0] <https://github.com/asteca/asteca/releases/tag/v0.5.0>`__ - 2024-04-18
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Major update. **ASteCA** is now a proper Python package that can be installed with
+`pip install asteca`. Some of the most important changes are:
+
+- Added support for MIST and Basti isochrones, in addition to PARSEC
+- No longer depends on `ptemcee <https://github.com/willvousden/ptemcee>`_, now the
+  user can employ any package to perform the parameter inference
+- Updated binary systems generation
+- Removed structural analysis function (for now at least)
 
 
 
