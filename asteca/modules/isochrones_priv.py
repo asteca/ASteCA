@@ -78,34 +78,43 @@ def get_columns(self) -> tuple[list, str, str, str]:
 
 
 def extract_paths(self) -> list:
-    """
-    Extract files from 'isochs_path'.
+    """Extract isochrone files from `isochs_path`.
     """
     f_paths = []
     # For each photometric system
     for ps in os.listdir(self.isochs_path):
         ps_path = os.path.join(self.isochs_path, ps)
 
+        # Only folders beyond this point
+        if os.path.isdir(ps_path) is False:
+            continue
+
         if self.model == "PARSEC":
+            # Remove possible hidden files inside this folder
+            in_folder = [_ for _ in os.listdir(ps_path) if not _.startswith('.')]
             # A single file per photometric system is expected here
-            if len(os.listdir(ps_path)) > 1:
-                raise ValueError("One file per photometric system is expected")
-            for met in os.listdir(ps_path):
-                f_paths.append(os.path.join(ps_path, met))
+            if len(in_folder) > 1:
+                raise ValueError(
+                    "One file per photometric system is expected for the PARSEC service"
+                )
+            f_paths.append(os.path.join(ps_path, in_folder[0]))
 
         elif self.model == "MIST":
             met_files = []
             for met in os.listdir(ps_path):
-                met_files.append(os.path.join(ps_path, met))
+                if not met.startswith('.'):
+                    met_files.append(os.path.join(ps_path, met))
             f_paths.append(met_files)
 
         elif self.model == "BASTI":
+            met_folders = [_ for _ in os.listdir(ps_path) if not _.startswith('.')]
             met_files = []
-            for met_folder in os.listdir(ps_path):
+            for met_folder in met_folders:
                 met_folder_path = os.path.join(ps_path, met_folder)
                 met_lst = []
                 for met in os.listdir(met_folder_path):
-                    met_lst.append(os.path.join(met_folder_path, met))
+                    if not met.startswith('.'):
+                        met_lst.append(os.path.join(met_folder_path, met))
                 met_files.append(met_lst)
             f_paths.append(met_files)
 
