@@ -78,8 +78,21 @@ def get_columns(self) -> tuple[list, str, str, str]:
 
 
 def extract_paths(self) -> list:
-    """Extract isochrone files from `isochs_path`.
+    r"""Extract isochrone files from `isochs_path`.
     """
+    # check that at least one sub-folder exists in the path
+    sub_fold_flag = False
+    for ps in os.listdir(self.isochs_path):
+        ps_path = os.path.join(self.isochs_path, ps)
+        if os.path.isdir(ps_path):
+            sub_fold_flag = True
+            break
+    if sub_fold_flag is False:
+        raise FileNotFoundError(
+            "At least one sub-folder with isochrone files must exist in "
+            + f"the '{self.isochs_path}' path given"
+        )
+
     f_paths = []
     # For each photometric system
     for ps in os.listdir(self.isochs_path):

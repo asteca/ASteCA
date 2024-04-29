@@ -51,12 +51,12 @@ The block below shows how the files should be stored for each service. A single
                        |---->> age_1.isc_xxxx
                        |---->> ...
 
-In this example ``phot_syst`` is the name of the photometric system that is
-being employed (not required but suggested), ``mets_ages`` is the single file
-produced by the ``PARSEC`` service, ``met_age_X.iso.cmd`` is the name of a file
-produced by the ``MIST`` system, and ``age_X.isc_xxxx`` is the names of a file produced
-by the ``BASTI`` system, stored in a sub-folder named after its metallicity
-``met_x``.
+In this example ``phot_syst`` is a folder with the name of the photometric system that
+is being employed (this naming convention is not required but suggested),
+``mets_ages`` is the single file produced by the ``PARSEC`` service,
+``met_age_X.iso.cmd`` is the name of a file produced by the ``MIST`` system,
+and ``age_X.isc_xxxx`` is the names of a file produced by the ``BASTI`` system,
+stored in a sub-folder named after its metallicity ``met_x``.
 
 
 Loading the files
