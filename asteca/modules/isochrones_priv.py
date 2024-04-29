@@ -228,7 +228,7 @@ def met_ages_check(self, met_age_arr: list) -> dict:
     all_z = np.array(list(dict.fromkeys(all_z))).astype(float)
     all_a = np.array(list(dict.fromkeys(all_a))).astype(float)
 
-    met_age_dict = {"met": all_z, "a": all_a}
+    met_age_dict = {"met": all_z, "loga": all_a}
 
     return met_age_dict
 

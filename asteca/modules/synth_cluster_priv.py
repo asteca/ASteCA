@@ -490,10 +490,10 @@ def properModel(
         mh = min(len(par) - 1, np.searchsorted(par, model_full[0]))
         ml = mh - 1
 
-    if len(met_age_dict["a"]) == 1:
+    if len(met_age_dict["loga"]) == 1:
         al = ah = 0
     else:
-        par = met_age_dict["a"]
+        par = met_age_dict["loga"]
         ah = min(len(par) - 1, np.searchsorted(par, model_full[1]))
         al = ah - 1
 
@@ -529,7 +529,7 @@ def zaWAverage(theor_tracks, met_age_dict, m_ini_idx, z_model, a_model, ml, mh, 
     # The four points in the (z, age) grid that define the box that contains
     # the model value (z_model, a_model)
     z1, z2 = met_age_dict["met"][ml], met_age_dict["met"][mh]
-    a1, a2 = met_age_dict["a"][al], met_age_dict["a"][ah]
+    a1, a2 = met_age_dict["loga"][al], met_age_dict["loga"][ah]
     pts = np.array([(z1, a1), (z1, a2), (z2, a1), (z2, a2)])
 
     # Order: (z1, a1), (z1, a2), (z2, a1), (z2, a2)

@@ -1,4 +1,5 @@
 import os
+import numpy as np
 from dataclasses import dataclass
 from typing import Optional
 from .modules import isochrones_priv
@@ -37,6 +38,12 @@ class isochrones:
         in the same photometric system as the magnitude.
         Example for Gaia's 'BP-RP' color:
         ``{"G_BPmag": 5182.58, "G_RPmag": 7825.08}``
+    z_to_FeH : float, optional, default=None
+        If ``None``, the default ``z`` values (defined when loading the isochrones
+        via the :py:mod:`asteca.isochrones` object) will be used to generate the
+        synthetic clusters. If ``float``, it must represent the solar metallicity
+        for these isochrones. The metallicity values will then be converted to
+        ``[FeH]`` values, to be used by the :meth:`synthetic.generate()` method.
     N_interp : int, default=2500
         Number of interpolation points used to ensure that all isochrones are the
         same shape.
@@ -59,6 +66,7 @@ class isochrones:
     isochs_path: str
     magnitude: dict
     color: dict
+    z_to_FeH: float | None = None
     N_interp: int = 2500
     color2: Optional[dict] = None
     column_names: Optional[dict] = None
@@ -98,4 +106,44 @@ class isochrones:
         self.theor_tracks, self.color_filters, self.met_age_dict = isochrones_priv.load(
             self
         )
+
+        # Convert z to FeH if requested
+        if self.z_to_FeH is not None:
+            self._func_z_to_FeH(self.z_to_FeH)
+
+        zmin, zmax, amin, amax = self._min_max()
+        print(f"met range  : [{zmin}, {zmax}]")
+        print(f"loga range : [{amin}, {amax}]")
         print("Isochrone object generated\n")
+
+    def _func_z_to_FeH(self, z_to_FeH):
+        r"""Convert z to FeH
+        """
+        feh = np.log10(self.met_age_dict["met"] / z_to_FeH)
+        N_old = len(feh)
+        round_n = 4
+        while True:
+            feh_r = np.round(feh, round_n)
+            N_new = len(set(feh_r))
+            # If no duplicated values exist after rounding
+            if N_old == N_new:
+                break
+            round_n += 1
+        # Replace old values
+        self.met_age_dict["met"] = feh_r
+
+    def _min_max(self) -> tuple[float]:
+        r"""Return the minimum and maximum values for the metallicity and age defined
+        in the theoretical isochrones.
+
+        Returns
+        -------
+        tuple[float]
+            Tuple of (minimum_metallicity, maximum_metallicity, minimum_age, maximum_age)
+
+        """
+        zmin = self.met_age_dict["met"].min()
+        zmax = self.met_age_dict["met"].max()
+        amin = self.met_age_dict["loga"].min()
+        amax = self.met_age_dict["loga"].max()
+        return zmin, zmax, amin, amax

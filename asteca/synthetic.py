@@ -99,9 +99,12 @@ class synthetic:
         # Generate random floats used by `synth_clusters.synthcl_generate()`
         self.rand_floats = scp.randVals(self)
 
+        # Store for internal usage
+        self.met_age_dict = self.isochs.met_age_dict
+
         print("Synthetic clusters object generated\n")
 
-    def calibrate(self, cluster, fix_params: dict = {}, z_to_FeH: float | None = None):
+    def calibrate(self, cluster, fix_params: dict = {}):
         r"""Calibrate a :py:mod:`asteca.synthetic` object based on a
         :py:mod:`asteca.cluster` object and a dictionary of fixed fundamental parameters
         (``fix_params``).
@@ -120,12 +123,6 @@ class synthetic:
              cluster.
         fix_params : dict, optional, default={}
             Dictionary with the values for the fixed parameters (if any).
-        z_to_FeH : float, optional, default=None
-            If ``None``, the default ``z`` values (defined when loading the isochrones
-            via the :py:mod:`asteca.isochrones` object) will be used to generate the
-            synthetic clusters. If ``float``, it must represent the solar metallicity
-            for these isochrones. The metallicity values will then be converted to
-            ``[FeH]`` values, to be used by the :meth:`synthetic.generate()` method.
 
         """
         # Used by the mass and binary probability estimation
@@ -142,51 +139,24 @@ class synthetic:
 
         self.fix_params = fix_params
 
-        # Convert z to FeH if requested
-        self.met_age_dict = self.isochs.met_age_dict
-        if z_to_FeH is not None:
-            self._func_z_to_FeH(z_to_FeH)
-
-        # Check if binary systems are to be produced
         self.binar_flag = True
         if "alpha" in list(fix_params.keys()) and "beta" in list(fix_params.keys()):
             if fix_params["alpha"] == 0.0 and fix_params["beta"] == 0.0:
                 self.binar_flag = False
 
+        # Check that the ranges are respected
+        for par in ("met", "loga"):
+            if par not in self.fix_params.keys():
+                N_par = len(self.met_age_dict[par])
+                if N_par == 1:
+                    raise ValueError(
+                        f"Parameter '{par}' is not fixed and its range is limited to "
+                        + f"a single value: {self.met_age_dict[par]}"
+                    )
+
         # # Remove low masses if required
         # if dm_min is not None:
         #     self._rm_low_masses(dm_min)
-
-    def _func_z_to_FeH(self, z_to_FeH):
-        """ """
-        feh = np.log10(self.met_age_dict["met"] / z_to_FeH)
-        N_old = len(feh)
-        round_n = 4
-        while True:
-            feh_r = np.round(feh, round_n)
-            N_new = len(set(feh_r))
-            # If no duplicated values exist after rounding
-            if N_old == N_new:
-                break
-            round_n += 1
-        # Replace old values
-        self.met_age_dict["met"] = feh_r
-
-    def min_max(self) -> tuple[float]:
-        r"""Return the minimum and maximum values for the metallicity and age defined
-        in the theoretical isochrones.
-
-        Returns
-        -------
-        tuple[float]
-            Tuple of (minimum_metallicity, maximum_metallicity, minimum_age, maximum_age)
-
-        """
-        zmin = self.met_age_dict["met"].min()
-        zmax = self.met_age_dict["met"].max()
-        amin = self.met_age_dict["a"].min()
-        amax = self.met_age_dict["a"].max()
-        return zmin, zmax, amin, amax
 
     def generate(self, fit_params: dict) -> np.ndarray:
         r"""Generate a synthetic cluster.
