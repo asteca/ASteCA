@@ -108,11 +108,13 @@ class isochrones:
         )
 
         # Convert z to FeH if requested
+        met_n = 'z  '
         if self.z_to_FeH is not None:
             self._func_z_to_FeH(self.z_to_FeH)
+            met_n = 'FeH'
 
         zmin, zmax, amin, amax = self._min_max()
-        print(f"met range  : [{zmin}, {zmax}]")
+        print(f"{met_n} range  : [{zmin}, {zmax}]")
         print(f"loga range : [{amin}, {amax}]")
         print("Isochrone object generated\n")
 
