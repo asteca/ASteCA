@@ -15,11 +15,13 @@ def lkl_data(self):
     hess_diag = []
     for i, col in enumerate(self.my_cluster.colors_p):
         # Fast 2D histogram
-        hess_diag = histogram2d(
-            self.my_cluster.mag_p,
-            col,
-            range=[[ranges[0][0], ranges[0][1]], [ranges[i + 1][0], ranges[i + 1][1]]],
-            bins=[Nbins[0], Nbins[i + 1]],
+        hess_diag.append(
+            histogram2d(
+                self.my_cluster.mag_p,
+                col,
+                range=[[ranges[0][0], ranges[0][1]], [ranges[i + 1][0], ranges[i + 1][1]]],
+                bins=[Nbins[0], Nbins[i + 1]],
+            )
         )
 
     # Flatten array
