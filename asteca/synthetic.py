@@ -247,7 +247,7 @@ class synthetic:
 
         return synth_clust[: self.m_ini_idx]
 
-    def synthplot(self, fit_params, ax=None, isochplot=False):
+    def synthplot(self, ax, fit_params, color_idx=0, isochplot=False):
         r"""Generate a color-magnitude plot for a synthetic cluster.
 
         The synthetic cluster is generated using the fundamental parameter values
@@ -255,13 +255,16 @@ class synthetic:
 
         Parameters
         ----------
+        ax : matplotlib.axis, optional, default=None
+            Matplotlib axis where to draw the plot.
         fit_params : dict
             Dictionary with the values for the fundamental parameters that were **not**
             included in the ``fix_params`` dictionary when the
             :py:mod:`asteca.synthetic` object was calibrated
             (:meth:`synthetic.calibrate()` method).
-        ax : matplotlib.axis, optional, default=None
-            Matplotlib axis where to draw the plot.
+        color_idx : int, default=0
+            Index of the color to plot. If ``0`` (default), plot the first color. If
+            ``1`` plot the second color.
         isochplot : bool, default=False
             If ``True``, the accompanying isochrone will be plotted.
 
@@ -271,8 +274,9 @@ class synthetic:
             Matplotlib axis object
 
         """
-        if ax is None:
-            f, ax = plt.subplots()
+        if color_idx > 1:
+            raise ValueError(
+                f"Wrong 'color_idx' value ({color_idx}), should be one of: [0, 1]")
 
         # Generate synthetic cluster.
         synth_clust = scp.generate(self, fit_params)
@@ -281,7 +285,10 @@ class synthetic:
         else:
             binar_idx = np.full(synth_clust.shape[1], False)
 
-        x_synth, y_synth = synth_clust[1], synth_clust[0]
+        y_synth = synth_clust[0]
+        x_synth = synth_clust[1]
+        if color_idx == 1:
+            x_synth = synth_clust[2]
         # Single synthetic systems
         ax.scatter(
             x_synth[~binar_idx],
@@ -301,8 +308,10 @@ class synthetic:
             label=f"Synthetic (binary), N={len(x_synth[binar_idx])}",
         )
 
-        plt.ylabel(list(self.isochs.magnitude.keys())[0])
-        c1, c2 = list(self.isochs.color.keys())
+        plt.ylabel(self.isochs.mag_filter_name)
+        c1, c2 = self.isochs.color_filter_name[0]
+        if color_idx == 1:
+            c1, c2 = self.isochs.color_filter_name[1]
         plt.xlabel(f"{c1}-{c2}")
         ax.set_ylim(max(self.mag_p) + .5, min(self.mag_p) - .5)
         ax.legend()
@@ -316,9 +325,12 @@ class synthetic:
         isochrone = scp.generate(self, fit_params_copy, True)
         # Remove stars beyond the color limits
         xmin, xmax = x_synth[~binar_idx].min(), x_synth[~binar_idx].max()
-        msk = (isochrone[1] >= xmin) & (isochrone[1] <= xmax)
+        c_idx = 1
+        if color_idx == 1:
+            c_idx = 2
+        msk = (isochrone[c_idx] >= xmin) & (isochrone[c_idx] <= xmax)
         isochrone = isochrone[:, msk]
-        ax.plot(isochrone[1], isochrone[0], c="k")
+        ax.plot(isochrone[c_idx], isochrone[0], c="k")
 
         return ax
 

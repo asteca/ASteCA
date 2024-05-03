@@ -110,14 +110,17 @@ class cluster:
 
         return ax
 
-    def clustplot(self, ax=None, binar_prob=None):
+    def clustplot(self, ax, color_idx=0, binar_probs=None):
         r"""Generate a color-magnitude plot.
 
         Parameters
         ----------
         ax : matplotlib.axis, optional, default=None
             Matplotlib axis where to draw the plot
-        binar_prob : numpy.array, optional, default=None
+        color_idx : int, default=0
+            Index of the color to plot. If ``0`` (default), plot the first color. If
+            ``1`` plot the second color.
+        binar_probs : numpy.array, optional, default=None
             Array with probabilities of being a binary system for each observed star
 
         Returns
@@ -125,20 +128,22 @@ class cluster:
         matplotlib.axis
             Matplotlib axis object
 
-
         """
-        if ax is None:
-            f, ax = plt.subplots()
+        if color_idx > 1:
+            raise ValueError(
+                f"Wrong 'color_idx' value ({color_idx}), should be one of: [0, 1]")
 
-        if binar_prob is not None:
-            msk_binar = binar_prob > 0.5
+        if binar_probs is not None:
+            msk_binar = binar_probs > 0.5
 
         mag_col = self.magnitude
         col_col = self.color
+        if color_idx == 1:
+            col_col = self.color2
 
-        if binar_prob is None:
+        if binar_probs is None:
             ax.scatter(
-                self.colors_p[0],
+                self.colors_p[color_idx],
                 self.mag_p,
                 c="green",
                 alpha=0.5,
@@ -146,16 +151,20 @@ class cluster:
             )
         else:
             ax.scatter(
-                self.colors_p[0][~msk_binar],
+                self.colors_p[color_idx][~msk_binar],
                 self.mag_p[~msk_binar],
-                c="green",
+                # c="green",
+                c=binar_probs[~msk_binar],
+                marker='o',
                 alpha=0.5,
                 label=f"Observed (single), N={len(self.mag_p[~msk_binar])}",
             )
             ax.scatter(
-                self.colors_p[0][msk_binar],
+                self.colors_p[color_idx][msk_binar],
                 self.mag_p[msk_binar],
-                c="red",
+                # c="red",
+                c=binar_probs[msk_binar],
+                marker='s',
                 alpha=0.5,
                 label=f"Observed (binary), N={len(self.mag_p[msk_binar])}",
             )
