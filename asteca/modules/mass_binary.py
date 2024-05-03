@@ -14,7 +14,8 @@ def ranModels(fit_params, model_std, seed, N_models=200):
     for k, f_val in fit_params.items():
         std = model_std[k]
         # models_ran[k] = np.random.normal(f_val, std, N_models)
-        models_ran[k] = np.random.default_rng(seed + int_seed).normal(f_val, std, N_models)
+        models_ran[k] = np.random.default_rng(seed + int_seed).normal(
+            f_val, std, N_models)
         int_seed += 1
     # Transpose dict of arrays into list of dicts
     ran_models = [dict(zip(models_ran, t)) for t in zip(*models_ran.values())]
