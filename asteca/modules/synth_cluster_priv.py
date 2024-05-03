@@ -634,7 +634,8 @@ def move_isochrone(isochrone, m_ini_idx, dm):
 
 
 def extinction(
-    ext_coefs, rand_norm, rand_unif, DR_distribution, m_ini_idx, Av, dr, Rv, isochrone
+    ext_law, ext_coefs, rand_norm, rand_unif, DR_distribution, m_ini_idx, binar_flag,
+    Av, dr, Rv, isochrone
 ):
     """
     Modifies magnitude and color(s) according to given values for the
@@ -644,6 +645,9 @@ def extinction(
     The distance modulus was applied before this function.
 
     isochrone = [mag, c1, (c2), .., Mini, mag_b, c1b, .., Mini_b]
+
+    For the CCMO model:
+
     ext_coefs = [mag_ec, c1_ec, ...]
 
     where:
@@ -665,6 +669,7 @@ def extinction(
                = (a12 + b12/Rv) * R_V * E(B-V)
     (m1 - m2)_obs = (m1 - m2)_int + E(m1 - m2)
     (m1 - m2)_obs = (m1 - m2)_int + (a12 + b12/Rv) * R_V * E(B-V)
+
     """
 
     if dr > 0.0:
@@ -684,29 +689,102 @@ def extinction(
         # Clip at 0
         Av = np.clip(Av + Av_dr, a_min=0, a_max=np.inf)
 
-    def colmove(ci):
-        Ex = (
-            (ext_coefs[ci][0][0] + ext_coefs[ci][0][1] / Rv)
-            - (ext_coefs[ci][1][0] + ext_coefs[ci][1][1] / Rv)
-        ) * Av
-        return Ex
+    if ext_law == 'CCMO':
+        # Magnitude
+        ec_mag = ext_coefs[0][0] + ext_coefs[0][1] / Rv
+        # First color
+        ec_col1 = (
+            (ext_coefs[1][0][0] + ext_coefs[1][0][1] / Rv)
+            - (ext_coefs[1][1][0] + ext_coefs[1][1][1] / Rv)
+        )
+    elif ext_law == 'GAIADR3':
+        # If this model is used the first color is always expected to be BP-RP
+        # BP_RP = isochrone[1]
+        ec_mag, ec_col1 = dustapprox(isochrone[1], Av)
 
-    # Move magnitude
-    Ax_d = (ext_coefs[0][0] + ext_coefs[0][1] / Rv) * Av
-    isochrone[0] += Ax_d
-    # Move filters with binary data.
-    if isochrone.shape[0] > m_ini_idx + 1:
-        isochrone[m_ini_idx + 1] += Ax_d
+    Ax = ec_mag * Av
+    isochrone[0] += Ax
+    Ex1 = ec_col1 * Av
+    isochrone[1] += Ex1
 
-    # Move colors.
-    for ci in range(1, m_ini_idx):
-        Ex = colmove(ci)
-        isochrone[ci] += Ex
-        # Move colors with binary data.
-        if isochrone.shape[0] > m_ini_idx + 1:
-            isochrone[m_ini_idx + 1 + ci] += Ex
+    # Move binary data.
+    if binar_flag:
+        isochrone[m_ini_idx + 1] += Ax  # Magnitude
+        isochrone[m_ini_idx + 2] += Ex1  # First color
+
+    # Second color
+    if len(ext_coefs) > 2:
+        ec_col2 = (
+            (ext_coefs[2][0][0] + ext_coefs[2][0][1] / Rv)
+            - (ext_coefs[2][1][0] + ext_coefs[2][1][1] / Rv)
+        )
+        Ex2 = ec_col2 * Av
+        isochrone[2] += Ex2
+        # Move color with binary data.
+        if binar_flag:
+            isochrone[m_ini_idx + 3] += Ex2
 
     return isochrone
+
+
+def dustapprox(X_, Av):
+    """
+    The 'coeffs' values are the main sequence values taken from:
+
+    https://www.cosmos.esa.int/web/gaia/edr3-extinction-law
+
+    The order of the coefficients is:
+
+    Intercept   X   X2  X3  A   A2  A3  XA  AX2 XA2
+
+    X_ == BP-RP
+    """
+    coeffs = {
+        'G': (
+            0.995969721536602, -0.159726460302015, 0.0122380738156057,
+            0.00090726555099859, -0.0377160263914123, 0.00151347495244888,
+            -2.52364537395142E-05, 0.0114522658102451, -0.000936914989014318,
+            -0.000260296774134201
+        ),
+        'BP': (
+            1.15363197483424, -0.0814012991657388, -0.036013023976704,
+            0.0192143585568966, -0.022397548243016, 0.000840562680547171,
+            -1.31018008013549E-05, 0.00660124080271006, -0.000882247501989453,
+            -0.000111215755291684
+        ),
+        'RP': (
+            0.66320787941067, -0.0179847164933981, 0.000493769449961458,
+            -0.00267994405695751, -0.00651422146709376, 3.30179903473159E-05,
+            1.57894227641527E-06, -7.9800898337247E-05, 0.000255679812110045,
+            1.10476584967393E-05
+        )
+    }
+
+    X_2 = X_ ** 2
+    X_3 = X_ ** 3
+    Av_2 = Av ** 2
+    Av_3 = Av ** 3
+
+    def ext_coeff(k):
+        """
+        https://www.cosmos.esa.int/web/gaia/edr3-extinction-law
+        """
+        # X   X2  X3  A   A2  A3  XA  AX2 XA2
+        ay = coeffs[k][0]
+        for i, Xk in enumerate([X_, X_2, X_3]):
+            ay += coeffs[k][1 + i] * Xk
+        for i, Ak in enumerate([Av, Av_2, Av_3]):
+            ay += coeffs[k][4 + i] * Ak
+
+        ay += (coeffs[k][7] * X_ * Av +
+               coeffs[k][9] * X_ * Av_2 +  # This index not a mistake
+               coeffs[k][8] * X_2 * Av)
+        return ay
+
+    ec_G = ext_coeff('G')
+    ec_BPRP = ext_coeff('BP') - ext_coeff('RP')
+
+    return ec_G, ec_BPRP
 
 
 def cut_max_mag(isoch_moved, max_mag_syn):
@@ -897,11 +975,13 @@ def generate(self, fit_params, plotflag=False):
 
     # Apply extinction correction
     isoch_extin = extinction(
+        self.ext_law,
         self.ext_coefs,
         self.rand_floats["norm"][0],
         self.rand_floats["unif"][0],
         self.DR_distribution,
         self.m_ini_idx,
+        self.binar_flag,
         av,
         dr,
         rv,

@@ -31,6 +31,11 @@ class synthetic:
         synthetic stars as observed stars.
     gamma : str, float, {"D&K", "fisher_stepped", "fisher_peaked", "raghavan"}, default="D&K"
         Distribution function for the mass ratio of the binary systems.
+    ext_law : str, {"CCMO", "GAIADR3"}, default="CCMO"
+        Extinction law. If "*GAIADR3*" is selected, the magnitude and first color defined
+        in :class:`isochrones` and :class:`cluster` are assumed to be Gaia's
+        (E)DR3 **G** and **(BP-RP)** respectively. The second color (if defined) will be
+        affected by the "*CCMO*" model.
     DR_distribution : str, {"uniform", "normal"}, default="uniform"
         Distribution function for the differential reddening.
     seed: int, optional, default=None
@@ -41,6 +46,7 @@ class synthetic:
     IMF_name: str = "chabrier_2014"
     max_mass: int = 100_000
     gamma: float | str = "D&K"
+    ext_law: str = 'CCMO'
     DR_distribution: str = "uniform"
     seed: Optional[int] = None
 
@@ -72,6 +78,14 @@ class synthetic:
                 f"IMF '{self.IMF_name}' not recognized. Should be one of {imfs}"
             )
 
+        # Check extinction law
+        ext_laws = ("CCMO", "GAIADR3")
+        if self.ext_law not in ext_laws:
+            raise ValueError(
+                f"Extinction law '{self.ext_law}' not recognized. Should be "
+                + f"one of {ext_laws}"
+            )
+
         # Sample the selected IMF
         # Nmets, Nages = self.theor_tracks.shape[:2]
         Nmets, Nages = self.isochs.theor_tracks.shape[:2]
@@ -81,7 +95,7 @@ class synthetic:
         self.theor_tracks = scp.add_binarity(self)
 
         # Get extinction coefficients for these filters
-        self.ext_coefs = scp.extinction_coeffs(self)
+        self.ext_coefs = scp.ccmo_ext_coeffs(self)
 
         # Generate random floats used by `synth_clusters.synthcl_generate()`
         self.rand_floats = scp.randVals(self)
@@ -212,11 +226,13 @@ class synthetic:
 
         # Apply extinction correction
         isoch_extin = scp.extinction(
+            self.ext_law,
             self.ext_coefs,
             self.rand_floats["norm"][0],
             self.rand_floats["unif"][0],
             self.DR_distribution,
             self.m_ini_idx,
+            self.binar_flag,
             av,
             dr,
             rv,
