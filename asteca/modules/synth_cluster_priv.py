@@ -188,7 +188,7 @@ def add_binarity(self) -> np.ndarray:
     return theor_tracks
 
 
-def extinction_coeffs(self) -> list:
+def ccmo_ext_coeffs(self) -> list:
     """Obtain extinction coefficients for all the observed filters and colors,
     in the order in which they are stored in theor_tracks.
 
@@ -199,7 +199,7 @@ def extinction_coeffs(self) -> list:
     # Effective wavelength in Armstrong.
     eff_wave = self.isochs.mag_color_lambdas[self.isochs.mag_filter_name]
     # CCM coefficient. Effective wavelength in inverse microns.
-    ext_coefs = [ccm_model(10000.0 / eff_wave)]
+    ext_coefs = [ccmo_model(10000.0 / eff_wave)]
 
     # For colors.
     for color in self.isochs.color_filter_name:
@@ -208,7 +208,7 @@ def extinction_coeffs(self) -> list:
         eff_wave1 = self.isochs.mag_color_lambdas[c_filt1]
         eff_wave2 = self.isochs.mag_color_lambdas[c_filt2]
         ext_coefs.append(
-            [ccm_model(10000.0 / eff_wave1), ccm_model(10000.0 / eff_wave2)]
+            [ccmo_model(10000.0 / eff_wave1), ccmo_model(10000.0 / eff_wave2)]
         )
 
     return ext_coefs
