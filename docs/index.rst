@@ -15,13 +15,9 @@ extinction, distance, metallicity, age, binarity, mass, etc..
 
 
 .. important::
-   Version 0.5.0 was a mayor re-write of **ASteCA**. In previous versions **ASteCA** was
-   a large script, from this version onward it is a proper Python package.
-   Many of the features that were previously available were removed (at least
-   temporarily) to concentrate on the fundamental parameters estimation.
-   Feel free to `contact me`_ if you have questions about using this code in your
-   research, and please `open a new issue`_ in the code's repository if you find
-   something either wrong, confusing or missing.
+   Version |ProjectVersion| released on the 10th of May, 2024. See :ref:`changelog`
+   for a detailed list of the changes implemented.
+
 
 Install with:
 
@@ -30,14 +26,19 @@ Install with:
    pip install asteca
 
 More details on how to install using a `conda <https://conda.io/docs/index.html>`_
-environment are available in the Section :ref:`installation`.
+environment are available in :ref:`installation`.
+
+Feel free to `contact me`_ if you have questions about using this code in your
+research, and please `open a new issue`_ in the code's repository if you find
+something either wrong, confusing or missing.
+
 
 .. _contact me: mailto:gabrielperren@gmail.com
 .. _open a new issue: https://github.com/Gabriel-p/asteca/issues/new
 
 
 License & Attribution
----------------------
+=====================
 
 Copyright 2015-2024 Gabriel I Perren.
 
@@ -45,7 +46,7 @@ Copyright 2015-2024 Gabriel I Perren.
 see the `LICENSE`_.
 
 If you make use of **ASteCA** in your research, please cite its `accompanying
-article <http://www.aanda.org/articles/aa/abs/2015/04/aa24946-14/aa24946-14.html>`_.
+article <http://www.aanda.org/articles/aa/abs/2015/04/aa24946-14/aa24946-14.html>`_
 using the following BibTeX entry:
 
 .. code-block:: Bibtex
