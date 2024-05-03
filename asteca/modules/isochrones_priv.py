@@ -84,7 +84,7 @@ def extract_paths(self) -> list:
     sub_fold_flag = False
     for ps in os.listdir(self.isochs_path):
         ps_path = os.path.join(self.isochs_path, ps)
-        if os.path.isdir(ps_path):
+        if os.path.isdir(ps_path) and not ps.startswith('.'):
             sub_fold_flag = True
             break
     if sub_fold_flag is False:
@@ -98,8 +98,8 @@ def extract_paths(self) -> list:
     for ps in os.listdir(self.isochs_path):
         ps_path = os.path.join(self.isochs_path, ps)
 
-        # Only folders beyond this point
-        if os.path.isdir(ps_path) is False:
+        # Only (not hidden) folders beyond this point
+        if os.path.isdir(ps_path) is False or ps.startswith('.'):
             continue
 
         if self.model == "PARSEC":
