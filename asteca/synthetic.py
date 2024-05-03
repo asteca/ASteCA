@@ -158,6 +158,18 @@ class synthetic:
         # if dm_min is not None:
         #     self._rm_low_masses(dm_min)
 
+        # Check that the number of colors match
+        N_c_cluster = 1
+        if cluster.color2 is not None:
+            N_c_cluster += 1
+        N_c_isoch = 1
+        if self.isochs.color2 is not None:
+            N_c_isoch += 1
+        if N_c_cluster != N_c_isoch:
+            raise ValueError(
+                f"Number of colors defined in 'isochrones' ({N_c_isoch}) "
+                + f"does not match the number defined in 'cluster' ({N_c_cluster})")
+
     def generate(self, fit_params: dict) -> np.ndarray:
         r"""Generate a synthetic cluster.
 
