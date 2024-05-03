@@ -375,12 +375,10 @@ class synthetic:
 
         # Observed photometry
         obs_phot = np.array([self.mag_p] + [_ for _ in self.colors_p])
-        # Identify nans in mag and colors and re-write them as -10. This ensures
-        # that the photometric distances to these stars is large enough to not be
-        # matched.
+        # Replace nans in mag and colors to avoid crashing KDTree()
         nan_msk = np.full(obs_phot.shape[1], False)
-        for col in obs_phot:
-            nan_msk = nan_msk | np.isnan(col)
+        for ophot in obs_phot:
+            nan_msk = nan_msk | np.isnan(ophot)
         obs_phot[:, nan_msk] = -10.0
         obs_phot = obs_phot.T
 
@@ -417,6 +415,14 @@ class synthetic:
                 "binar_prob": binar_prob,
             }
         )
+        # Assign all nans to stars with a photometric nan in any dimension
+        df[nan_msk] = np.nan
+        if nan_msk.sum() > 0:
+            warnings.warn(
+                f"\nN={nan_msk.sum()} stars found with no valid photometric data. "
+                + "\nThese will be assigned 'nan' values for masses and binarity "
+                + "probability"
+            )
 
         return df, np.array(b_fr_all)
 
