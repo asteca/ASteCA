@@ -34,6 +34,9 @@ copyright = "2024, Gabriel I Perren"
 version = __version__
 release = __version__
 
+rst_epilog = """.. |ProjectVersion| replace:: {versionnum}""".format(
+    versionnum = version,
+)
 
 # -- General configuration ---------------------------------------------------
 
