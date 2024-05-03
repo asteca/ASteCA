@@ -48,15 +48,9 @@ class synthetic:
 
         if self.seed is None:
             self.seed = np.random.randint(100000)
-        print(f"Setting random seed to {self.seed}")
 
         # Check gamma distribution
-        gammas = (
-            "D&K",
-            "fisher_stepped",
-            "fisher_peaked",
-            "raghavan",
-        )
+        gammas = ("D&K", "fisher_stepped", "fisher_peaked", "raghavan")
         if isinstance(self.gamma, str):
             if self.gamma not in gammas:
                 raise ValueError(
@@ -64,22 +58,15 @@ class synthetic:
                 )
 
         # Check differential reddening function
-        DR_funcs = (
-            "uniform",
-            "normal",
-        )
+        DR_funcs = ("uniform", "normal")
         if self.DR_distribution not in DR_funcs:
             raise ValueError(
-                f"Differential reddening function '{self.DR_distribution}' not recognized. "
-                + f"Should be one of {DR_funcs}"
+                f"Differential reddening function '{self.DR_distribution}' not "
+                + f"recognized. Should be one of {DR_funcs}"
             )
 
         # Check IMF function
-        imfs = (
-            "salpeter_1955",
-            "kroupa_2001",
-            "chabrier_2014",
-        )
+        imfs = ("salpeter_1955", "kroupa_2001", "chabrier_2014")
         if self.IMF_name not in imfs:
             raise ValueError(
                 f"IMF '{self.IMF_name}' not recognized. Should be one of {imfs}"
@@ -102,6 +89,12 @@ class synthetic:
         # Store for internal usage
         self.met_age_dict = self.isochs.met_age_dict
 
+        print(f"Initial Mass Function  : {self.IMF_name}")
+        print(f"Maximum initial mass   : {self.max_mass}")
+        print(f"Gamma distribution     : {self.gamma}")
+        print(f"Extinction law         : {self.ext_law}")
+        print(f"Differential reddening : {self.DR_distribution}")
+        print(f"Random seed            : {self.seed}")
         print("Synthetic clusters object generated\n")
 
     def calibrate(self, cluster, fix_params: dict = {}):
