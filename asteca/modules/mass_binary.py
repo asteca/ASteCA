@@ -15,7 +15,8 @@ def ranModels(fit_params, model_std, seed, N_models=200):
         std = model_std[k]
         # models_ran[k] = np.random.normal(f_val, std, N_models)
         models_ran[k] = np.random.default_rng(seed + int_seed).normal(
-            f_val, std, N_models)
+            f_val, std, N_models
+        )
         int_seed += 1
     # Transpose dict of arrays into list of dicts
     ran_models = [dict(zip(models_ran, t)) for t in zip(*models_ran.values())]
@@ -201,10 +202,7 @@ def minit_LGB05(ra, dec, dm, epsilon=0.08):
     numerator = (
         M_D
         * b**2
-        * (
-            a * r**2
-            + (a + 3 * np.sqrt(z**2 + b**2)) * (a + np.sqrt(z**2 + b**2)) ** 2
-        )
+        * (a * r**2 + (a + 3 * np.sqrt(z**2 + b**2)) * (a + np.sqrt(z**2 + b**2)) ** 2)
     )
     denominator = (b**2 + z**2) ** (3 / 2) * (
         r**2 + (a + np.sqrt(b**2 + z**2)) ** 2

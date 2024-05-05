@@ -19,7 +19,10 @@ def lkl_data(self):
             histogram2d(
                 self.my_cluster.mag_p,
                 col,
-                range=[[ranges[0][0], ranges[0][1]], [ranges[i + 1][0], ranges[i + 1][1]]],
+                range=[
+                    [ranges[0][0], ranges[0][1]],
+                    [ranges[i + 1][0], ranges[i + 1][1]],
+                ],
                 bins=[Nbins[0], Nbins[i + 1]],
             )
         )

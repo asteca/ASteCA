@@ -39,7 +39,7 @@ def sampleInv(ijseed, Max_mass, inv_cdf):
         # mr = np.random.rand(N)
         # The internal seed can not be 'self.seed' because otherwise all the
         # floats returned are equal
-        mr = np.random.default_rng(ijkseed).uniform(0., 1., N)
+        mr = np.random.default_rng(ijkseed).uniform(0.0, 1.0, N)
         return inv_cdf(mr)
 
     # Sample in chunks until the maximum defined mass is reached.

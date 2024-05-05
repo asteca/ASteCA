@@ -28,6 +28,7 @@ class likelihood:
         the color(s), also with edge values.
 
     """
+
     my_cluster: cluster
     lkl_name: str = "plr"
     bin_method: str = "knuth"
