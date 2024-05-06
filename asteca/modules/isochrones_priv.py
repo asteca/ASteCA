@@ -3,7 +3,8 @@ import numpy as np
 import pandas as pd
 
 
-# These are the column names for the initial mass, metallicity, and age for the
+# IMPORTANT
+# These are the default column names for the initial mass, metallicity, and age for the
 # supported photometric system's isochrones files.
 phot_syst_col_names = {
     "PARSEC": {"mass_col": "Mini", "met_col": "Zini", "age_col": "logAge"},
@@ -36,7 +37,7 @@ def load(self) -> tuple[np.ndarray, list, dict]:
 
     # isochrones.shape = (N_photsyst, N_z, N_a, N_interp, N_cols)
     # met_age_arr.shape = (N_photsyst, N_z*N_a, 2)
-    isochrones, met_age_arr = read(
+    isochrones = read(
         self.model,
         self.N_interp,
         self.parsec_rm_stage_9,
@@ -45,19 +46,28 @@ def load(self) -> tuple[np.ndarray, list, dict]:
         age_col,
         cols_keep,
     )
-    N_ps, Nz, Na = len(isochrones), len(isochrones[0]), len(isochrones[0][0])
-    print(
-        f"Processing {self.model} isochrones for {N_ps} photometric systems, "
-        + f"N_met={Nz}, N_age={Na}..."
-    )
 
-    isochrones = m_ini_check(self, mass_col, isochrones)
-    met_age_dict = met_ages_check(self, met_age_arr)
+    isochrones, met_age_arr = met_order_merge_massini_check(mass_col, isochrones)
+    try:
+        np.shape(isochrones)
+    except ValueError:
+        raise ValueError(
+            "Shape mismatch in loaded isochrones. This usually means that an\n"
+            + "incorrect number of ages and/or metallicities are stored in the\n"
+            + "isochrone files."
+        )
+
+    # Create dictionary of mets and ages
+    all_m, all_a = np.array(met_age_arr).T
+    # Discard duplicate values
+    all_m = np.array(list(dict.fromkeys(all_m))).astype(float)
+    all_a = np.array(list(dict.fromkeys(all_a))).astype(float)
+    met_age_dict = {"met": all_m, "loga": all_a}
 
     # theor_tracks.shape = (N_z, N_a, N_cols, N_interp)
-    theor_tracks, color_filters = order_isochrones(self, mass_col, isochrones)
+    theor_tracks, color_filters = shape_isochrones(self, mass_col, isochrones)
 
-    return theor_tracks, color_filters, met_age_dict
+    return theor_tracks, color_filters, met_age_dict, len(f_paths)
 
 
 def get_columns(self) -> tuple[list, str, str, str]:
@@ -81,162 +91,231 @@ def get_columns(self) -> tuple[list, str, str, str]:
 
 
 def extract_paths(self) -> list:
-    r"""Extract isochrone files from `isochs_path`.
-    """
-    # check that at least one sub-folder exists in the path
-    sub_fold_flag = False
-    for ps in os.listdir(self.isochs_path):
-        ps_path = os.path.join(self.isochs_path, ps)
-        if os.path.isdir(ps_path) and not ps.startswith('.'):
-            sub_fold_flag = True
-            break
-    if sub_fold_flag is False:
-        raise FileNotFoundError(
-            "At least one sub-folder with isochrone files must exist in "
-            + f"the '{self.isochs_path}' path given"
-        )
-
+    r"""Extract isochrone files from `isochs_path`."""
     f_paths = []
-    # For each photometric system
-    for ps in os.listdir(self.isochs_path):
-        ps_path = os.path.join(self.isochs_path, ps)
-
-        # Only (not hidden) folders beyond this point
-        if os.path.isdir(ps_path) is False or ps.startswith('.'):
+    # Iterate over files in directory
+    for path, folders, files in os.walk(self.isochs_path):
+        # Skip hidden folders
+        if path.split("/")[-1].startswith("."):
             continue
+        for filename in files:
+            # Skip hidden files
+            if not filename.startswith("."):
+                f_paths.append(os.path.join(path, filename))
 
-        if self.model == "PARSEC":
-            # Remove possible hidden files inside this folder
-            in_folder = [_ for _ in os.listdir(ps_path) if not _.startswith('.')]
-            # A single file per photometric system is expected here
-            if len(in_folder) > 1:
-                raise ValueError(
-                    "One file per photometric system is expected for the PARSEC service"
-                )
-            f_paths.append(os.path.join(ps_path, in_folder[0]))
-
-        elif self.model == "MIST":
-            met_files = []
-            for met in os.listdir(ps_path):
-                if not met.startswith('.'):
-                    met_files.append(os.path.join(ps_path, met))
-            f_paths.append(met_files)
-
-        elif self.model == "BASTI":
-            met_folders = [_ for _ in os.listdir(ps_path) if not _.startswith('.')]
-            met_files = []
-            for met_folder in met_folders:
-                met_folder_path = os.path.join(ps_path, met_folder)
-                met_lst = []
-                for met in os.listdir(met_folder_path):
-                    if not met.startswith('.'):
-                        met_lst.append(os.path.join(met_folder_path, met))
-                met_files.append(met_lst)
-            f_paths.append(met_files)
-
-    # Check that the number of files matches across photometric systems and
-    # metallicities for BASTI
-    if self.model == "MIST":
-        nmets = []
-        for ps in f_paths:
-            nmets.append(len(ps))
-        if len(list(set(nmets))) > 1:
-            raise ValueError(
-                "The number of files for each photometric system must match"
-            )
-    elif self.model == "BASTI":
-        nmets = []
-        for ps in f_paths:
-            nmets.append(len(ps))
-        if len(list(set(nmets))) > 1:
-            raise ValueError(
-                "The number of files for each photometric system must match"
-            )
-        # Now check the number of age files for each metallicity
-        for ps in f_paths:
-            nages = []
-            for met in ps:
-                nages.append(len(met))
-            if len(list(set(nages))) > 1:
-                raise ValueError(
-                    "The number of files for each metallicity system must match"
-                )
-
-        # Flatten the list once checked
-        f_paths_flat = []
-        for ps in f_paths:
-            met_f_ps = []
-            for met_f in ps:
-                met_f_ps += met_f
-            f_paths_flat.append(met_f_ps)
-        f_paths = f_paths_flat
+    if len(f_paths) == 0:
+        raise FileNotFoundError(
+            f"No files found in isochrones path '{self.isochs_path}'"
+        )
 
     return f_paths
 
 
-def m_ini_check(self, initial_mass: str, isochrones: list) -> list:
+def read(
+    model, N_interp, parsec_rm_stage_9, f_paths, met_col, age_col, cols_keep
+) -> tuple[list, list]:
+    """ """
+
+    group_col = {"PARSEC": met_col, "MIST": age_col, "BASTI": None}
+
+    isochrones = {}
+    for file_path in f_paths:
+
+        # Extract columns names and full header
+        col_names, full_header = get_header(file_path)
+
+        # Columns to keep for this photometric system
+        cols_keep_ps = list(set(col_names) & set(cols_keep))
+
+        # Group file in blocks as required
+        df_blocks = get_data_blocks(file_path, col_names, group_col[model])
+
+        if model == "PARSEC":
+            # Process metallicity blocks
+            for _, met_df in df_blocks:
+                # Group by age
+                age_blocks = met_df.groupby(age_col, sort=False)
+                for _, df in age_blocks:
+
+                    zinit = df[met_col].values[0]
+                    try:
+                        isochrones[zinit]
+                    except KeyError:
+                        isochrones[zinit] = {}
+
+                    # Remove post-AGB stage
+                    if parsec_rm_stage_9 is True:
+                        msk = df["label"] != "9"
+                        df = df[msk]
+
+                    age = df[age_col].values[0]
+                    # Interpolated isochrone
+                    isochrones = interp_df(
+                        N_interp, cols_keep_ps, df, isochrones, zinit, age
+                    )
+
+        elif model == "MIST":
+            zinit = get_MIST_z_val(met_col, full_header)
+            try:
+                isochrones[zinit]
+            except KeyError:
+                isochrones[zinit] = {}
+
+            # Process age blocks
+            for _, df in df_blocks:
+
+                age = df[age_col].values[0]
+                # Interpolated isochrone
+                isochrones = interp_df(
+                    N_interp, cols_keep_ps, df, isochrones, zinit, age
+                )
+
+        elif model == "BASTI":
+            zinit, age = get_BASTI_z_a_val(full_header, met_col, age_col)
+            try:
+                isochrones[zinit]
+            except KeyError:
+                isochrones[zinit] = {}
+
+            # Interpolated isochrone
+            isochrones = interp_df(
+                N_interp, cols_keep_ps, df_blocks, isochrones, zinit, age
+            )
+
+    return isochrones
+
+
+def get_header(file_path):
+    """Iterate through each line in the file to get the header"""
+    with open(file_path, mode="r") as f_iso:
+        full_header = []
+        for i, line in enumerate(f_iso):
+            # Skip BASTI lines that look like this
+            if line.startswith("#====="):
+                continue
+            full_header.append(line)
+            if not line.startswith("#"):
+                break
+            column_names = line
+
+        column_names = column_names.replace("#", "").split()
+
+    return column_names, full_header
+
+
+def get_data_blocks(file_path, header, block_col=None):
+    """Extract data in 'block_col' blocks"""
+
+    # IMPORTANT
+    # We are assuming that all models use spaces to separate columns. If this ever
+    # changes, this line will not longer work
+    df = pd.read_csv(file_path, comment="#", header=None, names=header, sep=r"\s+")
+
+    if block_col is None:
+        return df
+
+    grouped = df.groupby(block_col, sort=False)
+    return grouped
+
+
+def get_MIST_z_val(met_col, full_header):
     """
-    The isochrone parameter 'initial_mass' is assumed to be equal across
+    Extract metallicity value for MIST files.
+    """
+    for i, line in enumerate(full_header):
+        if met_col in line:
+            z_header_cols = line.split()[1:]
+            z_header_vals = full_header[i + 1].split()[1:]
+    z_df = pd.DataFrame([z_header_vals], columns=z_header_cols)
+    zinit = z_df[met_col].values
+    return str(zinit[0])
+
+
+def get_BASTI_z_a_val(full_header, met_col, age_col):
+    """
+    Extract metallicity and age values for BASTI files.
+    """
+    for line in full_header:
+        if met_col in line:
+            spl_1 = line.split(met_col)[1].replace("=", " ")
+            zval = spl_1.split()[0]
+
+            spl_2 = line.split(age_col)[1].replace("=", " ").strip()
+            aval = np.log10(float(spl_2) * 1e6)
+            aval = str(round(aval, 5))
+            break
+    return zval, aval
+
+
+def interp_df(N_interp, cols_keep_ps, df, isochrones, zinit, age):
+    """ """
+    # Drop columns not in list
+    df = df[df.columns.intersection(cols_keep_ps)]
+    # Dataframe to floats
+    df = df.apply(pd.to_numeric)
+    # Interpolate
+    xx = np.linspace(0.0, 1.0, N_interp)
+    xp = np.linspace(0.0, 1.0, len(df))
+    df_new = {}
+    for col in cols_keep_ps:
+        df_new[col] = np.interp(xx, xp, df[col])
+    isoch_interp = pd.DataFrame(df_new)
+
+    # Add to the dictionary of isochrones
+    try:
+        isochrones[zinit][age]
+    except KeyError:
+        isochrones[zinit][age] = []
+    isochrones[zinit][age].append(isoch_interp)
+
+    return isochrones
+
+
+def met_order_merge_massini_check(mass_col: str, isochrones: dict) -> list:
+    """
+    1. Order by metallicity.
+    2. Combine photometric systems if more than one was used.
+    3. Check that initial masses are equal across all systems
+
+    The isochrone parameter 'mass_col' is assumed to be equal across
     photometric systems, for a given metallicity and age. We check here that
     this is the case.
 
-    Combine photometric systems if more than one was used.
+
     """
-    if len(isochrones) == 1:
-        isochrones_merged = isochrones[0]
-        return isochrones_merged
+    # Metallicities in order
+    idx_met_sort = np.argsort(list(map(float, isochrones.keys())))
+    all_mets = np.array(list(isochrones.keys()))[idx_met_sort]
 
-    isochrones_merged = []
-    phot_syst_0 = isochrones[0]
-    for phot_syst in isochrones[1:]:
-        for i, met in enumerate(phot_syst_0):
-            met_vals = []
-            for j, df_age in enumerate(met):
-                df_x = phot_syst[i][j]
+    met_age_arr, isochrones_ordered = [], []
+    for met_k in all_mets:
+        met_vals = []
+        for age_k, age_list in isochrones[met_k].items():
+            met_age_arr.append([met_k, age_k])
 
-                if (
-                    abs(df_age[initial_mass].values - df_x[initial_mass].values).sum()
-                    > 0.001
-                ):
-                    raise ValueError(
-                        "Initial mass values are not equal across photometric systems"
-                    )
+            df_age_0 = age_list[0]
+            # Check masses if more than one photometric system was used
+            if len(age_list) > 1:
+                for df_age_X in age_list[1:]:
+                    mass_diff = abs(
+                        df_age_0[mass_col].values - df_age_X[mass_col].values
+                    ).sum()
+                    if mass_diff > 0.001:
+                        raise ValueError(
+                            "Initial mass values differ across photometric systems"
+                        )
+                    # Drop 'mass_col' column from this photometric system
+                    df_age_X = df_age_X.drop([mass_col], axis=1)
+                    # Merge data frames and replace original one
+                    df_age_0 = pd.concat([df_age_0, df_age_X], axis=1)
 
-                # Merge and drop a mass_ini column
-                df_x = df_x.drop(["Mini"], axis=1)
-                met_vals.append(pd.concat([df_age, df_x], axis=1))
-            isochrones_merged.append(met_vals)
+            met_vals.append(df_age_0)
+        isochrones_ordered.append(met_vals)
 
-        phot_syst_0 = phot_syst
-
-    return isochrones_merged
-
-
-def met_ages_check(self, met_age_arr: list) -> dict:
-    """ """
-    phot_syst_0 = met_age_arr[0]
-    for phot_syst in met_age_arr[1:]:
-        for i, met_age in enumerate(phot_syst_0):
-            met_age_x = phot_syst[i]
-
-            if abs(np.array(met_age) - np.array(met_age_x)).sum() > 0.001:
-                raise ValueError(
-                    "Metallicities and ages are not equal across photometric systems"
-                )
-
-        phot_syst_0 = phot_syst
-
-    # Discard duplicate values
-    all_z, all_a = np.array(phot_syst_0).T
-    all_z = np.array(list(dict.fromkeys(all_z))).astype(float)
-    all_a = np.array(list(dict.fromkeys(all_a))).astype(float)
-
-    met_age_dict = {"met": all_z, "loga": all_a}
-
-    return met_age_dict
+    return isochrones_ordered, met_age_arr
 
 
-def order_isochrones(
+def shape_isochrones(
     self, initial_mass: str, isochrones: list
 ) -> tuple[np.ndarray, list]:
     """
@@ -306,256 +385,3 @@ def order_isochrones(
         color_filters.append(met_lst)
 
     return theor_tracks, color_filters
-
-
-def read(
-    model, N_interp, parsec_rm_stage_9, f_paths, met_col, age_col, cols_keep
-) -> tuple[list, list]:
-    """ """
-
-    if model == "PARSEC":
-        isochrones, met_age_arr = read_PARSEC_files(
-            f_paths, parsec_rm_stage_9, met_col, age_col, cols_keep, N_interp
-        )
-    elif model == "MIST":
-        isochrones, met_age_arr = read_MIST_files(
-            f_paths, met_col, age_col, cols_keep, N_interp
-        )
-    elif model == "BASTI":
-        isochrones, met_age_arr = read_BASTI_files(
-            f_paths, met_col, age_col, cols_keep, N_interp
-        )
-
-    return isochrones, met_age_arr
-
-
-def read_PARSEC_files(
-    f_paths, parsec_rm_stage_9, met_col, age_col, cols_keep, N_interp, label_col="label"
-):
-    """
-    Each PARSEC file represents a single photometric system.
-    """
-    isochrones, met_age_arr = [], []
-    for isoch_path in f_paths:
-        isochs_array, met_age = [], []
-        with open(isoch_path, mode="r") as f_iso:
-            header = get_header(f_iso)
-
-            # Columns to keep for this photometric system
-            cols_keep_ps = list(set(header) & set(cols_keep))
-
-            # Group by metallicity
-            met_blocks = get_data_blocks(f_iso, header, met_col)
-            met_arr = []
-            for _, met_df in met_blocks:
-                # Group by age
-                a_grouped = met_df.groupby(age_col, sort=False)
-                age_arr = []
-                for _, df in a_grouped:
-                    # Remove post-AGB stage
-                    if parsec_rm_stage_9 is True:
-                        msk = df["label"] != "9"
-                        df = df[msk]
-
-                    # Save (z, a) values
-                    met_age.append(
-                        [float(df[met_col].values[0]), float(df[age_col].values[0])]
-                    )
-
-                    # Interpolate single isochrone
-                    age_arr.append(interp_df(N_interp, cols_keep_ps, df))
-
-                # Store single isochrone for this metallicity
-                met_arr.append(age_arr)
-
-            # Store all isochrones for this metallicity
-            isochs_array += met_arr
-
-        isochrones.append(isochs_array)
-        met_age_arr.append(met_age)
-
-    return isochrones, met_age_arr
-
-
-def read_MIST_files(f_paths, met_col, age_col, cols_keep, N_interp):
-    """
-    MIST isochrones are organized in one single file per metallicity. Multiple
-    files can mean multiple metallicities or multiple photometric systems or both.
-    A single file can also mean multiple photometric systems (e.g.: Gaia, UBVRI, etc)
-    """
-
-    def get_z_val(f_iso):
-        """
-        Extract metallicity value for MIST files.
-        """
-        for i, line in enumerate(f_iso):
-            next_line = False
-            if met_col in line:
-                z_header_cols = line.split()[1:]
-                next_line = True
-            if next_line:
-                z_header_vals = next(f_iso).split()[1:]
-                break
-        z_df = pd.DataFrame([z_header_vals], columns=z_header_cols)
-        zinit = float(z_df[met_col].values)
-        return zinit
-
-    # Sort files according to their metallicities BEFORE processing them
-    f_paths_zorder = []
-    for phot_syst in f_paths:
-        zinit_vals = []
-        for file_path in phot_syst:
-            with open(file_path, mode="r") as f_iso:
-                zinit = get_z_val(f_iso)
-                zinit_vals.append(zinit)
-        z_order = np.argsort(zinit_vals)
-        f_paths_zorder.append(list(np.array(phot_syst)[z_order]))
-    f_paths = f_paths_zorder
-
-    #
-    isochrones, met_age_arr = [], []
-    for phot_syst in f_paths:
-        isochrones_temp, met_age_temp = [], []
-        for file_path in phot_syst:
-            isochs_array = []
-            # Open the tracks file.
-            with open(file_path, mode="r") as f_iso:
-                zinit = get_z_val(f_iso)
-                header = get_header(f_iso)
-
-                # Columns to keep for this photometric system
-                cols_keep_ps = list(set(header) & set(cols_keep))
-
-                age_blocks = get_data_blocks(f_iso, header, age_col)
-                met_arr = []
-                for name, df in age_blocks:
-                    met_age_temp.append([zinit, float(df[age_col].values[0])])
-                    # Store single isochrone for this metallicity
-                    met_arr.append(interp_df(N_interp, cols_keep_ps, df))
-
-                # Store all isochrones for this metallicity
-                isochs_array += met_arr
-
-            isochrones_temp.append(isochs_array)
-
-        isochrones.append(isochrones_temp)
-        met_age_arr.append(met_age_temp)
-
-    return isochrones, met_age_arr
-
-
-def read_BASTI_files(f_paths, met_col, age_col, cols_keep, N_interp):
-    """
-    BASTI isochrones are organized in one single file per metallicity per age.
-    """
-
-    def get_z_a_val(f_iso, met_col, age_col):
-        """
-        Extract metallicity and age values for BASTI files.
-        """
-        for i, line in enumerate(f_iso):
-            if met_col in line:
-                spl_1 = line.split(met_col)[1].replace("=", " ")
-                z_header_val = spl_1.split()[0]
-                zval = float(z_header_val)
-
-                spl_2 = line.split(age_col)[1].replace("=", " ").strip()
-                aval = np.log10(float(spl_2) * 1e6)
-                break
-        return zval, aval
-
-    # Sort files according to their metallicities and aged BEFORE processing them
-    f_paths_zaorder = []
-    for phot_syst in f_paths:
-        za_vals = []
-        for file_path in phot_syst:
-            with open(file_path, mode="r") as f_iso:
-                zval, aval = get_z_a_val(f_iso, met_col, age_col)
-                za_vals.append([file_path, zval, aval])
-        # Sort by z then age
-        f_paths_zaorder.append(list(sorted(za_vals, key=lambda el: (el[1], el[2]))))
-
-    #
-    isochrones, met_age_arr = [], []
-    for phot_syst in f_paths_zaorder:
-        # Extract initial z value
-        z_old = phot_syst[0][1]
-
-        isochs_array, met_arr, met_age_temp = [], [], []
-        for file_path in phot_syst:
-            zval, aval = file_path[1], file_path[2]
-            met_age_temp.append([zval, aval])
-
-            # Open the tracks file.
-            with open(file_path[0], mode="r") as f_iso:
-                header = get_header(f_iso, True)
-                # Columns to keep for this photometric system
-                cols_keep_ps = list(set(header) & set(cols_keep))
-
-                df = get_data_blocks(f_iso, header, age_col, True)
-                df_interp = interp_df(N_interp, cols_keep_ps, df)
-
-                # Store single isochrone for this metallicity
-                if zval == z_old:
-                    met_arr.append(df_interp)
-                else:
-                    isochs_array.append(met_arr)
-                    met_arr = [df_interp]
-
-            z_old = zval
-        # Store final metallicity
-        isochs_array.append(met_arr)
-
-        isochrones.append(isochs_array)
-        met_age_arr.append(met_age_temp)
-
-    return isochrones, met_age_arr
-
-
-def get_header(f_iso, BASTI_flag=False):
-    """Iterate through each line in the file to get the header"""
-    all_lines = []
-    for i, line in enumerate(f_iso):
-        all_lines.append(line)
-        if not line.startswith("#"):
-            break
-        header = line
-
-    if BASTI_flag is True:
-        header = all_lines[i - 2].replace("#", "").split()
-    else:
-        header = header.replace("#", "").split()
-    return header
-
-
-def get_data_blocks(f_iso, header, age_col, BASTI_flag=False):
-    """ """
-    f_iso.seek(0, 0)
-    temp_f = []
-    for i, line in enumerate(f_iso):
-        if line.startswith("#") or line.startswith("\n"):
-            pass
-        else:
-            temp_f.append(line.split())
-    df = pd.DataFrame(temp_f, columns=header)
-    if BASTI_flag is True:
-        return df
-
-    grouped = df.groupby(age_col, sort=False)
-    return grouped
-
-
-def interp_df(N_interp, cols_keep_ps, df):
-    """ """
-    # Drop columns not in list
-    df = df[df.columns.intersection(cols_keep_ps)]
-    # Dataframe to floats
-    df = df.apply(pd.to_numeric)
-    # Interpolate
-    xx = np.linspace(0.0, 1.0, N_interp)
-    xp = np.linspace(0.0, 1.0, len(df))
-    df_new = {}
-    for col in cols_keep_ps:
-        df_new[col] = np.interp(xx, xp, df[col])
-    df_interp = pd.DataFrame(df_new)
-    return df_interp
