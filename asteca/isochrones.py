@@ -35,6 +35,15 @@ class isochrones:
     color2 : tuple, optional, default=None
         Optional second color to use in the analysis. Same format as that used by the
         ``color`` parameter.
+    magnitude_effl : float, optional, default=None
+        Effective lambda (in Angstrom) for the magnitude filter.
+    color_effl : tuple, optional, default=None
+        Effective lambdas for the filters that make up the ``color`` defined in the
+        :py:mod:`asteca.isochrones` object. E.g.: ``(1111.11, 2222.22)`` where
+        ``1111.11`` and ``2222.22`` are the effective lambdas (in Angstrom) for each
+        filter, in the same order as ``color``.
+    color2_effl : tuple, optional, default=None
+        Same as ``color_effl`` but for a second (optional) color defined.
     z_to_FeH : float, optional, default=None
         If ``None``, the default ``z`` values in the isochrones will be used to
         generate the synthetic clusters. If ``float``, it must represent the solar
@@ -61,13 +70,26 @@ class isochrones:
     isochs_path: str
     magnitude: str
     color: tuple
-    N_interp: int = 2500
     color2: Optional[tuple] = None
+    magnitude_effl: Optional[float] = None
+    color_effl: Optional[tuple] = None
+    color2_effl: Optional[tuple] = None
+    N_interp: int = 2500
     z_to_FeH: Optional[float] = None
     column_names: Optional[dict] = None
     parsec_rm_stage_9: Optional[bool] = True
 
     def __post_init__(self):
+        # Check that the number of colors match
+        if self.color2 is not None and self.color2_effl is None:
+            raise ValueError(
+                "Second color is defined but its effective lambdas are missing."
+            )
+        if self.color2 is None and self.color2_effl is not None:
+            raise ValueError(
+                "Lambdas for the second color are defined but second color is missing."
+            )
+
         # Check model input
         self.model = self.model.upper()
         models = ("PARSEC", "MIST", "BASTI")

@@ -29,17 +29,6 @@ class synthetic:
         in :class:`isochrones` and :class:`cluster` are assumed to be Gaia's
         (E)DR3 **G** and **(BP-RP)** respectively. The second color (if defined) will
         always be affected by the "*CCMO*" model.
-    magnitude_effl : float, optional, default=None
-        Effective lambda (in Angstrom) for the magnitude filter. **Required** if the
-        extinction law is "*CCMO*".
-    color_effl : tuple, optional, default=None
-        Effective lambdas for the filters that make up the ``color`` defined in the
-        :py:mod:`asteca.isochrones` object. E.g.: ``(1111.11, 2222.22)`` where
-        ``1111.11`` and ``2222.22`` are the effective lambdas (in Angstrom) for each
-        filter, in the same order as ``color``.  **Required** if the
-        extinction law is "*CCMO*".
-    color2_effl : tuple, optional, default=None
-        Same as ``color_effl`` but for a second (optional) color defined.
     DR_distribution : str, {"uniform", "normal"}, default="uniform"
         Distribution function for the differential reddening.
     IMF_name : str, {"salpeter_1955", "kroupa_2001", "chabrier_2014"}, default="chabrier_2014"
@@ -55,9 +44,6 @@ class synthetic:
     """
 
     isochs: isochrones
-    magnitude_effl: Optional[float] = None
-    color_effl: Optional[tuple] = None
-    color2_effl: Optional[tuple] = None
     ext_law: str = "CCMO"
     DR_distribution: str = "uniform"
     IMF_name: str = "chabrier_2014"
@@ -66,19 +52,6 @@ class synthetic:
     seed: Optional[int] = None
 
     def __post_init__(self):
-
-        # Check that the number of colors match
-        if self.isochs.color2 is not None and self.color2_effl is None:
-            raise ValueError(
-                "Two colors were defined in 'isochrones' but a single tuple\n"
-                + "of effective lambdas was defined in 'synthetic'."
-            )
-        if self.isochs.color2 is None and self.color2_effl is not None:
-            raise ValueError(
-                "Two colors were defined in 'synthetic' but a single tuple\n"
-                + "of effective lambdas was defined in 'isochrones'."
-            )
-
         if self.seed is None:
             self.seed = np.random.randint(100000)
 
@@ -112,19 +85,19 @@ class synthetic:
                 f"Extinction law '{self.ext_law}' not recognized. Should be "
                 + f"one of {ext_laws}"
             )
-        if self.ext_law == "GAIADR3":
-            if self.magnitude_effl is not None or self.color_effl is not None:
-                warnings.warn(
-                    f"Extinction law '{self.ext_law}' does not require effective lambda\n"
-                    + "values for the magnitude and first color (assumed to be 'G' \n"
-                    + "and 'BP-RP', respectively)."
-                )
-        if self.ext_law == "CCMO":
-            if self.magnitude_effl is None or self.color_effl is None:
-                raise ValueError(
-                    f"Extinction law '{self.ext_law}' requires effective lambda\n"
-                    + "values for the magnitude and first color."
-                )
+        # if self.ext_law == "CCMO":
+        #     if self.isochs.magnitude_effl is None or self.isochs.color_effl is None:
+        #         raise ValueError(
+        #             f"Extinction law '{self.ext_law}' requires effective lambda\n"
+        #             + "values for the magnitude and first color."
+        #         )
+        # if self.ext_law == "GAIADR3":
+        #     if self.isochs.magnitude_effl is not None or self.isochs.color_effl is not None:
+        #         warnings.warn(
+        #             f"\nExtinction law '{self.ext_law}' does not require effective lambda"
+        #             + " values for the\nmagnitude and first color (assumed to be 'G' "
+        #             + "and 'BP-RP', respectively)."
+        #         )
 
         print("Instantiating synthetic...")
 
@@ -174,12 +147,12 @@ class synthetic:
 
         """
         # Check that the number of colors match
-        if self.color2_effl is not None and cluster.color2 is None:
+        if self.isochs.color2_effl is not None and cluster.color2 is None:
             raise ValueError(
                 "Two colors were defined in 'synthetic' but a single color\n"
                 + "was defined in 'cluster'."
             )
-        if self.color2_effl is None and cluster.color2 is not None:
+        if self.isochs.color2_effl is None and cluster.color2 is not None:
             raise ValueError(
                 "Two colors were defined in 'cluster' but a single color\n"
                 + "was defined in 'synthetic'."
@@ -478,7 +451,7 @@ class synthetic:
         if nan_msk.sum() > 0:
             warnings.warn(
                 f"\nN={nan_msk.sum()} stars found with no valid photometric data. "
-                + "These will be assigned 'nan' values for masses and\n"
+                + "These will be assigned 'nan' values\nfor masses and "
                 + "binarity probability"
             )
 
