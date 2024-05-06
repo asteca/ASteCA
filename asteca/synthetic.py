@@ -24,6 +24,24 @@ class synthetic:
     ----------
     isochs : :class:`isochrones`
          :py:mod:`asteca.isochrones` object with the loaded files for the theoretical isochrones.
+    ext_law : str, {"CCMO", "GAIADR3"}, default="CCMO"
+        Extinction law. If "*GAIADR3*" is selected, the magnitude and first color defined
+        in :class:`isochrones` and :class:`cluster` are assumed to be Gaia's
+        (E)DR3 **G** and **(BP-RP)** respectively. The second color (if defined) will
+        always be affected by the "*CCMO*" model.
+    magnitude_effl : float, optional, default=None
+        Effective lambda (in Angstrom) for the magnitude filter. **Required** if the
+        extinction law is "*CCMO*".
+    color_effl : tuple, optional, default=None
+        Effective lambdas for the filters that make up the ``color`` defined in the
+        :py:mod:`asteca.isochrones` object. E.g.: ``(1111.11, 2222.22)`` where
+        ``1111.11`` and ``2222.22`` are the effective lambdas (in Angstrom) for each
+        filter, in the same order as ``color``.  **Required** if the
+        extinction law is "*CCMO*".
+    color2_effl : tuple, optional, default=None
+        Same as ``color_effl`` but for a second (optional) color defined.
+    DR_distribution : str, {"uniform", "normal"}, default="uniform"
+        Distribution function for the differential reddening.
     IMF_name : str, {"salpeter_1955", "kroupa_2001", "chabrier_2014"}, default="chabrier_2014"
         Name of the initial mass function used to populate the isochrones.
     max_mass : int, default=100_000
@@ -31,26 +49,35 @@ class synthetic:
         synthetic stars as observed stars.
     gamma : str, float, {"D&K", "fisher_stepped", "fisher_peaked", "raghavan"}, default="D&K"
         Distribution function for the mass ratio of the binary systems.
-    ext_law : str, {"CCMO", "GAIADR3"}, default="CCMO"
-        Extinction law. If "*GAIADR3*" is selected, the magnitude and first color defined
-        in :class:`isochrones` and :class:`cluster` are assumed to be Gaia's
-        (E)DR3 **G** and **(BP-RP)** respectively. The second color (if defined) will be
-        affected by the "*CCMO*" model.
-    DR_distribution : str, {"uniform", "normal"}, default="uniform"
-        Distribution function for the differential reddening.
     seed: int, optional, default=None
         Random seed. If ``None`` a random integer will be generated and used.
 
     """
+
     isochs: isochrones
+    magnitude_effl: Optional[float] = None
+    color_effl: Optional[tuple] = None
+    color2_effl: Optional[tuple] = None
+    ext_law: str = "CCMO"
+    DR_distribution: str = "uniform"
     IMF_name: str = "chabrier_2014"
     max_mass: int = 100_000
     gamma: float | str = "D&K"
-    ext_law: str = 'CCMO'
-    DR_distribution: str = "uniform"
     seed: Optional[int] = None
 
     def __post_init__(self):
+
+        # Check that the number of colors match
+        if self.isochs.color2 is not None and self.color2_effl is None:
+            raise ValueError(
+                "Two colors were defined in 'isochrones' but a single tuple\n"
+                + "of effective lambdas was defined in 'synthetic'."
+            )
+        if self.isochs.color2 is None and self.color2_effl is not None:
+            raise ValueError(
+                "Two colors were defined in 'synthetic' but a single tuple\n"
+                + "of effective lambdas was defined in 'isochrones'."
+            )
 
         if self.seed is None:
             self.seed = np.random.randint(100000)
@@ -85,6 +112,21 @@ class synthetic:
                 f"Extinction law '{self.ext_law}' not recognized. Should be "
                 + f"one of {ext_laws}"
             )
+        if self.ext_law == "GAIADR3":
+            if self.magnitude_effl is not None or self.color_effl is not None:
+                warnings.warn(
+                    f"Extinction law '{self.ext_law}' does not require effective lambda\n"
+                    + "values for the magnitude and first color (assumed to be 'G' \n"
+                    + "and 'BP-RP', respectively)."
+                )
+        if self.ext_law == "CCMO":
+            if self.magnitude_effl is None or self.color_effl is None:
+                raise ValueError(
+                    f"Extinction law '{self.ext_law}' requires effective lambda\n"
+                    + "values for the magnitude and first color."
+                )
+
+        print("Instantiating synthetic...")
 
         # Sample the selected IMF
         Nmets, Nages = self.isochs.theor_tracks.shape[:2]
@@ -131,6 +173,18 @@ class synthetic:
             Dictionary with the values for the fixed parameters (if any).
 
         """
+        # Check that the number of colors match
+        if self.color2_effl is not None and cluster.color2 is None:
+            raise ValueError(
+                "Two colors were defined in 'synthetic' but a single color\n"
+                + "was defined in 'cluster'."
+            )
+        if self.color2_effl is None and cluster.color2 is not None:
+            raise ValueError(
+                "Two colors were defined in 'cluster' but a single color\n"
+                + "was defined in 'synthetic'."
+            )
+
         # Used by the mass and binary probability estimation
         self.mag_p = cluster.mag_p
         self.colors_p = cluster.colors_p
@@ -163,18 +217,6 @@ class synthetic:
         # # Remove low masses if required
         # if dm_min is not None:
         #     self._rm_low_masses(dm_min)
-
-        # Check that the number of colors match
-        N_c_cluster = 1
-        if cluster.color2 is not None:
-            N_c_cluster += 1
-        N_c_isoch = 1
-        if self.isochs.color2 is not None:
-            N_c_isoch += 1
-        if N_c_cluster != N_c_isoch:
-            raise ValueError(
-                f"Number of colors defined in 'isochrones' ({N_c_isoch}) "
-                + f"does not match the number defined in 'cluster' ({N_c_cluster})")
 
     def generate(self, fit_params: dict) -> np.ndarray:
         r"""Generate a synthetic cluster.
@@ -329,12 +371,12 @@ class synthetic:
             label=f"Synthetic (binary), N={len(x_synth[binar_idx])}",
         )
 
-        plt.ylabel(self.isochs.mag_filter_name)
-        c1, c2 = self.isochs.color_filter_name[0]
+        plt.ylabel(self.isochs.magnitude)
+        c1, c2 = self.isochs.color
         if color_idx == 1:
-            c1, c2 = self.isochs.color_filter_name[1]
+            c1, c2 = self.isochs.color2
         plt.xlabel(f"{c1}-{c2}")
-        ax.set_ylim(max(self.mag_p) + .5, min(self.mag_p) - .5)
+        ax.set_ylim(max(self.mag_p) + 0.5, min(self.mag_p) - 0.5)
         ax.legend()
 
         if isochplot is False:
