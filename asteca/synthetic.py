@@ -405,7 +405,8 @@ class synthetic:
         m1_med = np.median(m12_masses[:, 0, :], 0)
         m1_std = np.std(m12_masses[:, 0, :], 0)
         # Secondary masses  (median + stddev). Hide 'All-nan slice' warnings
-        with warnings.catch_warnings(action="ignore"):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")  # TODO: this was changed in Python>3.10
             m2_med = np.nanmedian(m12_masses[:, 1, :], 0)
             # m2 can not be larger than m1
             m2_med = np.min([m1_med, m2_med], 0)
