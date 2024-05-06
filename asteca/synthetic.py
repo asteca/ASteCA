@@ -429,8 +429,8 @@ class synthetic:
         if nan_msk.sum() > 0:
             warnings.warn(
                 f"\nN={nan_msk.sum()} stars found with no valid photometric data. "
-                + "\nThese will be assigned 'nan' values for masses and binarity "
-                + "probability"
+                + "These will be assigned 'nan' values for masses and\n"
+                + "binarity probability"
             )
 
         return df, np.array(b_fr_all)
