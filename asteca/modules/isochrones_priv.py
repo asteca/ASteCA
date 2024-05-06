@@ -72,7 +72,10 @@ def get_columns(self) -> tuple[list, str, str, str]:
         age_col = self.column_names["age_col"]
 
     # Select columns to keep
-    cols_keep = list(self.mag_color_lambdas.keys()) + [mass_col]
+    all_filters = [self.magnitude] + list(self.color)
+    if self.color2 is not None:
+        all_filters += list(self.color2)
+    cols_keep = list(dict.fromkeys(all_filters)) + [mass_col]
 
     return cols_keep, mass_col, met_col, age_col
 
@@ -237,6 +240,12 @@ def order_isochrones(
     self, initial_mass: str, isochrones: list
 ) -> tuple[np.ndarray, list]:
     """
+    isochrones.shape = Nz, Na, Ni, Nd
+    Nz: number of metallicities
+    Na: number of log(age)s
+    Ni: number of interpolated values
+    Nd: number of data columns --> mini + mag + 2 * colors (one mag per color)
+
     Return list structured as:
 
     theor_tracks = [m1, m2, .., mN]
@@ -259,17 +268,13 @@ def order_isochrones(
     Nd: number of data columns
     Ni: number of interpolated values
     """
-    # isochrones.shape = Nz, Na, Ni, Nd
-    # Nz: number of metallicities
-    # Na: number of log(age)s
-    # Ni: number of interpolated values
-    # Nd: number of data columns --> mini + mag + 2 * colors (one mag per color)
+
     Nz, Na, Ni, Nd = np.shape(isochrones)
 
-    # m_ini_col = isoch_data['initial_mass']
-    # mag_filter = cluster_data['mag_filter_name']
-    # col_filter = cluster_data['color_filter_name']
-    N_colors = len(self.color_filter_name)
+    all_colors = [self.color]
+    if self.color2 is not None:
+        all_colors.append(self.color2)
+    N_colors = len(all_colors)
 
     # Array that will store all the interpolated tracks
     theor_tracks = np.zeros([Nz, Na, (1 + 1 + N_colors), Ni])
@@ -282,10 +287,10 @@ def order_isochrones(
         met_lst = []
         for j, df_age in enumerate(met):
             # Store magnitude
-            theor_tracks[i][j][0] = df_age[self.mag_filter_name]
+            theor_tracks[i][j][0] = df_age[self.magnitude]
             # Store colors
             cols_dict = {}
-            for k, color_filts in enumerate(self.color_filter_name):
+            for k, color_filts in enumerate(all_colors):
                 f1 = df_age[color_filts[0]]
                 f2 = df_age[color_filts[1]]
                 # Store color
