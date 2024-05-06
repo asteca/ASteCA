@@ -145,8 +145,12 @@ def add_binarity(self) -> np.ndarray:
         N_cols: magnitude + colors + initial mass
 
     """
+    all_colors = [self.isochs.color]
+    if self.isochs.color2 is not None:
+        all_colors.append(self.isochs.color2)
+    N_colors = len(all_colors)
+
     mag_idx = 0
-    N_colors = len(self.isochs.color_filter_name)
     m_ini_idx = mag_idx + N_colors + 1
 
     # Extend to accommodate binary data
@@ -173,7 +177,7 @@ def add_binarity(self) -> np.ndarray:
             theor_tracks[mx][ax][m_ini_idx + 1] = mag_combine(mag, mag_m2)
 
             # Calculate unresolved color for each color defined.
-            for ic, color in enumerate(self.isochs.color_filter_name):
+            for ic, color in enumerate(all_colors):
                 mc1 = self.isochs.color_filters[mx][ax][color[0]]
                 mc2 = self.isochs.color_filters[mx][ax][color[1]]
                 f_m1 = np.interp(m2, mass_ini, mc1)
@@ -195,21 +199,21 @@ def ccmo_ext_coeffs(self) -> list:
     ext_coefs = [ec_mag, ec_col1, ...]
 
     """
-    # For the magnitude.
-    # Effective wavelength in Armstrong.
-    eff_wave = self.isochs.mag_color_lambdas[self.isochs.mag_filter_name]
-    # CCM coefficient. Effective wavelength in inverse microns.
-    ext_coefs = [ccmo_model(10000.0 / eff_wave)]
-
-    # For colors.
-    for color in self.isochs.color_filter_name:
-        c_filt1, c_filt2 = color
+    ext_coefs = [[], []]
+    if self.ext_law != "GAIADR3":
+        # For the magnitude.
         # Effective wavelength in Armstrong.
-        eff_wave1 = self.isochs.mag_color_lambdas[c_filt1]
-        eff_wave2 = self.isochs.mag_color_lambdas[c_filt2]
-        ext_coefs.append(
-            [ccmo_model(10000.0 / eff_wave1), ccmo_model(10000.0 / eff_wave2)]
-        )
+        eff_wave = self.magnitude_effl
+        # Effective wavelength in inverse microns.
+        ext_coefs[0] = ccmo_model(10000.0 / eff_wave)
+
+        # For colors.
+        eff_wave1, eff_wave2 = self.color_effl
+        ext_coefs[1] = [ccmo_model(10000.0 / eff_wave1), ccmo_model(10000.0 / eff_wave2)]
+
+    if self.color2_effl is not None:
+        eff_wave1, eff_wave2 = self.color2_effl
+        ext_coefs += [[ccmo_model(10000.0 / eff_wave1), ccmo_model(10000.0 / eff_wave2)]]
 
     return ext_coefs
 
@@ -302,7 +306,7 @@ def sample_imf(self, Nmets: int, Nages: int) -> list:
     for i in range(Nmets):
         met_lst = []
         for j in range(Nages):
-            sampled_IMF = sampleInv(i+j + self.seed, self.max_mass, inv_cdf)
+            sampled_IMF = sampleInv(i + j + self.seed, self.max_mass, inv_cdf)
             met_lst.append(sampled_IMF)
         st_dist_mass.append(met_lst)
 
@@ -634,8 +638,17 @@ def move_isochrone(isochrone, m_ini_idx, dm):
 
 
 def extinction(
-    ext_law, ext_coefs, rand_norm, rand_unif, DR_distribution, m_ini_idx, binar_flag,
-    Av, dr, Rv, isochrone
+    ext_law,
+    ext_coefs,
+    rand_norm,
+    rand_unif,
+    DR_distribution,
+    m_ini_idx,
+    binar_flag,
+    Av,
+    dr,
+    Rv,
+    isochrone,
 ):
     """
     Modifies magnitude and color(s) according to given values for the
@@ -689,15 +702,14 @@ def extinction(
         # Clip at 0
         Av = np.clip(Av + Av_dr, a_min=0, a_max=np.inf)
 
-    if ext_law == 'CCMO':
+    if ext_law == "CCMO":
         # Magnitude
         ec_mag = ext_coefs[0][0] + ext_coefs[0][1] / Rv
         # First color
-        ec_col1 = (
-            (ext_coefs[1][0][0] + ext_coefs[1][0][1] / Rv)
-            - (ext_coefs[1][1][0] + ext_coefs[1][1][1] / Rv)
+        ec_col1 = (ext_coefs[1][0][0] + ext_coefs[1][0][1] / Rv) - (
+            ext_coefs[1][1][0] + ext_coefs[1][1][1] / Rv
         )
-    elif ext_law == 'GAIADR3':
+    elif ext_law == "GAIADR3":
         # If this model is used the first color is always expected to be BP-RP
         # BP_RP = isochrone[1]
         ec_mag, ec_col1 = dustapprox(isochrone[1], Av)
@@ -714,9 +726,8 @@ def extinction(
 
     # Second color
     if len(ext_coefs) > 2:
-        ec_col2 = (
-            (ext_coefs[2][0][0] + ext_coefs[2][0][1] / Rv)
-            - (ext_coefs[2][1][0] + ext_coefs[2][1][1] / Rv)
+        ec_col2 = (ext_coefs[2][0][0] + ext_coefs[2][0][1] / Rv) - (
+            ext_coefs[2][1][0] + ext_coefs[2][1][1] / Rv
         )
         Ex2 = ec_col2 * Av
         isochrone[2] += Ex2
@@ -740,30 +751,48 @@ def dustapprox(X_, Av):
     X_ == BP-RP
     """
     coeffs = {
-        'G': (
-            0.995969721536602, -0.159726460302015, 0.0122380738156057,
-            0.00090726555099859, -0.0377160263914123, 0.00151347495244888,
-            -2.52364537395142E-05, 0.0114522658102451, -0.000936914989014318,
-            -0.000260296774134201
+        "G": (
+            0.995969721536602,
+            -0.159726460302015,
+            0.0122380738156057,
+            0.00090726555099859,
+            -0.0377160263914123,
+            0.00151347495244888,
+            -2.52364537395142e-05,
+            0.0114522658102451,
+            -0.000936914989014318,
+            -0.000260296774134201,
         ),
-        'BP': (
-            1.15363197483424, -0.0814012991657388, -0.036013023976704,
-            0.0192143585568966, -0.022397548243016, 0.000840562680547171,
-            -1.31018008013549E-05, 0.00660124080271006, -0.000882247501989453,
-            -0.000111215755291684
+        "BP": (
+            1.15363197483424,
+            -0.0814012991657388,
+            -0.036013023976704,
+            0.0192143585568966,
+            -0.022397548243016,
+            0.000840562680547171,
+            -1.31018008013549e-05,
+            0.00660124080271006,
+            -0.000882247501989453,
+            -0.000111215755291684,
         ),
-        'RP': (
-            0.66320787941067, -0.0179847164933981, 0.000493769449961458,
-            -0.00267994405695751, -0.00651422146709376, 3.30179903473159E-05,
-            1.57894227641527E-06, -7.9800898337247E-05, 0.000255679812110045,
-            1.10476584967393E-05
-        )
+        "RP": (
+            0.66320787941067,
+            -0.0179847164933981,
+            0.000493769449961458,
+            -0.00267994405695751,
+            -0.00651422146709376,
+            3.30179903473159e-05,
+            1.57894227641527e-06,
+            -7.9800898337247e-05,
+            0.000255679812110045,
+            1.10476584967393e-05,
+        ),
     }
 
-    X_2 = X_ ** 2
-    X_3 = X_ ** 3
-    Av_2 = Av ** 2
-    Av_3 = Av ** 3
+    X_2 = X_**2
+    X_3 = X_**3
+    Av_2 = Av**2
+    Av_3 = Av**3
 
     def ext_coeff(k):
         """
@@ -776,13 +805,15 @@ def dustapprox(X_, Av):
         for i, Ak in enumerate([Av, Av_2, Av_3]):
             ay += coeffs[k][4 + i] * Ak
 
-        ay += (coeffs[k][7] * X_ * Av +
-               coeffs[k][9] * X_ * Av_2 +  # This index not a mistake
-               coeffs[k][8] * X_2 * Av)
+        ay += (
+            coeffs[k][7] * X_ * Av
+            + coeffs[k][9] * X_ * Av_2  # This index not a mistake
+            + coeffs[k][8] * X_2 * Av
+        )
         return ay
 
-    ec_G = ext_coeff('G')
-    ec_BPRP = ext_coeff('BP') - ext_coeff('RP')
+    ec_G = ext_coeff("G")
+    ec_BPRP = ext_coeff("BP") - ext_coeff("RP")
 
     return ec_G, ec_BPRP
 
