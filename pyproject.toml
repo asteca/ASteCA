@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "asteca"
-version = "0.5.1"
+version = "0.5.1-dev"
 description = "Stellar cluster analysis package"
 authors = ["Gabriel I Perren <gabrielperren@gmail.com>"]
 readme = "README.md"
@@ -11,11 +11,11 @@ repository = "https://github.com/asteca/ASteCA"
 documentation = "https://asteca.readthedocs.io/"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.10"
 numpy = "^1.26.4"
 matplotlib = "^3.8.4"
 scipy = "^1.13.0"
-astropy = "^6.0.1"
+astropy = "^6.1.0"
 pandas = "^2.2.2"
 fast-histogram = "^0.14"
 
