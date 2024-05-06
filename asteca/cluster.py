@@ -12,7 +12,8 @@ class cluster:
     Parameters
     ----------
     cluster_df : pd.DataFrame
-        pandas DataFrame with the cluster's loaded data
+        `pandas DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_
+        with the cluster's loaded data
     magnitude : str
         Name of the DataFrame column that contains the magnitude
     e_mag : str
@@ -37,6 +38,7 @@ class cluster:
         Name of the DataFrame column that contains the second color's uncertainty
 
     """
+
     cluster_df: pd.DataFrame
     magnitude: str
     e_mag: str
@@ -59,7 +61,7 @@ class cluster:
         The photometry is store with a '_p' to differentiate from the self.magnitude,
         self.color, etc that are defined with the class is called.
         """
-        print("Reading and processing cluster data")
+        print("Instantiating cluster...")
 
         self.mag_p = np.array(self.cluster_df[self.magnitude])
         self.e_mag_p = np.array(self.cluster_df[self.e_mag])
@@ -75,6 +77,11 @@ class cluster:
             self.ra_v = self.cluster_df[self.ra]
             self.dec_v = self.cluster_df[self.dec]
 
+        print(f"N_stars        : {len(self.mag_p)}")
+        print(f"Magnitude      : {self.magnitude}")
+        print(f"Color          : {self.color}")
+        if self.color2 is not None:
+            print(f"Color2         : {self.color2}")
         print("Cluster object generated\n")
 
     def radecplot(self):
@@ -131,7 +138,8 @@ class cluster:
         """
         if color_idx > 1:
             raise ValueError(
-                f"Wrong 'color_idx' value ({color_idx}), should be one of: [0, 1]")
+                f"Wrong 'color_idx' value ({color_idx}), should be one of: [0, 1]"
+            )
 
         if binar_probs is not None:
             msk_binar = binar_probs > 0.5
@@ -155,7 +163,7 @@ class cluster:
                 self.mag_p[~msk_binar],
                 # c="green",
                 c=binar_probs[~msk_binar],
-                marker='o',
+                marker="o",
                 alpha=0.5,
                 label=f"Observed (single), N={len(self.mag_p[~msk_binar])}",
             )
@@ -164,12 +172,12 @@ class cluster:
                 self.mag_p[msk_binar],
                 # c="red",
                 c=binar_probs[msk_binar],
-                marker='s',
+                marker="s",
                 alpha=0.5,
                 label=f"Observed (binary), N={len(self.mag_p[msk_binar])}",
             )
 
-        ax.set_ylim(max(self.mag_p) + .5, min(self.mag_p) - .5)
+        ax.set_ylim(max(self.mag_p) + 0.5, min(self.mag_p) - 0.5)
         ax.set_xlabel(col_col)
         ax.set_ylabel(mag_col)
         ax.legend()
