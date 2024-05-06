@@ -87,7 +87,6 @@ class synthetic:
             )
 
         # Sample the selected IMF
-        # Nmets, Nages = self.theor_tracks.shape[:2]
         Nmets, Nages = self.isochs.theor_tracks.shape[:2]
         self.st_dist_mass = scp.sample_imf(self, Nmets, Nages)
 
@@ -118,7 +117,7 @@ class synthetic:
 
         Use the data obtained from your observed cluster stored in the
         :py:mod:`asteca.cluster` object, to calibrate a :py:mod:`asteca.synthetic`
-        object. Additionally, a dictionary of fixed fundamental parameters 
+        object. Additionally, a dictionary of fixed fundamental parameters
         (metallicity, age, distance, extinction, etc.) can be passed.
 
         See the :ref:`synth_clusters` section for more details.
@@ -189,7 +188,7 @@ class synthetic:
         fit_params : dict
             Dictionary with the values for the fundamental parameters that were **not**
             included in the ``fix_params`` dictionary when the
-            :py:mod:`asteca.synthetic` object was calibrated 
+            :py:mod:`asteca.synthetic` object was calibrated
             (:meth:`synthetic.calibrate()` method).
 
         Returns
@@ -297,7 +296,8 @@ class synthetic:
         """
         if color_idx > 1:
             raise ValueError(
-                f"Wrong 'color_idx' value ({color_idx}), should be one of: [0, 1]")
+                f"Wrong 'color_idx' value ({color_idx}), should be one of: [0, 1]"
+            )
 
         # Generate synthetic cluster.
         synth_clust = scp.generate(self, fit_params)
@@ -364,7 +364,7 @@ class synthetic:
         model : dict
             Dictionary with the values for the fundamental parameters that were **not**
             included in the ``fix_params`` dictionary when the
-            :py:mod:`asteca.synthetic` object was calibrated 
+            :py:mod:`asteca.synthetic` object was calibrated
             (:meth:`synthetic.calibrate()` method).
         model_std : dict
             Dictionary with the standard deviations for the fundamental parameters in
@@ -391,7 +391,13 @@ class synthetic:
         obs_phot[:, nan_msk] = -10.0
         obs_phot = obs_phot.T
 
-        m12_masses, b_fr_all,  = [], []
+        (
+            m12_masses,
+            b_fr_all,
+        ) = (
+            [],
+            [],
+        )
         for model in models:
             isoch = scp.generate(self, model)
             if not isoch.any():
