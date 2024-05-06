@@ -35,7 +35,7 @@ version = __version__
 release = __version__
 
 rst_epilog = """.. |ProjectVersion| replace:: {versionnum}""".format(
-    versionnum = version,
+    versionnum=version,
 )
 
 # -- General configuration ---------------------------------------------------
@@ -54,7 +54,7 @@ extensions = [
     "sphinx.ext.mathjax",
 ]
 
-autoapi_dirs = ['../asteca']
+autoapi_dirs = ["../asteca"]
 # autoapi_options = ["imported-members", "show-inheritance", "inherited-members"]
 # autoapi_ignore = ["_*"]
 autoapi_add_toctree_entry = False
@@ -67,12 +67,14 @@ def skip_submodules(app, what, name, obj, skip, options):
     if what in ("package", "function", "attribute"):
         skip = True
     if what == "method":  # Skip private methods
-        if name.split('.')[-1].startswith("_"):
+        if name.split(".")[-1].startswith("_"):
             skip = True
     # if skip is False:
     #     print(what, ",", name, ",", obj)
     #     # breakpoint()
     return skip
+
+
 def setup(sphinx):
     sphinx.connect("autoapi-skip-member", skip_submodules)
 
@@ -133,7 +135,7 @@ html_theme_options = {
 
 
 # Hide parent class name in right sidebar TOC for methods
-toc_object_entries_show_parents = 'hide'
+toc_object_entries_show_parents = "hide"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
