@@ -1,7 +1,7 @@
-from .isochrones import isochrones
-from .synthetic import synthetic
-from .cluster import cluster
-from .likelihood import likelihood
+from .isochrones import isochrones as isochrones
+from .synthetic import synthetic as synthetic
+from .cluster import cluster as cluster
+from .likelihood import likelihood as likelihood
 
 from contextlib import suppress
 import importlib.metadata

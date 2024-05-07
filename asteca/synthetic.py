@@ -24,6 +24,13 @@ class synthetic:
     ----------
     isochs : :class:`isochrones`
          :py:mod:`asteca.isochrones` object with the loaded files for the theoretical isochrones.
+    ext_law : str, {"CCMO", "GAIADR3"}, default="CCMO"
+        Extinction law. If "*GAIADR3*" is selected, the magnitude and first color defined
+        in :class:`isochrones` and :class:`cluster` are assumed to be Gaia's
+        (E)DR3 **G** and **(BP-RP)** respectively. The second color (if defined) will
+        always be affected by the "*CCMO*" model.
+    DR_distribution : str, {"uniform", "normal"}, default="uniform"
+        Distribution function for the differential reddening.
     IMF_name : str, {"salpeter_1955", "kroupa_2001", "chabrier_2014"}, default="chabrier_2014"
         Name of the initial mass function used to populate the isochrones.
     max_mass : int, default=100_000
@@ -31,32 +38,25 @@ class synthetic:
         synthetic stars as observed stars.
     gamma : str, float, {"D&K", "fisher_stepped", "fisher_peaked", "raghavan"}, default="D&K"
         Distribution function for the mass ratio of the binary systems.
-    DR_distribution : str, {"uniform", "normal"}, default="uniform"
-        Distribution function for the differential reddening.
     seed: int, optional, default=None
         Random seed. If ``None`` a random integer will be generated and used.
 
     """
+
     isochs: isochrones
+    ext_law: str = "CCMO"
+    DR_distribution: str = "uniform"
     IMF_name: str = "chabrier_2014"
     max_mass: int = 100_000
     gamma: float | str = "D&K"
-    DR_distribution: str = "uniform"
     seed: Optional[int] = None
 
     def __post_init__(self):
-
         if self.seed is None:
             self.seed = np.random.randint(100000)
-        print(f"Setting random seed to {self.seed}")
 
         # Check gamma distribution
-        gammas = (
-            "D&K",
-            "fisher_stepped",
-            "fisher_peaked",
-            "raghavan",
-        )
+        gammas = ("D&K", "fisher_stepped", "fisher_peaked", "raghavan")
         if isinstance(self.gamma, str):
             if self.gamma not in gammas:
                 raise ValueError(
@@ -64,29 +64,44 @@ class synthetic:
                 )
 
         # Check differential reddening function
-        DR_funcs = (
-            "uniform",
-            "normal",
-        )
+        DR_funcs = ("uniform", "normal")
         if self.DR_distribution not in DR_funcs:
             raise ValueError(
-                f"Differential reddening function '{self.DR_distribution}' not recognized. "
-                + f"Should be one of {DR_funcs}"
+                f"Differential reddening function '{self.DR_distribution}' not "
+                + f"recognized. Should be one of {DR_funcs}"
             )
 
         # Check IMF function
-        imfs = (
-            "salpeter_1955",
-            "kroupa_2001",
-            "chabrier_2014",
-        )
+        imfs = ("salpeter_1955", "kroupa_2001", "chabrier_2014")
         if self.IMF_name not in imfs:
             raise ValueError(
                 f"IMF '{self.IMF_name}' not recognized. Should be one of {imfs}"
             )
 
+        # Check extinction law
+        ext_laws = ("CCMO", "GAIADR3")
+        if self.ext_law not in ext_laws:
+            raise ValueError(
+                f"Extinction law '{self.ext_law}' not recognized. Should be "
+                + f"one of {ext_laws}"
+            )
+        # if self.ext_law == "CCMO":
+        #     if self.isochs.magnitude_effl is None or self.isochs.color_effl is None:
+        #         raise ValueError(
+        #             f"Extinction law '{self.ext_law}' requires effective lambda\n"
+        #             + "values for the magnitude and first color."
+        #         )
+        # if self.ext_law == "GAIADR3":
+        #     if self.isochs.magnitude_effl is not None or self.isochs.color_effl is not None:
+        #         warnings.warn(
+        #             f"\nExtinction law '{self.ext_law}' does not require effective lambda"
+        #             + " values for the\nmagnitude and first color (assumed to be 'G' "
+        #             + "and 'BP-RP', respectively)."
+        #         )
+
+        print("Instantiating synthetic...")
+
         # Sample the selected IMF
-        # Nmets, Nages = self.theor_tracks.shape[:2]
         Nmets, Nages = self.isochs.theor_tracks.shape[:2]
         self.st_dist_mass = scp.sample_imf(self, Nmets, Nages)
 
@@ -94,21 +109,30 @@ class synthetic:
         self.theor_tracks = scp.add_binarity(self)
 
         # Get extinction coefficients for these filters
-        self.ext_coefs = scp.extinction_coeffs(self)
+        self.ext_coefs = scp.ccmo_ext_coeffs(self)
 
         # Generate random floats used by `synth_clusters.synthcl_generate()`
         self.rand_floats = scp.randVals(self)
 
+        # Store for internal usage
+        self.met_age_dict = self.isochs.met_age_dict
+
+        print(f"Initial Mass Function  : {self.IMF_name}")
+        print(f"Maximum initial mass   : {self.max_mass}")
+        print(f"Gamma distribution     : {self.gamma}")
+        print(f"Extinction law         : {self.ext_law}")
+        print(f"Differential reddening : {self.DR_distribution}")
+        print(f"Random seed            : {self.seed}")
         print("Synthetic clusters object generated\n")
 
-    def calibrate(self, cluster, fix_params: dict = {}, z_to_FeH: float | None = None):
+    def calibrate(self, cluster, fix_params: dict = {}):
         r"""Calibrate a :py:mod:`asteca.synthetic` object based on a
         :py:mod:`asteca.cluster` object and a dictionary of fixed fundamental parameters
         (``fix_params``).
 
         Use the data obtained from your observed cluster stored in the
         :py:mod:`asteca.cluster` object, to calibrate a :py:mod:`asteca.synthetic`
-        object. Additionally, a dictionary of fixed fundamental parameters 
+        object. Additionally, a dictionary of fixed fundamental parameters
         (metallicity, age, distance, extinction, etc.) can be passed.
 
         See the :ref:`synth_clusters` section for more details.
@@ -120,14 +144,20 @@ class synthetic:
              cluster.
         fix_params : dict, optional, default={}
             Dictionary with the values for the fixed parameters (if any).
-        z_to_FeH : float, optional, default=None
-            If ``None``, the default ``z`` values (defined when loading the isochrones
-            via the :py:mod:`asteca.isochrones` object) will be used to generate the
-            synthetic clusters. If ``float``, it must represent the solar metallicity
-            for these isochrones. The metallicity values will then be converted to
-            ``[FeH]`` values, to be used by the :meth:`synthetic.generate()` method.
 
         """
+        # Check that the number of colors match
+        if self.isochs.color2_effl is not None and cluster.color2 is None:
+            raise ValueError(
+                "Two colors were defined in 'synthetic' but a single color\n"
+                + "was defined in 'cluster'."
+            )
+        if self.isochs.color2_effl is None and cluster.color2 is not None:
+            raise ValueError(
+                "Two colors were defined in 'cluster' but a single color\n"
+                + "was defined in 'synthetic'."
+            )
+
         # Used by the mass and binary probability estimation
         self.mag_p = cluster.mag_p
         self.colors_p = cluster.colors_p
@@ -142,51 +172,24 @@ class synthetic:
 
         self.fix_params = fix_params
 
-        # Convert z to FeH if requested
-        self.met_age_dict = self.isochs.met_age_dict
-        if z_to_FeH is not None:
-            self._func_z_to_FeH(z_to_FeH)
-
-        # Check if binary systems are to be produced
         self.binar_flag = True
         if "alpha" in list(fix_params.keys()) and "beta" in list(fix_params.keys()):
             if fix_params["alpha"] == 0.0 and fix_params["beta"] == 0.0:
                 self.binar_flag = False
 
+        # Check that the ranges are respected
+        for par in ("met", "loga"):
+            if par not in self.fix_params.keys():
+                N_par = len(self.met_age_dict[par])
+                if N_par == 1:
+                    raise ValueError(
+                        f"Parameter '{par}' is not fixed and its range is limited to "
+                        + f"a single value: {self.met_age_dict[par]}"
+                    )
+
         # # Remove low masses if required
         # if dm_min is not None:
         #     self._rm_low_masses(dm_min)
-
-    def _func_z_to_FeH(self, z_to_FeH):
-        """ """
-        feh = np.log10(self.met_age_dict["met"] / z_to_FeH)
-        N_old = len(feh)
-        round_n = 4
-        while True:
-            feh_r = np.round(feh, round_n)
-            N_new = len(set(feh_r))
-            # If no duplicated values exist after rounding
-            if N_old == N_new:
-                break
-            round_n += 1
-        # Replace old values
-        self.met_age_dict["met"] = feh_r
-
-    def min_max(self) -> tuple[float]:
-        r"""Return the minimum and maximum values for the metallicity and age defined
-        in the theoretical isochrones.
-
-        Returns
-        -------
-        tuple[float]
-            Tuple of (minimum_metallicity, maximum_metallicity, minimum_age, maximum_age)
-
-        """
-        zmin = self.met_age_dict["met"].min()
-        zmax = self.met_age_dict["met"].max()
-        amin = self.met_age_dict["a"].min()
-        amax = self.met_age_dict["a"].max()
-        return zmin, zmax, amin, amax
 
     def generate(self, fit_params: dict) -> np.ndarray:
         r"""Generate a synthetic cluster.
@@ -200,7 +203,7 @@ class synthetic:
         fit_params : dict
             Dictionary with the values for the fundamental parameters that were **not**
             included in the ``fix_params`` dictionary when the
-            :py:mod:`asteca.synthetic` object was calibrated 
+            :py:mod:`asteca.synthetic` object was calibrated
             (:meth:`synthetic.calibrate()` method).
 
         Returns
@@ -237,11 +240,13 @@ class synthetic:
 
         # Apply extinction correction
         isoch_extin = scp.extinction(
+            self.ext_law,
             self.ext_coefs,
             self.rand_floats["norm"][0],
             self.rand_floats["unif"][0],
             self.DR_distribution,
             self.m_ini_idx,
+            self.binar_flag,
             av,
             dr,
             rv,
@@ -277,7 +282,7 @@ class synthetic:
 
         return synth_clust[: self.m_ini_idx]
 
-    def synthplot(self, fit_params, ax=None, isochplot=False):
+    def synthplot(self, ax, fit_params, color_idx=0, isochplot=False):
         r"""Generate a color-magnitude plot for a synthetic cluster.
 
         The synthetic cluster is generated using the fundamental parameter values
@@ -285,13 +290,16 @@ class synthetic:
 
         Parameters
         ----------
+        ax : matplotlib.axis, optional, default=None
+            Matplotlib axis where to draw the plot.
         fit_params : dict
             Dictionary with the values for the fundamental parameters that were **not**
             included in the ``fix_params`` dictionary when the
             :py:mod:`asteca.synthetic` object was calibrated
             (:meth:`synthetic.calibrate()` method).
-        ax : matplotlib.axis, optional, default=None
-            Matplotlib axis where to draw the plot.
+        color_idx : int, default=0
+            Index of the color to plot. If ``0`` (default), plot the first color. If
+            ``1`` plot the second color.
         isochplot : bool, default=False
             If ``True``, the accompanying isochrone will be plotted.
 
@@ -301,8 +309,10 @@ class synthetic:
             Matplotlib axis object
 
         """
-        if ax is None:
-            f, ax = plt.subplots()
+        if color_idx > 1:
+            raise ValueError(
+                f"Wrong 'color_idx' value ({color_idx}), should be one of: [0, 1]"
+            )
 
         # Generate synthetic cluster.
         synth_clust = scp.generate(self, fit_params)
@@ -311,7 +321,10 @@ class synthetic:
         else:
             binar_idx = np.full(synth_clust.shape[1], False)
 
-        x_synth, y_synth = synth_clust[1], synth_clust[0]
+        y_synth = synth_clust[0]
+        x_synth = synth_clust[1]
+        if color_idx == 1:
+            x_synth = synth_clust[2]
         # Single synthetic systems
         ax.scatter(
             x_synth[~binar_idx],
@@ -331,10 +344,12 @@ class synthetic:
             label=f"Synthetic (binary), N={len(x_synth[binar_idx])}",
         )
 
-        plt.ylabel(list(self.isochs.magnitude.keys())[0])
-        c1, c2 = list(self.isochs.color.keys())
+        plt.ylabel(self.isochs.magnitude)
+        c1, c2 = self.isochs.color
+        if color_idx == 1:
+            c1, c2 = self.isochs.color2
         plt.xlabel(f"{c1}-{c2}")
-        ax.set_ylim(max(self.mag_p) + .5, min(self.mag_p) - .5)
+        ax.set_ylim(max(self.mag_p) + 0.5, min(self.mag_p) - 0.5)
         ax.legend()
 
         if isochplot is False:
@@ -346,9 +361,12 @@ class synthetic:
         isochrone = scp.generate(self, fit_params_copy, True)
         # Remove stars beyond the color limits
         xmin, xmax = x_synth[~binar_idx].min(), x_synth[~binar_idx].max()
-        msk = (isochrone[1] >= xmin) & (isochrone[1] <= xmax)
+        c_idx = 1
+        if color_idx == 1:
+            c_idx = 2
+        msk = (isochrone[c_idx] >= xmin) & (isochrone[c_idx] <= xmax)
         isochrone = isochrone[:, msk]
-        ax.plot(isochrone[1], isochrone[0], c="k")
+        ax.plot(isochrone[c_idx], isochrone[0], c="k")
 
         return ax
 
@@ -361,7 +379,7 @@ class synthetic:
         model : dict
             Dictionary with the values for the fundamental parameters that were **not**
             included in the ``fix_params`` dictionary when the
-            :py:mod:`asteca.synthetic` object was calibrated 
+            :py:mod:`asteca.synthetic` object was calibrated
             (:meth:`synthetic.calibrate()` method).
         model_std : dict
             Dictionary with the standard deviations for the fundamental parameters in
@@ -381,16 +399,20 @@ class synthetic:
 
         # Observed photometry
         obs_phot = np.array([self.mag_p] + [_ for _ in self.colors_p])
-        # Identify nans in mag and colors and re-write them as -10. This ensures
-        # that the photometric distances to these stars is large enough to not be
-        # matched.
+        # Replace nans in mag and colors to avoid crashing KDTree()
         nan_msk = np.full(obs_phot.shape[1], False)
-        for col in obs_phot:
-            nan_msk = nan_msk | np.isnan(col)
+        for ophot in obs_phot:
+            nan_msk = nan_msk | np.isnan(ophot)
         obs_phot[:, nan_msk] = -10.0
         obs_phot = obs_phot.T
 
-        m12_masses, b_fr_all,  = [], []
+        (
+            m12_masses,
+            b_fr_all,
+        ) = (
+            [],
+            [],
+        )
         for model in models:
             isoch = scp.generate(self, model)
             if not isoch.any():
@@ -404,7 +426,8 @@ class synthetic:
         m1_med = np.median(m12_masses[:, 0, :], 0)
         m1_std = np.std(m12_masses[:, 0, :], 0)
         # Secondary masses  (median + stddev). Hide 'All-nan slice' warnings
-        with warnings.catch_warnings(action="ignore"):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")  # TODO: this was changed in Python>3.10
             m2_med = np.nanmedian(m12_masses[:, 1, :], 0)
             # m2 can not be larger than m1
             m2_med = np.min([m1_med, m2_med], 0)
@@ -423,6 +446,14 @@ class synthetic:
                 "binar_prob": binar_prob,
             }
         )
+        # Assign all nans to stars with a photometric nan in any dimension
+        df[nan_msk] = np.nan
+        if nan_msk.sum() > 0:
+            warnings.warn(
+                f"\nN={nan_msk.sum()} stars found with no valid photometric data. "
+                + "These will be assigned 'nan' values\nfor masses and "
+                + "binarity probability"
+            )
 
         return df, np.array(b_fr_all)
 

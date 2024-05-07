@@ -20,7 +20,7 @@ Defining the object
 *******************
 
 To instantiate a :class:`synthetic` object you need to pass the :class:`isochrones`
-object previously generated, as explained in the section :ref:`isochronesload`:
+object previously generated, as explained in the section :ref:`isochronesload`.
 
 .. code-block:: python
 
@@ -40,8 +40,9 @@ are (also see :py:mod:`asteca.synthetic`):
 
     IMF_name : Initial mass function.
     max_mass : Maximum total initial mass.
-    gamma : Distribution function for the mass ratio of the binary systems.
-    DR_dist : Distribution function for the differential reddening.
+    gamma    : Distribution for the mass ratio of the binary systems.
+    ext_law  : Extinction law.
+    DR_dist  : Distribution for the differential reddening.
 
 
 The ``IMF_name`` and ``max_mass`` arguments are used to generate random mass samples from
@@ -61,7 +62,6 @@ and `Chabrier et al. (2014) <https://ui.adsabs.harvard.edu/abs/2014ApJ...796...7
 value to be sampled. This value is related to the number of stars in the observed
 cluster: it should be large enough to allow generating as many synthetic stars as those
 observed.
-
 
 The ``gamma`` argument ($\gamma$) defines the distribution of the mass ratio for the
 binary systems. The mass ratio is the ratio of secondary masses to primary masses
@@ -105,6 +105,33 @@ uniform distribution.
 .. figure:: ../_static/qdist_unif.png
     :scale: 35%
     :align: center
+
+
+The ``ext_law`` argument defines the extinction law as one of either ``CCMO`` or
+``GAIADR3``. The first one corresponds to the model by
+`Cardelli, Clayton & Mathis (1989) <https://ui.adsabs.harvard.edu/abs/1989ApJ...345..245C>`_, with updated coefficients for near-UV from
+`O'Donnell (1994) <https://ui.adsabs.harvard.edu/abs/1994ApJ...422..158O>`_.
+The second one is
+`Gaia's (E)DR3 <https://www.cosmos.esa.int/web/gaia/edr3-extinction-law>`_,
+color-dependent law (main sequence), only applicable to Gaia's photometry. If this law
+is selected, **ASteCA** assumes that the magnitude and first color used are Gaia's ``G``
+and ``BP-RP`` respectively. 
+
+.. important::
+
+    While ``CCMO`` allows different ``Rv`` values (which means this parameter can even
+    be fitted), ``GAIADR3`` is to be used with ``Rv=3.1``. Please read the online
+    documentation and its accompanying articles  to learn more about this law's
+    limitations.
+
+There are dedicated packages like
+`dustapprox <https://mfouesneau.github.io/dustapprox/>`_,
+`dust_extinction <https://dust-extinction.readthedocs.io/>`_ or
+`extinction <https://extinction.readthedocs.io/en/latest/>`_
+that can handle this process. We chose to employ our own implementation to increase the
+performance. If you want to use a different extinction model, please drop me an
+`email <mailto:gabrielperren@gmail.com>`_.
+
 
 The ``DR_dist`` argument fixes the distribution used for the differential reddening, if
 this parameter is fitted to a value other than 0 (see Section :ref:`ref_calibrating` for
@@ -240,14 +267,7 @@ The first two are related through the equation:
 
     A_V = R_V \times E_{B-V}
 
-These values are transformed to those required for the photometric systems under
-analysis employing the `Cardelli, Clayton & Mathis (1989)
-<https://ui.adsabs.harvard.edu/abs/1989ApJ...345..245C>`_ model for extinction  coefficients, with updated coefficients for near-UV from
-`O'Donnell (1994) <https://ui.adsabs.harvard.edu/abs/1994ApJ...422..158O>`_.
-There are dedicated packages like `dust_extinction
-<https://dust-extinction.readthedocs.io/>`_ that can handle this process but we use our
-own implementation to increase the performance. If you want to use a different
-extinction model, please drop me an `email <mailto:gabrielperren@gmail.com>`_.
+xxxxxx
 
 Finally, the differential reddening parameter ``DR`` adds random scatter to the cluster
 stars affectd by ``Av``. The distribution for this scatter is controlled setting the

@@ -1,5 +1,21 @@
 .. :changelog:
 
+`[v0.5.2] <https://github.com/asteca/asteca/releases/tag/v0.5.2>`__ - 2024-05-XX
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+- Re-wrote isochrones reading module. See :ref:`isochronesload`.
+- Added `Gaia (E)DR3 extinction law <https://www.cosmos.esa.int/web/gaia/edr3-extinction-law>`_.
+  See :ref:`synth_clusters`.
+- Downgrade requirements to ``python=3.10`` to allow running in default Google Colab
+- Fixed wrong masses and binary probabilities being assigned to stars with missing
+  photometric data
+- Fixed bug in :class:`likelihood` when two colors were defined
+- Move ``z_to_FeH`` argument from :class:`synthetic` to :class:`isochrones`
+- Remove ``min_max()`` method from :class:`synthetic`, values are now shown when
+  instantiating an :class:`isochrones` class
+- Allow plotting two colors in :class:`cluster` and :class:`synthetic` plotting modules
+
+
 
 `[v0.5.1] <https://github.com/asteca/asteca/releases/tag/v0.5.1>`__ - 2024-04-19
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -19,6 +35,13 @@ Major update. **ASteCA** is now a proper Python package that can be installed wi
   user can employ any package to perform the parameter inference
 - Updated binary systems generation
 - Removed structural analysis function (for now at least)
+
+
+[v0.4.4-0.4.9]
+++++++++++++++
+
+These version numbers were skipped due to the major changes introduced in version
+``0.5.0``.
 
 
 

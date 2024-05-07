@@ -5,14 +5,13 @@ import io
 
 
 def main(isoch_f):
-    """
-    """
+    """ """
     # Gaia solar isochrone from PARSEC
     df = pd.read_csv(io.StringIO(isoch_f))
 
-    m1 = df['Mini']
-    mag_m1 = df['Gmag']
-    mc1, mc2 = df['G_BPmag'], df['G_RPmag']
+    m1 = df["Mini"]
+    mag_m1 = df["Gmag"]
+    mc1, mc2 = df["G_BPmag"], df["G_RPmag"]
     col_m1 = mc1 - mc2
 
     # q = 1
@@ -36,9 +35,9 @@ def main(isoch_f):
     f2 = mag_combine(f2, f_m2)
     col_b3 = f1 - f2
 
-    plt.scatter(col_m1, mag_m1, alpha=.5, c='b')
-    plt.scatter(col_b, mag_b, alpha=.5, c='r')
-    plt.scatter(col_b3, mag_b3, alpha=.5, c='orange')
+    plt.scatter(col_m1, mag_m1, alpha=0.5, c="b")
+    plt.scatter(col_b, mag_b, alpha=0.5, c="r")
+    plt.scatter(col_b3, mag_b3, alpha=0.5, c="orange")
     plt.gca().invert_yaxis()
     plt.show()
 
@@ -527,5 +526,5 @@ isoch_f = """"Mini","Gmag","G_BPmag","G_RPmag"
 4.7106719017,29.98,29.97,29.986
 """
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main(isoch_f)
