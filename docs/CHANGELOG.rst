@@ -1,6 +1,6 @@
 .. :changelog:
 
-`[v0.5.2] <https://github.com/asteca/asteca/releases/tag/v0.5.2>`__ - 2024-05-XX
+`[v0.5.2] <https://github.com/asteca/asteca/releases/tag/v0.5.2>`__ - 2024-05-07
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 - Re-wrote isochrones reading module. See :ref:`isochronesload`.
