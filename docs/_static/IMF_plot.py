@@ -3,7 +3,7 @@ import numpy as np
 
 
 def main():
-    fig = plt.figure(figsize=(8, 4))
+    plt.figure(figsize=(8, 4))
 
     x_vals = np.array(
         list(np.arange(0.02, 1, 0.01)) + [1] + [1, 2, 3, 5, 10, 15, 20, 50, 100]

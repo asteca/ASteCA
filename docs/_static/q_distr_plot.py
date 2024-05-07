@@ -132,7 +132,7 @@ def qunif_plot(N_m=50000):
     # for g in gamma:
     #     y = f_gamma(q, g)
     #     plt.plot(q, y, label=r"$\gamma=${:.2f}".format(g))
-    fig = plt.figure(figsize=(8, 3))
+    plt.figure(figsize=(8, 3))
 
     gamma = -0.25
     print(gamma)
