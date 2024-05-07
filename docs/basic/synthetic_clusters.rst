@@ -40,9 +40,9 @@ are (also see :py:mod:`asteca.synthetic`):
 
     IMF_name : Initial mass function.
     max_mass : Maximum total initial mass.
-    gamma    : Distribution function for the mass ratio of the binary systems.
+    gamma    : Distribution for the mass ratio of the binary systems.
     ext_law  : Extinction law.
-    DR_dist  : Distribution function for the differential reddening.
+    DR_dist  : Distribution for the differential reddening.
 
 
 The ``IMF_name`` and ``max_mass`` arguments are used to generate random mass samples from
