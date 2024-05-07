@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "asteca"
-version = "0.5.2"
+version = "0.5.2-dev"
 description = "Stellar cluster analysis package"
 authors = ["Gabriel I Perren <gabrielperren@gmail.com>"]
 readme = "README.md"
