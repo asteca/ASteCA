@@ -62,7 +62,8 @@ or a color-magnitude plot with the ``cmd_plot()`` method:
 
     import matplotlib.pyplot as plt
 
-    ax = my_cluster.cmdplot()
+    ax = plt.subplot(111)
+    ax = my_cluster.clustplot(ax1)
     plt.show()
 
 which should results in something like this:
