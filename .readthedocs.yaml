@@ -21,12 +21,11 @@ build:
       #
       # If there are no changes (git diff exits with 0) we force the command to return with 183.
       # This is a special exit code on Read the Docs that will cancel the build immediately.
-    - |
-      if [ "$READTHEDOCS_VERSION_TYPE" = "external" ] && [ "$(git diff --quiet origin/develop -- docs/ .readthedocs.yml; echo $?)" -eq 0 ];
-      then
-        echo "No changes to docs/ - exiting the build.";
-        exit 183;
-      fi
+      - |
+        if [ "$READTHEDOCS_VERSION_TYPE" = "external" ] && git diff --quiet origin/develop -- docs/ .readthedocs.yaml;
+        then
+          exit 183;
+        fi
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:
