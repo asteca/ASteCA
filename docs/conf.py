@@ -1,7 +1,6 @@
 # Configuration file for the Sphinx documentation builder.
 #
-# This file only contains a selection of the most common options. For a full
-# list see the documentation:
+# For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 # -- Path setup --------------------------------------------------------------
@@ -15,6 +14,12 @@
 # import asteca
 # __version__ = asteca.__version__
 
+
+# -- Project information -----------------------------------------------------
+project = "ASteCA"
+copyright = "2024, Gabriel I Perren"
+# author = 'Gabriel I Perren'
+
 # Read version from pyproject.toml
 with open("../pyproject.toml", encoding="utf-8") as pyproject_toml:
     __version__ = (
@@ -22,13 +27,6 @@ with open("../pyproject.toml", encoding="utf-8") as pyproject_toml:
         .split("=")[1]
         .strip("'\"\n ")
     )
-
-
-# -- Project information -----------------------------------------------------
-
-project = "ASteCA"
-copyright = "2024, Gabriel I Perren"
-# author = 'Gabriel I Perren'
 
 # The full version, including alpha/beta/rc tags
 version = __version__
@@ -97,16 +95,8 @@ myst_enable_extensions = [
     "dollarmath",
 ]
 
-# # Don't re-order methods alphabetically
-# autodoc_member_order = "bysource"
-
-# Add any paths that contain templates here, relative to this directory.
 # templates_path = ['_templates']
-
-# List of patterns, relative to source directory, that match files and
-# directories to ignore when looking for source files.
-# This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+# exclude_patterns = []
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -132,7 +122,6 @@ html_theme_options = {
         "notebook_interface": "classic",
     },
 }
-
 
 # Hide parent class name in right sidebar TOC for methods
 toc_object_entries_show_parents = "hide"
