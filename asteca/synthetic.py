@@ -11,36 +11,39 @@ from .modules import mass_binary as mb
 
 @dataclass
 class synthetic:
-    r"""Define a ``synthetic`` object.
+    """Define a :class:`synthetic` object.
 
-    Use the isochrones loaded in the :py:mod:`asteca.isochrones` object to generate a
-    :py:mod:`asteca.synthetic` object. This object is used to generate synthetic clusters
-    given a :py:mod:`asteca.cluster` object  and a set of input fundamental parameters
-    (metallicity, age, distance, extinction, etc.).
+    Use the isochrones loaded in the :py:class:`asteca.isochrones` object to generate a
+    :py:class:`asteca.synthetic` object. This object is used to generate synthetic
+    clusters given a :py:class:`asteca.cluster` object and a set of input fundamental
+    parameters (metallicity, age, distance, extinction, etc.).
 
     See the :ref:`synth_clusters` section for more details.
 
-    Parameters
-    ----------
-    isochs : :class:`isochrones`
-         :py:mod:`asteca.isochrones` object with the loaded files for the theoretical isochrones.
-    ext_law : str, {"CCMO", "GAIADR3"}, default="CCMO"
-        Extinction law. If "*GAIADR3*" is selected, the magnitude and first color defined
-        in :class:`isochrones` and :class:`cluster` are assumed to be Gaia's
-        (E)DR3 **G** and **(BP-RP)** respectively. The second color (if defined) will
-        always be affected by the "*CCMO*" model.
-    DR_distribution : str, {"uniform", "normal"}, default="uniform"
-        Distribution function for the differential reddening.
-    IMF_name : str, {"salpeter_1955", "kroupa_2001", "chabrier_2014"}, default="chabrier_2014"
-        Name of the initial mass function used to populate the isochrones.
-    max_mass : int, default=100_000
-        Maximum total initial mass. Should be large enough to allow generating as many
-        synthetic stars as observed stars.
-    gamma : str, float, {"D&K", "fisher_stepped", "fisher_peaked", "raghavan"}, default="D&K"
-        Distribution function for the mass ratio of the binary systems.
-    seed: int, optional, default=None
-        Random seed. If ``None`` a random integer will be generated and used.
-
+    :param isochs: :py:class:`asteca.isochrones` object with the loaded files for the
+        theoretical isochrones
+    :type isochs: :class:`isochrones`
+    :param ext_law: Extinction law. if ``GAIADR3`` is selected, the magnitude and first
+        color defined in :py:class:`asteca.isochrones` and :py:class:`asteca.cluster`
+        are assumed to be Gaia's (E)DR3 **G** and **(BP-RP)** respectively. The second
+        color (if defined) will always be affected by the ``CCMO`` model, defaults to
+        ``CCMO``
+    :type ext_law: str: ``CCMO, GAIADR3``
+    :param DR_distribution: Distribution function for the differential reddening,
+        defaults to ``uniform``
+    :type DR_distribution: str: ``uniform, normal``
+    :param IMF_name: Name of the initial mass function used to populate the isochrones,
+        defaults to ``chabrier_2014``
+    :type IMF_name: str: ``salpeter_1955, kroupa_2001, chabrier_2014``
+    :param max_mass: Maximum total initial mass. Should be large enough to allow
+        generating as many synthetic stars as observed stars, defaults to ``100_000``
+    :type max_mass: int
+    :param gamma: Distribution function for the mass ratio of the binary systems,
+        defaults to ``D&K``
+    :type gamma: str: ``D&K, fisher_stepped, fisher_peaked, raghavan``, float
+    :param seed: Random seed. If ``None`` a random integer will be generated and used,
+        defaults to ``None``
+    :type seed: int, optional
     """
 
     isochs: isochrones
@@ -126,25 +129,23 @@ class synthetic:
         print("Synthetic clusters object generated\n")
 
     def calibrate(self, cluster, fix_params: dict = {}):
-        r"""Calibrate a :py:mod:`asteca.synthetic` object based on a
-        :py:mod:`asteca.cluster` object and a dictionary of fixed fundamental parameters
-        (``fix_params``).
+        """Calibrate a :py:class:`asteca.synthetic` object based on a
+        :py:class:`asteca.cluster` object and a dictionary of fixed fundamental
+        parameters (``fix_params``).
 
         Use the data obtained from your observed cluster stored in the
-        :py:mod:`asteca.cluster` object, to calibrate a :py:mod:`asteca.synthetic`
+        :py:class:`asteca.cluster` object, to calibrate a :py:class:`asteca.synthetic`
         object. Additionally, a dictionary of fixed fundamental parameters
         (metallicity, age, distance, extinction, etc.) can be passed.
 
         See the :ref:`synth_clusters` section for more details.
 
-        Parameters
-        ----------
-        cluster : :class:`cluster`
-             :py:mod:`asteca.cluster` object with the processed data from your observed
-             cluster.
-        fix_params : dict, optional, default={}
-            Dictionary with the values for the fixed parameters (if any).
-
+        :param cluster: :py:class:`asteca.cluster` object with the processed data from
+            your observed cluster
+        :type cluster: :py:class:`asteca.cluster`
+        :param fix_params: Dictionary with the values for the fixed parameters (if any),
+            defaults to ``{}``
+        :type fix_params: dict, optional
         """
         # Check that the number of colors match
         if self.isochs.color2_effl is not None and cluster.color2 is None:
@@ -192,27 +193,21 @@ class synthetic:
         #     self._rm_low_masses(dm_min)
 
     def generate(self, fit_params: dict) -> np.ndarray:
-        r"""Generate a synthetic cluster.
+        """Generate a synthetic cluster.
 
         The synthetic cluster is generated according to the parameters given in
         the ``fit_params`` dictionary and the already calibrated
-        :py:mod:`asteca.synthetic` object.
+        :py:class:`asteca.synthetic` object.
 
-        Parameters
-        ----------
-        fit_params : dict
-            Dictionary with the values for the fundamental parameters that were **not**
-            included in the ``fix_params`` dictionary when the
-            :py:mod:`asteca.synthetic` object was calibrated
+        :param fit_params: Dictionary with the values for the fundamental parameters
+            that were **not** included in the ``fix_params`` dictionary when the
+            :py:class:`asteca.synthetic` object was calibrated
             (:meth:`synthetic.calibrate()` method).
-
-        Returns
-        -------
-        array[mag, c1, (c2)]
-            Return a ``np.array`` containing a synthetic cluster with the shape
+        :type fit_params: dict
+        :return: Return a ``np.array`` containing a synthetic cluster with the shape
             ``[mag, c1, (c2)]``, where ``mag`` is the magnitude dimension, and
             ``c1`` and ``c2`` (last one is optional) are the color dimension(s).
-
+        :rtype: array[mag, c1, (c2)]
         """
 
         # Return proper values for fixed parameters and parameters required
@@ -283,31 +278,26 @@ class synthetic:
         return synth_clust[: self.m_ini_idx]
 
     def synthplot(self, ax, fit_params, color_idx=0, isochplot=False):
-        r"""Generate a color-magnitude plot for a synthetic cluster.
+        """Generate a color-magnitude plot for a synthetic cluster.
 
         The synthetic cluster is generated using the fundamental parameter values
         given in the ``fit_params`` dictionary.
 
-        Parameters
-        ----------
-        ax : matplotlib.axis, optional, default=None
-            Matplotlib axis where to draw the plot.
-        fit_params : dict
-            Dictionary with the values for the fundamental parameters that were **not**
-            included in the ``fix_params`` dictionary when the
-            :py:mod:`asteca.synthetic` object was calibrated
+        :param ax: Matplotlib axis where to draw the plot, defaults to ``None``
+        :type ax: matplotlib.axis, optional
+        :param fit_params: Dictionary with the values for the fundamental parameters
+            that were **not** included in the ``fix_params`` dictionary when the
+            :py:class:`asteca.synthetic` object was calibrated
             (:meth:`synthetic.calibrate()` method).
-        color_idx : int, default=0
-            Index of the color to plot. If ``0`` (default), plot the first color. If
-            ``1`` plot the second color.
-        isochplot : bool, default=False
-            If ``True``, the accompanying isochrone will be plotted.
-
-        Returns
-        -------
-        matplotlib.axis
-            Matplotlib axis object
-
+        :type fit_params: dict
+        :param color_idx: Index of the color to plot. If ``0`` (default), plot the
+            first color. If ``1`` plot the second color. Defaults to ``0``
+        :type color_idx: int
+        :param isochplot: If ``True``, the accompanying isochrone will be plotted,
+            defaults to ``False``
+        :type isochplot: bool
+        :return: Matplotlib axis object
+        :rtype: matplotlib.axis
         """
         if color_idx > 1:
             raise ValueError(
@@ -371,28 +361,22 @@ class synthetic:
         return ax
 
     def masses_binary_probs(self, model, model_std):
-        r"""Estimate individual masses for the observed stars, along with their binary
+        """Estimate individual masses for the observed stars, along with their binary
         probabilities (if binarity was estimated).
 
-        Parameters
-        ----------
-        model : dict
-            Dictionary with the values for the fundamental parameters that were **not**
-            included in the ``fix_params`` dictionary when the
-            :py:mod:`asteca.synthetic` object was calibrated
-            (:meth:`synthetic.calibrate()` method).
-        model_std : dict
-            Dictionary with the standard deviations for the fundamental parameters in
-            the ``model`` argument.
-
-        Returns
-        -------
-        pandas.DataFrame
-            Data frame containing per-star primary and secondary masses along with
-            their uncertainties, and their probability of being a binary system.
-        numpy.array
-            Distribution of total binary fraction values for the cluster.
-
+        :param model: Dictionary with the values for the fundamental parameters that
+            were **not** included in the ``fix_params`` dictionary when the
+            :py:class:`asteca.synthetic` object was calibrated
+            (:py:meth:`synthetic.calibrate()` method)
+        :type model: dict
+        :param model_std: Dictionary with the standard deviations for the fundamental
+            parameters in the ``model`` argument
+        :type model_std: dict
+        :return: Data frame containing per-star primary and secondary masses along with
+            their uncertainties, and their probability of being a binary system
+        :rtype: pandas.DataFrame
+        :return: Distribution of total binary fraction values for the cluster
+        :rtype: numpy.array
         """
         # Generate random models from the selected solution
         models = mb.ranModels(model, model_std, self.seed)
@@ -458,9 +442,7 @@ class synthetic:
         return df, np.array(b_fr_all)
 
     def _get_masses(self, fit_params, model_std, ra_c, dec_c):
-        """
-        Estimate the different total masses for the observed cluster
-        """
+        """Estimate the different total masses for the observed cluster"""
         print("Estimating total initial and actual masses")
         # Generate random models from the selected solution
         models = mb.ranModels(fit_params, model_std, self.seed)

@@ -1,12 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.patches import Ellipse
+
+# from matplotlib.patches import Ellipse
 
 cmd_xy = []
 with open("asteca_icon.dat", "r") as f:
     for line in f:
-        l = line.split()
-        cmd_xy.append([float(l[1]), float(l[0])])
+        line_split = line.split()
+        cmd_xy.append([float(line_split[1]), float(line_split[0])])
 cmd_xy = np.array(cmd_xy).T
 
 # fig = plt.figure(figsize=(25, 25))

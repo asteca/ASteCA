@@ -1,8 +1,8 @@
 # Configuration file for the Sphinx documentation builder.
 #
-# This file only contains a selection of the most common options. For a full
-# list see the documentation:
+# For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
+import os
 
 # -- Path setup --------------------------------------------------------------
 
@@ -15,6 +15,12 @@
 # import asteca
 # __version__ = asteca.__version__
 
+
+# -- Project information -----------------------------------------------------
+project = "ASteCA"
+copyright = "2024, Gabriel I Perren"
+# author = 'Gabriel I Perren'
+
 # Read version from pyproject.toml
 with open("../pyproject.toml", encoding="utf-8") as pyproject_toml:
     __version__ = (
@@ -22,13 +28,6 @@ with open("../pyproject.toml", encoding="utf-8") as pyproject_toml:
         .split("=")[1]
         .strip("'\"\n ")
     )
-
-
-# -- Project information -----------------------------------------------------
-
-project = "ASteCA"
-copyright = "2024, Gabriel I Perren"
-# author = 'Gabriel I Perren'
 
 # The full version, including alpha/beta/rc tags
 version = __version__
@@ -39,13 +38,9 @@ rst_epilog = """.. |ProjectVersion| replace:: {versionnum}""".format(
 )
 
 # -- General configuration ---------------------------------------------------
-
-# Add any Sphinx extension module names here, as strings. They can be
-# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
-# ones.
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 extensions = [
-    # "sphinx.ext.autodoc",
-    "autoapi.extension",
+    "autodoc2",
     "sphinx.ext.napoleon",
     "sphinx.ext.githubpages",
     "myst_nb",
@@ -54,29 +49,45 @@ extensions = [
     "sphinx.ext.mathjax",
 ]
 
-autoapi_dirs = ["../asteca"]
-# autoapi_options = ["imported-members", "show-inheritance", "inherited-members"]
-# autoapi_ignore = ["_*"]
-autoapi_add_toctree_entry = False
-autoapi_keep_files = True
-# autoapi_own_page_level = "attribute"
+autodoc2_packages = [
+    {
+        "path": "../asteca",
+        "exclude_dirs": [
+            "__pycache__",
+            "modules",
+        ],
+    }
+]
+autodoc2_hidden_objects = ["dunder", "private", "inherited"]
 
 
-# Hide private files
-def skip_submodules(app, what, name, obj, skip, options):
-    if what in ("package", "function", "attribute"):
-        skip = True
-    if what == "method":  # Skip private methods
-        if name.split(".")[-1].startswith("_"):
-            skip = True
-    # if skip is False:
-    #     print(what, ",", name, ",", obj)
-    #     # breakpoint()
-    return skip
+################################################################
+# This block removes the attributes from the apidocs .rst files.
+# I could not find a simpler way to do this 26/05/24
+# https://www.sphinx-doc.org/en/master/extdev/appapi.html#sphinx-core-events
+def source_read_handler(app, docname, source):
+    """'docname, source' not used but required"""
+    path = "./apidocs/asteca/"
+    for file in os.listdir(path):
+        with open(path + file) as f:
+            lines = f.readlines()
+            idxs = []
+            for i, line in enumerate(lines):
+                if ".. py:attribute:" in line:
+                    idxs += list(range(i, i + 6))
+        for i in range(len(lines), 0, -1):
+            if i in idxs:
+                del lines[i]
+        with open(path + file, "w") as f:
+            for line in lines:
+                f.write(line)
 
 
-def setup(sphinx):
-    sphinx.connect("autoapi-skip-member", skip_submodules)
+def setup(app):
+    app.connect("source-read", source_read_handler)
+
+
+################################################################
 
 
 # https://www.sympy.org/sphinx-math-dollar/
@@ -97,16 +108,8 @@ myst_enable_extensions = [
     "dollarmath",
 ]
 
-# # Don't re-order methods alphabetically
-# autodoc_member_order = "bysource"
-
-# Add any paths that contain templates here, relative to this directory.
 # templates_path = ['_templates']
-
-# List of patterns, relative to source directory, that match files and
-# directories to ignore when looking for source files.
-# This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+# exclude_patterns = []
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -132,7 +135,6 @@ html_theme_options = {
         "notebook_interface": "classic",
     },
 }
-
 
 # Hide parent class name in right sidebar TOC for methods
 toc_object_entries_show_parents = "hide"

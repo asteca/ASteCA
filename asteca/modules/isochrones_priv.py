@@ -120,7 +120,6 @@ def read(
 
     isochrones = {}
     for file_path in f_paths:
-
         # Extract columns names and full header
         col_names, full_header = get_header(file_path)
 
@@ -136,7 +135,6 @@ def read(
                 # Group by age
                 age_blocks = met_df.groupby(age_col, sort=False)
                 for _, df in age_blocks:
-
                     zinit = df[met_col].values[0]
                     try:
                         isochrones[zinit]
@@ -163,7 +161,6 @@ def read(
 
             # Process age blocks
             for _, df in df_blocks:
-
                 age = df[age_col].values[0]
                 # Interpolated isochrone
                 isochrones = interp_df(

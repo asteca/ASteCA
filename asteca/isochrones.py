@@ -7,63 +7,67 @@ from .modules import isochrones_priv
 
 @dataclass
 class isochrones:
-    r"""Define an ``isochrones`` object.
+    """Define an :class:`isochrones` object.
 
     This object contains the loaded theoretical isochrones used by the
-    :py:mod:`asteca.synthetic` class to generate synthetic clusters.
+    :py:class:`asteca.synthetic` class to generate synthetic clusters.
     See :ref:`isochronesload` for more details.
 
-    Parameters
-    ----------
-    model : str, {"PARSEC", "MIST", "BASTI"}
-        The model must be one of the supported isochrone services:
-        `PARSEC <http://stev.oapd.inaf.it/cgi-bin/cmd_3.7>`_,
-        `MIST <https://waps.cfa.harvard.edu/MIST/>`_, or
-        `BASTI <http://basti-iac.oa-abruzzo.inaf.it/isocs.html>`_.
-    isochs_path : str
-        Path to the folder that contains the files for the theoretical isochrones.
-    magnitude : str
-        Magnitude's filter name as defined in the theoretical isochrones.
-        Example for Gaia's ``G`` magnitude: ``"Gmag"``.
-    color : tuple
-        Tuple containing the filter names that generate the first color defined.
-        The correct format is: ``("filter1", "filter2")``, where ``filter1``
+    :param model: The model must be one of the supported isochrone services:
+        `PARSEC <http://stev.oapd.inaf.it/cgi-bin/cmd_3.7>`__,
+        `MIST <https://waps.cfa.harvard.edu/MIST/>`__, or
+        `BASTI <http://basti-iac.oa-abruzzo.inaf.it/isocs.html>`__.
+    :type model: str: ``PARSEC, MIST, BASTI``
+    :param isochs_path: Path to the folder that contains the files for the theoretical
+        isochrones
+    :type isochs_path: str
+    :param magnitude: Magnitude's filter name as defined in the theoretical isochrones.
+        Example for Gaia's ``G`` magnitude: ``"Gmag"``
+    :type magnitude: str
+    :param color: Tuple containing the filter names that generate the first color
+        defined. The correct format is: ``("filter1", "filter2")``, where ``filter1``
         and ``filter2`` are the names of the filters that are combined to generate
         the color. The order is important because the color will be generated as:
         ``filter1-filter2``. Example for Gaia's 'BP-RP' color:
-        ``("G_BPmag", "G_RPmag")``.
-    color2 : tuple, optional, default=None
-        Optional second color to use in the analysis. Same format as that used by the
-        ``color`` parameter.
-    magnitude_effl : float, optional, default=None
-        Effective lambda (in Angstrom) for the magnitude filter.
-    color_effl : tuple, optional, default=None
-        Effective lambdas for the filters that make up the ``color`` defined in the
-        :py:mod:`asteca.isochrones` object. E.g.: ``(1111.11, 2222.22)`` where
-        ``1111.11`` and ``2222.22`` are the effective lambdas (in Angstrom) for each
-        filter, in the same order as ``color``.
-    color2_effl : tuple, optional, default=None
-        Same as ``color_effl`` but for a second (optional) color defined.
-    z_to_FeH : float, optional, default=None
-        If ``None``, the default ``z`` values in the isochrones will be used to
-        generate the synthetic clusters. If ``float``, it must represent the solar
-        metallicity for these isochrones. The metallicity values will then be converted
-        to ``[FeH]`` values, to be used by the :meth:`synthetic.generate()` method.
-    N_interp : int, default=2500
-        Number of interpolation points used to ensure that all isochrones are the
-        same shape.
-    column_names : dict, optional, default=None
-        Column names for the initial mass, metallicity, and age for the photometric
-        system's isochrones files. Example:
+        ``("G_BPmag", "G_RPmag")``
+    :type color: tuple
+    :param color2: Optional second color to use in the analysis. Same format as that
+        used by the ``color`` parameter, defaults to ``None``
+    :type color2: tuple, optional
+    :param magnitude_effl: Effective lambda (in Angstrom) for the magnitude filter,
+        defaults to ``None``
+    :type magnitude_effl: float, optional
+    :param color_effl: Effective lambdas for the filters that make up the ``color``
+        defined in the :py:class:`asteca.isochrones` object. E.g.:
+        ``(1111.11, 2222.22)`` where ``1111.11`` and ``2222.22`` are the effective
+        lambdas (in Angstrom) for each filter, in the same order as ``color``, defaults
+        to ``None``
+    :type color_effl: tuple, optional
+    :param color2_effl: Same as ``color_effl`` but for a second (optional) color
+        defined, defaults to ``None``
+    :type color2_effl: tuple, optional
+    :param z_to_FeH: If ``None``, the default ``z`` values in the isochrones will be
+        used to generate the synthetic clusters. If ``float``, it must represent the
+        solar metallicity for these isochrones. The metallicity values will then be
+        converted to ``[FeH]`` values, to be used by the
+        :py:meth:`synthetic.generate() <asteca.synthetic.synthetic.generate>` method,
+        defaults to ``None``
+    :type z_to_FeH: float, optional
+    :param N_interp: Number of interpolation points used to ensure that all isochrones
+        are the same shape, defaults to ``2500``
+    :type N_interp: int
+    :param column_names: Column names for the initial mass, metallicity, and age for
+        the photometric system's isochrones files. Example:
         ``{"mass_col": "Mini", "met_col": "Zini", "age_col": "logAge"}``.
         This dictionary is defined internally in `ASteCA` and should only be given
         by the user if the isochrone service changes its format and the `isochrones`
-        class fails to load the files.
-    parsec_rm_stage_9 : boll, optional, default=True
-        If the isochrones are PARSEC, this argument set to ``True`` will remove the
-        *post_AGB* stage (label=9) which are still
-        "`in preparation <http://stev.oapd.inaf.it/cmd_3.7/faq.html>`_".
-
+        class fails to load the files, defaults to ``None``
+    :type column_names: dict, optional
+    :param parsec_rm_stage_9: If the isochrones are PARSEC, this argument set to
+        ``True`` will remove the *post_AGB* stage (label=9) which are still
+        "`in preparation <http://stev.oapd.inaf.it/cmd_3.7/faq.html>`__", defaults
+        to ``True``
+    :type parsec_rm_stage_9: bool, optional
     """
 
     model: str
@@ -130,7 +134,7 @@ class isochrones:
         print("Isochrone object generated\n")
 
     def _func_z_to_FeH(self, z_to_FeH):
-        r"""Convert z to FeH"""
+        """Convert z to FeH"""
         feh = np.log10(self.met_age_dict["met"] / z_to_FeH)
         N_old = len(feh)
         round_n = 4
@@ -145,14 +149,12 @@ class isochrones:
         self.met_age_dict["met"] = feh_r
 
     def _min_max(self) -> tuple[float]:
-        r"""Return the minimum and maximum values for the metallicity and age defined
+        """Return the minimum and maximum values for the metallicity and age defined
         in the theoretical isochrones.
 
-        Returns
-        -------
-        tuple[float]
-            Tuple of (minimum_metallicity, maximum_metallicity, minimum_age, maximum_age)
-
+        :return: Tuple of (minimum_metallicity, maximum_metallicity, minimum_age,
+            maximum_age)
+        :rtype: tuple[float]
         """
         zmin = self.met_age_dict["met"].min()
         zmax = self.met_age_dict["met"].max()

@@ -57,7 +57,7 @@ def main():
     x = np.linspace(0.029, 32, 100)
     y = 0.09 + 0.94 * (x / (1.4 + x))
 
-    fig = plt.figure(figsize=(8, 4))
+    plt.figure(figsize=(8, 4))
     plt.scatter(
         mass_OF,
         multfreq_OF,

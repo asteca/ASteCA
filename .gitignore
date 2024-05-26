@@ -17,5 +17,6 @@
 # and ignore these folders
 /docs/build/*
 /docs/autoapi/*
+/docs/apidocs/*
 # Jupyter Notebook
 .ipynb_checkpoints

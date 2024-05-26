@@ -209,11 +209,16 @@ def ccmo_ext_coeffs(self) -> list:
 
         # For colors.
         eff_wave1, eff_wave2 = self.isochs.color_effl
-        ext_coefs[1] = [ccmo_model(10000.0 / eff_wave1), ccmo_model(10000.0 / eff_wave2)]
+        ext_coefs[1] = [
+            ccmo_model(10000.0 / eff_wave1),
+            ccmo_model(10000.0 / eff_wave2),
+        ]
 
     if self.isochs.color2_effl is not None:
         eff_wave1, eff_wave2 = self.isochs.color2_effl
-        ext_coefs += [[ccmo_model(10000.0 / eff_wave1), ccmo_model(10000.0 / eff_wave2)]]
+        ext_coefs += [
+            [ccmo_model(10000.0 / eff_wave1), ccmo_model(10000.0 / eff_wave2)]
+        ]
 
     return ext_coefs
 

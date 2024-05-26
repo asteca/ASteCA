@@ -3,40 +3,45 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from .modules import cluster_priv as cp
 
 
 @dataclass
 class cluster:
-    r"""Define a ``cluster`` object.
+    """Define a :class:`cluster` object.
 
-    Parameters
-    ----------
-    cluster_df : pd.DataFrame
-        `pandas DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_
-        with the cluster's loaded data
-    magnitude : str
-        Name of the DataFrame column that contains the magnitude
-    e_mag : str
-        Name of the DataFrame column that contains the magnitude's uncertainty
-    color : str
-        Name of the DataFrame column that contains the color
-    e_color : str
-        Name of the DataFrame column that contains the color's uncertainty
-    ra: str, optional, default=None
-        Name of the DataFrame column that contains the right ascension (RA)
-    dec: str, optional, default=None
-        Name of the DataFrame column that contains the declination (DEC)
-    plx: str, optional, default=None
-        Name of the DataFrame column that contains the parallax
-    pmra: str, optional, default=None
-        Name of the DataFrame column that contains the RA proper motion
-    pmde: str, optional, default=None
-        Name of the DataFrame column that contains the DEC proper motion
-    color2: str, optional, default=None
-        Name of the DataFrame column that contains the second color
-    e_color2: str, optional, default=None
-        Name of the DataFrame column that contains the second color's uncertainty
-
+    :param cluster_df: `pandas DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`__
+        with the cluster's loaded data.
+    :type cluster_df: pd.DataFrame
+    :param magnitude: Name of the DataFrame column that contains the magnitude
+    :type magnitude: str
+    :param e_mag: Name of the DataFrame column that contains the magnitude's uncertainty
+    :type e_mag: str
+    :param color: Name of the DataFrame column that contains the color
+    :type color: str
+    :param e_color: Name of the DataFrame column that contains the color's uncertainty
+    :type e_color: str
+    :param ra: Name of the DataFrame column that contains the right ascension (RA),
+        defaults to ``None``
+    :type ra: str, optional
+    :param dec: Name of the DataFrame column that contains the declination (DEC),
+        defaults to ``None``
+    :type dec: str, optional
+    :param plx: Name of the DataFrame column that contains the parallax,
+        defaults to ``None``
+    :type plx: str, optional
+    :param pmra: Name of the DataFrame column that contains the RA proper motion,
+        defaults to ``None``
+    :type pmra: str, optional
+    :param pmde: Name of the DataFrame column that contains the DEC proper motion,
+        defaults to ``None``
+    :type pmde: str, optional
+    :param color2: Name of the DataFrame column that contains the second color,
+        defaults to ``None``
+    :type color2: str, optional
+    :param e_color2: Name of the DataFrame column that contains the second color's
+        uncertainty, defaults to ``None``
+    :type e_color2: str, optional
     """
 
     cluster_df: pd.DataFrame
@@ -49,17 +54,19 @@ class cluster:
     plx: Optional[str] = None
     pmra: Optional[str] = None
     pmde: Optional[str] = None
+    e_plx: Optional[str] = None
+    e_pmra: Optional[str] = None
+    e_pmde: Optional[str] = None
     color2: Optional[str] = None
     e_color2: Optional[str] = None
 
     def __post_init__(self):
-        # Load photometry
+        """Load photometry."""
         self._load()
 
     def _load(self):
-        """
-        The photometry is store with a '_p' to differentiate from the self.magnitude,
-        self.color, etc that are defined with the class is called.
+        """The photometry is store with a '_p' to differentiate from the
+        self.magnitude, self.color, etc that are defined with the class is called.
         """
         print("Instantiating cluster...")
 
@@ -73,9 +80,22 @@ class cluster:
         if self.e_color2 is not None:
             self.e_colors_p.append(np.array(self.cluster_df[self.e_color2]))
 
+        self.ra_v, self.dec_v = None, None
         if self.ra is not None:
             self.ra_v = self.cluster_df[self.ra]
             self.dec_v = self.cluster_df[self.dec]
+
+        self.pmra_v, self.e_pmra_v, self.pmde_v, self.pmde_v = None, None, None, None
+        if self.pmra is not None:
+            self.pmra_v = self.cluster_df[self.pmra].values
+            self.pmde_v = self.cluster_df[self.pmde].values
+            self.e_pmra_v = self.cluster_df[self.e_pmra].values
+            self.e_pmde_v = self.cluster_df[self.e_pmde].values
+
+        self.plx_v, self.e_plx_v = None, None
+        if self.plx is not None:
+            self.plx_v = self.cluster_df[self.plx].values
+            self.e_plx_v = self.cluster_df[self.e_plx].values
 
         print(f"N_stars        : {len(self.mag_p)}")
         print(f"Magnitude      : {self.magnitude}")
@@ -85,13 +105,10 @@ class cluster:
         print("Cluster object generated\n")
 
     def radecplot(self):
-        r"""Generate a (RA, DEC) plot.
+        """Generate a (RA, DEC) plot.
 
-        Returns
-        -------
-        matplotlib.axis
-            Matplotlib axis object
-
+        :return: Matplotlib axis object
+        :rtype: matplotlib.axis
         """
         ra = self.ra_v  # cluster_df[self.ra].values
         dec = self.dec_v  # cluster_df[self.dec].values
@@ -118,23 +135,18 @@ class cluster:
         return ax
 
     def clustplot(self, ax, color_idx=0, binar_probs=None):
-        r"""Generate a color-magnitude plot.
+        """Generate a color-magnitude plot.
 
-        Parameters
-        ----------
-        ax : matplotlib.axis, optional, default=None
-            Matplotlib axis where to draw the plot
-        color_idx : int, default=0
-            Index of the color to plot. If ``0`` (default), plot the first color. If
-            ``1`` plot the second color.
-        binar_probs : numpy.array, optional, default=None
-            Array with probabilities of being a binary system for each observed star
-
-        Returns
-        -------
-        matplotlib.axis
-            Matplotlib axis object
-
+        :param ax: Matplotlib axis where to draw the plot
+        :type ax: matplotlib.axis, optional, default=None
+        :param color_idx: Index of the color to plot. If ``0`` (default), plot the
+            first color. If ``1`` plot the second color.
+        :type color_idx: int, default=0
+        :param binar_probs: Array with probabilities of being a binary system for each
+            observed star
+        :type binar_probs: numpy.array, optional, default=None
+        :return: Matplotlib axis object
+        :rtype: matplotlib.axis
         """
         if color_idx > 1:
             raise ValueError(
@@ -183,3 +195,105 @@ class cluster:
         ax.legend()
 
         return ax
+
+    def get_center(
+        self,
+        method="knn_5d",
+        xy_c=None,
+        vpd_c=None,
+        plx_c=None,
+        N_cluster=None,
+        N_clust_min=25,
+    ):
+        """Estimate center coordinates for the cluster
+
+        Use the available data (ra, dec, pmra, pmde, plx) to estimate a cluster's
+        center coordinates as the point of maximum density. Methods:
+
+        ``knn_5d``: Estimates the center value as the median position of the k
+        (k=N_clust_min) nearest stars to an estimate of the center in proper motions
+        and (ra, dec, plx), if given. All 5 dimensions of data must be available.
+
+        :param method: Method used to estimate center values, one of (``knn_5d``),
+            defaults to ``knn_5d``
+        :type method: str
+        :param xy_c: Estimated value for the (RA, DEC) center, defaults to ``None``
+        :type xy_c: tuple(float, float), optional
+        :param vpd_c: Estimated value for the (pmRA, pmDE) center, defaults to ``None``
+        :type vpd_c: tuple(float, float), optional
+        :param plx_c: Estimated value for the plx center, defaults to ``None``
+        :type plx_c: float, optional
+        :param N_cluster: Estimated number of members, defaults to ``None``
+        :type N_cluster: int, optional
+        :param N_clust_min: Minimum number of cluster members, defaults to ``25``
+        :type N_clust_min: int, optional
+
+        :return: Dictionary of center coordinates
+        :rtype: dict
+        """
+
+        if method == "knn_5d":
+            if any(
+                [
+                    _ is None
+                    for _ in (
+                        self.pmra_v,
+                        self.pmde_v,
+                        self.plx_v,
+                        self.e_pmra_v,
+                        self.e_pmde_v,
+                        self.e_plx_v,
+                    )
+                ]
+            ):
+                raise ValueError(
+                    f"Method '{method}' requires (ra, dec, pmra, pmde, plx) data and "
+                    + "their uncertainties"
+                )
+
+            # To galactic coordinates
+            glon, glat = cp.radec2lonlat(self.ra_v.values, self.dec_v.values)
+            X = np.array(
+                [
+                    glon,
+                    glat,
+                    self.pmra_v,
+                    self.pmde_v,
+                    self.plx_v,
+                    self.e_pmra_v,
+                    self.e_pmde_v,
+                    self.e_plx_v,
+                ]
+            )
+            # Reject nan values and extract clean data
+            _, X_no_nan = cp.reject_nans(X)
+            lon, lat, pmRA, pmDE, plx, _, _, _ = X_no_nan
+
+            x_c, y_c, pmra_c, pmde_c, plx_c = cp.get_5D_center(
+                lon,
+                lat,
+                pmRA,
+                pmDE,
+                plx,
+                xy_c=xy_c,
+                vpd_c=vpd_c,
+                plx_c=plx_c,
+                N_cluster=N_cluster,
+                N_clust_min=N_clust_min,
+            )
+            ra_c, dec_c = cp.lonlat2radec(x_c, y_c)
+
+        print("\nCenter coordinates found:")
+        print("ra_c     : {:.4f}".format(ra_c))
+        print("dec_c    : {:.4f}".format(dec_c))
+        print("pmra_c   : {:.3f}".format(pmra_c))
+        print("pmde_c   : {:.3f}".format(pmde_c))
+        print("plx_c    : {:.3f}".format(plx_c))
+
+        return {
+            "ra_c": ra_c,
+            "dec_c": dec_c,
+            "pmra_c": pmra_c,
+            "pmde_c": pmde_c,
+            "plx_c": plx_c,
+        }

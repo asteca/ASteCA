@@ -15,7 +15,7 @@ extinction, distance, metallicity, age, binarity, mass, etc..
 
 
 .. important::
-   Version |ProjectVersion| released on the 10th of May, 2024. See :ref:`changelog`
+   Version |ProjectVersion| released on the 26th of May, 2024. See :ref:`changelog`
    for a detailed list of the changes implemented.
 
 
@@ -76,6 +76,7 @@ TOC
 
    contents/installation
    contents/changelog
+   contents/api
 
 .. toctree::
    :maxdepth: 1
@@ -92,8 +93,4 @@ TOC
    tutorials/quickstart
 
 
-.. toctree::
-   :maxdepth: 1
-   :caption: API Reference
 
-   autoapi/asteca/index

@@ -1,6 +1,7 @@
+from .cluster import cluster as cluster
+from . import membership as membership
 from .isochrones import isochrones as isochrones
 from .synthetic import synthetic as synthetic
-from .cluster import cluster as cluster
 from .likelihood import likelihood as likelihood
 
 from contextlib import suppress
