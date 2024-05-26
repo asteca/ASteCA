@@ -1,5 +1,13 @@
 .. :changelog:
 
+`[v0.5.3] <https://github.com/asteca/asteca/releases/tag/v0.5.3>`__ - 2024-05-26
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+- Added the :py:meth:`asteca.membership.fastmp` method
+- Added the :py:meth:`asteca.cluster.cluster.get_center` method
+
+
+
 `[v0.5.2] <https://github.com/asteca/asteca/releases/tag/v0.5.2>`__ - 2024-05-07
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
