@@ -1,20 +1,6 @@
 API Reference
 =============
 
-.. toctree::
-   :titlesonly:
-   :maxdepth: 2
-
-   /../apidocs/asteca/asteca.cluster
-   /../apidocs/asteca/asteca.membership
-   /../apidocs/asteca/asteca.isochrones
-   /../apidocs/asteca/asteca.synthetic
-   /../apidocs/asteca/asteca.likelihood
-
-
-Classes
-~~~~~~~
-
 .. list-table::
    :class: autosummary longtable
    :align: left
@@ -34,4 +20,19 @@ Classes
    * - :py:obj:`likelihood <asteca.likelihood.likelihood>`
      - .. autodoc2-docstring:: asteca.likelihood.likelihood
           :summary:
+
+
+Submodules
+----------
+
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   /../apidocs/asteca/asteca.cluster
+   /../apidocs/asteca/asteca.membership
+   /../apidocs/asteca/asteca.isochrones
+   /../apidocs/asteca/asteca.synthetic
+   /../apidocs/asteca/asteca.likelihood
+
 
