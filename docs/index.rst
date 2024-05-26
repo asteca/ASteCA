@@ -76,6 +76,7 @@ TOC
 
    contents/installation
    contents/changelog
+   contents/api
 
 .. toctree::
    :maxdepth: 1
@@ -92,8 +93,4 @@ TOC
    tutorials/quickstart
 
 
-.. toctree::
-   :maxdepth: 1
-   :caption: API Reference
 
-   autoapi/asteca/index
