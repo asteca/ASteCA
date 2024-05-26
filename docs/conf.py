@@ -2,6 +2,7 @@
 #
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
+import os
 
 # -- Path setup --------------------------------------------------------------
 
@@ -59,12 +60,13 @@ autodoc2_packages = [
 ]
 autodoc2_hidden_objects = ["dunder", "private", "inherited"]
 
+
 ################################################################
 # This block removes the attributes from the apidocs .rst files.
 # I could not find a simpler way to do this 26/05/24
 # https://www.sphinx-doc.org/en/master/extdev/appapi.html#sphinx-core-events
-import os
 def source_read_handler(app, docname, source):
+    """'docname, source' not used but required"""
     path = "./apidocs/asteca/"
     for file in os.listdir(path):
         with open(path + file) as f:
@@ -72,7 +74,7 @@ def source_read_handler(app, docname, source):
             idxs = []
             for i, line in enumerate(lines):
                 if ".. py:attribute:" in line:
-                    idxs += list(range(i, i+6))
+                    idxs += list(range(i, i + 6))
         for i in range(len(lines), 0, -1):
             if i in idxs:
                 del lines[i]
@@ -80,8 +82,11 @@ def source_read_handler(app, docname, source):
             for line in lines:
                 f.write(line)
 
+
 def setup(app):
-    app.connect('source-read', source_read_handler)
+    app.connect("source-read", source_read_handler)
+
+
 ################################################################
 
 
