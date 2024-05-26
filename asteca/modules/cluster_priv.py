@@ -13,7 +13,7 @@ def radec2lonlat(ra, dec):
 
 
 def lonlat2radec(lon, lat):
-    gc = SkyCoord(l=lon * u.degree, b=lat * u.degree, frame='galactic')
+    gc = SkyCoord(l=lon * u.degree, b=lat * u.degree, frame="galactic")
     ra, dec = gc.fk5.ra.value, gc.fk5.dec.value
     return ra, dec
 
@@ -36,18 +36,34 @@ def reject_nans(data):
     return idx_clean, data.T[msk_accpt].T
 
 
+def get_Nd_dists(cents, data, dists_flag=False):
+    """Obtain indexes and distances of stars to the given center"""
+    # Distances to center
+    dist_Nd = spatial.distance.cdist(data, cents).T[0]
+    if dists_flag:
+        # Return the distances
+        return dist_Nd
+
+    # Indexes that sort the distances
+    d_idxs = dist_Nd.argsort()
+    # Return the indexes that sort the distances
+    return d_idxs
+
+
 def get_5D_center(
     lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c, N_cluster, N_clust_min, N_cent=500
 ):
     """
-    Estimate the 5-dimensional center of a cluster. Steps:
+    Estimate the 5-dimensional center of a cluster.
 
-    1. Estimate the center in PMs (the value can be given as input)
-    2. Using this center with any other given center, obtain the
-       'N_cent' stars closest to the combined center.
-    3. Estimate the 5-dimensional final center using KDE
+    Steps:
 
-    N_cent: how many stars are used to estimate the KDE center.
+    1. Keep only 'N_cent' stars if xy_c or plx_c are given
+    2. (Re)Estimate the center in PMs (the value can be given as input)
+    3. Obtain the 'N_cent' stars closest to the available center values
+    4. Estimate the 5-dimensional final center using kNN
+
+    N_cent: estimated number of members
 
     """
     # Re-write if this parameter is given
@@ -74,26 +90,16 @@ def get_5D_center(
     return x_c, y_c, pmra_c, pmde_c, plx_c
 
 
-def get_Nd_dists(cents, data, dists_flag=False):
-    """Obtain indexes and distances of stars to the given center"""
-    # Distances to center
-    dist_Nd = spatial.distance.cdist(data, cents).T[0]
-    if dists_flag:
-        # Return the distances
-        return dist_Nd
-
-    # Indexes that sort the distances
-    d_idxs = dist_Nd.argsort()
-    # Return the indexes that sort the distances
-    return d_idxs
-
-
 def filter_pms_stars(xy_c, plx_c, lon, lat, pmRA, pmDE, plx, N_cent):
-    """ """
-    # Distances to xy_c+plx_c centers, if any was given
+    """If either xy_c or plx_c values are given, select the 'N_cent' stars
+    closest to this 1D/2D/3D center, and return their proper motions.
+    """
+
+    # Distances to xy_c+plx_c centers
     if xy_c is None and plx_c is None:
         return pmRA, pmDE
 
+    # Create arrays with required shape
     if xy_c is None and plx_c is not None:
         cent = np.array([[plx_c]])
         data = np.array([plx]).T
@@ -136,7 +142,7 @@ def get_pms_center(vpd_c, N_clust_min, pmRA, pmDE, N_bins=50, zoom_f=4, N_zoom=1
         if vpd_c is not None:
             # Store the auto center for later
             cxm, cym = cx, cy
-            # Use the manual to zoom in
+            # Use the manual values to zoom in
             cx, cy = vpd_c
 
         # Zoom in
@@ -189,11 +195,10 @@ def get_stars_close_center(lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c, N_cent
 
 
 def get_kNN_center(N_clust_min, data):
-    """
-    Estimate 5D center with kNN. Better results are obtained not using
-    the parallax data
-    """
-    data_noplx = data[:, :4]
+    """Estimate 5D center with kNN."""
+
+    # Better results are obtained not using the parallax data?
+    data_noplx = data[:, :4]  # <-- HARDCODED
 
     tree = spatial.cKDTree(data_noplx)
     inx = tree.query(data_noplx, k=N_clust_min + 1)
@@ -203,10 +208,10 @@ def get_kNN_center(N_clust_min, data):
     # Sort by largest density
     idxs = np.argsort(-dens)
 
-    # Use the star with the largest density
+    # # Use the single star with the largest density
     # cent = np.array([data[idxs[0]]])[0]
-    # # Use median of stars with largest densities
+
+    # Use median of 'N_clust_min' stars with largest densities
     cent = np.median(data[idxs[:N_clust_min]], 0)
 
-    x_c, y_c, pmra_c, pmde_c, plx_c = cent
-    return x_c, y_c, pmra_c, pmde_c, plx_c
+    return cent

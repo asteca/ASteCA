@@ -2,6 +2,7 @@ import warnings
 import numpy as np
 from astropy.stats import RipleysKEstimator
 from scipy import spatial
+
 # from scipy.stats import gaussian_kde # NEEDS TEST, 05/24
 from . import cluster_priv as cp
 
@@ -19,17 +20,6 @@ def fastMP(
     N_resample,
 ):
     """ """
-    print("\nRunning fastMP...")
-    print(f"fixed_centers : {fixed_centers}")
-    print(f"N_cluster     : {N_cluster}")
-    print(f"N_clust_min   : {N_clust_min}")
-    print(f"N_clust_max   : {N_clust_max}")
-    centers_ex_flag = False
-    if centers_ex is not None:
-        centers_ex_flag = True
-    print(f"centers_ex    : {centers_ex_flag}")
-    print(f"N_resample    : {N_resample}")
-
     # HARDCODED
     N_break = max(50, int(N_resample * 0.05))
     # HARDCODED
@@ -230,7 +220,9 @@ def prep_extra_cl_dict(centers_ex):
     The parameter 'centers_ex' must be a list of dictionaries, one
     dictionary for each extra cluster in the frame. The dictionaries
     must have at most three keys, 'xy', 'pms', 'plx', each with a list
-    containing the center value(s) in those dimensions. Example:
+    containing the center value(s) in those dimensions.
+
+    Examples:
 
     centers_ex = [{'xy': [105.39, 0.9], 'plx': [1.3]}]
 
