@@ -1,5 +1,12 @@
 .. :changelog:
 
+`[v0.5.4] <https://github.com/asteca/asteca/releases/tag/v0.5.4>`__ - 2024-05-26
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+- Fix small issue with documentation in v0.5.3
+
+
+
 `[v0.5.3] <https://github.com/asteca/asteca/releases/tag/v0.5.3>`__ - 2024-05-26
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
