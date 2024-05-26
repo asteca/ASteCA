@@ -15,7 +15,7 @@ extinction, distance, metallicity, age, binarity, mass, etc..
 
 
 .. important::
-   Version |ProjectVersion| released on the 7th of May, 2024. See :ref:`changelog`
+   Version |ProjectVersion| released on the 26th of May, 2024. See :ref:`changelog`
    for a detailed list of the changes implemented.
 
 
