@@ -973,82 +973,116 @@ def add_errors(isoch_compl, err_dist, rand_norm_vals):
     return isoch_compl
 
 
-def generate(self, fit_params, plotflag=False):
-    r"""Returns the full synthetic cluster array.
+# def generate(self, fit_params, plotflag=False):
+#     r"""Returns the full synthetic cluster array.
 
-    This is an almost exact copy of the ``synth_cluster.generate()`` function with
-    the only difference that it returns the full array. This is generated:
+#     This is an almost exact copy of the ``synth_cluster.generate()`` function with
+#     the only difference that it returns the full array. This is generated:
 
-    synth_clust = [mag, c1, (c2), m_ini_1, mag_b, c1_b, (c2_b), m_ini_2]
+#     synth_clust = [mag, c1, (c2), m_ini_1, mag_b, c1_b, (c2_b), m_ini_2]
 
-    where c1 and c2 colors defined, and 'm_ini_1, m_ini_2' are the primary and
-    secondary masses of the binary systems. The single systems only have a '0'
-    stored in 'm_ini_2'.
+#     where c1 and c2 colors defined, and 'm_ini_1, m_ini_2' are the primary and
+#     secondary masses of the binary systems. The single systems only have a '0'
+#     stored in 'm_ini_2'.
 
-    """
-    # Return proper values for fixed parameters and parameters required
-    # for the (z, log(age)) isochrone averaging.
-    met, loga, alpha, beta, av, dr, rv, dm, ml, mh, al, ah = properModel(
-        self.met_age_dict, self.fix_params, fit_params
-    )
+#     """
+#     # Return proper values for fixed parameters and parameters required
+#     # for the (z, log(age)) isochrone averaging.
+#     met, loga, alpha, beta, av, dr, rv, dm, ml, mh, al, ah = properModel(
+#         self.met_age_dict, self.fix_params, fit_params
+#     )
 
-    # Generate a weighted average isochrone from the (z, log(age)) values in
-    # the 'model'.
-    isochrone = zaWAverage(
-        self.theor_tracks,
-        self.met_age_dict,
-        self.m_ini_idx,
-        met,
-        loga,
-        ml,
-        mh,
-        al,
-        ah,
-    )
+#     # Generate a weighted average isochrone from the (z, log(age)) values in
+#     # the 'model'.
+#     isochrone = zaWAverage(
+#         self.theor_tracks,
+#         self.met_age_dict,
+#         self.m_ini_idx,
+#         met,
+#         loga,
+#         ml,
+#         mh,
+#         al,
+#         ah,
+#     )
 
-    # Move theoretical isochrone using the distance modulus
-    isoch_moved = move_isochrone(isochrone, self.m_ini_idx, dm)
+#     # Move theoretical isochrone using the distance modulus
+#     isoch_moved = move_isochrone(isochrone, self.m_ini_idx, dm)
 
-    # Apply extinction correction
-    isoch_extin = extinction(
-        self.ext_law,
-        self.ext_coefs,
-        self.rand_floats["norm"][0],
-        self.rand_floats["unif"][0],
-        self.DR_distribution,
-        self.m_ini_idx,
-        self.binar_flag,
-        av,
-        dr,
-        rv,
-        isoch_moved,
-    )
+#     # Apply extinction correction
+#     isoch_extin = extinction(
+#         self.ext_law,
+#         self.ext_coefs,
+#         self.rand_floats["norm"][0],
+#         self.rand_floats["unif"][0],
+#         self.DR_distribution,
+#         self.m_ini_idx,
+#         self.binar_flag,
+#         av,
+#         dr,
+#         rv,
+#         isoch_moved,
+#     )
 
-    # Remove isochrone stars beyond the maximum magnitude
-    isoch_cut = cut_max_mag(isoch_extin, self.max_mag_syn)
-    if not isoch_cut.any():
-        return np.array([])
-    if plotflag:
-        return isoch_cut
+#     # Remove isochrone stars beyond the maximum magnitude
+#     isoch_cut = cut_max_mag(isoch_extin, self.max_mag_syn)
+#     if not isoch_cut.any():
+#         return np.array([])
+#     if plotflag:
+#         return isoch_cut
 
-    # Interpolate IMF's sampled masses into the isochrone.
-    isoch_mass = mass_interp(
-        isoch_cut, self.m_ini_idx, self.st_dist_mass[ml][al], self.N_obs_stars
-    )
-    if not isoch_mass.any():
-        return np.array([])
+#     # Interpolate IMF's sampled masses into the isochrone.
+#     isoch_mass = mass_interp(
+#         isoch_cut, self.m_ini_idx, self.st_dist_mass[ml][al], self.N_obs_stars
+#     )
+#     if not isoch_mass.any():
+#         return np.array([])
 
-    # Assignment of binarity.
-    isoch_binar = binarity(
-        alpha,
-        beta,
-        self.binar_flag,
-        self.m_ini_idx,
-        self.rand_floats["unif"][1],
-        isoch_mass,
-    )
+#     # Assignment of binarity.
+#     isoch_binar = binarity(
+#         alpha,
+#         beta,
+#         self.binar_flag,
+#         self.m_ini_idx,
+#         self.rand_floats["unif"][1],
+#         isoch_mass,
+#     )
 
-    # Assign errors according to errors distribution.
-    synth_clust = add_errors(isoch_binar, self.err_dist, self.rand_floats["norm"][1])
+#     # Assign errors according to errors distribution.
+#     synth_clust = add_errors(isoch_binar, self.err_dist, self.rand_floats["norm"][1])
 
-    return synth_clust
+#     return synth_clust
+
+
+# def _rm_low_masses(self, dm_min):
+#     """
+#     dm_min: float | None = None
+
+#     dm_min : float, optional, default=None
+#         Value for the minimum distance modulus. Used to constrain the lower masses
+#         in the theoretical isochrones to make the generating process more
+#         efficient.
+#     """
+#     min_masses = []
+#     for met_arr in self.theor_tracks:
+#         met_lst = []
+#         for age_arr in met_arr:
+#             mag, mass = age_arr[0], age_arr[self.m_ini_idx]
+#             i = np.argmin(abs(self.max_mag_syn - (mag + dm_min)))
+#             met_lst.append(mass[i])
+#         min_masses.append(met_lst)
+
+#     st_dist_mass_lmass = []
+#     for i, met_arr in enumerate(self.st_dist_mass):
+#         met_lst = []
+#         for j, mass_sample in enumerate(met_arr):
+#             min_mass = min_masses[i][j]
+#             msk = mass_sample > min_mass
+#             sampled_IMF = mass_sample[msk]
+#             met_lst.append(sampled_IMF)
+#         st_dist_mass_lmass.append(met_lst)
+
+#     # Make copy of original array, used for mass estimation in cluster() class
+#     self.st_dist_mass_full = self.st_dist_mass.copy()
+#     # Update this parameter with the new array
+#     self.st_dist_mass = st_dist_mass_lmass
