@@ -1,33 +1,34 @@
 import warnings
 from dataclasses import dataclass
-from typing import Optional
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from .isochrones import isochrones
+from .cluster import Cluster
+from .isochrones import Isochrones
 from .modules import synth_cluster_priv as scp
 from .modules import mass_binary as mb
 
 
 @dataclass
-class synthetic:
-    """Define a :class:`synthetic` object.
+class Synthetic:
+    """Define a :py:class:`Synthetic` object.
 
-    Use the isochrones loaded in the :py:class:`asteca.isochrones` object to generate a
-    :py:class:`asteca.synthetic` object. This object is used to generate synthetic
-    clusters given a :py:class:`asteca.cluster` object and a set of input fundamental
-    parameters (metallicity, age, distance, extinction, etc.).
+    Use the isochrones loaded in the
+    :py:class:`Isochrones <asteca.isochrones.Isochrones>` object
+    to generate a :py:class:`Synthetic` object. This object is used
+    to generate synthetic clusters given a :py:class:`Cluster <asteca.cluster.Cluster>`
+    object and a set of input fundamental parameters (metallicity, age, distance,
+    extinction, etc.).
 
     See the :ref:`synth_clusters` section for more details.
 
-    :param isochs: :py:class:`asteca.isochrones` object with the loaded files for the
-        theoretical isochrones
-    :type isochs: :class:`isochrones`
+    :param isochs: :py:class:`Isochrones <asteca.isochrones.Isochrones>` object with
+        the loaded files for the theoretical isochrones
+    :type isochs: :py:class:`Isochrones <asteca.isochrones.Isochrones>`
     :param ext_law: Extinction law. if ``GAIADR3`` is selected, the magnitude and first
-        color defined in :py:class:`asteca.isochrones` and :py:class:`asteca.cluster`
-        are assumed to be Gaia's (E)DR3 **G** and **(BP-RP)** respectively. The second
-        color (if defined) will always be affected by the ``CCMO`` model, defaults to
-        ``CCMO``
+        color defined in the :py:class:`Isochrones <asteca.isochrones.Isochrones>` and
+        :py:class:`Cluster <asteca.cluster.Cluster>` objects are assumed to be Gaia's
+        (E)DR3 **G** and **(BP-RP)** respectively. The second color (if defined) will
+        always be affected by the ``CCMO`` model, defaults to ``CCMO``
     :type ext_law: str: ``CCMO, GAIADR3``
     :param DR_distribution: Distribution function for the differential reddening,
         defaults to ``uniform``
@@ -43,16 +44,16 @@ class synthetic:
     :type gamma: str: ``D&K, fisher_stepped, fisher_peaked, raghavan``, float
     :param seed: Random seed. If ``None`` a random integer will be generated and used,
         defaults to ``None``
-    :type seed: int, optional
+    :type seed: int | None
     """
 
-    isochs: isochrones
+    isochs: Isochrones
     ext_law: str = "CCMO"
     DR_distribution: str = "uniform"
     IMF_name: str = "chabrier_2014"
     max_mass: int = 100_000
     gamma: float | str = "D&K"
-    seed: Optional[int] = None
+    seed: int | None = None
 
     def __post_init__(self):
         if self.seed is None:
@@ -126,26 +127,32 @@ class synthetic:
         print(f"Extinction law         : {self.ext_law}")
         print(f"Differential reddening : {self.DR_distribution}")
         print(f"Random seed            : {self.seed}")
-        print("Synthetic clusters object generated\n")
+        print("Synthetic clusters object generated")
 
-    def calibrate(self, cluster, fix_params: dict = {}):
-        """Calibrate a :py:class:`asteca.synthetic` object based on a
-        :py:class:`asteca.cluster` object and a dictionary of fixed fundamental
-        parameters (``fix_params``).
+    def calibrate(self, cluster: Cluster, fix_params: dict = {}):
+        """Calibrate a :py:class:`Synthetic` object based on a
+        :py:class:`Cluster <asteca.cluster.Cluster>` object and a dictionary of fixed
+        fundamental parameters (``fix_params``).
 
         Use the data obtained from your observed cluster stored in the
-        :py:class:`asteca.cluster` object, to calibrate a :py:class:`asteca.synthetic`
-        object. Additionally, a dictionary of fixed fundamental parameters
-        (metallicity, age, distance, extinction, etc.) can be passed.
+        :py:class:`Cluster <asteca.cluster.Cluster>` object, to calibrate a
+        :py:class:`Synthetic` object. Additionally, a dictionary of fixed fundamental
+        parameters (metallicity, age, distance, extinction, etc.) can be passed.
 
         See the :ref:`synth_clusters` section for more details.
 
-        :param cluster: :py:class:`asteca.cluster` object with the processed data from
-            your observed cluster
-        :type cluster: :py:class:`asteca.cluster`
+        :param cluster: :py:class:`Cluster <asteca.cluster.Cluster>` object with the
+            processed data from your observed cluster
+        :type cluster: Cluster
         :param fix_params: Dictionary with the values for the fixed parameters (if any),
             defaults to ``{}``
-        :type fix_params: dict, optional
+        :type fix_params: dict
+
+        :raises ValueError: If the number of colors defined in the
+            :py:class:`Cluster <asteca.cluster.Cluster>` and
+            :py:class:`Synthetic <asteca.synthetic.Synthetic>` objects do not match
+        :raises ValueError: If the metallicity or age parameters are not fixed to a
+            single value but there ranges are.
         """
         # Check that the number of colors match
         if self.isochs.color2_effl is not None and cluster.color2 is None:
@@ -192,22 +199,36 @@ class synthetic:
         # if dm_min is not None:
         #     self._rm_low_masses(dm_min)
 
-    def generate(self, fit_params: dict) -> np.ndarray:
+    def generate(
+        self,
+        fit_params: dict,
+        plot_flag: bool = False,
+        full_arr_flag: bool = False
+    ) -> np.array:
         """Generate a synthetic cluster.
 
         The synthetic cluster is generated according to the parameters given in
         the ``fit_params`` dictionary and the already calibrated
-        :py:class:`asteca.synthetic` object.
+        :py:class:`Synthetic` object.
 
         :param fit_params: Dictionary with the values for the fundamental parameters
             that were **not** included in the ``fix_params`` dictionary when the
-            :py:class:`asteca.synthetic` object was calibrated
-            (:meth:`synthetic.calibrate()` method).
+            :py:class:`Synthetic` object was calibrated
+            (:py:meth:`calibrate` method).
         :type fit_params: dict
-        :return: Return a ``np.array`` containing a synthetic cluster with the shape
-            ``[mag, c1, (c2)]``, where ``mag`` is the magnitude dimension, and
-            ``c1`` and ``c2`` (last one is optional) are the color dimension(s).
-        :rtype: array[mag, c1, (c2)]
+        :param plot_flag: If ``True`` returns the isochrone after the maximum magnitude
+            cut  is applied. Used mainly for plotting, defaults to ``False``
+        :type plot_flag: bool
+        :param full_arr_flag: If ``True`` returns the full array for the synthetic
+            cluster, inclusing the binary data (if any). Used mainly for plotting,
+            defaults to ``False``
+        :type full_arr_flag: bool
+
+        :return: By default it returns a ``np.array`` containing a synthetic cluster
+            with the shape ``[mag, c1, (c2)]``, where ``mag`` is the magnitude
+            dimension, and``c1`` and ``c2`` (last one is optional) are the color
+            dimension(s). This changes depending on the flags above.
+        :rtype: np.array
         """
 
         # Return proper values for fixed parameters and parameters required
