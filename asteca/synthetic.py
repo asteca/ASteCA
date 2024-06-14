@@ -103,11 +103,12 @@ class Synthetic:
         #             + "and 'BP-RP', respectively)."
         #         )
 
-        print("Instantiating synthetic...")
+        print("\nInstantiating synthetic...")
 
         # Sample the selected IMF
         Nmets, Nages = self.isochs.theor_tracks.shape[:2]
-        self.st_dist_mass = scp.sample_imf(self, Nmets, Nages)
+        self.st_dist_mass, self.st_dist_mass_ordered = scp.sample_imf(
+            self, Nmets, Nages)
 
         # Add binary systems
         self.theor_tracks = scp.add_binarity(self)
@@ -273,6 +274,8 @@ class Synthetic:
         isoch_cut = scp.cut_max_mag(isoch_extin, self.max_mag_syn)
         if not isoch_cut.any():
             return np.array([])
+        if plot_flag:
+            return isoch_cut
 
         # Interpolate IMF's sampled masses into the isochrone.
         isoch_mass = scp.mass_interp(
@@ -296,112 +299,32 @@ class Synthetic:
             isoch_binar, self.err_dist, self.rand_floats["norm"][1]
         )
 
+        if full_arr_flag:
+            return synth_clust
         return synth_clust[: self.m_ini_idx]
 
-    def synthplot(self, ax, fit_params, color_idx=0, isochplot=False):
-        """Generate a color-magnitude plot for a synthetic cluster.
-
-        The synthetic cluster is generated using the fundamental parameter values
-        given in the ``fit_params`` dictionary.
-
-        :param ax: Matplotlib axis where to draw the plot, defaults to ``None``
-        :type ax: matplotlib.axis, optional
-        :param fit_params: Dictionary with the values for the fundamental parameters
-            that were **not** included in the ``fix_params`` dictionary when the
-            :py:class:`asteca.synthetic` object was calibrated
-            (:meth:`synthetic.calibrate()` method).
-        :type fit_params: dict
-        :param color_idx: Index of the color to plot. If ``0`` (default), plot the
-            first color. If ``1`` plot the second color. Defaults to ``0``
-        :type color_idx: int
-        :param isochplot: If ``True``, the accompanying isochrone will be plotted,
-            defaults to ``False``
-        :type isochplot: bool
-        :return: Matplotlib axis object
-        :rtype: matplotlib.axis
-        """
-        if color_idx > 1:
-            raise ValueError(
-                f"Wrong 'color_idx' value ({color_idx}), should be one of: [0, 1]"
-            )
-
-        # Generate synthetic cluster.
-        synth_clust = scp.generate(self, fit_params)
-        if self.binar_flag is True:
-            binar_idx = ~np.isnan(synth_clust[-1])
-        else:
-            binar_idx = np.full(synth_clust.shape[1], False)
-
-        y_synth = synth_clust[0]
-        x_synth = synth_clust[1]
-        if color_idx == 1:
-            x_synth = synth_clust[2]
-        # Single synthetic systems
-        ax.scatter(
-            x_synth[~binar_idx],
-            y_synth[~binar_idx],
-            marker="^",
-            c="#519ddb",
-            alpha=0.5,
-            label=f"Synthetic (single), N={len(x_synth[~binar_idx])}",
-        )
-        # Binary synthetic systems
-        ax.scatter(
-            x_synth[binar_idx],
-            y_synth[binar_idx],
-            marker="v",
-            c="#F34C4C",
-            alpha=0.5,
-            label=f"Synthetic (binary), N={len(x_synth[binar_idx])}",
-        )
-
-        plt.ylabel(self.isochs.magnitude)
-        c1, c2 = self.isochs.color
-        if color_idx == 1:
-            c1, c2 = self.isochs.color2
-        plt.xlabel(f"{c1}-{c2}")
-        ax.set_ylim(max(self.mag_p) + 0.5, min(self.mag_p) - 0.5)
-        ax.legend()
-
-        if isochplot is False:
-            return ax
-
-        # Generate displaced isochrone
-        fit_params_copy = dict(fit_params)
-        fit_params_copy["DR"] = 0.0
-        isochrone = scp.generate(self, fit_params_copy, True)
-        # Remove stars beyond the color limits
-        xmin, xmax = x_synth[~binar_idx].min(), x_synth[~binar_idx].max()
-        c_idx = 1
-        if color_idx == 1:
-            c_idx = 2
-        msk = (isochrone[c_idx] >= xmin) & (isochrone[c_idx] <= xmax)
-        isochrone = isochrone[:, msk]
-        ax.plot(isochrone[c_idx], isochrone[0], c="k")
-
-        return ax
-
-    def masses_binary_probs(self, model, model_std):
-        """Estimate individual masses for the observed stars, along with their binary
-        probabilities (if binarity was estimated).
+    def get_models(
+        self,
+        model: dict,
+        model_std: dict,
+        radec_c: tuple[float, float],
+        N_models: int = 200
+    ) -> None:
+        """Generate random sampled models from the selected solution. Use these models
+        to generate full synthetic clusters.
 
         :param model: Dictionary with the values for the fundamental parameters that
             were **not** included in the ``fix_params`` dictionary when the
-            :py:class:`asteca.synthetic` object was calibrated
-            (:py:meth:`synthetic.calibrate()` method)
+            :py:class:`Synthetic` object was calibrated
+            (:py:meth:`synthetic.Synthetic.calibrate` method)
         :type model: dict
         :param model_std: Dictionary with the standard deviations for the fundamental
             parameters in the ``model`` argument
         :type model_std: dict
-        :return: Data frame containing per-star primary and secondary masses along with
-            their uncertainties, and their probability of being a binary system
-        :rtype: pandas.DataFrame
-        :return: Distribution of total binary fraction values for the cluster
-        :rtype: numpy.array
-        """
-        # Generate random models from the selected solution
-        models = mb.ranModels(model, model_std, self.seed)
+        :param N_models: Number of sampled models, defaults to ``200``
+        :type N_models: int
 
+        """
         # Observed photometry
         obs_phot = np.array([self.mag_p] + [_ for _ in self.colors_p])
         # Replace nans in mag and colors to avoid crashing KDTree()
@@ -411,20 +334,46 @@ class Synthetic:
         obs_phot[:, nan_msk] = -10.0
         obs_phot = obs_phot.T
 
-        (
-            m12_masses,
-            b_fr_all,
-        ) = (
-            [],
-            [],
-        )
-        for model in models:
-            isoch = scp.generate(self, model)
+        sampled_models = mb.ranModels(model, model_std, N_models, self.seed)
+
+        sampled_synthcls, close_stars_idxs = [], []
+        remove_model_index = []
+        for i, model in enumerate(sampled_models):
+            isoch = self.generate(model, full_arr_flag=True)
             if not isoch.any():
+                remove_model_index.append(i)
                 continue
-            m1_obs, m2_obs, b_fr = mb.get_m1m2_bpr(self, isoch, obs_phot)
+            sampled_synthcls.append(isoch)
+            idxs = mb.get_close_idxs(self, obs_phot, isoch)
+            close_stars_idxs.append(idxs)
+
+        if len(remove_model_index) > 0:
+            sampled_models = np.delete(sampled_models, remove_model_index).tolist()
+        self.sampled_models = sampled_models
+        self.sampled_synthcls = sampled_synthcls
+        self.close_stars_idxs = close_stars_idxs
+        self.obs_nan_msk = nan_msk
+
+        # Obtain galactic vertical distance and distance to center
+        Z, R_GC = mb.galactic_coords(self, radec_c)
+        self.Z = Z
+        self.R_GC = R_GC
+
+    def get_stellar_masses(
+        self,
+    ) -> pd.DataFrame:
+        """Estimate individual masses for the observed stars, along with their binary
+        probabilities (if binarity was estimated).
+
+        :return: Data frame containing per-star primary and secondary masses along with
+            their uncertainties, and their probability of being a binary system
+        :rtype: pandas.DataFrame
+
+        """
+        m12_masses = []
+        for i, isoch in enumerate(self.sampled_synthcls):
+            m1_obs, m2_obs = mb.get_m1m2(self, isoch, self.close_stars_idxs[i])
             m12_masses.append([m1_obs, m2_obs])
-            b_fr_all.append(b_fr)
         m12_masses = np.array(m12_masses)
 
         # Primary masses (median + stddev)
@@ -451,7 +400,9 @@ class Synthetic:
                 "binar_prob": binar_prob,
             }
         )
+
         # Assign all nans to stars with a photometric nan in any dimension
+        nan_msk = self.obs_nan_msk
         df[nan_msk] = np.nan
         if nan_msk.sum() > 0:
             warnings.warn(
@@ -460,20 +411,107 @@ class Synthetic:
                 + "binarity probability"
             )
 
-        return df, np.array(b_fr_all)
+        return df
 
-    def _get_masses(self, fit_params, model_std, ra_c, dec_c):
-        """Estimate the different total masses for the observed cluster"""
-        print("Estimating total initial and actual masses")
-        # Generate random models from the selected solution
-        models = mb.ranModels(fit_params, model_std, self.seed)
+    def get_binary_fraction(
+        self,
+    ) -> np.array:
+        """Estimate individual masses for the observed stars, along with their binary
+        probabilities (if binarity was estimated).
+
+        :return: Distribution of total binary fraction values for the cluster
+        :rtype: np.array
+        """
+        b_fr_all = []
+        for i, isoch in enumerate(self.sampled_synthcls):
+            b_fr = mb.get_bpr(self, isoch, self.close_stars_idxs[i])
+            b_fr_all.append(b_fr)
+
+        return np.array(b_fr_all)
+
+    def cluster_masses(
+        self,
+        rho_amb: float | None = None,
+        M_B: float = 2.5e10,
+        r_B: float = 0.5e3,
+        M_D: float = 7.5e10,
+        a: float = 5.4e3,
+        b: float = 0.3e3,
+        r_s: float = 15.19e3,
+        M_s: float = 1.87e11,
+        C_env: float = 810e6,
+        epsilon: float = 0.08,
+        gamma: float = 0.62
+    ) -> dict:
+        """Estimate the different total masses for the observed cluster.
+
+        The returned dictionary contains distributions for
+        ``M_obs, M_phot, M_evol, M_dyn``, where:
+
+        - ``M_obs`` : Observed mass
+        - ``M_phot``: Photometric mass, ie: mass not observed that is located below the
+          maximum observed magnitude
+        - ``M_evol``: Mass lost via stellar evolution
+        - ``M_dyn`` : Mass lost via dynamical effects
+
+        The actual and initial masses of the cluster can be obtained from these as:
+
+        - ``M_actual = M_obs + M_phot``
+        - ``M_init = M_actual + M_evol + M_dyn``
+
+        :param radec_c: Right ascension and declination center coordinates for the
+            cluster
+        :type radec_c: tuple[float, float]
+
+        :return: Dictionary with the mass distributions for the observed, photometric,
+            evolutionary, and dynamical masses: ``M_obs, M_phot, M_evol, M_dyn``
+        :rtype: dict
+        """
 
         masses_all = []
-        for i, model in enumerate(models):
-            isoch = scp.generate(self, model)
-            if not isoch.any():
-                continue
-            masses_all.append(mb.get_masses(self, model, ra_c, dec_c, isoch, i))
+        for i, model in enumerate(self.sampled_models):
+
+            # Extract met and loga
+            model_comb = self.fix_params | model
+            z_met, loga = model_comb["met"], model_comb["loga"]
+            if self.isochs.z_to_FeH is not None:
+                z_met = self.isochs.z_to_FeH * 10**z_met
+
+            # Estimate the actual mass, ie: the sum of the observed and photometric
+            # masses
+            isoch = self.sampled_synthcls[i]
+            M_obs, M_phot = mb.get_M_actual(self, isoch, i)
+            M_a = M_obs + M_phot
+
+            # Ambient density
+            if rho_amb is None:
+                rho_amb = mb.ambient_density(
+                    M_B,
+                    r_B,
+                    M_D,
+                    a,
+                    b,
+                    r_s,
+                    M_s,
+                    self.Z[i],
+                    self.R_GC[i]
+                )
+
+            # Dissolution parameter
+            t0 = mb.dissolution_param(C_env, epsilon, gamma, rho_amb)
+
+            # Fraction of the initial mass that is lost by stellar evolution
+            mu_ev = mb.stellar_evol_mass_loss(z_met, loga)
+
+            # Initial mass
+            M_i = mb.minit_LGB05(loga, M_a, gamma, t0, mu_ev)
+
+            # Obtain evolutionary and dynamical masses
+            M_evol = M_i * (1 - mu_ev)
+            M_dyn = M_i - M_evol - M_a
+
+            masses_all.append([M_obs, M_phot, M_evol, M_dyn])
+
         masses_all = np.array(masses_all).T
 
         # Check the number of generated synthetic stars
@@ -484,37 +522,11 @@ class Synthetic:
                 + "the 'max_mass' argument for a more accurate mass estimation"
             )
 
-        return {"M_init": masses_all[0], "M_actual": masses_all[1]}
+        M_actual = masses_all[0] + masses_all[1]
+        M_init = M_actual + masses_all[2] + masses_all[3]
 
-    # def _rm_low_masses(self, dm_min):
-    #     """
-    #     dm_min: float | None = None
-
-    #     dm_min : float, optional, default=None
-    #         Value for the minimum distance modulus. Used to constrain the lower masses
-    #         in the theoretical isochrones to make the generating process more
-    #         efficient.
-    #     """
-    #     min_masses = []
-    #     for met_arr in self.theor_tracks:
-    #         met_lst = []
-    #         for age_arr in met_arr:
-    #             mag, mass = age_arr[0], age_arr[self.m_ini_idx]
-    #             i = np.argmin(abs(self.max_mag_syn - (mag + dm_min)))
-    #             met_lst.append(mass[i])
-    #         min_masses.append(met_lst)
-
-    #     st_dist_mass_lmass = []
-    #     for i, met_arr in enumerate(self.st_dist_mass):
-    #         met_lst = []
-    #         for j, mass_sample in enumerate(met_arr):
-    #             min_mass = min_masses[i][j]
-    #             msk = mass_sample > min_mass
-    #             sampled_IMF = mass_sample[msk]
-    #             met_lst.append(sampled_IMF)
-    #         st_dist_mass_lmass.append(met_lst)
-
-    #     # Make copy of original array, used for mass estimation in cluster() class
-    #     self.st_dist_mass_full = self.st_dist_mass.copy()
-    #     # Update this parameter with the new array
-    #     self.st_dist_mass = st_dist_mass_lmass
+        return {
+            "M_init": M_init, "M_actual": M_actual,
+            "M_obs": masses_all[0], "M_phot": masses_all[1],
+            "M_evol": masses_all[2], "M_dyn": masses_all[3]
+        }

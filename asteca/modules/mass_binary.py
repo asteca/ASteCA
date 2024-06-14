@@ -5,7 +5,7 @@ import astropy.coordinates as coord
 from scipy.spatial import KDTree
 
 
-def ranModels(fit_params, model_std, seed, N_models=200):
+def ranModels(fit_params: dict, model_std: dict, N_models: int, seed: int) -> list:
     """
     Generate the 'N_models' models via sampling a Gaussian centered on 'fit_params',
     with standard deviation given by 'model_std'.
@@ -24,133 +24,138 @@ def ranModels(fit_params, model_std, seed, N_models=200):
     return ran_models
 
 
-def get_m1m2_bpr(self, isoch, obs_phot):
+def get_close_idxs(self, obs_phot, isoch):
+    """Indexes of the closest synthetic stars to observed stars"""
+    synth_photom = isoch[: self.m_ini_idx].T
+    tree = KDTree(synth_photom)
+    _, idxs = tree.query(obs_phot, k=1)
+    return idxs
+
+
+def get_m1m2(self, isoch: np.array, idxs: np.array):
     """ """
     # Masses
     mass_1, mass_2 = isoch[self.m_ini_idx], isoch[-1]
 
-    # Indexes of closets synthetic stars to observed stars
-    synth_photom = isoch[: self.m_ini_idx].T
-    tree = KDTree(synth_photom)
-    _, idxs = tree.query(obs_phot, k=1)
     # Assign primary and secondary (synthetic) masses to each observed star
     m1_obs, m2_obs = mass_1[idxs], mass_2[idxs]
+
+    return m1_obs, m2_obs
+
+
+def get_bpr(self, isoch: np.array, idxs: np.array):
+    """ """
+    # Secondary masses
+    mass_2 = isoch[-1]
+
+    # Assign secondary (synthetic) masses to each observed star
+    m2_obs = mass_2[idxs]
 
     # Single systems are identified with m2=np.nan. This mask identifies observed
     # stars identified as binary systems
     m2_msk = ~np.isnan(m2_obs)
-    # Binary fraction for the observed cluster
+
+    # Total binary fraction for the observed cluster
     b_fr = m2_msk.sum() / len(m2_obs)
 
-    return m1_obs, m2_obs, b_fr
+    return b_fr
 
 
-def get_masses(self, model, ra_c, dec_c, isoch, int_seed):
-    """ """
-    # Extract dm and loga
-    model_comb = self.fix_params | model
-    loga, dm = model_comb["loga"], model_comb["dm"]
-
-    # N_obs = cl_dict["N_obs_stars"]
-    mass_ini = isoch[self.m_ini_idx]
-    M_obs = mass_ini.sum()
-    mass_min, mass_max = mass_ini.min(), mass_ini.max()
-
-    # Select a random IMF sampling array
-    Nmets, Nages = len(self.st_dist_mass), len(self.st_dist_mass[0])
-    # i = np.random.randint(Nmets)
-    i = np.random.default_rng(self.seed + int_seed).integers(Nmets)
-    # j = np.random.randint(Nages)
-    j = np.random.default_rng(self.seed + int_seed).integers(Nages)
-    mass_samples = self.st_dist_mass[i][j]
-
-    mass_tot = np.cumsum(mass_samples)
-
-    gamma = 0.62
-    t = 10**loga
-    qev_t = stellar_evol_mass_loss(loga)
-    term1 = (1 - qev_t) ** gamma
-    t0 = minit_LGB05(ra_c, dec_c, dm)
-
-    def func_optm(N_max, flag_mass=False):
-        M_init_sample = mass_samples[: int(N_max)]
-        M_init = mass_tot[int(N_max)]
-
-        # Masks for the min-max mass range
-        msk_max = M_init_sample > mass_max
-        M_ev = M_init_sample[msk_max].sum()
-        M_actual_dyn = M_init - M_ev
-        msk_min = M_init_sample < mass_min
-        # This is the percentage of mass below the photometric minimum mass limit
-        M_ratio = M_init_sample[msk_min].sum() / M_actual_dyn
-
-        term2 = (gamma / (M_init**gamma)) * (t / t0)
-        M_actual, M_actual_range = 0, 0
-        if term1 > term2:
-            M_actual = M_init * (term1 - term2) ** (1 / gamma)
-            M_actual_range = M_actual - M_actual * M_ratio
-
-        if flag_mass:
-            return M_actual, M_init, abs(M_actual_range - M_obs)
-        return abs(M_actual_range - M_obs)
-
-    # Perform grid search
-    optimal_param = grid_search_optimal_parameter(func_optm, 100, len(mass_samples))
-    M_actual, M_init, mass_diff = func_optm(optimal_param, True)
-
-    # print(round(loga, 2), int(M_actual), int(M_init), int(mass_diff))
-
-    return M_init, M_actual
-
-
-def grid_search_optimal_parameter(
-    func, lower_bound, upper_bound, tolerance=500, max_iterations=5
-) -> float:
+def galactic_coords(
+    synthcl,
+    radec_c: float,
+) -> tuple[np.array, np.array]:
+    """Convert equatorial coordinates to cylindrical, and obtain the vertical distance
+    Z and the galactocentric distance R_GC
     """
-    Perform a grid search to find the optimal parameter within a given range.
+    c = SkyCoord(ra=radec_c[0] * u.degree, dec=radec_c[1] * u.degree)
+    lon, lat = c.galactic.l, c.galactic.b
+    dist_pc = []
+    for model in synthcl.sampled_models:
+        # Extract dm
+        model_comb = synthcl.fix_params | model
+        dist_pc.append(10 ** (0.2 * (model_comb["dm"] + 5)))
+    c = SkyCoord(l=lon, b=lat, distance=dist_pc * u.pc, frame="galactic")
+    c.representation_type = "cylindrical"
 
-    Parameters:
-    - func: The objective function to optimize.
-    - lower_bound: The lower bound of the parameter range.
-    - upper_bound: The upper bound of the parameter range.
-    - tolerance: The tolerance level to determine convergence.
-    - max_iterations: Maximum number of iterations.
+    # Extract z value
+    Z = c.z.value
 
-    Returns:
-    - optimal_parameter: The optimal parameter within the specified range.
+    # Estimate R_GC
+    gc = c.transform_to(coord.Galactocentric(galcen_distance=8 * u.kpc, z_sun=0 * u.pc))
+    R_GC = np.sqrt(gc.x.value**2 + gc.y.value**2)
+
+    return Z, R_GC
+
+
+def get_M_actual(synthcl, isoch, int_seed) -> tuple[float, float]:
+    """Estimate the actual mass using the observed mass and the fraction of
+    mass estimated to be beyond the maximum observed magnitude.
     """
 
-    iteration = 0
-    while iteration < max_iterations and (upper_bound - lower_bound) > tolerance:
-        mid_point = (lower_bound + upper_bound) / 2
-        par_range = upper_bound - lower_bound
-        left_point = mid_point - par_range / 4
-        right_point = mid_point + par_range / 4
+    mass_ini = isoch[synthcl.m_ini_idx]
+    M_obs = mass_ini.sum()    
 
-        func_mid = func(mid_point)
-        if func(left_point) < func_mid:
-            upper_bound = mid_point
-        elif func(right_point) < func_mid:
-            lower_bound = mid_point
-        else:
-            lower_bound = left_point
-            upper_bound = right_point
+    # Select a random IMF sampling array (faster than sampling the IMF in place)
+    Nmets, Nages = len(synthcl.st_dist_mass), len(synthcl.st_dist_mass[0])
+    i = np.random.default_rng(synthcl.seed + int_seed).integers(Nmets)
+    j = np.random.default_rng(synthcl.seed + int_seed).integers(Nages)
+    sorted_masses = synthcl.st_dist_mass_ordered[i][j]
 
-        iteration += 1
+    idx_min = np.argmin(abs(sorted_masses-mass_ini.min()))
+    idx_max = np.argmin(abs(sorted_masses-mass_ini.max()))
+    M_phot_sample = sorted_masses[:idx_min].sum()
+    M_obs_sample = sorted_masses[idx_min:idx_max].sum()
 
-    optimal_parameter = (lower_bound + upper_bound) / 2
+    # This is the ratio of the sampled mass below the minimum mass value,
+    # over the sampled mass within the observed mass range
+    factor = M_phot_sample / M_obs_sample
 
-    return optimal_parameter
+    # This is the 'photometric mass', or the mass that is lost beyond the minimum
+    # observed mass
+    M_phot = factor * M_obs
 
-
-def stellar_evol_mass_loss(loga) -> float:
-    """Fraction of the initial cluster mass (Mini) lost by stellar evolution"""
-    a, b, c = 7, 0.26, -1.8
-    q_ev = 10 ** ((max(7.1, loga) - a) ** b + c)
-    return q_ev
+    return M_obs, M_phot
 
 
-def minit_LGB05(ra, dec, dm, epsilon=0.08):
+def stellar_evol_mass_loss(z_met, loga) -> float:
+    """Fraction of the initial cluster mass (M_ini) lost by stellar evolution
+
+    Source: Lamers, Baumgardt & Gieles (2010); Table B2
+    (http://adsabs.harvard.edu/abs/2010MNRAS.409..305L)
+    """
+
+    mu_coeffs = {
+        "Z": np.array([0.0004, 0.0010, 0.0040, 0.0080, 0.0200]),
+        "a0": np.array([1.0541, 1.0469, 1.0247, 1.0078, 0.9770]),
+        "a1": np.array([-0.10912, -0.10122, -0.08307, -0.07456, -0.05709]),
+        "a2": np.array([-0.01082, -0.01349, -0.01845, -0.02002, -0.02338]),
+        "a3": np.array([0.00285, 0.00306, 0.00336, 0.00340, 0.00348])
+    }
+    i = np.argmin(abs(mu_coeffs["Z"]-z_met))
+    a0 = mu_coeffs['a0'][i]
+    a1 = mu_coeffs['a1'][i]
+    a2 = mu_coeffs['a2'][i]
+    a3 = mu_coeffs['a3'][i]
+
+    t_Myr = 10**loga
+    x = np.log10(t_Myr/1e6)
+    mu_ev = a0 + a1*x + a2*x**2 + a3*x**3
+
+    return mu_ev
+
+
+def ambient_density(
+    M_B,
+    r_B,
+    M_D,
+    a,
+    b,
+    r_s,
+    M_s,
+    Z,
+    R_GC
+):
     """
     Laplacian in spherical coordinates:
 
@@ -159,30 +164,9 @@ def minit_LGB05(ra, dec, dm, epsilon=0.08):
 
     I need polar coordinates in r so I just disregard the derivatives in the two
     angles.
+
+    Source: Angelo et al. (2023); 10.1093/mnras/stad1038
     """
-    # Constants for all clusters
-    gamma = 0.62
-    C_env0 = 810e6
-
-    # Constants for MW potentials
-    M_B = 2.5e10
-    r_B = 0.5e3
-    M_D = 7.5e10
-    a = 5.4e3
-    b = 0.3e3
-    r_s = 15.19e3
-    M_s = 1.87e11
-
-    # Extract z value
-    c = SkyCoord(ra=ra * u.degree, dec=dec * u.degree)
-    lon, lat = c.galactic.l, c.galactic.b
-    dist_pc = 10 ** (0.2 * (dm + 5))
-    c = SkyCoord(l=lon, b=lat, distance=dist_pc * u.pc, frame="galactic")
-    c.representation_type = "cylindrical"
-    z = c.z.value
-    # Estimate R_GC
-    gc = c.transform_to(coord.Galactocentric(galcen_distance=8 * u.kpc, z_sun=0 * u.pc))
-    r = np.sqrt(gc.x.value**2 + gc.y.value**2)
 
     # Hernquist potential (bulge)
     # https://galaxiesbook.org/chapters/I-01.-Potential-Theory-and-Spherical-Mass-Distributions.html; Eq 3.58
@@ -193,7 +177,7 @@ def minit_LGB05(ra, dec, dm, epsilon=0.08):
     # Phi_B_Laplacian = 2*M_B/r_B**3 * 1/((r/r_B)*(1+r/r_B)**3)
     # The above is equivalent to this one by
     # https://academic.oup.com/mnras/article/428/4/2805/992063; Eq 1
-    Phi_B_Laplacian = 2 * M_B * r_B / (r * (r + r_B) ** 3)
+    Phi_B_Laplacian = 2 * M_B * r_B / (R_GC * (R_GC + r_B) ** 3)
 
     # Miyamoto & Nagai potential (disk)
     # https://galaxiesbook.org/chapters/II-01.-Flattened-Mass-Distributions.html#Thickened-disk:-the-Miyamoto-Nagai-model
@@ -202,20 +186,77 @@ def minit_LGB05(ra, dec, dm, epsilon=0.08):
     numerator = (
         M_D
         * b**2
-        * (a * r**2 + (a + 3 * np.sqrt(z**2 + b**2)) * (a + np.sqrt(z**2 + b**2)) ** 2)
+        * (a * R_GC**2 + (a + 3 * np.sqrt(Z**2 + b**2)) * (a + np.sqrt(Z**2 + b**2)) ** 2)
     )
-    denominator = (b**2 + z**2) ** (3 / 2) * (
-        r**2 + (a + np.sqrt(b**2 + z**2)) ** 2
+    denominator = (b**2 + Z**2) ** (3 / 2) * (
+        R_GC**2 + (a + np.sqrt(b**2 + Z**2)) ** 2
     ) ** (5 / 2)
     Phi_D_laplacian = numerator / denominator
 
     # Sanderson potential (dark matter halo)
     A = -M_s / (np.log(2) - 0.5)
-    Phi_H_Laplacian = -A / (r * (r + r_s) ** 2)
+    Phi_H_Laplacian = -A / (R_GC * (R_GC + r_s) ** 2)
 
     # Ambient density
     rho_amb = (1 / (4 * np.pi)) * (Phi_B_Laplacian + Phi_D_laplacian + Phi_H_Laplacian)
-    t0 = C_env0 * (1 - epsilon) * 10 ** (-4 * gamma) * rho_amb ** (-0.5)
+
+    return rho_amb
+
+
+def dissolution_param(C_env, epsilon, gamma, rho_amb):
+    """
+    Lamers, Gieles & Zwart (2005), "Disruption time scales of star clusters in
+    different galaxies" introduces the "disruption time" 't_dis' in Eq 8.
+
+    The 'C_env' constant is originally set to 810 Myr and described as: "indicates
+    the time when 95 per cent of the initial cluster mass is lost". In Eq 9 it is
+    generalized to the range 300-800 Myr.
+
+    In Eq 10 't_dis' is written as t_4*(Mi/10^4)^(gamma) where 't_4' is "the disruption
+    time (in yrs) of a cluster with an initial mass of 10^4 Mo". This is the equivalent
+    of 't0' in later articles.
+
+    The relation with 'rho_amb' is described as "t_4 is expected to scale
+    with the inverse square-root of the mean density in the host galaxy".
+    For our Galaxy the authors estimate (see Table 1):
+    t_4 ~ 10^8.75 ; rho_amb ~ 10^-1
+
+
+    Lamers, Gieles, Bastian, Baumgardt, Kharchen & Zwart (2005), "An analytical
+    description of the disruption of star clusters in tidal fields with an application
+    to Galactic open clusters"
+    The 't0' constant is "a constant that depends on the tidal field of the particular
+    galaxy in which the cluster moves and on the ellipticity of its orbit". The
+    relation with 'rho_amb' is described as: "'t0' is expected to depend on the
+    ambient density at the location of the clusters in that galaxy as
+    t0~rho_amb^(-1/2)". 'C_env' is said to be in the range 300-800 Myr.
+
+    'mu_ev' is "fraction of the initial mass of the cluster that would have
+    remained at age t, if stellar evolution would have been the only mass loss
+    mechanism"
+
+
+    Lamers, Baumgardt & Gieles (2010), "Mass-loss rates and the mass evolution of
+    star clusters"
+
+    "Theoretical considerations suggest that gamma ~ 0.65 to 0.85."
+
+    "dissolution parameter (which is the hypothetical dissolution time-scale of a
+    cluster of 1 M)"
+
+
+    """
+    # Dissolution parameter
+    t0 = C_env * (1 - epsilon) * 10 ** (-4 * gamma) * rho_amb ** (-0.5)
 
     return t0
-    # Minit = (M_actual**gamma + gamma*(t/t0))**(1/gamma)/(1-q_ev)
+
+
+def minit_LGB05(loga, M_actual, gamma, t0, mu_ev):
+    """
+    """
+    # Initial mass
+    t = 10**loga
+    M_init = (M_actual**gamma + gamma*(t/t0))**(1/gamma) / mu_ev
+
+    return M_init

@@ -307,15 +307,17 @@ def sample_imf(self, Nmets: int, Nages: int) -> list:
     """
     inv_cdf = invTrnsfSmpl(self.IMF_name)
 
-    st_dist_mass = []
+    st_dist_mass, st_dist_mass_ordered = [], []
     for i in range(Nmets):
-        met_lst = []
+        met_lst, met_lst_ord = [], []
         for j in range(Nages):
             sampled_IMF = sampleInv(i + j + self.seed, self.max_mass, inv_cdf)
             met_lst.append(sampled_IMF)
+            met_lst_ord.append(np.sort(sampled_IMF))
         st_dist_mass.append(met_lst)
+        st_dist_mass_ordered.append(met_lst_ord)
 
-    return st_dist_mass
+    return st_dist_mass, st_dist_mass_ordered
 
 
 def randVals(self) -> dict:
