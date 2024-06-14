@@ -1,5 +1,15 @@
 .. :changelog:
 
+`[v0.5.5] <https://github.com/asteca/asteca/releases/tag/v0.5.5>`__ - 2024-06-XX
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+- Add Bayesian decontamination algorithm
+- Move plot functions to its own module
+- Add ``cluster_masses`` method to the ``synthetic`` class
+- 
+
+
+
 `[v0.5.4] <https://github.com/asteca/asteca/releases/tag/v0.5.4>`__ - 2024-05-26
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

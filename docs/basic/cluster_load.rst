@@ -1,7 +1,7 @@
 .. _cluster_load:
 
 Loading your cluster
-====================
+####################
 
 Your cluster's data needs to be stored in a file format compatible with the
 `pandas <https://pandas.pydata.org/>`_ package. The
@@ -48,7 +48,8 @@ That's it! You can now for example generate a quick coordinates plot with the
 
     import matplotlib.pyplot as plt
 
-    ax = my_cluster.radecplot()
+    ax = plt.subplot()
+    asteca.plot.radec(my_cluster, ax)
     plt.show()
 
 showing something like:
@@ -70,3 +71,10 @@ which should results in something like this:
 
 .. figure:: ../_static/cmd_plot.png
    :align: center
+
+
+Structure analysis
+******************
+
+
+xxx

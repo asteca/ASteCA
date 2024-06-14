@@ -83,6 +83,7 @@ TOC
    :caption: Basic configuration
 
    basic/cluster_load
+   basic/membership
    basic/isochrones_load
    basic/synthetic_clusters
 
