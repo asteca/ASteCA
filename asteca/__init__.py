@@ -1,8 +1,9 @@
-from .cluster import cluster as cluster
-from . import membership as membership
-from .isochrones import isochrones as isochrones
-from .synthetic import synthetic as synthetic
-from .likelihood import likelihood as likelihood
+from .cluster import Cluster as cluster
+from .membership import Membership as membership
+from .isochrones import Isochrones as isochrones
+from .synthetic import Synthetic as synthetic
+from .likelihood import Likelihood as likelihood
+from . import plot as plot
 
 from contextlib import suppress
 import importlib.metadata

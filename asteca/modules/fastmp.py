@@ -2,7 +2,6 @@ import warnings
 import numpy as np
 from astropy.stats import RipleysKEstimator
 from scipy import spatial
-
 # from scipy.stats import gaussian_kde # NEEDS TEST, 05/24
 from . import cluster_priv as cp
 
@@ -33,20 +32,6 @@ def fastMP(
     # Unpack input data with no 'nans'
     lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx = X_no_nan
 
-    # Estimate initial center
-    xy_c, vpd_c, plx_c = get_center(
-        xy_c,
-        vpd_c,
-        plx_c,
-        fixed_centers,
-        N_cluster,
-        N_clust_min,
-        lon,
-        lat,
-        pmRA,
-        pmDE,
-        plx,
-    )
     cents_init = [xy_c, vpd_c, plx_c]
 
     # Remove the most obvious field stars to speed up the process
@@ -187,11 +172,11 @@ def fastMP(
     # Change '0' probabilities using linear relation
     probs_final = probs_0(N_clust_min, dims_norm, X, cents_init, probs_final)
 
-    if break_check > N_break:
-        print(f"Convergence reached at {N_runs} runs.")
-    else:
-        print(f"Maximum number of runs reached: {N_resample}.")
     print(f"Estimated number of members: {N_survived}")
+    if break_check > N_break:
+        print(f"Convergence reached at {N_runs} runs")
+    else:
+        print(f"Maximum number of runs reached: {N_resample}")
 
     return probs_final
 
@@ -476,7 +461,7 @@ def estimate_nmembs(
         dims_norm,
     )
 
-    # NOT SURE WHY I REMOVED THIS BLOCK, POOR PERFORMANCE MOST LIKELY. NEED TO TEST
+    # DONT REMEMBER WHY I REMOVED THIS BLOCK, POOR PERFORMANCE MOST LIKELY. NEED TO TEST
     # # Filter by (lon, lat) KDE
     # kde_probs = self.kde_probs(lon, lat, idx_survived, msk)
     # if kde_probs is not None:
@@ -771,14 +756,13 @@ def assign_probs(N_all, idx_clean, idx_selected, N_runs):
     idx_clean: indexes of stars that survived the removal of 'nans' and
     of stars that are clear field stars
     """
-    # Initial -1 probabilities for *all* stars
-    probs_final = np.zeros(N_all) - 1
+    # Initial 0 probabilities for *all* stars
+    probs_final = np.zeros(N_all)
 
     # Number of processed stars (ie: not rejected as nans)
     N_stars = len(idx_clean)
     # Initial zero probabilities for the processed stars
     probs_all = np.zeros(N_stars)
-
     if idx_selected:
         # Estimate probabilities as averages of counts
         values, counts = np.unique(idx_selected, return_counts=True)
