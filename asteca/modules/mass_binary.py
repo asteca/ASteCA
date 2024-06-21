@@ -91,7 +91,9 @@ def get_M_actual(synthcl, isoch, int_seed) -> tuple[float, float]:
     """
 
     mass_ini = isoch[synthcl.m_ini_idx]
-    M_obs = mass_ini.sum()    
+    mass_2nd = isoch[-1]
+    # Add secondary masses
+    M_obs = np.nansum([mass_ini, mass_2nd])
 
     # Select a random IMF sampling array (faster than sampling the IMF in place)
     Nmets, Nages = len(synthcl.st_dist_mass), len(synthcl.st_dist_mass[0])
