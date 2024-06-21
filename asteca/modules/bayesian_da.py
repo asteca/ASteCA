@@ -2,18 +2,19 @@ import numpy as np
 import warnings
 
 
-def bayesian_mp(frame_arr, e_frame_arr, center, radius, n_memb, bayesda_runs):
+def bayesian_mp(frame_arr, e_frame_arr, center, radius, N_cluster, bayesda_runs):
     """
-    Bayesian field decontamination algorithm.
+    Bayesian field decontamination algorithm. See Perren et al. (2015)
 
-    See Perren et al. (2015)
+    A larger radius appears to translate to more estimated members using the
+    "density" method (which) is expected, but a smaller number of stars with
+    P>0.5 (and a cleaner final sequence)
     """
-
     cl_region, e_cl_region, fl_region_all, e_fl_region_all, cl_reg_idxs = get_cl_region(
-        frame_arr, e_frame_arr, center, radius)
-
-    n_memb, n_field, N_cl_region = estimate_N_membs(
-        n_memb, frame_arr, cl_region, center, radius)
+        frame_arr, e_frame_arr, center, radius
+    )
+    N_cl_region = cl_region.shape[1]
+    n_field = max(5, N_cl_region - N_cluster)
 
     # Normalize data
     cl_region, e_cl_region2 = dataNorm(cl_region, e_cl_region)
@@ -30,43 +31,46 @@ def bayesian_mp(frame_arr, e_frame_arr, center, radius, n_memb, bayesda_runs):
     # Run 'bayesda_runs*fl_likelihoods' times.
     N_total = 0
     for N_run in range(bayesda_runs):
-
         # Select stars from the cluster region according to their
         # associated probabilities so far.
         if N_run == 0:
             # Initial run
-            p = np.random.choice(N_cl_region, n_memb, replace=False)
+            p = np.random.choice(N_cl_region, N_cluster, replace=False)
         else:
             p = np.random.choice(
-                N_cl_region, n_memb, replace=False,
-                p=sum_cl_probs / sum_cl_probs.sum())
+                N_cl_region,
+                N_cluster,
+                replace=False,
+                p=sum_cl_probs / sum_cl_probs.sum(),
+            )
 
         # Generate a random field region
         fl_region, e_fl_region2 = generate_field_region(
-            fl_region_all, e_fl_region2_all, n_field)
+            fl_region_all, e_fl_region2_all, n_field
+        )
         # Compare cluster region with this field region
-        fl_lkl = likelihood(
-            cl_region_T, e_cl_region2_T, fl_region, e_fl_region2)
+        fl_lkl = likelihood(cl_region_T, e_cl_region2_T, fl_region, e_fl_region2)
         # Compare cluster region with the most probable cluster members (so far)
         cl_lkl = likelihood(
-            cl_region_T, e_cl_region2_T, cl_region[:, p], e_cl_region2[:, p])
+            cl_region_T, e_cl_region2_T, cl_region[:, p], e_cl_region2[:, p]
+        )
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             # Bayesian probability for each star within the cluster region.
-            bayes_prob = 1. / (1. + (fl_lkl / cl_lkl))
+            bayes_prob = 1.0 / (1.0 + (fl_lkl / cl_lkl))
         # Replace possible nan values with 0.
-        bayes_prob[np.isnan(bayes_prob)] = 0.
+        bayes_prob[np.isnan(bayes_prob)] = 0.0
         N_total += 1
         sum_cl_probs += bayes_prob
 
         # If probabilities converged break out
         prob_avrg_old, break_flag = break_check(
-            prob_avrg_old, sum_cl_probs, bayesda_runs, N_total)
+            prob_avrg_old, sum_cl_probs, bayesda_runs, N_total
+        )
         if break_flag:
             break
 
-    print(f"Estimated number of members: {n_memb}")
     if break_flag:
         print(f"Convergence reached at {N_run} runs")
     else:
@@ -85,7 +89,7 @@ def bayesian_mp(frame_arr, e_frame_arr, center, radius, n_memb, bayesda_runs):
 def get_cl_region(frame_arr, e_frame_arr2, center, radius):
     """Identify stars inside/outside the cluster region"""
     ra, dec = frame_arr[0], frame_arr[1]
-    dist = np.sqrt((ra - center[0])**2 + (dec - center[1])**2)
+    dist = np.sqrt((ra - center[0]) ** 2 + (dec - center[1]) ** 2)
     msk_in_rad = dist <= radius
     cl_reg_idxs = np.arange(len(ra))[msk_in_rad]
 
@@ -100,51 +104,6 @@ def get_cl_region(frame_arr, e_frame_arr2, center, radius):
     return cl_region, e_cl_region2, fl_region_all, e_fl_region2_all, cl_reg_idxs
 
 
-def estimate_N_membs(n_memb, frame_arr, cl_region, center, radius):
-    """
-    """
-    N_total = frame_arr.shape[1]
-    N_cl_region = cl_region.shape[1]
-    N_field = N_total - N_cl_region
-
-    dim_x = np.percentile(frame_arr[0], (1, 99))
-    dim_y = np.percentile(frame_arr[1], (1, 99))
-    A_total = (dim_x[1] - dim_x[0]) * (dim_y[1] - dim_y[0])
-
-    A_cl_region = np.pi*radius**2
-    A_field = A_total - A_cl_region
-    dens_field = N_field / A_field
-
-    if n_memb is None:
-        n_field = int(dens_field * A_cl_region)
-        n_memb = int(N_cl_region - n_field)
-    else:
-        n_field = N_cl_region - n_memb
-
-    # n_all = []
-    # ra, dec = frame_arr[0], frame_arr[1]
-    # for radius in np.linspace(0.001, 1, 100):
-    #     dist = np.sqrt((ra - center[0])**2 + (dec - center[1])**2)
-    #     msk = dist <= radius
-    #     cl_region = frame_arr[2:, msk]
-    #     N_cl_region = cl_region.shape[1]
-
-    #     A_cl_region = np.pi*radius**2
-    #     A_field = A_total - A_cl_region
-    #     dens_field = N_field / A_field
-
-    #     n_field = int(dens_field * A_cl_region)
-    #     n_memb = int(N_cl_region - n_field)
-    #     if n_memb < 0:
-    #         break
-
-    #     n_all.append([n_memb, n_field])
-    #     print(round(radius, 3), N_cl_region, n_field, n_memb)
-    # breakpoint()
-
-    return n_memb, n_field, N_cl_region
-
-
 def generate_field_region(fl_region_all, e_fl_region2_all, n_field):
     """Generate random field regions."""
     idxs = np.random.choice(fl_region_all.shape[1], n_field, replace=False)
@@ -155,7 +114,7 @@ def generate_field_region(fl_region_all, e_fl_region2_all, n_field):
     return fl_region, e_fl_region2
 
 
-def dataNorm(arr, e_arr, sigma_max=4.):
+def dataNorm(arr, e_arr, sigma_max=4.0):
     """
     Mask 'sigma_max' sigma outliers (particularly important when PMs are used),
     and normalize arrays.
@@ -164,8 +123,7 @@ def dataNorm(arr, e_arr, sigma_max=4.):
         for dim in tarr:
             med, std = np.nanmedian(dim), np.nanstd(dim)
             msk = np.logical_or(
-                dim < med - sigma_max * std,
-                dim > med + sigma_max * std
+                dim < med - sigma_max * std, dim > med + sigma_max * std
             )
             dim[msk] = np.nan
 
@@ -212,12 +170,12 @@ def likelihood(cl_region_T, e_cl_region2_T, region, e_region2):
     e_sum2 = e_cl_region2_T + e_region2.T[None, :]
 
     # Handle 'nan' values. THIS IS IMPORTANT
-    arr_diff[np.isnan(arr_diff)] = 0.
-    e_sum2[np.isnan(e_sum2)] = 1.
+    arr_diff[np.isnan(arr_diff)] = 0.0
+    e_sum2[np.isnan(e_sum2)] = 1.0
 
-    Dsum = ((arr_diff)**2 / e_sum2).sum(axis=-1)
+    Dsum = ((arr_diff) ** 2 / e_sum2).sum(axis=-1)
     # Clip max values in place. THIS IS IMPORTANT
-    np.clip(Dsum, a_min=None, a_max=50., out=Dsum)
+    np.clip(Dsum, a_min=None, a_max=50.0, out=Dsum)
 
     sum_M_j = np.exp(-0.5 * Dsum) / np.sqrt(np.prod(e_sum2, axis=-1))
     Lkl = np.nansum(sum_M_j, axis=-1)
@@ -239,7 +197,7 @@ def break_check(prob_avrg_old, runs_fields_probs, bayesda_runs, N_total):
 
     break_flag = False
     # Check if mean probabilities changed within 0.1%
-    if np.mean(abs(prob_avrg_old-prob_avrg)) < 0.001:
+    if np.mean(abs(prob_avrg_old - prob_avrg)) < 0.001:
         break_flag = True
 
     return prob_avrg, break_flag
