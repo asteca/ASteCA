@@ -3,10 +3,10 @@
 Synthetic clusters
 ##################
 
-The :py:mod:`asteca.synthetic` class allows generating synthetic clusters from:
+The :py:class:`asteca.synthetic` class allows generating synthetic clusters from:
 
-1. An :class:`isochrones` object
-2. A :class:`cluster` object
+1. An :py:class:`asteca.isochrones.Isochrones` object
+2. A :py:class:`asteca.cluster.Cluster` object for calibration
 3. A dictionary of fixed fundamental parameters (optional)
 4. A dictionary of free fundamental parameters to be fitted
 
@@ -539,6 +539,12 @@ written as the sum of all of its components as:
 
     M_{i} = M_{obs} + M_{phot} + M_{ev} + M_{dyn}
 
+The actual mass $M_{a}$ is estimated by **ASteCA** starting from the
+observed mass $M_{obs}$ (approximated by a sampled synthetic cluster with parameters
+matching those of the observed cluster) and using an IMF sample to infer the missing
+portion below the maximum magnitude cut, i.e. the photometric mass $M_{phot}$. As stated
+above, the sum of these two is equivalent to $M_{a}$.
+
 Following `Lamers et al. (2005)
 <https://www.aanda.org/articles/aa/abs/2005/37/aa2241-04/aa2241-04.html>`_, the initial
 mass can be estimated via:
@@ -577,7 +583,7 @@ location of the clusters in the Galaxy as:
 
 where $C_{env}$ is a constant set to 810 Myr (`Lamers, Gieles & Zwart 2005
 <https://www.aanda.org/articles/aa/abs/2005/01/aa1476/aa1476.html>`_), $\epsilon$ is
-the ellipticity of the orbit, and $\rho_{amb}$ is the ambient density which depends on
+the eccentricity of the orbit, and $\rho_{amb}$ is the ambient density which depends on
 the adopted gravitational potential field.
 
 Following `Angelo et al. (2023)
@@ -592,20 +598,22 @@ where $\phi_B(r),\, \phi_D(\rho, z),\, \phi_H(r)$ are the bulge, disc and halo
 potentials, respectively (see Eqs 8, 9 and 10 of the Angelo et al. article to see how
 these are modeled).
 
-Finally, the actual mass $M_{a}$ is estimated by **ASteCA** starting from the
-observed mass $M_{obs}$ (approximated by a sampled synthetic cluster with parameters
-matching those of the observed cluster) and using an IMF sample to infer the missing
-portion below the maximum magnitude cut, i.e. the photometric mass $M_{phot}$. As stated
-above, the sum of these two is equivalent to $M_{a}$.
-
-Plugging these values into the equation for $M_{i}$, we can estimate all the masses
-and their uncertainties through a bootstrap process.
+Finally, plugging these values into the equation for $M_{i}$, we can estimate all the
+masses and their uncertainties through a bootstrap process. **ASteCA** applies all these
+processes via the
+:py:meth:`cluster_masses() <asteca.synthetic.Synthetic.cluster_masses>`
+method as:
 
 
 .. code-block:: python
 
     masses_dict = synthcl.cluster_masses()
     
+The returned dictionary contains arrays with the distributions of masses for each
+mass. Their median and STDDEV values can be extracted for example with:
+
+.. code-block:: python
+
     # Print the median mass values and their STDDEV
     for k, arr in masses_dict.items():
         print("{:<8}: {:.0f}+/-{:.0f}".format(k, np.median(arr), np.std(arr)))
