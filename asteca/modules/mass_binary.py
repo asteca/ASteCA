@@ -101,8 +101,8 @@ def get_M_actual(synthcl, isoch, int_seed) -> tuple[float, float]:
     j = np.random.default_rng(synthcl.seed + int_seed).integers(Nages)
     sorted_masses = synthcl.st_dist_mass_ordered[i][j]
 
-    idx_min = np.argmin(abs(sorted_masses-mass_ini.min()))
-    idx_max = np.argmin(abs(sorted_masses-mass_ini.max()))
+    idx_min = np.argmin(abs(sorted_masses - mass_ini.min()))
+    idx_max = np.argmin(abs(sorted_masses - mass_ini.max()))
     M_phot_sample = sorted_masses[:idx_min].sum()
     M_obs_sample = sorted_masses[idx_min:idx_max].sum()
 
@@ -129,43 +129,35 @@ def stellar_evol_mass_loss(z_met, loga) -> float:
         "a0": np.array([1.0541, 1.0469, 1.0247, 1.0078, 0.9770]),
         "a1": np.array([-0.10912, -0.10122, -0.08307, -0.07456, -0.05709]),
         "a2": np.array([-0.01082, -0.01349, -0.01845, -0.02002, -0.02338]),
-        "a3": np.array([0.00285, 0.00306, 0.00336, 0.00340, 0.00348])
+        "a3": np.array([0.00285, 0.00306, 0.00336, 0.00340, 0.00348]),
     }
-    i = np.argmin(abs(mu_coeffs["Z"]-z_met))
-    a0 = mu_coeffs['a0'][i]
-    a1 = mu_coeffs['a1'][i]
-    a2 = mu_coeffs['a2'][i]
-    a3 = mu_coeffs['a3'][i]
+    i = np.argmin(abs(mu_coeffs["Z"] - z_met))
+    a0 = mu_coeffs["a0"][i]
+    a1 = mu_coeffs["a1"][i]
+    a2 = mu_coeffs["a2"][i]
+    a3 = mu_coeffs["a3"][i]
 
     t_Myr = 10**loga
-    x = np.log10(t_Myr/1e6)
-    mu_ev = a0 + a1*x + a2*x**2 + a3*x**3
+    x = np.log10(t_Myr / 1e6)
+    mu_ev = a0 + a1 * x + a2 * x**2 + a3 * x**3
 
     return mu_ev
 
 
 def ambient_density(M_B, r_B, M_D, a, b, r_s, M_s, Z, R_GC, R_xy):
     """
-    Laplacian in spherical coordinates:
-
-    https://planetmath.org/derivationofthelaplacianfromrectangulartosphericalcoordinates
-    https://www.math.cmu.edu/~rcristof/pdf/Teaching/Spring2017/The%20Laplacian%20in%20polar%20and%20spherical%20coordinates(1).pdf
-
-    I need polar coordinates in r so I just disregard the derivatives in the two
-    angles.
-
     Source: Angelo et al. (2023); 10.1093/mnras/stad1038
+
+    The 4*pi constant is left for the final evaluation
     """
 
     # Hernquist potential (bulge)
     # https://galaxiesbook.org/chapters/I-01.-Potential-Theory-and-Spherical-Mass-Distributions.html; Eq 3.58
-    # This source above gives a density that does not match the two below formulas:
-    # r_B/(r*(1+r/R_B)**3) <-- ?
+    # Phi_B_Laplacian = rho_0 * r_B/(r*(1+r/r_B)**3)
     # https://docs.galpy.org/en/latest/reference/potentialhernquist.html
     # "note that amp is 2 x [total mass] for the chosen definition of the Two Power Spherical potential"
-    # Phi_B_Laplacian = 2*M_B/r_B**3 * 1/((r/r_B)*(1+r/r_B)**3)
-    # The above is equivalent to this one by
-    # https://academic.oup.com/mnras/article/428/4/2805/992063; Eq 1
+    # Phi_B_Laplacian = 2*M_B/(4*pi*r_B**3) * 1/((r/r_B)*(1+r/r_B)**3)
+    # The two above are equivalent if rho_0 = 2*M_B/(4*pi*r_B**3)
     Phi_B_Laplacian = 2 * M_B * r_B / (R_GC * (R_GC + r_B) ** 3)
 
     # Miyamoto & Nagai potential (disk)
@@ -246,9 +238,9 @@ def dissolution_param(C_env, epsilon, gamma, rho_amb):
 
 def minit_LGB05(loga, M_actual, gamma, t0, mu_ev):
     """
+    Initial mass estimation from Lamers et al. 2005
     """
-    # Initial mass
     t = 10**loga
-    M_init = (M_actual**gamma + gamma*(t/t0))**(1/gamma) / mu_ev
+    M_init = (M_actual**gamma + gamma * (t / t0)) ** (1 / gamma) / mu_ev
 
     return M_init
