@@ -367,7 +367,7 @@ class Synthetic:
         print(f"N_models       : {N_models}")
         print("Attributes stored in Synthetic object")
 
-    def get_stellar_masses(
+    def stellar_masses(
         self,
     ) -> pd.DataFrame:
         """Estimate individual masses for the observed stars, along with their binary
@@ -421,7 +421,7 @@ class Synthetic:
 
         return df
 
-    def get_binary_fraction(
+    def binary_fraction(
         self,
     ) -> np.array:
         """Estimate individual masses for the observed stars, along with their binary

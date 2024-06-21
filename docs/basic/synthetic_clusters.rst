@@ -390,6 +390,7 @@ overlays the isochrone used as a building block for the synthetic cluster:
     :align: center
 
 
+.. _masses_and_binarity:
 
 Mass and binarity
 *****************
@@ -437,13 +438,13 @@ Per star masses and binarity
 
 An estimation of the observed stars individual masses and their probability of belonging
 to a binary system can be achieved via the
-:py:meth:`get_stellar_masses() <asteca.synthetic.Synthetic.get_stellar_masses>`
+:py:meth:`stellar_masses() <asteca.synthetic.Synthetic.stellar_masses>`
 method:
 
 .. code-block:: python
 
     # Assuming `synthcl.get_models(model, model_std)` was already performed
-    df_masses_bprob = synthcl.get_stellar_masses()
+    df_masses_bprob = synthcl.stellar_masses()
 
 The returned variable ``df_masses_bprob`` is a ``pandas.Dataframe`` containing the
 columns ``m1, m1_std, m2, m2_std, binar_prob``:
@@ -487,13 +488,13 @@ Total binary fraction
 Since the fraction of synthetic binary systems is handled through the ``alpha, beta``
 parameters, there is no *binary fraction* parameter than can be fitted using the
 synthetic clusters. This parameter needs to be generated separately via the
-:py:meth:`get_binary_fraction() <asteca.synthetic.Synthetic.get_binary_fraction>`
+:py:meth:`binary_fraction() <asteca.synthetic.Synthetic.binary_fraction>`
 method as follows:
 
 .. code-block:: python
 
     # Assuming `synthcl.get_models(model, model_std)` was already performed
-    binar_f = synthcl.get_binary_fraction()
+    binar_f = synthcl.binary_fraction()
 
     # Print median and STDDEV values
     print("b_fr: {:.2f}+/-{:.2f}".format(np.median(binar_vals), np.std(binar_vals)))
