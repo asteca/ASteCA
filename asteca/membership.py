@@ -28,20 +28,20 @@ class Membership:
     employed.
 
     :param cluster: :py:class:`Cluster <asteca.cluster.Cluster>` object with the
-        loaded data for the observed cluster
+        loaded data for the observed field
     :type cluster: :py:class:`Cluster <asteca.cluster.Cluster>`
     """
 
-    my_cluster: Cluster
+    my_field: Cluster
 
     def __post_init__(self):
         noradeg_flag = False
         try:
-            self.my_cluster.ra
+            self.my_field.ra
         except AttributeError:
             noradeg_flag = True
         try:
-            self.my_cluster.dec
+            self.my_field.dec
         except AttributeError:
             noradeg_flag = True
         if noradeg_flag:
@@ -49,13 +49,13 @@ class Membership:
                 "The 'Membership' class requires (RA, DEC) data\n"
                 + "to be present in the 'cluster' object"
             )
+        if hasattr(self.my_field, "N_cluster") is False:
+            raise ValueError(
+                "The 'Membership' class requires the 'N_cluster' attribute\n"
+                + "to be present in the 'cluster' object"
+            )
 
-    def bayesian(
-        self,
-        N_cluster: int | None = None,
-        N_runs: int = 1000,
-        eq_to_gal: bool = False
-    ) -> np.array:
+    def bayesian(self, N_runs: int = 1000, eq_to_gal: bool = False) -> np.array:
         """Assign membership probabilities.
 
         Estimate the probability of being a true cluster member for all observed
@@ -63,8 +63,6 @@ class Membership:
         are required to be present in the
         :py:class:`Cluster <asteca.cluster.Cluster>` object.
 
-        :param N_cluster: Estimated number of members, defaults to ``None``
-        :type N_cluster: int | None
         :param N_runs: Maximum number of runs, defaults to ``1000``
         :type N_runs: int
         :param eq_to_gal: Convert ``(RA, DEC)`` to ``(lon, lat)``. Useful for clusters
@@ -78,15 +76,15 @@ class Membership:
         :return: Membership probabilities for all stars in the frame
         :rtype: np.array
         """
-        for attrib in ('radec_c', 'radius'):
-            if hasattr(self.my_cluster, attrib) is False:
+        for attrib in ("radec_c", "radius"):
+            if hasattr(self.my_field, attrib) is False:
                 raise AttributeError(
                     f"Attribute '{attrib}' is required to be present "
                     + "in the 'cluster' object"
                 )
 
-        xc, yc = self.my_cluster.ra_v, self.my_cluster.dec_v
-        center = self.my_cluster.radec_c
+        xc, yc = self.my_field.ra_v, self.my_field.dec_v
+        center = self.my_field.radec_c
         cent_str = "radec_c "
         # Convert (RA, DEC) to (lon, lat)
         if eq_to_gal is True:
@@ -96,76 +94,58 @@ class Membership:
 
         print("\nRunning Bayesian DA...")
         print("{}       : ({:.4f}, {:.4f})".format(cent_str, *center))
-        print(f"radius         : {self.my_cluster.radius} [deg]")
-        print(f"N_cluster      : {N_cluster}")
+        print(f"radius         : {self.my_field.radius} [deg]")
+        print(f"N_cluster      : {self.my_field.N_cluster}")
         print(f"N_runs         : {N_runs}")
 
         # Generate input data array
         X = [xc, yc]
         e_X = []
-        if hasattr(self.my_cluster, 'mag_p'):
-            X.append(self.my_cluster.mag_p)
-            e_X.append(self.my_cluster.e_mag_p)
-        if hasattr(self.my_cluster, 'colors_p'):
-            X.append(self.my_cluster.colors_p[0])
-            e_X.append(self.my_cluster.e_colors_p[0])
+        if hasattr(self.my_field, "mag_p"):
+            X.append(self.my_field.mag_p)
+            e_X.append(self.my_field.e_mag_p)
+        if hasattr(self.my_field, "colors_p"):
+            X.append(self.my_field.colors_p[0])
+            e_X.append(self.my_field.e_colors_p[0])
             try:
-                X.append(self.my_cluster.colors_p[1])
-                e_X.append(self.my_cluster.e_colors_p[1])
+                X.append(self.my_field.colors_p[1])
+                e_X.append(self.my_field.e_colors_p[1])
             except IndexError:
                 pass
-        if hasattr(self.my_cluster, 'plx_v'):
-            X.append(self.my_cluster.plx_v)
-            e_X.append(self.my_cluster.e_plx_v)
-        if hasattr(self.my_cluster, 'pmra_v'):
-            X.append(self.my_cluster.pmra_v)
-            e_X.append(self.my_cluster.e_pmra_v)
-        if hasattr(self.my_cluster, 'pmde_v'):
-            X.append(self.my_cluster.pmde_v)
-            e_X.append(self.my_cluster.e_pmde_v)
+        if hasattr(self.my_field, "plx_v"):
+            X.append(self.my_field.plx_v)
+            e_X.append(self.my_field.e_plx_v)
+        if hasattr(self.my_field, "pmra_v"):
+            X.append(self.my_field.pmra_v)
+            e_X.append(self.my_field.e_pmra_v)
+        if hasattr(self.my_field, "pmde_v"):
+            X.append(self.my_field.pmde_v)
+            e_X.append(self.my_field.e_pmde_v)
         X = np.array(X)
         e_X = np.array(e_X)
 
-        probs = bayesian_mp(X, e_X, center, self.my_cluster.radius, N_cluster, N_runs)
+        probs = bayesian_mp(
+            X, e_X, center, self.my_field.radius, self.my_field.N_cluster, N_runs
+        )
         return probs
 
     def fastmp(
         self,
         fixed_centers: bool = False,
-        N_cluster: int | None = None,
-        N_clust_min: int = 25,
-        N_clust_max: int = 5000,
-        centers_ex: list[dict] | None = None,
+        # centers_ex: list[dict] | None = None,
         N_resample: int = 1000,
-        eq_to_gal: bool = True
+        eq_to_gal: bool = True,
     ) -> np.array:
         """Assign membership probabilities.
 
         Estimate the probability of being a true cluster member for all observed
         stars using the fastMP algorithm. The following data dimensions are required:
         ``(pmRA, pmDE, plx)``; photometry is not employed. Center estimates in
-        ``(RA, DEC)``, as well as ``(pmRA, pmDE)`` and ``plx`` are required. 
+        ``(RA, DEC)``, as well as ``(pmRA, pmDE)`` and ``plx`` are required.
 
         :param fixed_centers: If ``True`` any center estimate (radec_c, pms_c, plx_c)
             given will be kept fixed throughout the process, defaults to ``False``
         :type fixed_centers: bool
-        :param N_cluster: Estimated number of members, defaults to ``None``
-        :type N_cluster: int | None
-        :param N_clust_min: Minimum number of cluster members, defaults to ``25``
-        :type N_clust_min: int
-        :param N_clust_max: Maximum number of cluster members, defaults to ``5000``
-        :type N_clust_max: int
-        :param centers_ex: List of dictionaries, one dictionary for each object that
-            shares the frame with the cluster and that should be ignored. The
-            dictionaries must have at most three keys, 'xy', 'pms', 'plx', each with a
-            list containing the center value(s) in those dimensions. Defaults to
-            ``None``. Examples:
-            one object:
-            ``[{'xy': [105.39, 0.9], 'plx': [1.3]}]``,
-            two objects:
-            ``[{'xy': [105.39, 0.9], 'pms': [3.5, -0.7]},
-            {'xy': [0.82, -4.5], 'pms': [3.5, -0.7], 'plx': [3.5]}]``
-        :type centers_ex: list[dict] | None
         :param N_resample: Maximum number of resamples, defaults to ``1000``
         :type N_resample: int
         :param eq_to_gal: Convert ``(RA, DEC)`` to ``(lon, lat)``. Useful for clusters
@@ -176,64 +156,70 @@ class Membership:
         :raises ValueError: If the :py:class:`Cluster <asteca.cluster.Cluster>` object
             is missing a required attribute:
             ``(ra, dec, pmra, pmde, plx, e_pmra, e_pmde, e_plx, radec_c, pms_c, plx_c)``
-            
 
         :return: Membership probabilities for all stars in the frame
         :rtype: np.array
         """
         for k in (
-            "ra", "dec", "pmra", "pmde", "plx", "e_pmra", "e_pmde", "e_plx",
-            "radec_c", "pms_c", "plx_c"
+            "ra",
+            "dec",
+            "pmra",
+            "pmde",
+            "plx",
+            "e_pmra",
+            "e_pmde",
+            "e_plx",
+            "radec_c",
+            "pms_c",
+            "plx_c",
         ):
-            if hasattr(self.my_cluster, k) is False:
+            if hasattr(self.my_field, k) is False:
                 raise ValueError(f"'{k}' must be present as a 'cluster' attribute")
 
-        xc, yc = self.my_cluster.ra_v, self.my_cluster.dec_v
-        center = self.my_cluster.radec_c
+        xv, yv = self.my_field.ra_v, self.my_field.dec_v
+        xy_center = self.my_field.radec_c
         cent_str = "radec_c "
         # Convert (RA, DEC) to (lon, lat)
         if eq_to_gal is True:
-            xc, yc = cp.radec2lonlat(xc, yc)
-            center = cp.radec2lonlat(*center)
+            xv, yv = cp.radec2lonlat(xv, yv)
+            xy_center = cp.radec2lonlat(*xy_center)
             cent_str = "lonlat_c"
 
         print("\nRunning fastMP...")
-        print("{}       : ({:.4f}, {:.4f})".format(cent_str, *center))
-        print("pms_c          : ({:.3f}, {:.3f})".format(*self.my_cluster.pms_c))
-        print(f"plx_c          : {self.my_cluster.plx_c}")
+        print("{}       : ({:.4f}, {:.4f})".format(cent_str, *xy_center))
+        print("pms_c          : ({:.3f}, {:.3f})".format(*self.my_field.pms_c))
+        print(f"plx_c          : {self.my_field.plx_c}")
         print(f"fixed_centers  : {fixed_centers}")
-        print(f"N_cluster      : {N_cluster}")
-        print(f"N_clust_min    : {N_clust_min}")
-        print(f"N_clust_max    : {N_clust_max}")
-        centers_ex_flag = False
-        if centers_ex is not None:
-            centers_ex_flag = True
-        print(f"centers_ex     : {centers_ex_flag}")
+        print(f"N_cluster      : {self.my_field.N_cluster}")
+        # centers_ex_flag = False
+        # if centers_ex is not None:
+        #     centers_ex_flag = True
+        # print(f"centers_ex     : {centers_ex_flag}")
         print(f"N_resample     : {N_resample}")
 
         # Generate input data array for fastMP
         X = np.array(
             [
-                xc,
-                yc,
-                self.my_cluster.pmra_v,
-                self.my_cluster.pmde_v,
-                self.my_cluster.plx_v,
-                self.my_cluster.e_pmra_v,
-                self.my_cluster.e_pmde_v,
-                self.my_cluster.e_plx_v,
+                xv,
+                yv,
+                self.my_field.pmra_v,
+                self.my_field.pmde_v,
+                self.my_field.plx_v,
+                self.my_field.e_pmra_v,
+                self.my_field.e_pmde_v,
+                self.my_field.e_plx_v,
             ]
         )
         probs = fastMP(
             X,
-            list(center),
-            list(self.my_cluster.pms_c),
-            self.my_cluster.plx_c,
+            list(xy_center),
+            list(self.my_field.pms_c),
+            self.my_field.plx_c,
             fixed_centers,
-            N_cluster,
-            N_clust_min,
-            N_clust_max,
-            centers_ex,
+            self.my_field.N_cluster,
+            self.my_field.N_clust_min,
+            self.my_field.N_clust_max,
+            # centers_ex,
             N_resample,
         )
 
