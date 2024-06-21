@@ -234,3 +234,69 @@ class Cluster:
         self.radec_c = [ra_c, dec_c]
         self.pms_c = [pmra_c, pmde_c]
         self.plx_c = plx_c
+
+    def get_nmembers(self, algo: str = "ripley", eq_to_gal: bool = True) -> None:
+        """Estimate the number of members for the cluster
+
+        - ``ripley``: Originally introduced with the ``fastMP`` membership method
+          in `Perren et al.
+          (2023) <https://academic.oup.com/mnras/article/526/3/4107/7276628>`__.
+          Requires ``(ra, dec, pmra, pmde, plx)`` and their center estimates.
+        - ``density``: Simple algorithm that counts the number of stars within the
+          cluster region (center+radius) and subtracts the expected number of field
+          stars within that region. Requires the radius of the cluster to be defined.
+
+        :param algo: Algorithm used to estimate center values, one of
+            (``ripley, density``); defaults to ``ripley``
+        :type algo: str
+        :param eq_to_gal: Convert ``(RA, DEC)`` to ``(lon, lat)``. Useful for clusters
+            with large ``DEC`` values to reduce the frame's distortion,
+            defaults to ``False``
+        :type eq_to_gal: bool
+
+        :raises ValueError: If required attributes are  missing from the
+            :py:class:`Cluster <asteca.cluster.Cluster>` object
+        """
+        if algo == "ripley":
+            for k in ("ra", "dec", "pmra", "pmde", "plx", "radec_c", "pms_c", "plx_c"):
+                if hasattr(self, k) is False:
+                    raise ValueError(f"'{k}' must be present as a 'cluster' attribute")
+        elif algo == "density":
+            for k in ("ra", "dec", "radec_c", "radius"):
+                if hasattr(self, k) is False:
+                    raise ValueError(f"'{k}' must be present as a 'cluster' attribute")
+
+        xv, yv = self.ra_v, self.dec_v
+        xy_center = self.radec_c
+        # Convert (RA, DEC) to (lon, lat)
+        if eq_to_gal is True:
+            xv, yv = cp.radec2lonlat(xv, yv)
+            xy_center = cp.radec2lonlat(*xy_center)
+
+        if algo == "ripley":
+            N_cluster = nm.ripley_nmembs(
+                xv,
+                yv,
+                self.pmra_v,
+                self.pmde_v,
+                self.plx_v,
+                list(xy_center),
+                self.pms_c,
+                self.plx_c,
+            )
+        elif algo == "density":
+            N_cluster = nm.density_nmembs(xv, yv, xy_center, self.radius)
+
+        if N_cluster < self.N_clust_min:
+            warnings.warn(
+                "The estimated number of cluster members is " + f"<{self.N_clust_min}"
+            )
+            N_cluster = self.N_clust_min
+        if N_cluster > self.N_clust_max:
+            warnings.warn(
+                "The estimated number of cluster members is " + f">{self.N_clust_max}"
+            )
+            N_cluster = self.N_clust_max
+
+        self.N_cluster = N_cluster
+        print(f"\nN_cluster      : {N_cluster}")
