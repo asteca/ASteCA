@@ -1,7 +1,6 @@
 import numpy as np
 from scipy import stats
 from scipy.optimize import curve_fit
-import warnings
 from .imfs import invTrnsfSmpl, sampleInv
 
 
@@ -23,14 +22,25 @@ def error_distribution(self, mag, e_mag, e_colors):
     e_colors = e_col_non_nan
 
     # Left end of magnitude range
-    be_m = max(min(mag) + 1.0, np.percentile(mag, 0.5))
+    if mag.max() - mag.min() > 2:
+        be_m = max(min(mag) + 1, np.percentile(mag, 0.5))
+    else:
+        be_m = np.percentile(mag, 0.5)
     # Width of the intervals in magnitude.
     interv_mag = 0.5
-    # Number of intervals.
-    delta_mag = mag.max() - be_m
-    n_interv = int(round(delta_mag / interv_mag))
+    # Number of intervals, three minimum
+    while True:
+        delta_mag = mag.max() - be_m
+        n_interv = int(round(delta_mag / interv_mag))
+        if n_interv > 3:
+            break
+        interv_mag -= 0.05
+        if interv_mag <= 0.1:
+            break
     #
-    steps_x = np.linspace(be_m - 0.5 * interv_mag, mag.max(), n_interv - 1)
+    # Not sure why I was using '0.5 * interv_mag', removed 20/06/24
+    # steps_x = np.linspace(be_m - 0.5 * interv_mag, mag.max(), n_interv - 1)
+    steps_x = np.linspace(be_m - interv_mag, mag.max(), n_interv - 1)
 
     # Median values for each error array in each magnitude range
     mag_y = []
@@ -43,8 +53,8 @@ def error_distribution(self, mag, e_mag, e_colors):
             if len(strs_in_range) > 1:
                 e_mc_medians.append(np.median(strs_in_range))
             else:
-                # If no stars in interval, use fixed value
-                e_mc_medians.append(0.0001)
+                # If no stars in interval, use small value
+                e_mc_medians.append(0.001)
             x1 = x2
         mag_y.append(e_mc_medians)
 
@@ -101,30 +111,47 @@ def get_3p_pars(mag_x, y, mags):
             # attempt to fit a 3 parameter exp function since it will fail.
             raise RuntimeError
 
+        # Check a, b values
+        if popt_mc[0] > 1e5 or popt_mc[1] <= 0:
+            raise RuntimeError
+
     # If the 3-param exponential fitting process fails.
     except RuntimeError:
-        warnings.warn("3-param exponential error function fit failed. Attempt 2P fit")
+        print("Error: 3-param exponential error function fit failed. Attempt 2P fit")
         try:
             # Fit simple 2-params exponential curve.
             popt_mc, _ = curve_fit(exp_2p, mag_x, y)
             # Insert empty 'c' value to be fed later on to the 3P exponential
             # function used to obtain the plotted error bars. This makes the
-            # 2P exp function equivalent with the 3P exp function, with the
+            # 2P exp function equivalent to the 3P exp function, with the
             # 'c' parameter equal to 0.
             popt_mc = np.insert(popt_mc, 2, 0.0)
+
+            # Check a, b values
+            if popt_mc[0] > 1e5 or popt_mc[1] <= 0:
+                raise RuntimeError
 
         # If the 2-param exponential fitting process also fails, try with a
         # 2P exp but using only min and max error values.
         except RuntimeError:
-            warnings.warn(
-                "2-param exponential error function fit failed. Perform min-max magnitude fit."
+            print(
+                "Error: 2-param exponential error function fit failed. Perform "
+                + "min-max magnitude fit."
             )
             # Fit simple 2-params exponential curve.
             mags_minmax = [min(mags), max(mags) - (max(mags) - min(mags)) / 20.0]
             y_minmax = [min(y), max(y)]
-            popt_mc, _ = curve_fit(exp_2p, mags_minmax, y_minmax)
-            # Insert 'c' value into exponential function param list.
-            popt_mc = np.insert(popt_mc, 2, 0.0)
+
+            # OLD code, replaced by manual estimation 20/06/24
+            # popt_mc, _ = curve_fit(exp_2p, mags_minmax, y_minmax)
+            # # Insert 'c' value into exponential function param list.
+            # popt_mc = np.insert(popt_mc, 2, 0.0)
+            # Manual coefficients
+            x0, x1 = mags_minmax
+            y0, y1 = y_minmax
+            b = np.log(y0 / y1) / (x0 - x1)
+            a = y0 / np.exp(b * x0)
+            popt_mc = np.array([a, b, 0])
 
     return popt_mc
 
