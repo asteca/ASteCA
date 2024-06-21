@@ -2,7 +2,7 @@ import numpy as np
 from scipy.interpolate import make_interp_spline
 
 
-def invTrnsfSmpl(IMF_name, m_low=0.08, m_high=150):
+def invTrnsfSmpl(IMF_name, m_low=0.08, m_high=100):
     """
     IMF inverse transform sampling.
     """
