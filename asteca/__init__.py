@@ -10,6 +10,9 @@ import importlib.metadata
 from pathlib import Path
 
 
+__all__ = ["cluster", "membership", "isochrones", "synthetic", "likelihood", "plot"]
+
+
 def extract_version() -> str:
     """Returns either the version of the installed package or the one
     found in nearby pyproject.toml
