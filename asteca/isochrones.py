@@ -118,12 +118,12 @@ class Isochrones:
             met_n = "FeH"
         zmin, zmax, amin, amax = self._min_max()
 
-        N_met, N_age, N_cols, N_interp = self.theor_tracks.shape
+        N_met, N_age, _, N_isoch = self.theor_tracks.shape
         print(f"Model          : {self.model}")
         print(f"N_files        : {N_isoch_files}")
         print(f"N_met          : {N_met}")
         print(f"N_age          : {N_age}")
-        print(f"N_interp       : {N_interp}")
+        print(f"N_isoch        : {N_isoch}")
         print(f"{met_n} range      : [{zmin}, {zmax}]")
         print(f"loga range     : [{amin}, {amax}]")
         print(f"Magnitude      : {self.magnitude}")
