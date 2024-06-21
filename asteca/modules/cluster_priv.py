@@ -9,13 +9,13 @@ def radec2lonlat(ra, dec):
     gc = SkyCoord(ra=ra * u.degree, dec=dec * u.degree)
     lb = gc.transform_to("galactic")
     lon, lat = lb.l.value, lb.b.value
-    return lon, lat
+    return [lon, lat]
 
 
 def lonlat2radec(lon, lat):
     gc = SkyCoord(l=lon * u.degree, b=lat * u.degree, frame="galactic")
     ra, dec = gc.fk5.ra.value, gc.fk5.dec.value
-    return ra, dec
+    return [ra, dec]
 
 
 def reject_nans(data):

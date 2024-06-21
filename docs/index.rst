@@ -1,8 +1,8 @@
 .. ASteCA documentation master file, created by
    sphinx-quickstart on Sat Feb 17 12:19:51 2024.
 
-.. image:: _static/asteca_icon.png
-   :scale: 50%
+.. image:: _static/asteca_icon.webp
+   :scale: 10%
    :align: center
    :class: no-scaled-link
 
@@ -15,7 +15,7 @@ extinction, distance, metallicity, age, binarity, mass, etc..
 
 
 .. important::
-   Version |ProjectVersion| released on the 26th of May, 2024. See :ref:`changelog`
+   Version |ProjectVersion| released on the 21st of June, 2024. See :ref:`changelog`
    for a detailed list of the changes implemented.
 
 
@@ -83,6 +83,7 @@ TOC
    :caption: Basic configuration
 
    basic/cluster_load
+   basic/membership
    basic/isochrones_load
    basic/synthetic_clusters
 

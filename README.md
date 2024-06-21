@@ -1,3 +1,9 @@
+<div align="center">
+  <br>
+  <img src="/docs/_static/asteca_icon.webp" alt="UCC" width="200"/>
+  <br>
+</div>
+
 
 # ASteCA [Automated Stellar Cluster Analysis]
 [![AA](https://img.shields.io/badge/A%26A-576--A6,%202015-yellowgreen.svg)][1]

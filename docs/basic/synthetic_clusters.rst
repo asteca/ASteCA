@@ -3,10 +3,10 @@
 Synthetic clusters
 ##################
 
-The :py:mod:`asteca.synthetic` class allows generating synthetic clusters from:
+The :py:class:`asteca.synthetic` class allows generating synthetic clusters from:
 
-1. An :class:`isochrones` object
-2. A :class:`cluster` object
+1. An :py:class:`asteca.isochrones.Isochrones` object
+2. A :py:class:`asteca.cluster.Cluster` object for calibration
 3. A dictionary of fixed fundamental parameters (optional)
 4. A dictionary of free fundamental parameters to be fitted
 
@@ -208,7 +208,7 @@ more depth in the following sub-sections.
 
 
 Intrinsic parameters
---------------------
+====================
 
 The valid ranges for the metallicity and logarithmic age are inherited from the
 theoretical isochrone(s) loaded in the :class:`isochrones` object. The minimum and
@@ -250,7 +250,7 @@ approximately 50% of binary systems, distributed uniformly across masses
 
 
 Extrinsic parameters
---------------------
+====================
 
 The extrinsic parameters are related to two external processes affecting stellar
 clusters: their distance and the extinction that affects them. The distance is measured
@@ -267,8 +267,6 @@ The first two are related through the equation:
 
     A_V = R_V \times E_{B-V}
 
-xxxxxx
-
 Finally, the differential reddening parameter ``DR`` adds random scatter to the cluster
 stars affectd by ``Av``. The distribution for this scatter is controlled setting the
 argument ``DR_dist`` when the :class:`synthetic` object is instantiated (as explained in
@@ -277,7 +275,7 @@ argument ``DR_dist`` when the :class:`synthetic` object is instantiated (as expl
 
 
 Generation
-----------
+==========
 
 Generating a synthetic cluster after calibrating the :class:`synthetic` object simply
 requires calling the :meth:`generate()` method with a dictionary containing the
@@ -342,17 +340,18 @@ do this, do not pass a dictionary of fixed model parameters when calibrating the
 
 
 
-Plotting synthetic clusters
-***************************
+Plotting
+========
 
-The generated synthetic clusters can be quickly plotted using the :meth:`synthplot()`
-method:
+The generated synthetic clusters can be quickly plotted using the
+:py:func:`asteca.plot.synthetic` function:
 
 .. code-block:: python
 
     import matplotlib.pyplot as plt
 
-    synthcl.synthplot(fit_params)
+    ax = plt.subplot()
+    asteca.plot.synthetic(synthcl, ax, fit_params)
     plt.show()
 
 which will produce something like this:
@@ -361,15 +360,15 @@ which will produce something like this:
     :scale: 35%
     :align: center
 
-You can combine this with the :meth:`clustplot()` method mentioned in :ref:`cluster_load`
+You can combine this with the :py:func:`asteca.plot.cluster` function
 to generate a combined CMD plot:
 
 .. code-block:: python
 
     import matplotlib.pyplot as plt
-    ax = my_cluster.clustplot()
-    # Use the axis returned by `clustplot()`
-    synthcl.synthplot(fit_params, ax)
+    ax = plt.subplot()
+    asteca.plot.cluster(my_cluster, ax)
+    asteca.plot.synthetic(synthcl, ax, fit_params)
     plt.show()
 
 which produces:
@@ -378,11 +377,11 @@ which produces:
     :scale: 35%
     :align: center
 
-Setting the ``isochplot`` argument to ``True`` in :meth:`synthplot()` 
+Setting the ``isochplot`` argument to ``True`` in :py:func:`asteca.plot.synthetic`
 
 .. code-block:: python
 
-    synthcl.synthplot(fit_params, ax, isochplot=True)
+    asteca.plot.synthetic(synthcl, ax, fit_params, isochplot=True)
 
 overlays the isochrone used as a building block for the synthetic cluster:
 
@@ -391,21 +390,22 @@ overlays the isochrone used as a building block for the synthetic cluster:
     :align: center
 
 
+.. _masses_and_binarity:
 
-Stellar masses and binarity
-****************************
+Mass and binarity
+*****************
 
-Since the fraction of synthetic binary systems is handled through the ``alpha, beta``
-parameters, there is no *binary fraction* parameter than can be fitted using the
-synthetic clusters. This needs to be generated separately, along with an estimation of
-the observed stars individual masses and their probability of belonging to a binary
-system.
+The individual stellar masses, their probability of being binary systems, the total
+binary fraction and the total cluster mass can all be estimated using methods available
+in the :py:class:`synthetic <asteca.synthetic.Synthetic.synthetic>` object.
 
-This can be achieved via the :meth:`masses_binary_probs()` method. It requires two
-arguments: ``model`` which is a dictionary of parameters to be fitted (equivalent to
-the ``fit_params`` dictionary used to generate synthetic clusters), and a ``model_std``
-dictionary which contains the uncertainties (standard deviations) associated to each
-parameter in the ``model`` dictionary. For example:
+The first step is to call the
+:py:meth:`get_models() <asteca.synthetic.Synthetic.get_models>` method. This method
+requires three arguments: ``model`` which is a dictionary of parameters to be fitted 
+(equivalent to the ``fit_params`` dictionary used to generate synthetic clusters), a
+``model_std`` dictionary which contains the uncertainties (standard deviations)
+associated to each parameter in the ``model`` dictionary, and a list with center
+coordinates for the cluster in ``(RA, DEC)``. For example:
 
 .. code-block:: python
 
@@ -422,10 +422,32 @@ parameter in the ``model`` dictionary. For example:
         "dm": 0.25,
         "Av": 0.03,
     }
-    df_masses_bprob, binar_f = synthcl.masses_binary_probs(model, model_std)
+    # List that contains the (RA, DEC) center coordinates
+    radec_c = [119.49, -60.77]    
+    synthcl.get_models(model, model_std, radec_c)
 
-The first variable ``df_masses_bprob`` is a ``pandas.Dataframe`` containing the columns
-``m1, m1_std, m2, m2_std, binar_prob``:
+This will store in the :py:class:`synthetic <asteca.synthetic.Synthetic.synthetic>`
+object a sample of synthetic clusters (sampled from a normal distribution centered
+on ``model`` with a STDDEV taken from ``model_std``) along with a few other
+required data arrays. Once this is complete, the masses and binarity can be estimated
+as shown in the following sub-sections.
+
+
+Per star masses and binarity
+============================
+
+An estimation of the observed stars individual masses and their probability of belonging
+to a binary system can be achieved via the
+:py:meth:`stellar_masses() <asteca.synthetic.Synthetic.stellar_masses>`
+method:
+
+.. code-block:: python
+
+    # Assuming `synthcl.get_models(model, model_std)` was already performed
+    df_masses_bprob = synthcl.stellar_masses()
+
+The returned variable ``df_masses_bprob`` is a ``pandas.Dataframe`` containing the
+columns ``m1, m1_std, m2, m2_std, binar_prob``:
 
 .. code-block:: python
 
@@ -445,19 +467,161 @@ The first variable ``df_masses_bprob`` is a ``pandas.Dataframe`` containing the 
 
 
 These columns represent, for each observed star in the cluster under analysis, estimates
-for: its primary mass (``m1``), its uncertainty (``m1_std``), its secondary mass 
-(``m2``; under the assumption that this star belongs to a binary system), its
-uncertainty (``m2_std``), and its probability of being a binary system (``binar_prob``).
+for:
+
+- ``m1``: primary mass
+- ``m1_std``: uncertainty of the primary mass
+- ``m2``: secondary mass (under the assumption that this star belongs to a binary
+  system)
+- ``m2_std``: uncertainty of the secondary mass
+- ``binar_prob``: probability of being a binary system 
+
 If an observed star has ``binar_prob=0``, i.e. a zero probability of being a binary
 system, then the mass value for its secondary star is a ``NaN`` value since no secondary
 star could be assigned to it.
 
-The ``binar_f``  variable will store an array with the distribution for the total binary
-fraction estimate for the cluster:
+
+
+Total binary fraction
+=====================
+
+Since the fraction of synthetic binary systems is handled through the ``alpha, beta``
+parameters, there is no *binary fraction* parameter than can be fitted using the
+synthetic clusters. This parameter needs to be generated separately via the
+:py:meth:`binary_fraction() <asteca.synthetic.Synthetic.binary_fraction>`
+method as follows:
+
+.. code-block:: python
+
+    # Assuming `synthcl.get_models(model, model_std)` was already performed
+    binar_f = synthcl.binary_fraction()
+
+    # Print median and STDDEV values
+    print("b_fr: {:.2f}+/-{:.2f}".format(np.median(binar_vals), np.std(binar_vals)))
+
+    >> b_fr: 0.46+/-0.24
+
+
+The ``binar_f``  variable will store an array with the distribution for the
+total binary fraction estimate for the cluster. 
 
 .. figure:: ../_static/binar_distr_obs.png
     :scale: 35%
     :align: center
 
-The user can obtain estimate values (e.g., mean and STDDEV) from this array, and use
-these as global estimates for the cluster's binary fraction.
+As shown above, the user can obtain estimate values (e.g., median and STDDEV) from this
+distribution, and use these as global estimates for the cluster's binary fraction.
+
+
+
+Total cluster mass
+==================
+
+The total initial mass of a cluster can be split in several parts, as follows:
+
+.. math::
+
+    M_{i} = M_{a} + M_{ev} + M_{dyn}
+
+where $M_{i}$ is the initial mass, $M_{a}$ is the actual mass, $M_{ev}$ is the mass
+**lost** via stellar evolution, and $M_{dyn}$ is the mass **lost** through dynamical
+effects (or *dissolution*). The actual mass $M_{a}$ can be further split as:
+
+.. math::
+
+    M_{a} = M_{obs} + M_{phot}
+
+where $M_{obs}$ is the observed mass (e.g.: the sum of individual stellar masses in the
+observed CMD) and $M_{phot}$ is the mass **unobserved** due to photometric effects (i.e:
+the low mass stars beyond the maximum magnitude cut). The total initial mass can thus be
+written as the sum of all of its components as:
+
+.. math::
+
+    M_{i} = M_{obs} + M_{phot} + M_{ev} + M_{dyn}
+
+The actual mass $M_{a}$ is estimated by **ASteCA** starting from the
+observed mass $M_{obs}$ (approximated by a sampled synthetic cluster with parameters
+matching those of the observed cluster) and using an IMF sample to infer the missing
+portion below the maximum magnitude cut, i.e. the photometric mass $M_{phot}$. As stated
+above, the sum of these two is equivalent to $M_{a}$.
+
+Following `Lamers et al. (2005)
+<https://www.aanda.org/articles/aa/abs/2005/37/aa2241-04/aa2241-04.html>`_, the initial
+mass can be estimated via:
+
+.. math::
+
+    M_i \simeq \left\{ M_a^{\gamma} + \frac{\gamma t}{t_0} \right\}^{1\gamma} \mu_{\text
+    {ev}}(Z, t)^{-1}
+
+where $M_{a}$ is the actual mass, $t$ is the cluster's age, $\mu_{\text{ev}}(Z, t)$
+is the "*fraction of the initial mass of the cluster that would have remained at age t,
+if stellar evolution would have been the only mass loss mechanism*", ${\gamma}$ is a
+constant, and $t_{0}$ is "*a constant that depends on the tidal field of the particular
+galaxy in which the cluster moves and on the ellipticity of its orbit*".
+
+The $\gamma$ constant is usually set to 0.62 and the $\mu_{\text{ev}}(Z, t)$ parameter
+can be estimated using a 3rd degree polynomial as shown in 
+`Lamers, Baumgardt & Gieles (2010) <http://adsabs.harvard.edu/abs/2010MNRAS.409..305L>`_,
+Table B2.
+
+The dissolution parameter $t_0$ of a cluster is the hypothetical dissolution
+time-scale of a cluster of 1 $M_{\odot}$ and is related to the disruption time
+$t_{dis}$ (defined as the time when 5% of the initial number of stars remain in the
+cluster) via:
+
+.. math::
+
+    t_{dis} = t_{0} M_i^{\gamma}
+
+Furthermore, $t_0$ is expected to depend on the ambient density $\rho_{amb}$ at the
+location of the clusters in the Galaxy as:
+
+.. math::
+
+    t_{0} = C_{env} (1-\epsilon) 10^{-4\gamma} \rho_{amb}^{-1/2}
+
+where $C_{env}$ is a constant set to 810 Myr (`Lamers, Gieles & Zwart 2005
+<https://www.aanda.org/articles/aa/abs/2005/01/aa1476/aa1476.html>`_), $\epsilon$ is
+the eccentricity of the orbit, and $\rho_{amb}$ is the ambient density which depends on
+the adopted gravitational potential field.
+
+Following `Angelo et al. (2023)
+<https://ui.adsabs.harvard.edu/abs/2023MNRAS.522..956A/abstract>`_, **ASteCA** uses by
+default $\epsilon=0.08$ and estimates $\rho_{amb}$ as:
+
+.. math::
+
+    \rho_{\text{amb}} = \frac{1}{4\pi G} \nabla^2 \left[ \phi_B(r) + \phi_D(\rho, z) + \phi_H(r) \right]
+
+where $\phi_B(r),\, \phi_D(\rho, z),\, \phi_H(r)$ are the bulge, disc and halo
+potentials, respectively (see Eqs 8, 9 and 10 of the Angelo et al. article to see how
+these are modeled).
+
+Finally, plugging these values into the equation for $M_{i}$, we can estimate all the
+masses and their uncertainties through a bootstrap process. **ASteCA** applies all these
+processes via the
+:py:meth:`cluster_masses() <asteca.synthetic.Synthetic.cluster_masses>`
+method as:
+
+
+.. code-block:: python
+
+    masses_dict = synthcl.cluster_masses()
+    
+The returned dictionary contains arrays with the distributions of masses for each
+mass. Their median and STDDEV values can be extracted for example with:
+
+.. code-block:: python
+
+    # Print the median mass values and their STDDEV
+    for k, arr in masses_dict.items():
+        print("{:<8}: {:.0f}+/-{:.0f}".format(k, np.median(arr), np.std(arr)))
+
+    >> M_init  : 4063+/-620
+    >> M_actual: 2938+/-282
+    >> M_obs   : 2463+/-151
+    >> M_phot  : 454+/-148
+    >> M_evol  : 827+/-225
+    >> M_dyn   : 298+/-205

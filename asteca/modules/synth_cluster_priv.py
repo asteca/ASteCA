@@ -1,7 +1,6 @@
 import numpy as np
 from scipy import stats
 from scipy.optimize import curve_fit
-import warnings
 from .imfs import invTrnsfSmpl, sampleInv
 
 
@@ -23,14 +22,25 @@ def error_distribution(self, mag, e_mag, e_colors):
     e_colors = e_col_non_nan
 
     # Left end of magnitude range
-    be_m = max(min(mag) + 1.0, np.percentile(mag, 0.5))
+    if mag.max() - mag.min() > 2:
+        be_m = max(min(mag) + 1, np.percentile(mag, 0.5))
+    else:
+        be_m = np.percentile(mag, 0.5)
     # Width of the intervals in magnitude.
     interv_mag = 0.5
-    # Number of intervals.
-    delta_mag = mag.max() - be_m
-    n_interv = int(round(delta_mag / interv_mag))
+    # Number of intervals, three minimum
+    while True:
+        delta_mag = mag.max() - be_m
+        n_interv = int(round(delta_mag / interv_mag))
+        if n_interv > 3:
+            break
+        interv_mag -= 0.05
+        if interv_mag <= 0.1:
+            break
     #
-    steps_x = np.linspace(be_m - 0.5 * interv_mag, mag.max(), n_interv - 1)
+    # Not sure why I was using '0.5 * interv_mag', removed 20/06/24
+    # steps_x = np.linspace(be_m - 0.5 * interv_mag, mag.max(), n_interv - 1)
+    steps_x = np.linspace(be_m - interv_mag, mag.max(), n_interv - 1)
 
     # Median values for each error array in each magnitude range
     mag_y = []
@@ -43,8 +53,8 @@ def error_distribution(self, mag, e_mag, e_colors):
             if len(strs_in_range) > 1:
                 e_mc_medians.append(np.median(strs_in_range))
             else:
-                # If no stars in interval, use fixed value
-                e_mc_medians.append(0.0001)
+                # If no stars in interval, use small value
+                e_mc_medians.append(0.001)
             x1 = x2
         mag_y.append(e_mc_medians)
 
@@ -101,30 +111,47 @@ def get_3p_pars(mag_x, y, mags):
             # attempt to fit a 3 parameter exp function since it will fail.
             raise RuntimeError
 
+        # Check a, b values
+        if popt_mc[0] > 1e5 or popt_mc[1] <= 0:
+            raise RuntimeError
+
     # If the 3-param exponential fitting process fails.
     except RuntimeError:
-        warnings.warn("3-param exponential error function fit failed. Attempt 2P fit")
+        print("Error: 3-param exponential error function fit failed. Attempt 2P fit")
         try:
             # Fit simple 2-params exponential curve.
             popt_mc, _ = curve_fit(exp_2p, mag_x, y)
             # Insert empty 'c' value to be fed later on to the 3P exponential
             # function used to obtain the plotted error bars. This makes the
-            # 2P exp function equivalent with the 3P exp function, with the
+            # 2P exp function equivalent to the 3P exp function, with the
             # 'c' parameter equal to 0.
             popt_mc = np.insert(popt_mc, 2, 0.0)
+
+            # Check a, b values
+            if popt_mc[0] > 1e5 or popt_mc[1] <= 0:
+                raise RuntimeError
 
         # If the 2-param exponential fitting process also fails, try with a
         # 2P exp but using only min and max error values.
         except RuntimeError:
-            warnings.warn(
-                "2-param exponential error function fit failed. Perform min-max magnitude fit."
+            print(
+                "Error: 2-param exponential error function fit failed. Perform "
+                + "min-max magnitude fit."
             )
             # Fit simple 2-params exponential curve.
             mags_minmax = [min(mags), max(mags) - (max(mags) - min(mags)) / 20.0]
             y_minmax = [min(y), max(y)]
-            popt_mc, _ = curve_fit(exp_2p, mags_minmax, y_minmax)
-            # Insert 'c' value into exponential function param list.
-            popt_mc = np.insert(popt_mc, 2, 0.0)
+
+            # OLD code, replaced by manual estimation 20/06/24
+            # popt_mc, _ = curve_fit(exp_2p, mags_minmax, y_minmax)
+            # # Insert 'c' value into exponential function param list.
+            # popt_mc = np.insert(popt_mc, 2, 0.0)
+            # Manual coefficients
+            x0, x1 = mags_minmax
+            y0, y1 = y_minmax
+            b = np.log(y0 / y1) / (x0 - x1)
+            a = y0 / np.exp(b * x0)
+            popt_mc = np.array([a, b, 0])
 
     return popt_mc
 
@@ -307,15 +334,17 @@ def sample_imf(self, Nmets: int, Nages: int) -> list:
     """
     inv_cdf = invTrnsfSmpl(self.IMF_name)
 
-    st_dist_mass = []
+    st_dist_mass, st_dist_mass_ordered = [], []
     for i in range(Nmets):
-        met_lst = []
+        met_lst, met_lst_ord = [], []
         for j in range(Nages):
             sampled_IMF = sampleInv(i + j + self.seed, self.max_mass, inv_cdf)
             met_lst.append(sampled_IMF)
+            met_lst_ord.append(np.sort(sampled_IMF))
         st_dist_mass.append(met_lst)
+        st_dist_mass_ordered.append(met_lst_ord)
 
-    return st_dist_mass
+    return st_dist_mass, st_dist_mass_ordered
 
 
 def randVals(self) -> dict:
@@ -973,82 +1002,116 @@ def add_errors(isoch_compl, err_dist, rand_norm_vals):
     return isoch_compl
 
 
-def generate(self, fit_params, plotflag=False):
-    r"""Returns the full synthetic cluster array.
+# def generate(self, fit_params, plotflag=False):
+#     r"""Returns the full synthetic cluster array.
 
-    This is an almost exact copy of the ``synth_cluster.generate()`` function with
-    the only difference that it returns the full array. This is generated:
+#     This is an almost exact copy of the ``synth_cluster.generate()`` function with
+#     the only difference that it returns the full array. This is generated:
 
-    synth_clust = [mag, c1, (c2), m_ini_1, mag_b, c1_b, (c2_b), m_ini_2]
+#     synth_clust = [mag, c1, (c2), m_ini_1, mag_b, c1_b, (c2_b), m_ini_2]
 
-    where c1 and c2 colors defined, and 'm_ini_1, m_ini_2' are the primary and
-    secondary masses of the binary systems. The single systems only have a '0'
-    stored in 'm_ini_2'.
+#     where c1 and c2 colors defined, and 'm_ini_1, m_ini_2' are the primary and
+#     secondary masses of the binary systems. The single systems only have a '0'
+#     stored in 'm_ini_2'.
 
-    """
-    # Return proper values for fixed parameters and parameters required
-    # for the (z, log(age)) isochrone averaging.
-    met, loga, alpha, beta, av, dr, rv, dm, ml, mh, al, ah = properModel(
-        self.met_age_dict, self.fix_params, fit_params
-    )
+#     """
+#     # Return proper values for fixed parameters and parameters required
+#     # for the (z, log(age)) isochrone averaging.
+#     met, loga, alpha, beta, av, dr, rv, dm, ml, mh, al, ah = properModel(
+#         self.met_age_dict, self.fix_params, fit_params
+#     )
 
-    # Generate a weighted average isochrone from the (z, log(age)) values in
-    # the 'model'.
-    isochrone = zaWAverage(
-        self.theor_tracks,
-        self.met_age_dict,
-        self.m_ini_idx,
-        met,
-        loga,
-        ml,
-        mh,
-        al,
-        ah,
-    )
+#     # Generate a weighted average isochrone from the (z, log(age)) values in
+#     # the 'model'.
+#     isochrone = zaWAverage(
+#         self.theor_tracks,
+#         self.met_age_dict,
+#         self.m_ini_idx,
+#         met,
+#         loga,
+#         ml,
+#         mh,
+#         al,
+#         ah,
+#     )
 
-    # Move theoretical isochrone using the distance modulus
-    isoch_moved = move_isochrone(isochrone, self.m_ini_idx, dm)
+#     # Move theoretical isochrone using the distance modulus
+#     isoch_moved = move_isochrone(isochrone, self.m_ini_idx, dm)
 
-    # Apply extinction correction
-    isoch_extin = extinction(
-        self.ext_law,
-        self.ext_coefs,
-        self.rand_floats["norm"][0],
-        self.rand_floats["unif"][0],
-        self.DR_distribution,
-        self.m_ini_idx,
-        self.binar_flag,
-        av,
-        dr,
-        rv,
-        isoch_moved,
-    )
+#     # Apply extinction correction
+#     isoch_extin = extinction(
+#         self.ext_law,
+#         self.ext_coefs,
+#         self.rand_floats["norm"][0],
+#         self.rand_floats["unif"][0],
+#         self.DR_distribution,
+#         self.m_ini_idx,
+#         self.binar_flag,
+#         av,
+#         dr,
+#         rv,
+#         isoch_moved,
+#     )
 
-    # Remove isochrone stars beyond the maximum magnitude
-    isoch_cut = cut_max_mag(isoch_extin, self.max_mag_syn)
-    if not isoch_cut.any():
-        return np.array([])
-    if plotflag:
-        return isoch_cut
+#     # Remove isochrone stars beyond the maximum magnitude
+#     isoch_cut = cut_max_mag(isoch_extin, self.max_mag_syn)
+#     if not isoch_cut.any():
+#         return np.array([])
+#     if plotflag:
+#         return isoch_cut
 
-    # Interpolate IMF's sampled masses into the isochrone.
-    isoch_mass = mass_interp(
-        isoch_cut, self.m_ini_idx, self.st_dist_mass[ml][al], self.N_obs_stars
-    )
-    if not isoch_mass.any():
-        return np.array([])
+#     # Interpolate IMF's sampled masses into the isochrone.
+#     isoch_mass = mass_interp(
+#         isoch_cut, self.m_ini_idx, self.st_dist_mass[ml][al], self.N_obs_stars
+#     )
+#     if not isoch_mass.any():
+#         return np.array([])
 
-    # Assignment of binarity.
-    isoch_binar = binarity(
-        alpha,
-        beta,
-        self.binar_flag,
-        self.m_ini_idx,
-        self.rand_floats["unif"][1],
-        isoch_mass,
-    )
+#     # Assignment of binarity.
+#     isoch_binar = binarity(
+#         alpha,
+#         beta,
+#         self.binar_flag,
+#         self.m_ini_idx,
+#         self.rand_floats["unif"][1],
+#         isoch_mass,
+#     )
 
-    # Assign errors according to errors distribution.
-    synth_clust = add_errors(isoch_binar, self.err_dist, self.rand_floats["norm"][1])
+#     # Assign errors according to errors distribution.
+#     synth_clust = add_errors(isoch_binar, self.err_dist, self.rand_floats["norm"][1])
 
-    return synth_clust
+#     return synth_clust
+
+
+# def _rm_low_masses(self, dm_min):
+#     """
+#     dm_min: float | None = None
+
+#     dm_min : float, optional, default=None
+#         Value for the minimum distance modulus. Used to constrain the lower masses
+#         in the theoretical isochrones to make the generating process more
+#         efficient.
+#     """
+#     min_masses = []
+#     for met_arr in self.theor_tracks:
+#         met_lst = []
+#         for age_arr in met_arr:
+#             mag, mass = age_arr[0], age_arr[self.m_ini_idx]
+#             i = np.argmin(abs(self.max_mag_syn - (mag + dm_min)))
+#             met_lst.append(mass[i])
+#         min_masses.append(met_lst)
+
+#     st_dist_mass_lmass = []
+#     for i, met_arr in enumerate(self.st_dist_mass):
+#         met_lst = []
+#         for j, mass_sample in enumerate(met_arr):
+#             min_mass = min_masses[i][j]
+#             msk = mass_sample > min_mass
+#             sampled_IMF = mass_sample[msk]
+#             met_lst.append(sampled_IMF)
+#         st_dist_mass_lmass.append(met_lst)
+
+#     # Make copy of original array, used for mass estimation in cluster() class
+#     self.st_dist_mass_full = self.st_dist_mass.copy()
+#     # Update this parameter with the new array
+#     self.st_dist_mass = st_dist_mass_lmass

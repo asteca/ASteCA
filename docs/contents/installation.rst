@@ -23,25 +23,24 @@ in an isolated Python environment. To install ``conda``, follow these steps:
 
    .. code-block:: bash
 
-     $ conda create --name asteca python=3.11
+     $ conda create --name asteca python=3.10
 
 5. Activate the environment:
 
    .. code-block:: bash
 
-    $ conda activate asteca
+     $ conda activate asteca
 
-   .. important::
 
-     You can tell that the environment is activated because its name is now
-     shown in the terminal before the ``$`` symbol as:
+   You can tell that the environment is activated because its name is now
+   shown in the terminal before the ``$`` symbol as:
 
-     .. code-block:: bash
+   .. code-block:: bash
 
-      (asteca) $
+     (asteca) $
 
-     You need to activate this environment each time *before* attempting to
-     run **ASteCA**.
+   You need to activate this environment each time *before* attempting to
+   run **ASteCA**.
 
 6. Finally, install **ASteCA** with:
 
@@ -56,7 +55,7 @@ environment and import **ASteCA**:
 .. code-block:: bash
 
  (asteca) $ python
- Python 3.11.5 (main, Sep 11 2023, 13:54:46) [GCC 11.2.0] on linux
+ Python 3.10.14 (main, Mar 21 2024, 16:24:04) [GCC 11.2.0] on linux
  Type "help", "copyright", "credits" or "license" for more information.
  >>> import asteca
  >>> asteca.__version__
