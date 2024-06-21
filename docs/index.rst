@@ -1,8 +1,8 @@
 .. ASteCA documentation master file, created by
    sphinx-quickstart on Sat Feb 17 12:19:51 2024.
 
-.. image:: _static/asteca_icon.png
-   :scale: 50%
+.. image:: _static/asteca_icon.webp
+   :scale: 10%
    :align: center
    :class: no-scaled-link
 
