@@ -1,12 +1,19 @@
 .. :changelog:
 
-`[v0.5.5] <https://github.com/asteca/asteca/releases/tag/v0.5.5>`__ - 2024-06-XX
+`[v0.5.5] <https://github.com/asteca/asteca/releases/tag/v0.5.5>`__ - 2024-06-21
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-- Add Bayesian decontamination algorithm
+- Add :py:meth:`asteca.membership.Membership.bayesian` method decontamination algorithm
 - Move plot functions to its own module
-- Add ``cluster_masses`` method to the ``synthetic`` class
-- 
+- Removed ``masses_binary_probs`` method from the
+  :py:class:`asteca.synthetic.Synthetic` class
+  and added the methods: :py:meth:`asteca.synthetic.Synthetic.get_models`,
+  :py:meth:`asteca.synthetic.Synthetic.stellar_masses`,
+  :py:meth:`asteca.synthetic.Synthetic.binary_fraction`,
+  :py:meth:`asteca.synthetic.Synthetic.cluster_masses`, to estimate individual masses,
+  total binarity fraction, and total masses (see: :ref:`masses_and_binarity`)
+- Added the :py:meth:`asteca.cluster.Cluster.get_nmembers` method to estimate the
+  number of members for a cluster embedded in a field.
 
 
 
@@ -20,8 +27,8 @@
 `[v0.5.3] <https://github.com/asteca/asteca/releases/tag/v0.5.3>`__ - 2024-05-26
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-- Added the :py:meth:`asteca.membership.fastmp` method
-- Added the :py:meth:`asteca.cluster.cluster.get_center` method
+- Added the :py:meth:`asteca.membership.Membership.fastmp` method
+- Added the :py:meth:`asteca.cluster.Cluster.get_center` method
 
 
 
