@@ -108,7 +108,8 @@ class Synthetic:
         # Sample the selected IMF
         Nmets, Nages = self.isochs.theor_tracks.shape[:2]
         self.st_dist_mass, self.st_dist_mass_ordered = scp.sample_imf(
-            self, Nmets, Nages)
+            self, Nmets, Nages
+        )
 
         # Add binary systems
         self.theor_tracks = scp.add_binarity(self)
@@ -122,12 +123,12 @@ class Synthetic:
         # Store for internal usage
         self.met_age_dict = self.isochs.met_age_dict
 
-        print(f"Initial Mass Function  : {self.IMF_name}")
-        print(f"Maximum initial mass   : {self.max_mass}")
-        print(f"Gamma distribution     : {self.gamma}")
-        print(f"Extinction law         : {self.ext_law}")
-        print(f"Differential reddening : {self.DR_distribution}")
-        print(f"Random seed            : {self.seed}")
+        print(f"IMF            : {self.IMF_name}")
+        print(f"Max init mass  : {self.max_mass}")
+        print(f"Gamma dist     : {self.gamma}")
+        print(f"Extinction law : {self.ext_law}")
+        print(f"Diff reddening : {self.DR_distribution}")
+        print(f"Random seed    : {self.seed}")
         print("Synthetic clusters object generated")
 
     def calibrate(self, cluster: Cluster, fix_params: dict = {}):
@@ -201,10 +202,7 @@ class Synthetic:
         #     self._rm_low_masses(dm_min)
 
     def generate(
-        self,
-        fit_params: dict,
-        plot_flag: bool = False,
-        full_arr_flag: bool = False
+        self, fit_params: dict, plot_flag: bool = False, full_arr_flag: bool = False
     ) -> np.array:
         """Generate a synthetic cluster.
 
@@ -308,7 +306,7 @@ class Synthetic:
         model: dict,
         model_std: dict,
         radec_c: tuple[float, float],
-        N_models: int = 200
+        N_models: int = 200,
     ) -> None:
         """Generate random sampled models from the selected solution. Use these models
         to generate full synthetic clusters.
@@ -321,6 +319,9 @@ class Synthetic:
         :param model_std: Dictionary with the standard deviations for the fundamental
             parameters in the ``model`` argument
         :type model_std: dict
+        :param radec_c: Right ascension and declination center coordinates for the
+            cluster
+        :type radec_c: tuple[float, float]
         :param N_models: Number of sampled models, defaults to ``200``
         :type N_models: int
 
@@ -338,8 +339,8 @@ class Synthetic:
 
         sampled_synthcls, close_stars_idxs = [], []
         remove_model_index = []
-        for i, model in enumerate(sampled_models):
-            isoch = self.generate(model, full_arr_flag=True)
+        for i, smodel in enumerate(sampled_models):
+            isoch = self.generate(smodel, full_arr_flag=True)
             if not isoch.any():
                 remove_model_index.append(i)
                 continue
@@ -355,9 +356,16 @@ class Synthetic:
         self.obs_nan_msk = nan_msk
 
         # Obtain galactic vertical distance and distance to center
-        Z, R_GC = mb.galactic_coords(self, radec_c)
+        Z, R_GC, R_xy = mb.galactic_coords(self, radec_c)
         self.Z = Z
         self.R_GC = R_GC
+        self.R_xy = R_xy
+
+        print("")
+        print("Model          :", ", ".join(f"{k}: {v}" for k, v in model.items()))
+        print("Model STDDEV   :", ", ".join(f"{k}: {v}" for k, v in model_std.items()))
+        print(f"N_models       : {N_models}")
+        print("Attributes stored in Synthetic object")
 
     def get_stellar_masses(
         self,
@@ -367,7 +375,7 @@ class Synthetic:
 
         :return: Data frame containing per-star primary and secondary masses along with
             their uncertainties, and their probability of being a binary system
-        :rtype: pandas.DataFrame
+        :rtype: pd.DataFrame
 
         """
         m12_masses = []
@@ -437,40 +445,78 @@ class Synthetic:
         M_D: float = 7.5e10,
         a: float = 5.4e3,
         b: float = 0.3e3,
-        r_s: float = 15.19e3,
         M_s: float = 1.87e11,
+        r_s: float = 15.19e3,
         C_env: float = 810e6,
+        gamma: float = 0.62,
         epsilon: float = 0.08,
-        gamma: float = 0.62
     ) -> dict:
         """Estimate the different total masses for the observed cluster.
 
         The returned dictionary contains distributions for
-        ``M_obs, M_phot, M_evol, M_dyn``, where:
+        ``M_init, M_actual, M_obs, M_phot, M_evol, M_dyn``, where:
 
+        - ``M_init`` : Initial mass
+        - ``M_actual`` : Actual mass
         - ``M_obs`` : Observed mass
         - ``M_phot``: Photometric mass, ie: mass not observed that is located below the
           maximum observed magnitude
         - ``M_evol``: Mass lost via stellar evolution
         - ``M_dyn`` : Mass lost via dynamical effects
 
-        The actual and initial masses of the cluster can be obtained from these as:
+        The actual and initial masses can also be obtained as:
 
         - ``M_actual = M_obs + M_phot``
         - ``M_init = M_actual + M_evol + M_dyn``
 
-        :param radec_c: Right ascension and declination center coordinates for the
-            cluster
-        :type radec_c: tuple[float, float]
+        :param rho_amb: Ambient density. If ``None``, it is estimated using the
+            cluster's position and a model for the Galaxy's potential; defaults to
+            ``None``.
+        :type rho_amb: float | None
+        :param M_B: Bulge mass (in solar masses); defaults to ``2.5e10`` (from
+            `Haghi et al. 2015 <https://doi.org/10.1093/mnras/stv827>`__, Table 1)
+        :type M_B: float
+        :param r_B: Characteristic radius of the bulge (in pc); defaults to ``0.5e3``
+            (from `Haghi et al. 2015 <https://doi.org/10.1093/mnras/stv827>`__,
+            Table 1)
+        :type r_B: float
+        :param M_D: Disc mass (in solar masses); defaults to ``7.5e10`` (from
+            `Haghi et al. 2015 <https://doi.org/10.1093/mnras/stv827>`__, Table 1)
+        :type M_D: float
+        :param a: Disc scale radius (in pc); defaults to ``5.4e3`` (from
+            `Haghi et al. 2015 <https://doi.org/10.1093/mnras/stv827>`__, Table 1)
+        :type a: float
+        :param b: Disc scaleheight (in pc); defaults to ``0.3e3`` (from
+            `Haghi et al. 2015 <https://doi.org/10.1093/mnras/stv827>`__, Table 1)
+        :type b: float
+        :param M_s: Dark matter halo mass (in solar masses); defaults to ``1.87e11``
+            (from `Sanderson et al. 2017
+            <https://iopscience.iop.org/article/10.3847/1538-4357/aa5eb4>`__, Table 1)
+        :type M_s: float
+        :param r_s: Dark matter halo scale radius (in pc); defaults to ``15.19e3`` (from
+            `Sanderson et al. 2017
+            <https://iopscience.iop.org/article/10.3847/1538-4357/aa5eb4>`__, Table 1)
+        :type r_s: float
+        :param C_env: Constant related to the disruption time (in Myr); defaults to
+            ``810e6`` (from `Lamers, Gieles & Zwart 2005
+            <https://www.aanda.org/articles/aa/abs/2005/01/aa1476/aa1476.html>`__)
+        :type C_env: float
+        :param gamma: Constant related to the disruption time (no units); defaults to
+            ``0.62`` (from `Lamers, Gieles & Zwart 2005
+            <https://www.aanda.org/articles/aa/abs/2005/01/aa1476/aa1476.html>`__)
+        :type gamma: float
+        :param epsilon: Eccentricity of the orbit; defaults to ``0.08`` (from
+            `Angelo et al. (2023) <https://doi.org/10.1093/mnras/stad1038>`__)
+        :type epsilon: float
 
-        :return: Dictionary with the mass distributions for the observed, photometric,
-            evolutionary, and dynamical masses: ``M_obs, M_phot, M_evol, M_dyn``
+        :return: Dictionary with the mass distributions for the initial, actual,
+            observed, photometric, evolutionary, and dynamical masses:
+            ``M_init, M_actual, M_obs, M_phot, M_evol, M_dyn``
         :rtype: dict
         """
 
         masses_all = []
         for i, model in enumerate(self.sampled_models):
-
             # Extract met and loga
             model_comb = self.fix_params | model
             z_met, loga = model_comb["met"], model_comb["loga"]
@@ -486,15 +532,7 @@ class Synthetic:
             # Ambient density
             if rho_amb is None:
                 rho_amb = mb.ambient_density(
-                    M_B,
-                    r_B,
-                    M_D,
-                    a,
-                    b,
-                    r_s,
-                    M_s,
-                    self.Z[i],
-                    self.R_GC[i]
+                    M_B, r_B, M_D, a, b, r_s, M_s, self.Z[i], self.R_GC[i], self.R_xy[i]
                 )
 
             # Dissolution parameter
@@ -526,7 +564,10 @@ class Synthetic:
         M_init = M_actual + masses_all[2] + masses_all[3]
 
         return {
-            "M_init": M_init, "M_actual": M_actual,
-            "M_obs": masses_all[0], "M_phot": masses_all[1],
-            "M_evol": masses_all[2], "M_dyn": masses_all[3]
+            "M_init": M_init,
+            "M_actual": M_actual,
+            "M_obs": masses_all[0],
+            "M_phot": masses_all[1],
+            "M_evol": masses_all[2],
+            "M_dyn": masses_all[3],
         }
