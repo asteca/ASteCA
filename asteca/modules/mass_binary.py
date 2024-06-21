@@ -75,17 +75,14 @@ def galactic_coords(
         # Extract dm
         model_comb = synthcl.fix_params | model
         dist_pc.append(10 ** (0.2 * (model_comb["dm"] + 5)))
-    c = SkyCoord(l=lon, b=lat, distance=dist_pc * u.pc, frame="galactic")
-    c.representation_type = "cylindrical"
+    cgal = SkyCoord(l=lon, b=lat, distance=dist_pc * u.pc, frame="galactic")
+    c_GC = cgal.transform_to(coord.Galactocentric())
 
-    # Extract z value
-    Z = c.z.value
+    X, Y, Z = c_GC.x.value, c_GC.y.value, c_GC.z.value
+    R_GC = np.sqrt(X**2 + Y**2 + Z**2)
+    R_xy = np.sqrt(X**2 + Y**2)
 
-    # Estimate R_GC
-    gc = c.transform_to(coord.Galactocentric(galcen_distance=8 * u.kpc, z_sun=0 * u.pc))
-    R_GC = np.sqrt(gc.x.value**2 + gc.y.value**2)
-
-    return Z, R_GC
+    return Z, R_GC, R_xy
 
 
 def get_M_actual(synthcl, isoch, int_seed) -> tuple[float, float]:
@@ -145,17 +142,7 @@ def stellar_evol_mass_loss(z_met, loga) -> float:
     return mu_ev
 
 
-def ambient_density(
-    M_B,
-    r_B,
-    M_D,
-    a,
-    b,
-    r_s,
-    M_s,
-    Z,
-    R_GC
-):
+def ambient_density(M_B, r_B, M_D, a, b, r_s, M_s, Z, R_GC, R_xy):
     """
     Laplacian in spherical coordinates:
 
@@ -186,14 +173,17 @@ def ambient_density(
     numerator = (
         M_D
         * b**2
-        * (a * R_GC**2 + (a + 3 * np.sqrt(Z**2 + b**2)) * (a + np.sqrt(Z**2 + b**2)) ** 2)
+        * (
+            a * R_xy**2
+            + (a + 3 * np.sqrt(Z**2 + b**2)) * (a + np.sqrt(Z**2 + b**2)) ** 2
+        )
     )
     denominator = (b**2 + Z**2) ** (3 / 2) * (
-        R_GC**2 + (a + np.sqrt(b**2 + Z**2)) ** 2
+        R_xy**2 + (a + np.sqrt(b**2 + Z**2)) ** 2
     ) ** (5 / 2)
     Phi_D_laplacian = numerator / denominator
 
-    # Sanderson potential (dark matter halo)
+    # Sanderson, Hartke & Helmi (2017) potential (dark matter halo)
     A = -M_s / (np.log(2) - 0.5)
     Phi_H_Laplacian = -A / (R_GC * (R_GC + r_s) ** 2)
 
