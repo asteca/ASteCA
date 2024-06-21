@@ -45,7 +45,7 @@ def cluster(
     cluster: Cluster,
     ax: matplotlib.axes.Axes,
     color_idx: int = 0,
-    binar_probs: np.ndarray | None = None
+    binar_probs: np.ndarray | None = None,
 ) -> matplotlib.axes.Axes:
     """Generate a color-magnitude plot.
 
@@ -120,7 +120,7 @@ def synthetic(
     ax: matplotlib.axes.Axes,
     fit_params: dict,
     color_idx: int = 0,
-    isochplot: bool = False
+    isochplot: bool = False,
 ) -> matplotlib.axes.Axes:
     """Generate a color-magnitude plot for a synthetic cluster.
 
