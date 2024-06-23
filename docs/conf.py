@@ -47,6 +47,7 @@ extensions = [
     "IPython.sphinxext.ipython_console_highlighting",
     "sphinx_math_dollar",
     "sphinx.ext.mathjax",
+    # "sphinx.ext.doctest"
 ]
 
 autodoc2_packages = [
