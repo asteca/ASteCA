@@ -180,17 +180,21 @@ class Synthetic:
                 + "was defined in 'synthetic'."
             )
 
-        # Used by the mass and binary probability estimation
-        self.mag_p = cluster.mag_p
-        self.colors_p = cluster.colors_p
-
         # Data used by the `generate()` method
+        self.m_ini_idx = 2  # (0->mag, 1->color, 2->mass_ini)
+        if self.isochs.color2_effl is not None:
+            self.m_ini_idx = 3  # (0->mag, 1->color, 2->color2, 3->mass_ini)
+        
         self.max_mag_syn = max(cluster.mag_p)
         self.N_obs_stars = len(cluster.mag_p)
-        self.m_ini_idx = len(cluster.colors_p) + 1
         self.err_dist = scp.error_distribution(
             self, cluster.mag_p, cluster.e_mag_p, cluster.e_colors_p
         )
+
+        # Used by the `get_models()` method and its result by the `stellar_masses()`
+        # and `binary_fraction()` methods
+        self.mag_p = cluster.mag_p
+        self.colors_p = cluster.colors_p
 
         self.fix_params = fix_params
 
