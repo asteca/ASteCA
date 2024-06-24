@@ -1,10 +1,8 @@
-from dataclasses import dataclass
 import numpy as np
 from .cluster import Cluster
 from .modules import likelihood_priv as lpriv
 
 
-@dataclass
 class Likelihood:
     """Define a :py:class:`Likelihood` object.
 
@@ -15,24 +13,33 @@ class Likelihood:
 
     :param my_cluster: :py:class:`Cluster <asteca.cluster.Cluster>` object with the
         loaded data for the observed cluster
-    :type my_cluster: :py:class:`Cluster <asteca.cluster.Cluster>`
+    :type my_cluster: Cluster
     :param lkl_name: Currently only the Poisson likelihood ratio defined in
-        `Tremmel et al. (2013) <https://ui.adsabs.harvard.edu/abs/2013ApJ...766...19T/abstract)>`__
+        `Tremmel et al. (2013)
+        <https://ui.adsabs.harvard.edu/abs/2013ApJ...766...19T/abstract)>`__
         is accepted, defaults to ``plr``
     :type lkl_name: str
     :param bin_method: Bin method used to split the color-magnitude diagram into cells
-        (`Hess diagram <https://en.wikipedia.org/wiki/Hess_diagram>`__). If ``manual``
+        (`Hess diagram <https://en.wikipedia.org/wiki/Hess_diagram>`__); one of:
+        ``knuth, fixed, bayes_blocks, manual``. If ``manual``
         is selected, a list containing an array of edge values for the magnitude,
         followed by one or two arrays (depending on the number of colors defined) for
         the color(s), also with edge values,  defaults to ``knuth``
-    :type bin_method: str: ``knuth, fixed, bayes_blocks, manual``
+    :type bin_method: str
+
+    :raises ValueError: If any of the attributes is not recognized as a valid option    
     """
 
-    my_cluster: Cluster
-    lkl_name: str = "plr"
-    bin_method: str = "knuth"
+    def __init__(
+        self,
+        my_cluster: Cluster,
+        lkl_name: str = "plr",
+        bin_method: str = "knuth"
+    ) -> None:
+        self.my_cluster = my_cluster
+        self.lkl_name = lkl_name
+        self.bin_method = bin_method
 
-    def __post_init__(self):
         likelihoods = ("plr", "bins_distance")
         if self.lkl_name not in likelihoods:
             raise ValueError(
@@ -54,7 +61,7 @@ class Likelihood:
             np.array([self.my_cluster.mag_p, *self.my_cluster.colors_p])
         )
 
-        print("Likelihood object generated")
+        print("\nLikelihood object generated")
 
     def get(self, synth_clust: np.array) -> float:
         """Evaluate the selected likelihood function.
