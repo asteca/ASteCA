@@ -1,5 +1,4 @@
 import warnings
-from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 from .cluster import Cluster
@@ -8,7 +7,6 @@ from .modules import synth_cluster_priv as scp
 from .modules import mass_binary as mb
 
 
-@dataclass
 class Synthetic:
     """Define a :py:class:`Synthetic` object.
 
@@ -23,39 +21,53 @@ class Synthetic:
 
     :param isochs: :py:class:`Isochrones <asteca.isochrones.Isochrones>` object with
         the loaded files for the theoretical isochrones
-    :type isochs: :py:class:`Isochrones <asteca.isochrones.Isochrones>`
-    :param ext_law: Extinction law. if ``GAIADR3`` is selected, the magnitude and first
+    :type isochs: Isochrones
+    :param ext_law: Extinction law, one of ``CCMO, GAIADR3``.
+        If ``GAIADR3`` is selected, the magnitude and first
         color defined in the :py:class:`Isochrones <asteca.isochrones.Isochrones>` and
         :py:class:`Cluster <asteca.cluster.Cluster>` objects are assumed to be Gaia's
         (E)DR3 **G** and **(BP-RP)** respectively. The second color (if defined) will
         always be affected by the ``CCMO`` model, defaults to ``CCMO``
-    :type ext_law: str: ``CCMO, GAIADR3``
+    :type ext_law: str
     :param DR_distribution: Distribution function for the differential reddening,
-        defaults to ``uniform``
-    :type DR_distribution: str: ``uniform, normal``
+        one of ``uniform, normal``; defaults to ``uniform``
+    :type DR_distribution: str
     :param IMF_name: Name of the initial mass function used to populate the isochrones,
+        one of ``salpeter_1955, kroupa_2001, chabrier_2014``;
         defaults to ``chabrier_2014``
-    :type IMF_name: str: ``salpeter_1955, kroupa_2001, chabrier_2014``
+    :type IMF_name: str
     :param max_mass: Maximum total initial mass. Should be large enough to allow
         generating as many synthetic stars as observed stars, defaults to ``100_000``
     :type max_mass: int
     :param gamma: Distribution function for the mass ratio of the binary systems,
+        float or one of ``D&K, fisher_stepped, fisher_peaked, raghavan``;
         defaults to ``D&K``
-    :type gamma: str: ``D&K, fisher_stepped, fisher_peaked, raghavan``, float
+    :type gamma: float | str
     :param seed: Random seed. If ``None`` a random integer will be generated and used,
         defaults to ``None``
     :type seed: int | None
+
+    :raises ValueError: If any of the attributes is not recognized as a valid option
     """
 
-    isochs: Isochrones
-    ext_law: str = "CCMO"
-    DR_distribution: str = "uniform"
-    IMF_name: str = "chabrier_2014"
-    max_mass: int = 100_000
-    gamma: float | str = "D&K"
-    seed: int | None = None
+    def __init__(
+        self,
+        isochs: Isochrones,
+        ext_law: str = "CCMO",
+        DR_distribution: str = "uniform",
+        IMF_name: str = "chabrier_2014",
+        max_mass: int = 100_000,
+        gamma: float | str = "D&K",
+        seed: int | None = None
+    ) -> None:
+        self.isochs = isochs
+        self.ext_law = ext_law
+        self.DR_distribution = DR_distribution
+        self.IMF_name = IMF_name
+        self.max_mass = max_mass
+        self.gamma = gamma
+        self.seed = seed
 
-    def __post_init__(self):
         if self.seed is None:
             self.seed = np.random.randint(100000)
 
