@@ -150,11 +150,11 @@ distribution.
 Calibrating the object
 **********************
 
-After instantiating a ``synthcl`` object through a :class:`synthetic` class (using an
-:class:`isochrones` object and the required initial arguments: IMF, ``gamma``, etc), we
-need to calibrate it with our observed cluster. This process collects required data from
-the :class:`cluster` object (defined as ``my_cluster`` in :ref:`cluster_load`), as well
-as reading the fixed fundamental parameters (if any), and some initialization arguments.
+After instantiating a ``synthcl`` object through a :py:class:`asteca.synthetic.Synthetic` class (using an :py:class:`asteca.isochrones.Isochrones` object and the required initial arguments: IMF, ``gamma``, etc), we need to calibrate it with our observed cluster.
+This process collects required data from
+the :py:class:`asteca.cluster.Cluster` object (defined as ``my_cluster`` in
+:ref:`cluster_load`), as well as reading the fixed fundamental parameters (if any), and some initialization arguments.
+
 The basic configuration looks like this:
 
 .. code-block:: python
@@ -177,13 +177,14 @@ observed uncertainty values in magnitude and color(s)
 
 
 
+.. _ref_generating:
 
 Generating synthetic clusters
 *****************************
 
 Once the calibration is complete, we can generate synthetic clusters by simply
 passing a dictionary with the fundamental parameters to be fitted to the
-:meth:`generate` method of our :class:`synthetic` object. **ASteCA** currently accepts
+:py:meth:`asteca.synthetic.Synthetic.generate` method. **ASteCA** currently accepts
 eight parameters, related to three intrinsic and two extrinsic cluster characteristics:
 
 - *Intrinsic*: metallicity (``met``), age (``loga``), and binarity (``alpha, beta``)
@@ -199,16 +200,10 @@ Intrinsic parameters
 ====================
 
 The valid ranges for the metallicity and logarithmic age are inherited from the
-theoretical isochrone(s) loaded in the :class:`isochrones` object. The minimum and
-maximum stored values for these parameters can be obtained calling the :meth:`min_max`
-method of our :class:`synthcl` object:
-
-.. code-block:: python
-
-    met_min, met_max, loga_min, loga_max = synthcl.min_max()
+theoretical isochrone(s) loaded in the :py:class:`asteca.isochrones.Isochrones` object.
 
 The metallicity, ``met``, can be modeled either as ``z`` or ``FeH`` as
-explained in the previous section. The age parameter, ``loga``, is modeled as the
+explained in section :ref:`isoch_loading`. The age parameter, ``loga``, is modeled as the
 logarithmic age.
 
 The ``alpha, beta`` parameters determine the fraction of binary systems
