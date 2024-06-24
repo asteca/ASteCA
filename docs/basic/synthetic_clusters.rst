@@ -171,22 +171,10 @@ mention here that the ``fix_params`` dictionary is optional. If you choose not t
 any parameters, then all the fundamental parameters will be expected when calling
 the ``synthcl`` object to generate a synthetic cluster.
 
-There is one more optional argument that can be used when calibrating the
-``synthcl`` object: ``z_to_FeH``. This argument is used to transform metallicity values
-from he default ``z`` (obtained from the loaded isochrones) to the logarithmic version
-``FeH``, and it is set to ``None`` by default. If you want to fit your synthetic cluster
-models using ``FeH`` instead of ``z``, then this argument must be changed to the solar
-``z`` metallicity value for the isochrones defined in the :class:`isochrones` object.
-For example, if you are using PARSEC isochrones which have a solar metallicity of
-``z=0.0152`` (see `CMD input form <http://stev.oapd.inaf.it/cgi-bin/cmd_3.7>`_), then
-you would calibrate the ``synthcl`` object as:
+The photometric uncertainties in the synthetic clusters are modeled after the observed
+photometric uncertainties. The algorithm employed by **ASteCA** is to simply use the
+observed uncertainty values in magnitude and color(s)
 
-.. code-block:: python
-
-    synthcl.calibrate(my_cluster, fix_params, z_to_FeH=0.0152)
-
-If this argument is not changed from its default then the ``z`` parameter will be used
-to generate synthetic clusters, as shown in the next section.
 
 
 

@@ -19,6 +19,8 @@ produced with these services will contain:
 * BASTI  : single metallicity and single age
 
 
+.. _isoch_loading:
+
 Loading the files
 *****************
 
@@ -64,6 +66,32 @@ the documentation for the
 `pyphot <https://mfouesneau.github.io/pyphot/libcontent.html>`_ package and the
 `Filter Profile Service <http://svo2.cab.inta-csic.es/theory/fps/>`_
 of the Spanish Virtual Observatory.
+
+There is one more optional argument that can be used when loading the isochrones:
+``z_to_FeH``. This argument is used to transform metallicity values
+from he default ``z`` to the logarithmic version ``FeH``, and it is set to ``None`` by
+default. If you want to generate your synthetic cluster models using ``FeH`` instead of
+``z``, then this argument must be changed to the solar ``z`` metallicity value for the
+isochrones.
+For example, if you are using PARSEC isochrones a solar metallicity of
+``z=0.0152`` is recommended (see
+`CMD input form <http://stev.oapd.inaf.it/cgi-bin/cmd_3.7>`_), which means that
+you would load your isochrones as:
+
+.. code-block:: python
+
+    isochs = asteca.isochrones(
+        model="PARSEC",
+        isochs_path="isochrones/",
+        magnitude="Gmag",
+        color=("G_BPmag", "G_RPmag"),
+        magnitude_effl=6390.7,
+        color_effl=(5182.58, 7825.08),
+        z_to_FeH=0.0152
+    )
+
+If this argument is not changed from its default then the ``z`` parameter will be used
+to generate synthetic clusters, as shown in the section :ref:`ref_generating`.
 
 See :py:mod:`asteca.isochrones` for more information on the arguments of the
 :class:`isochrones` class.
