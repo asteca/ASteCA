@@ -1,10 +1,8 @@
 import os
 import numpy as np
-from dataclasses import dataclass
 from .modules import isochrones_priv
 
 
-@dataclass
 class Isochrones:
     """Define an :py:class:`Isochrones` object.
 
@@ -16,7 +14,7 @@ class Isochrones:
         `PARSEC <http://stev.oapd.inaf.it/cgi-bin/cmd_3.7>`__,
         `MIST <https://waps.cfa.harvard.edu/MIST/>`__, or
         `BASTI <http://basti-iac.oa-abruzzo.inaf.it/isocs.html>`__.
-    :type model: str: ``PARSEC, MIST, BASTI``
+    :type model: str
     :param isochs_path: Path to the folder that contains the files for the theoretical
         isochrones
     :type isochs_path: str
@@ -58,7 +56,7 @@ class Isochrones:
         This dictionary is defined internally in **ASteCA** and should only be given
         by the user if the isochrone service changes its format and the `isochrones`
         class fails to load the files, defaults to ``None``
-    :type column_names: dict, optional
+    :type column_names: dict | None
     :param N_interp: Number of interpolation points used to ensure that all isochrones
         are the same shape, defaults to ``2500``
     :type N_interp: int
@@ -67,22 +65,39 @@ class Isochrones:
         "`in preparation <http://stev.oapd.inaf.it/cmd_3.7/faq.html>`__", defaults
         to ``True``
     :type parsec_rm_stage_9: bool
+
+    :raises ValueError: If any of the attributes is not recognized as a valid option,
+        or there are missing required attributes
     """
 
-    model: str
-    isochs_path: str
-    magnitude: str
-    color: tuple
-    color2: tuple | None = None
-    magnitude_effl: float | None = None
-    color_effl: tuple | None = None
-    color2_effl: tuple | None = None
-    z_to_FeH: float | None = None
-    column_names: dict | None = None
-    N_interp: int = 2500
-    parsec_rm_stage_9: bool = True
+    def __init__(
+        self,
+        model: str,
+        isochs_path: str,
+        magnitude: str,
+        color: tuple,
+        color2: tuple | None = None,
+        magnitude_effl: float | None = None,
+        color_effl: tuple | None = None,
+        color2_effl: tuple | None = None,
+        z_to_FeH: float | None = None,
+        column_names: dict | None = None,
+        N_interp: int = 2500,
+        parsec_rm_stage_9: bool = True
+    ) -> None:
+        self.model = model
+        self.isochs_path = isochs_path
+        self.magnitude = magnitude
+        self.color = color
+        self.color2 = color2
+        self.magnitude_effl = magnitude_effl
+        self.color_effl = color_effl
+        self.color2_effl = color2_effl
+        self.z_to_FeH = z_to_FeH
+        self.column_names = column_names
+        self.N_interp = N_interp
+        self.parsec_rm_stage_9 = parsec_rm_stage_9
 
-    def __post_init__(self):
         # Check that the number of colors match
         if self.color2 is not None and self.color2_effl is None:
             raise ValueError(
