@@ -51,7 +51,7 @@ def get_bpr(self, isoch: np.array, idxs: np.array):
     # Assign secondary (synthetic) masses to each observed star
     m2_obs = mass_2[idxs]
 
-    # Single systems are identified with m2=np.nan. This mask identifies observed
+    # Single systems are identified with m2=np.nan. This mask points to observed
     # stars identified as binary systems
     m2_msk = ~np.isnan(m2_obs)
 
