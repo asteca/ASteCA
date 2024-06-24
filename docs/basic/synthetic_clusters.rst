@@ -172,8 +172,10 @@ any parameters, then all the fundamental parameters will be expected when callin
 the ``synthcl`` object to generate a synthetic cluster.
 
 The photometric uncertainties in the synthetic clusters are modeled after the observed
-photometric uncertainties. The algorithm employed by **ASteCA** is to simply use the
-observed uncertainty values in magnitude and color(s)
+photometric uncertainties. The algorithm employed by **ASteCA** is to simply transport
+the observed uncertainty values in magnitude and color(s) to the generated synthetic
+stars. This way no approximation to the distribution of photometric uncertainties is
+required.
 
 
 
