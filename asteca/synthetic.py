@@ -436,8 +436,7 @@ class Synthetic:
     def binary_fraction(
         self,
     ) -> np.array:
-        """Estimate individual masses for the observed stars, along with their binary
-        probabilities (if binarity was estimated).
+        """Estimate the total binary fraction for the observed cluster.
 
         :return: Distribution of total binary fraction values for the cluster
         :rtype: np.array
