@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 import numpy as np
 from .cluster import Cluster
 from .modules import cluster_priv as cp
@@ -6,7 +5,6 @@ from .modules.fastmp import fastMP
 from .modules.bayesian_da import bayesian_mp
 
 
-@dataclass
 class Membership:
     """Define a :py:class:`Membership` object.
 
@@ -27,14 +25,17 @@ class Membership:
     :py:class:`Cluster <asteca.cluster.Cluster>` object. Photometry data is not
     employed.
 
-    :param cluster: :py:class:`Cluster <asteca.cluster.Cluster>` object with the
+    :param my_field: :py:class:`Cluster <asteca.cluster.Cluster>` object with the
         loaded data for the observed field
-    :type cluster: :py:class:`Cluster <asteca.cluster.Cluster>`
+    :type my_field: Cluster
+
+    :raises ValueError: If there are missing required attributes in the
+        :py:class:`Cluster <asteca.cluster.Cluster>` object
     """
 
-    my_field: Cluster
+    def __init__(self, my_field: Cluster) -> None:
+        self.my_field = my_field
 
-    def __post_init__(self):
         noradeg_flag = False
         try:
             self.my_field.ra
