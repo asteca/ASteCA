@@ -188,7 +188,8 @@ class Synthetic:
         self.max_mag_syn = max(cluster.mag_p)
         self.N_obs_stars = len(cluster.mag_p)
         self.err_dist = scp.error_distribution(
-            self, cluster.mag_p, cluster.e_mag_p, cluster.e_colors_p
+            cluster.mag_p, cluster.e_mag_p, cluster.e_colors_p,
+            self.rand_floats['norm'][1]
         )
 
         # Used by the `get_models()` method and its result by the `stellar_masses()`
@@ -309,9 +310,7 @@ class Synthetic:
         )
 
         # Assign errors according to errors distribution.
-        synth_clust = scp.add_errors(
-            isoch_binar, self.err_dist, self.rand_floats["norm"][1]
-        )
+        synth_clust = scp.add_errors(isoch_binar, self.err_dist)
 
         if full_arr_flag:
             return synth_clust
