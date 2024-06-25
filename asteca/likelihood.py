@@ -27,14 +27,11 @@ class Likelihood:
         the color(s), also with edge values,  defaults to ``knuth``
     :type bin_method: str
 
-    :raises ValueError: If any of the attributes is not recognized as a valid option    
+    :raises ValueError: If any of the attributes is not recognized as a valid option
     """
 
     def __init__(
-        self,
-        my_cluster: Cluster,
-        lkl_name: str = "plr",
-        bin_method: str = "knuth"
+        self, my_cluster: Cluster, lkl_name: str = "plr", bin_method: str = "knuth"
     ) -> None:
         self.my_cluster = my_cluster
         self.lkl_name = lkl_name

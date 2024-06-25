@@ -83,7 +83,7 @@ class Cluster:
         pmde: str | None = None,
         e_pmde: str | None = None,
         N_clust_min: int = 25,
-        N_clust_max: int = 5000
+        N_clust_max: int = 5000,
     ) -> None:
         self.obs_df = obs_df
         self.ra = ra

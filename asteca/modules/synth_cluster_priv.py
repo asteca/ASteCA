@@ -8,6 +8,7 @@ def error_distribution(mag, e_mag, e_colors, rand_norm_vals):
     Extract the magnitude and color(s) uncertainties to use as error model for the
     synthetic clusters.
     """
+
     def filnans(data):
         msk = np.isnan(data)
         data[msk] = np.interp(np.flatnonzero(msk), np.flatnonzero(~msk), data[~msk])

@@ -89,6 +89,7 @@ autodoc2_hidden_objects = ["dunder", "private", "inherited"]
 #     app.connect("source-read", source_read_handler)
 ################################################################
 
+
 ################################################################
 # This block changes the 'Initialization' title for a 'Methods' title
 # WARNING: could break at any moment if pydoclint changes its behavior!
@@ -117,6 +118,8 @@ def source_read_handler(app, docname, source):
 
 def setup(app):
     app.connect("source-read", source_read_handler)
+
+
 ################################################################
 
 

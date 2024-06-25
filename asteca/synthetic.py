@@ -58,7 +58,7 @@ class Synthetic:
         IMF_name: str = "chabrier_2014",
         max_mass: int = 100_000,
         gamma: float | str = "D&K",
-        seed: int | None = None
+        seed: int | None = None,
     ) -> None:
         self.isochs = isochs
         self.ext_law = ext_law
@@ -184,12 +184,14 @@ class Synthetic:
         self.m_ini_idx = 2  # (0->mag, 1->color, 2->mass_ini)
         if self.isochs.color2_effl is not None:
             self.m_ini_idx = 3  # (0->mag, 1->color, 2->color2, 3->mass_ini)
-        
+
         self.max_mag_syn = max(cluster.mag_p)
         self.N_obs_stars = len(cluster.mag_p)
         self.err_dist = scp.error_distribution(
-            cluster.mag_p, cluster.e_mag_p, cluster.e_colors_p,
-            self.rand_floats['norm'][1]
+            cluster.mag_p,
+            cluster.e_mag_p,
+            cluster.e_colors_p,
+            self.rand_floats["norm"][1],
         )
 
         # Used by the `get_models()` method and its result by the `stellar_masses()`
@@ -377,10 +379,14 @@ class Synthetic:
         self.R_xy = R_xy
 
         print("")
-        print("Model          :", ", ".join(
-            f"{k}: {round(v, 3)}" for k, v in model.items()))
-        print("Model STDDEV   :", ", ".join(
-            f"{k}: {round(v, 3)}" for k, v in model_std.items()))
+        print(
+            "Model          :",
+            ", ".join(f"{k}: {round(v, 3)}" for k, v in model.items()),
+        )
+        print(
+            "Model STDDEV   :",
+            ", ".join(f"{k}: {round(v, 3)}" for k, v in model_std.items()),
+        )
         print(f"N_models       : {N_models}")
         print("Attributes stored in Synthetic object")
 
