@@ -1,14 +1,15 @@
 import warnings
-from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 from .modules import cluster_priv as cp
 from .modules import nmembers as nm
 
 
-@dataclass
 class Cluster:
     """Define a :py:class:`Cluster` object.
+
+    This object contains the basic data required to load a group of observed stars
+    that could represent a cluster or an entire field.
 
     :param obs_df: `pandas DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`__
         with the observed loaded data.
@@ -42,7 +43,7 @@ class Cluster:
     :type plx: str | None
     :param e_plx: Name of the DataFrame column that contains the parallax uncertainty,
         defaults to ``None``
-    :type plx: str | None
+    :type e_plx: str | None
     :param pmra: Name of the DataFrame column that contains the RA proper motion,
         defaults to ``None``
     :type pmra: str | None
@@ -59,43 +60,71 @@ class Cluster:
     :type N_clust_min: int
     :param N_clust_max: Maximum number of cluster members, defaults to ``5000``
     :type N_clust_max: int
+
+    :raises ValueError: If there are missing required attributes to generate the
+        :py:class:`Cluster <asteca.cluster.Cluster>` object
     """
 
-    obs_df: pd.DataFrame
-    ra: str | None = None
-    dec: str | None = None
-    magnitude: str | None = None
-    e_mag: str | None = None
-    color: str | None = None
-    e_color: str | None = None
-    color2: str | None = None
-    e_color2: str | None = None
-    plx: str | None = None
-    pmra: str | None = None
-    pmde: str | None = None
-    e_plx: str | None = None
-    e_pmra: str | None = None
-    e_pmde: str | None = None
-    N_clust_min: int = 25
-    N_clust_max: int = 5000
+    def __init__(
+        self,
+        obs_df: pd.DataFrame,
+        ra: str | None = None,
+        dec: str | None = None,
+        magnitude: str | None = None,
+        e_mag: str | None = None,
+        color: str | None = None,
+        e_color: str | None = None,
+        color2: str | None = None,
+        e_color2: str | None = None,
+        plx: str | None = None,
+        e_plx: str | None = None,
+        pmra: str | None = None,
+        e_pmra: str | None = None,
+        pmde: str | None = None,
+        e_pmde: str | None = None,
+        N_clust_min: int = 25,
+        N_clust_max: int = 5000,
+    ) -> None:
+        self.obs_df = obs_df
+        self.ra = ra
+        self.dec = dec
+        self.magnitude = magnitude
+        self.e_mag = e_mag
+        self.color = color
+        self.e_color = e_color
+        self.color2 = color2
+        self.e_color2 = e_color2
+        self.plx = plx
+        self.pmra = pmra
+        self.pmde = pmde
+        self.e_plx = e_plx
+        self.e_pmra = e_pmra
+        self.e_pmde = e_pmde
+        self.N_clust_min = N_clust_min
+        self.N_clust_max = N_clust_max
 
-    def __post_init__(self):
-        """The photometry is stored with a '_p' to differentiate from the
-        self.magnitude, self.color, etc that are defined with the class is called.
-        """
         self.N_stars = len(self.obs_df)
         print("\nInstantiating cluster...")
         print(f"N_stars        : {self.N_stars}")
         print(f"N_clust_min    : {self.N_clust_min}")
         print(f"N_clust_max    : {self.N_clust_max}")
 
+        dim_count = self._load()
+        if dim_count > 0:
+            print("Cluster object generated")
+        else:
+            raise ValueError("No column names defined for cluster")
+
+    def _load(self):
         dim_count = 0
+
         if self.ra is not None:
             self.ra_v = self.obs_df[self.ra].values
             self.dec_v = self.obs_df[self.dec].values
             print(f"(RA, DEC)      : ({self.ra}, {self.dec})")
             dim_count += 1
 
+        # TODO: change _p to _v
         if self.magnitude is not None:
             self.mag_p = self.obs_df[self.magnitude].values
             if self.e_mag is not None:
@@ -148,10 +177,7 @@ class Cluster:
             print(f"pmDE           : {self.pmra} [{self.e_pmde}]")
             dim_count += 1
 
-        if dim_count > 0:
-            print("Cluster object generated")
-        else:
-            raise ValueError("No column names defined for cluster")
+        return dim_count
 
     def get_center(
         self,

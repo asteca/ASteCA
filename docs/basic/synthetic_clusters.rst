@@ -150,11 +150,11 @@ distribution.
 Calibrating the object
 **********************
 
-After instantiating a ``synthcl`` object through a :class:`synthetic` class (using an
-:class:`isochrones` object and the required initial arguments: IMF, ``gamma``, etc), we
-need to calibrate it with our observed cluster. This process collects required data from
-the :class:`cluster` object (defined as ``my_cluster`` in :ref:`cluster_load`), as well
-as reading the fixed fundamental parameters (if any), and some initialization arguments.
+After instantiating a ``synthcl`` object through a :py:class:`asteca.synthetic.Synthetic` class (using an :py:class:`asteca.isochrones.Isochrones` object and the required initial arguments: IMF, ``gamma``, etc), we need to calibrate it with our observed cluster.
+This process collects required data from
+the :py:class:`asteca.cluster.Cluster` object (defined as ``my_cluster`` in
+:ref:`cluster_load`), as well as reading the fixed fundamental parameters (if any), and some initialization arguments.
+
 The basic configuration looks like this:
 
 .. code-block:: python
@@ -171,31 +171,22 @@ mention here that the ``fix_params`` dictionary is optional. If you choose not t
 any parameters, then all the fundamental parameters will be expected when calling
 the ``synthcl`` object to generate a synthetic cluster.
 
-There is one more optional argument that can be used when calibrating the
-``synthcl`` object: ``z_to_FeH``. This argument is used to transform metallicity values
-from he default ``z`` (obtained from the loaded isochrones) to the logarithmic version
-``FeH``, and it is set to ``None`` by default. If you want to fit your synthetic cluster
-models using ``FeH`` instead of ``z``, then this argument must be changed to the solar
-``z`` metallicity value for the isochrones defined in the :class:`isochrones` object.
-For example, if you are using PARSEC isochrones which have a solar metallicity of
-``z=0.0152`` (see `CMD input form <http://stev.oapd.inaf.it/cgi-bin/cmd_3.7>`_), then
-you would calibrate the ``synthcl`` object as:
-
-.. code-block:: python
-
-    synthcl.calibrate(my_cluster, fix_params, z_to_FeH=0.0152)
-
-If this argument is not changed from its default then the ``z`` parameter will be used
-to generate synthetic clusters, as shown in the next section.
+The photometric uncertainties in the synthetic clusters are modeled after the observed
+photometric uncertainties. The algorithm employed by **ASteCA** is to simply transport
+the observed uncertainty values in magnitude and color(s) to the generated synthetic
+stars. This way no approximation to the distribution of photometric uncertainties is
+required.
 
 
+
+.. _ref_generating:
 
 Generating synthetic clusters
 *****************************
 
 Once the calibration is complete, we can generate synthetic clusters by simply
 passing a dictionary with the fundamental parameters to be fitted to the
-:meth:`generate` method of our :class:`synthetic` object. **ASteCA** currently accepts
+:py:meth:`asteca.synthetic.Synthetic.generate` method. **ASteCA** currently accepts
 eight parameters, related to three intrinsic and two extrinsic cluster characteristics:
 
 - *Intrinsic*: metallicity (``met``), age (``loga``), and binarity (``alpha, beta``)
@@ -211,16 +202,10 @@ Intrinsic parameters
 ====================
 
 The valid ranges for the metallicity and logarithmic age are inherited from the
-theoretical isochrone(s) loaded in the :class:`isochrones` object. The minimum and
-maximum stored values for these parameters can be obtained calling the :meth:`min_max`
-method of our :class:`synthcl` object:
-
-.. code-block:: python
-
-    met_min, met_max, loga_min, loga_max = synthcl.min_max()
+theoretical isochrone(s) loaded in the :py:class:`asteca.isochrones.Isochrones` object.
 
 The metallicity, ``met``, can be modeled either as ``z`` or ``FeH`` as
-explained in the previous section. The age parameter, ``loga``, is modeled as the
+explained in section :ref:`isoch_loading`. The age parameter, ``loga``, is modeled as the
 logarithmic age.
 
 The ``alpha, beta`` parameters determine the fraction of binary systems

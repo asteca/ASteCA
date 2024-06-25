@@ -155,163 +155,163 @@ def tremmel(self, synth_clust):
     return tremmel_lkl
 
 
-def visual(cluster_dict, synth_clust):
-    # If synthetic cluster is empty, assign a small likelihood value.
-    if not synth_clust.any():
-        return -1.0e09
+# def visual(cluster_dict, synth_clust):
+#     # If synthetic cluster is empty, assign a small likelihood value.
+#     if not synth_clust.any():
+#         return -1.0e09
 
-    mag_o, colors_o = cluster_dict["mag"], cluster_dict["colors"]
-    mag_s, colors_s = synth_clust[0], synth_clust[1:]
+#     mag_o, colors_o = cluster_dict["mag"], cluster_dict["colors"]
+#     mag_s, colors_s = synth_clust[0], synth_clust[1:]
 
-    N_mag, N_col = 15, 10
-    mag = list(mag_o) + list(mag_s)
-    col = list(colors_o[0]) + list(colors_s[0])
-    mag_min, mag_max = np.nanmin(mag), np.nanmax(mag)
-    bin_edges = [np.linspace(mag_min, mag_max, N_mag)]
-    col_min, col_max = np.nanmin(col), np.nanmax(col)
-    bin_edges.append(np.linspace(col_min, col_max, N_col))
+#     N_mag, N_col = 15, 10
+#     mag = list(mag_o) + list(mag_s)
+#     col = list(colors_o[0]) + list(colors_s[0])
+#     mag_min, mag_max = np.nanmin(mag), np.nanmax(mag)
+#     bin_edges = [np.linspace(mag_min, mag_max, N_mag)]
+#     col_min, col_max = np.nanmin(col), np.nanmax(col)
+#     bin_edges.append(np.linspace(col_min, col_max, N_col))
 
-    # Obtain histogram for observed cluster.
-    cl_histo_f = []
-    for i, col_o in enumerate(colors_o):
-        hess_diag = np.histogram2d(mag_o, col_o, bins=bin_edges)[0]
-        # Flatten array
-        cl_histo_f += list(hess_diag.ravel())
-    cl_histo_f = np.array(cl_histo_f)
-    # Down sample histogram
-    # msk = cl_histo_f > 5
-    # cl_histo_f[msk] = 5
+#     # Obtain histogram for observed cluster.
+#     cl_histo_f = []
+#     for i, col_o in enumerate(colors_o):
+#         hess_diag = np.histogram2d(mag_o, col_o, bins=bin_edges)[0]
+#         # Flatten array
+#         cl_histo_f += list(hess_diag.ravel())
+#     cl_histo_f = np.array(cl_histo_f)
+#     # Down sample histogram
+#     # msk = cl_histo_f > 5
+#     # cl_histo_f[msk] = 5
 
-    syn_histo_f = []
-    for i, col_s in enumerate(colors_s):
-        hess_diag = np.histogram2d(mag_s, col_s, bins=bin_edges)[0]
-        # Flatten array
-        syn_histo_f += list(hess_diag.ravel())
-    syn_histo_f = np.array(syn_histo_f)
-    # Down sample histogram
-    # msk = syn_histo_f > 5
-    # syn_histo_f[msk] = 5
+#     syn_histo_f = []
+#     for i, col_s in enumerate(colors_s):
+#         hess_diag = np.histogram2d(mag_s, col_s, bins=bin_edges)[0]
+#         # Flatten array
+#         syn_histo_f += list(hess_diag.ravel())
+#     syn_histo_f = np.array(syn_histo_f)
+#     # Down sample histogram
+#     # msk = syn_histo_f > 5
+#     # syn_histo_f[msk] = 5
 
-    # return -sum(abs(cluster_dict["hist_down_samp"]-syn_histo_f))
+#     # return -sum(abs(cluster_dict["hist_down_samp"]-syn_histo_f))
 
-    # create a mask for where each data set is non-zero
-    m1 = cl_histo_f != 0
-    m2 = syn_histo_f != 0
-    m1_area = m1.sum()
-    m2_area = m2.sum()
-    tot_area = m1_area + m2_area
-    # use a logical and to create a combined map where both datasets are non-zero
-    ovrlp_area = np.logical_and(m1, m2).sum()
+#     # create a mask for where each data set is non-zero
+#     m1 = cl_histo_f != 0
+#     m2 = syn_histo_f != 0
+#     m1_area = m1.sum()
+#     m2_area = m2.sum()
+#     tot_area = m1_area + m2_area
+#     # use a logical and to create a combined map where both datasets are non-zero
+#     ovrlp_area = np.logical_and(m1, m2).sum()
 
-    # # calculate the overlapping density, where 0.5 is the bin width
-    # ol_density = np.abs((cl_histo_f - syn_histo_f) * 0.5)[ol]
-    # # calculate the total overlap percent
-    # h_overlap = ol_density.sum() * 100
+#     # # calculate the overlapping density, where 0.5 is the bin width
+#     # ol_density = np.abs((cl_histo_f - syn_histo_f) * 0.5)[ol]
+#     # # calculate the total overlap percent
+#     # h_overlap = ol_density.sum() * 100
 
-    h_overlap = ovrlp_area / tot_area
+#     h_overlap = ovrlp_area / tot_area
 
-    # ol_density = np.abs((cl_histo_f - cl_histo_f) * 0.5)[ol]
-    # h_overlap_0 = ol_density.sum() * 100
-    # print(h_overlap_0)
-    # breakpoint()
+#     # ol_density = np.abs((cl_histo_f - cl_histo_f) * 0.5)[ol]
+#     # h_overlap_0 = ol_density.sum() * 100
+#     # print(h_overlap_0)
+#     # breakpoint()
 
-    # # cl_histo_f = cluster_dict["hist_down_samp"]
-    # mi_cnst = np.clip(cl_histo_f, a_min=0, a_max=1)
-    # # Final chi.
-    # mig_chi = np.sum((cl_histo_f + mi_cnst - syn_histo_f)**2 / (cl_histo_f + 1.))
-    # mig_chi_0 = np.sum((cl_histo_f + mi_cnst)**2 / (cl_histo_f + 1.))
-    # mig_chi_opt = np.sum((cl_histo_f + mi_cnst - cl_histo_f)**2 / (cl_histo_f + 1.))
-    # print(mig_chi_opt, mig_chi_0, mig_chi)
+#     # # cl_histo_f = cluster_dict["hist_down_samp"]
+#     # mi_cnst = np.clip(cl_histo_f, a_min=0, a_max=1)
+#     # # Final chi.
+#     # mig_chi = np.sum((cl_histo_f + mi_cnst - syn_histo_f)**2 / (cl_histo_f + 1.))
+#     # mig_chi_0 = np.sum((cl_histo_f + mi_cnst)**2 / (cl_histo_f + 1.))
+#     # mig_chi_opt = np.sum((cl_histo_f + mi_cnst - cl_histo_f)**2 / (cl_histo_f + 1.))
+#     # print(mig_chi_opt, mig_chi_0, mig_chi)
 
-    # import matplotlib.pyplot as plt
-    # # plt.subplot(121)
-    # y_edges, x_edges = bin_edges #cluster_dict['bin_edges']
-    # for xe in x_edges:
-    #     plt.axvline(xe, c="grey", ls=":")
-    # for ye in y_edges:
-    #     plt.axhline(ye, c="grey", ls=":")
-    # plt.title(h_overlap)
-    # plt.scatter(colors_o[0], mag_o, alpha=.5)
-    # plt.scatter(colors_s[0], mag_s, alpha=.5)
-    # plt.gca().invert_yaxis()
+#     # import matplotlib.pyplot as plt
+#     # # plt.subplot(121)
+#     # y_edges, x_edges = bin_edges #cluster_dict['bin_edges']
+#     # for xe in x_edges:
+#     #     plt.axvline(xe, c="grey", ls=":")
+#     # for ye in y_edges:
+#     #     plt.axhline(ye, c="grey", ls=":")
+#     # plt.title(h_overlap)
+#     # plt.scatter(colors_o[0], mag_o, alpha=.5)
+#     # plt.scatter(colors_s[0], mag_s, alpha=.5)
+#     # plt.gca().invert_yaxis()
 
-    # # plt.subplot(122)
-    # # plt.title(h_overlap)
-    # # plt.bar(np.arange(len(cl_histo_f)), cl_histo_f, label='obs', alpha=.5)
-    # # plt.bar(np.arange(len(syn_histo_f)), syn_histo_f, label='syn', alpha=.5)
-    # # plt.legend()
-    # plt.show()
+#     # # plt.subplot(122)
+#     # # plt.title(h_overlap)
+#     # # plt.bar(np.arange(len(cl_histo_f)), cl_histo_f, label='obs', alpha=.5)
+#     # # plt.bar(np.arange(len(syn_histo_f)), syn_histo_f, label='syn', alpha=.5)
+#     # # plt.legend()
+#     # plt.show()
 
-    return h_overlap
-
-
-def mean_dist(cluster_dict, synth_clust):
-    # If synthetic cluster is empty, assign a small likelihood value.
-    if not synth_clust.any():
-        return -1.0e09
-
-    # mag_o, colors_o = cluster_dict['mag'], cluster_dict['colors']
-    mag0, colors0 = cluster_dict["mag0"], cluster_dict["colors0"]
-    mag_s, colors_s = synth_clust[0], synth_clust[1:]
-
-    dist = (np.median(mag0) - np.median(mag_s)) ** 2 + (
-        np.median(colors0) - np.median(colors_s)
-    ) ** 2
-    return -dist
-
-    if len(mag_s) < 5:
-        return -1.0e09
-    import ndtest
-
-    P_val = ndtest.ks2d2s(mag0, colors0, mag_s, colors_s[0])
-
-    # import matplotlib.pyplot as plt
-    # plt.title(P_val)
-    # plt.scatter(colors_o0, mag_o, alpha=.5)
-    # plt.scatter(colors_s[0], mag_s, alpha=.5)
-    # plt.gca().invert_yaxis()
-    # plt.show()
-
-    return P_val
+#     return h_overlap
 
 
-def bins_distance(cluster_dict, synth_clust):
+# def mean_dist(cluster_dict, synth_clust):
+#     # If synthetic cluster is empty, assign a small likelihood value.
+#     if not synth_clust.any():
+#         return -1.0e09
+
+#     # mag_o, colors_o = cluster_dict['mag'], cluster_dict['colors']
+#     mag0, colors0 = cluster_dict["mag0"], cluster_dict["colors0"]
+#     mag_s, colors_s = synth_clust[0], synth_clust[1:]
+
+#     dist = (np.median(mag0) - np.median(mag_s)) ** 2 + (
+#         np.median(colors0) - np.median(colors_s)
+#     ) ** 2
+#     return -dist
+
+#     if len(mag_s) < 5:
+#         return -1.0e09
+#     import ndtest
+
+#     P_val = ndtest.ks2d2s(mag0, colors0, mag_s, colors_s[0])
+
+#     # import matplotlib.pyplot as plt
+#     # plt.title(P_val)
+#     # plt.scatter(colors_o0, mag_o, alpha=.5)
+#     # plt.scatter(colors_s[0], mag_s, alpha=.5)
+#     # plt.gca().invert_yaxis()
+#     # plt.show()
+
+#     return P_val
+
+
+def bins_distance(self, synth_clust):
     """Sum of distances to corresponding bins in he Hess diagram."""
     if not synth_clust.any():
         return 1.0e09
 
-    mag0, colors0 = cluster_dict["mag"], cluster_dict["colors"][0]
-    msk = np.isnan(mag0) | np.isnan(colors0)
-    mag0, colors0 = mag0[~msk], colors0[~msk]
+    mag_o, colors_o = self.my_cluster.mag_p, self.my_cluster.colors_p[0]
     mag_s, colors_s = synth_clust[0], synth_clust[1]
 
-    mpercs = (0.1, 0.5, 1, 2, 5, 10, 30, 60, 90)
-    cpercs = (0.5, 1, 5, 15, 30, 60, 90)
+    mpercs = (0.5, 10, 20, 30, 40, 50, 60, 70, 80, 90)
+    cpercs = (0.5, 10, 20, 30, 40, 50, 60, 70, 75, 80, 85, 90, 95)
 
-    perc_mag0 = np.percentile(mag0, mpercs)
-    perc_colors0 = np.percentile(colors0, cpercs)
-    pts_0 = []
-    for pm in perc_mag0:
-        for pc in perc_colors0:
-            pts_0.append([pm, pc])
-    pts_0 = np.array(pts_0).T
+    perc_mag_o = np.nanpercentile(mag_o, mpercs)
+    perc_colors_o = np.nanpercentile(colors_o, cpercs)
+    pts_o = []
+    for pm in perc_mag_o:
+        for pc in perc_colors_o:
+            pts_o.append([pm, pc])
+    pts_o = np.array(pts_o).T
 
-    # import matplotlib.pyplot as plt
-    # plt.scatter(colors0, mag0)
-    # plt.scatter(pts_0[1], pts_0[0], c='k')
-    # plt.gca().invert_yaxis()
-    # plt.show()
-    # breakpoint()
-
-    perc_mag_s = np.percentile(mag_s, mpercs)
-    perc_colors_s = np.percentile(colors_s, cpercs)
+    perc_mag_s = np.nanpercentile(mag_s, mpercs)
+    perc_colors_s = np.nanpercentile(colors_s, cpercs)
     pts_s = []
     for pm in perc_mag_s:
         for pc in perc_colors_s:
             pts_s.append([pm, pc])
     pts_s = np.array(pts_s).T
 
-    dist = np.sqrt((pts_s[0] - pts_0[0]) ** 2 + (pts_s[1] - pts_0[1]) ** 2)
+    # import matplotlib.pyplot as plt
+    # plt.scatter(colors_o, mag_o, alpha=.25, c='r')
+    # plt.scatter(colors_s, mag_s, alpha=.25, c='b')
+    # plt.scatter(pts_o[1], pts_o[0], c='r')
+    # plt.scatter(pts_s[1], pts_s[0], c='b')
+    # plt.gca().invert_yaxis()
+    # plt.show()
+
+    # dist = np.sqrt((pts_s[0] - pts_o[0]) ** 2 + (pts_s[1] - pts_o[1]) ** 2)
+    dist = (pts_s[0] - pts_o[0]) ** 2 + (pts_s[1] - pts_o[1]) ** 2
     weights = np.linspace(1, 0.05, len(mpercs) * len(cpercs))
     lkl = sum(dist * weights)
 

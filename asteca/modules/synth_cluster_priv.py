@@ -1,159 +1,37 @@
 import numpy as np
 from scipy import stats
-from scipy.optimize import curve_fit
 from .imfs import invTrnsfSmpl, sampleInv
 
 
-def error_distribution(self, mag, e_mag, e_colors):
+def error_distribution(mag, e_mag, e_colors, rand_norm_vals):
     """
-    Fit an exponential function to the errors in each photometric dimension,
-    using the main magnitude as the x coordinate.
+    Extract the magnitude and color(s) uncertainties to use as error model for the
+    synthetic clusters.
     """
-    # Mask of not nan values across arrays
-    nan_msk = np.isnan(mag) | np.isnan(e_mag)
+
+    def filnans(data):
+        msk = np.isnan(data)
+        data[msk] = np.interp(np.flatnonzero(msk), np.flatnonzero(~msk), data[~msk])
+        return data
+
+    # Replace nan values with interpolated values
+    mag = filnans(mag)
+    e_mag = filnans(e_mag)
+    e_colors = [filnans(_) for _ in e_colors]
+
+    # The minus generates reversed sorting in magnitude. This is important so that
+    # synthetic clusters with a smaller magnitude range are assigned uncertainties
+    # from the bottom up (i.e.: from the largest to the smallest magnitudes)
+    idx = np.argsort(-mag)
+
+    # Multiplying by a random normal float centered at 0 with STDDEV=1 generates the
+    # uncertainty values ready to be added to the synthetic photometry.
+    N = len(mag)
+    err_dist = [rand_norm_vals[:N] * e_mag[idx]]
     for e_col in e_colors:
-        nan_msk = nan_msk | np.isnan(e_col)
-    not_nan_msk = ~nan_msk
-    # Remove nan values
-    mag, e_mag = mag[not_nan_msk], e_mag[not_nan_msk]
-    e_col_non_nan = []
-    for e_col in e_colors:
-        e_col_non_nan.append(e_col[not_nan_msk])
-    e_colors = e_col_non_nan
-
-    # Left end of magnitude range
-    if mag.max() - mag.min() > 2:
-        be_m = max(min(mag) + 1, np.percentile(mag, 0.5))
-    else:
-        be_m = np.percentile(mag, 0.5)
-    # Width of the intervals in magnitude.
-    interv_mag = 0.5
-    # Number of intervals, three minimum
-    while True:
-        delta_mag = mag.max() - be_m
-        n_interv = int(round(delta_mag / interv_mag))
-        if n_interv > 3:
-            break
-        interv_mag -= 0.05
-        if interv_mag <= 0.1:
-            break
-    #
-    # Not sure why I was using '0.5 * interv_mag', removed 20/06/24
-    # steps_x = np.linspace(be_m - 0.5 * interv_mag, mag.max(), n_interv - 1)
-    steps_x = np.linspace(be_m - interv_mag, mag.max(), n_interv - 1)
-
-    # Median values for each error array in each magnitude range
-    mag_y = []
-    for i, e_mc in enumerate([e_mag] + [list(_) for _ in e_colors]):
-        x1 = steps_x[0]
-        e_mc_medians = []
-        for x2 in steps_x[1:]:
-            msk = (mag >= x1) & (mag < x2)
-            strs_in_range = np.array(e_mc)[msk]
-            if len(strs_in_range) > 1:
-                e_mc_medians.append(np.median(strs_in_range))
-            else:
-                # If no stars in interval, use small value
-                e_mc_medians.append(0.001)
-            x1 = x2
-        mag_y.append(e_mc_medians)
-
-    # Make sure that median error values increase with increasing magnitude. This
-    # ensures that the 3P exponential fit does not fail
-    mag_y_new = []
-    for e_arr in mag_y:
-        e_arr_new, v_old = [], np.inf
-        for i in range(-1, -len(e_arr) - 1, -1):
-            if e_arr[i] > v_old:
-                e_arr_new.append(v_old)
-            else:
-                e_arr_new.append(e_arr[i])
-            v_old = e_arr[i]
-        e_arr_new.reverse()
-        mag_y_new.append(e_arr_new)
-    mag_y = mag_y_new
-
-    # Mid points in magnitude range
-    mag_x = 0.5 * (steps_x[:-1] + steps_x[1:])
-
-    # Fit 3-parameter exponential
-    err_dist = []
-    for y in mag_y:
-        popt_mc = get_3p_pars(mag_x, y, mag)
-        err_dist.append(popt_mc)
+        err_dist.append(rand_norm_vals[:N] * e_col[idx])
 
     return err_dist
-
-
-def exp_3p(x, a, b, c):
-    """
-    Three-parameters exponential function.
-
-    This function is tied to the 'synth_cluster.add_errors' function.
-    """
-    return a * np.exp(b * x) + c
-
-
-def exp_2p(x, a, b):
-    """Two-parameters exponential function. Required for scipy.optimize.curve_fit."""
-    return a * np.exp(b * x)
-
-
-def get_3p_pars(mag_x, y, mags):
-    """Fit 3P or 2P exponential curve."""
-    try:
-        if len(mag_x) >= 3:
-            # Fit 3-param exponential curve.
-            popt_mc, _ = curve_fit(exp_3p, mag_x, y)
-        else:
-            # If the length of this list is 2, it means that the main
-            # magnitude length is too small. If this is the case, do not
-            # attempt to fit a 3 parameter exp function since it will fail.
-            raise RuntimeError
-
-        # Check a, b values
-        if popt_mc[0] > 1e5 or popt_mc[1] <= 0:
-            raise RuntimeError
-
-    # If the 3-param exponential fitting process fails.
-    except RuntimeError:
-        print("Error: 3-param exponential error function fit failed. Attempt 2P fit")
-        try:
-            # Fit simple 2-params exponential curve.
-            popt_mc, _ = curve_fit(exp_2p, mag_x, y)
-            # Insert empty 'c' value to be fed later on to the 3P exponential
-            # function used to obtain the plotted error bars. This makes the
-            # 2P exp function equivalent to the 3P exp function, with the
-            # 'c' parameter equal to 0.
-            popt_mc = np.insert(popt_mc, 2, 0.0)
-
-            # Check a, b values
-            if popt_mc[0] > 1e5 or popt_mc[1] <= 0:
-                raise RuntimeError
-
-        # If the 2-param exponential fitting process also fails, try with a
-        # 2P exp but using only min and max error values.
-        except RuntimeError:
-            print(
-                "Error: 2-param exponential error function fit failed. Perform "
-                + "min-max magnitude fit."
-            )
-            # Fit simple 2-params exponential curve.
-            mags_minmax = [min(mags), max(mags) - (max(mags) - min(mags)) / 20.0]
-            y_minmax = [min(y), max(y)]
-
-            # OLD code, replaced by manual estimation 20/06/24
-            # popt_mc, _ = curve_fit(exp_2p, mags_minmax, y_minmax)
-            # # Insert 'c' value into exponential function param list.
-            # popt_mc = np.insert(popt_mc, 2, 0.0)
-            # Manual coefficients
-            x0, x1 = mags_minmax
-            y0, y1 = y_minmax
-            b = np.log(y0 / y1) / (x0 - x1)
-            a = y0 / np.exp(b * x0)
-            popt_mc = np.array([a, b, 0])
-
-    return popt_mc
 
 
 def add_binarity(self) -> np.ndarray:
@@ -870,7 +748,7 @@ def mass_interp(isoch_cut, m_ini_idx, st_dist_mass, N_obs_stars):
     Masses that fall outside of the isochrone's mass range have been previously
     rejected.
     """
-    # Assumes `mass_ini=isoch_cut[m_ini_idx]` is ordered
+    # Assumes `mass_ini=isoch_cut[m_ini_idx]` is sorted min to max <-- IMPORTANT
     mass_ini = isoch_cut[m_ini_idx]
 
     # Filter masses in the IMF sampling that are outside of the mass
@@ -905,6 +783,7 @@ def mass_interp(isoch_cut, m_ini_idx, st_dist_mass, N_obs_stars):
     # for i, arr in enumerate(isoch_cut):
     #     isoch_mass[i] = np.interp(mass_dist, mass_ini, arr)
 
+    # Interpolate the sampled stars (masses) into the isochrone
     isoch_mass = interp_mass_isoch(isoch_cut, mass_ini, mass_dist)
 
     return isoch_mass
@@ -977,110 +856,17 @@ def binarity(alpha, beta, binar_flag, m_ini_idx, rand_unif_vals, isoch_mass):
     return isoch_mass
 
 
-def add_errors(isoch_compl, err_dist, rand_norm_vals):
+def add_errors(isoch_binar, err_dist):
     """
     Add random synthetic uncertainties to the magnitude and color(s)
     """
 
-    rnd = rand_norm_vals[: isoch_compl.shape[-1]]
-    main_mag = isoch_compl[0]
+    N = len(isoch_binar[0])
+    mag_sort = np.argsort(-isoch_binar[0])
+    for i, sigma in enumerate(err_dist):
+        isoch_binar[i][mag_sort] += sigma[:N]
 
-    for i, (a, b, c) in enumerate(err_dist):
-        # isoch_compl[0] is the main magnitude.
-        # sigma_mc = getSigmas(isoch_compl[0], popt_mc)
-
-        # Three-parameters exponential function for the uncertainty
-        # sigma_mc = a * np.exp(b * main_mag) + c
-        sigma_mc = exp_3p(main_mag, a, b, c)
-
-        # Randomly move stars around these errors.
-        # isoch_compl[i] = gauss_error(rnd, isoch_compl[i], sigma_mc)
-
-        # Randomly perturb photometry with a Gaussian distribution
-        isoch_compl[i] += rnd * sigma_mc
-
-    return isoch_compl
-
-
-# def generate(self, fit_params, plotflag=False):
-#     r"""Returns the full synthetic cluster array.
-
-#     This is an almost exact copy of the ``synth_cluster.generate()`` function with
-#     the only difference that it returns the full array. This is generated:
-
-#     synth_clust = [mag, c1, (c2), m_ini_1, mag_b, c1_b, (c2_b), m_ini_2]
-
-#     where c1 and c2 colors defined, and 'm_ini_1, m_ini_2' are the primary and
-#     secondary masses of the binary systems. The single systems only have a '0'
-#     stored in 'm_ini_2'.
-
-#     """
-#     # Return proper values for fixed parameters and parameters required
-#     # for the (z, log(age)) isochrone averaging.
-#     met, loga, alpha, beta, av, dr, rv, dm, ml, mh, al, ah = properModel(
-#         self.met_age_dict, self.fix_params, fit_params
-#     )
-
-#     # Generate a weighted average isochrone from the (z, log(age)) values in
-#     # the 'model'.
-#     isochrone = zaWAverage(
-#         self.theor_tracks,
-#         self.met_age_dict,
-#         self.m_ini_idx,
-#         met,
-#         loga,
-#         ml,
-#         mh,
-#         al,
-#         ah,
-#     )
-
-#     # Move theoretical isochrone using the distance modulus
-#     isoch_moved = move_isochrone(isochrone, self.m_ini_idx, dm)
-
-#     # Apply extinction correction
-#     isoch_extin = extinction(
-#         self.ext_law,
-#         self.ext_coefs,
-#         self.rand_floats["norm"][0],
-#         self.rand_floats["unif"][0],
-#         self.DR_distribution,
-#         self.m_ini_idx,
-#         self.binar_flag,
-#         av,
-#         dr,
-#         rv,
-#         isoch_moved,
-#     )
-
-#     # Remove isochrone stars beyond the maximum magnitude
-#     isoch_cut = cut_max_mag(isoch_extin, self.max_mag_syn)
-#     if not isoch_cut.any():
-#         return np.array([])
-#     if plotflag:
-#         return isoch_cut
-
-#     # Interpolate IMF's sampled masses into the isochrone.
-#     isoch_mass = mass_interp(
-#         isoch_cut, self.m_ini_idx, self.st_dist_mass[ml][al], self.N_obs_stars
-#     )
-#     if not isoch_mass.any():
-#         return np.array([])
-
-#     # Assignment of binarity.
-#     isoch_binar = binarity(
-#         alpha,
-#         beta,
-#         self.binar_flag,
-#         self.m_ini_idx,
-#         self.rand_floats["unif"][1],
-#         isoch_mass,
-#     )
-
-#     # Assign errors according to errors distribution.
-#     synth_clust = add_errors(isoch_binar, self.err_dist, self.rand_floats["norm"][1])
-
-#     return synth_clust
+    return isoch_binar
 
 
 # def _rm_low_masses(self, dm_min):
