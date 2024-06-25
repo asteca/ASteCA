@@ -1,5 +1,13 @@
 .. :changelog:
 
+`[v0.5.6] <https://github.com/asteca/asteca/releases/tag/v0.5.6>`__ - 2024-06-25
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+- Simpler error distribution function
+- Convert `dataclass` to `class` (simpler API documentation)
+
+
+
 `[v0.5.5] <https://github.com/asteca/asteca/releases/tag/v0.5.5>`__ - 2024-06-21
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
