@@ -97,7 +97,7 @@ If this argument is not changed from its default then the ``z`` parameter will b
 to generate synthetic clusters, as shown in the section :ref:`ref_generating`.
 
 Another extra argument is ``N_interp``, which controls the isochrones interpolation 
-(set to ``2500``by default). A smaller value con be used to lower the amount of memory
+(set to ``2500`` by default). A smaller value con be used to lower the amount of memory
 used by this class, but it comes at the expense of more coarse synthetic clusters being
 generated later on (since the isochrones will be interpolated with fewer points and will
 thus contain less resolution).
