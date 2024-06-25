@@ -377,8 +377,10 @@ class Synthetic:
         self.R_xy = R_xy
 
         print("")
-        print("Model          :", ", ".join(f"{k}: {v}" for k, v in model.items()))
-        print("Model STDDEV   :", ", ".join(f"{k}: {v}" for k, v in model_std.items()))
+        print("Model          :", ", ".join(
+            f"{k}: {round(v, 3)}" for k, v in model.items()))
+        print("Model STDDEV   :", ", ".join(
+            f"{k}: {round(v, 3)}" for k, v in model_std.items()))
         print(f"N_models       : {N_models}")
         print("Attributes stored in Synthetic object")
 
