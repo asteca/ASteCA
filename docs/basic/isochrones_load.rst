@@ -67,12 +67,15 @@ the documentation for the
 `Filter Profile Service <http://svo2.cab.inta-csic.es/theory/fps/>`_
 of the Spanish Virtual Observatory.
 
-There is one more optional argument that can be used when loading the isochrones:
-``z_to_FeH``. This argument is used to transform metallicity values
-from he default ``z`` to the logarithmic version ``FeH``, and it is set to ``None`` by
-default. If you want to generate your synthetic cluster models using ``FeH`` instead of
-``z``, then this argument must be changed to the solar ``z`` metallicity value for the
-isochrones.
+There are a few more optional arguments that can be used when loading the isochrones.
+The user can refer to :py:mod:`asteca.isochrones` for more information on the arguments
+of the :class:`isochrones` class.
+
+One of those extra arguments is ``z_to_FeH``, used to transform metallicity values from
+he default ``z`` to the logarithmic version ``FeH`` (set to ``None`` by default).
+If you want to generate your synthetic cluster models using
+``FeH`` instead of ``z``, then this argument must be changed to the solar ``z``
+metallicity value for the isochrones.
 For example, if you are using PARSEC isochrones a solar metallicity of
 ``z=0.0152`` is recommended (see
 `CMD input form <http://stev.oapd.inaf.it/cgi-bin/cmd_3.7>`_), which means that
@@ -93,8 +96,12 @@ you would load your isochrones as:
 If this argument is not changed from its default then the ``z`` parameter will be used
 to generate synthetic clusters, as shown in the section :ref:`ref_generating`.
 
-See :py:mod:`asteca.isochrones` for more information on the arguments of the
-:class:`isochrones` class.
+Another extra argument is ``N_interp``, which controls the isochrones interpolation 
+(set to ``2500``by default). A smaller value con be used to lower the amount of memory
+used by this class, but it comes at the expense of more coarse synthetic clusters being
+generated later on (since the isochrones will be interpolated with fewer points and will
+thus contain less resolution).
+
 
 Please `contact me <gabrielperren@gmail.com>`_ if you have any issues with the loading
 process of the theoretical isochrones.
