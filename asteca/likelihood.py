@@ -77,9 +77,9 @@ class Likelihood:
         """
         if self.lkl_name == "plr":
             return lpriv.tremmel(self, synth_clust)
-        if self.lkl_name == "visual":
-            return lpriv.visual(self, synth_clust)
-        if self.lkl_name == "mean_dist":
-            return lpriv.mean_dist(self, synth_clust)
+        # if self.lkl_name == "visual":
+        #     return lpriv.visual(self, synth_clust)
+        # if self.lkl_name == "mean_dist":
+        #     return lpriv.mean_dist(self, synth_clust)
         if self.lkl_name == "bins_distance":
             return lpriv.bins_distance(self, synth_clust)
