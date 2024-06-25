@@ -50,13 +50,6 @@ class Isochrones:
         :py:meth:`Synthetic.generate() <asteca.synthetic.Synthetic.generate>` method,
         defaults to ``None``
     :type z_to_FeH: float | None
-    :param column_names: Column names for the initial mass, metallicity, and age for
-        the photometric system's isochrones files. Example:
-        ``{"mass_col": "Mini", "met_col": "Zini", "age_col": "logAge"}``.
-        This dictionary is defined internally in **ASteCA** and should only be given
-        by the user if the isochrone service changes its format and the `isochrones`
-        class fails to load the files, defaults to ``None``
-    :type column_names: dict | None
     :param N_interp: Number of interpolation points used to ensure that all isochrones
         are the same shape, defaults to ``2500``
     :type N_interp: int
@@ -65,6 +58,13 @@ class Isochrones:
         "`in preparation <http://stev.oapd.inaf.it/cmd_3.7/faq.html>`__", defaults
         to ``True``
     :type parsec_rm_stage_9: bool
+    :param column_names: Column names for the initial mass, metallicity, and age for
+        the photometric system's isochrones files. Example:
+        ``{"mass_col": "Mini", "met_col": "Zini", "age_col": "logAge"}``.
+        This dictionary is defined internally in **ASteCA** and should only be given
+        by the user if the isochrone service changes its format and the `isochrones`
+        class fails to load the files, defaults to ``None``
+    :type column_names: dict | None
 
     :raises ValueError: If any of the attributes is not recognized as a valid option,
         or there are missing required attributes
@@ -81,9 +81,9 @@ class Isochrones:
         color_effl: tuple | None = None,
         color2_effl: tuple | None = None,
         z_to_FeH: float | None = None,
-        column_names: dict | None = None,
         N_interp: int = 2500,
-        parsec_rm_stage_9: bool = True
+        parsec_rm_stage_9: bool = True,
+        column_names: dict | None = None,
     ) -> None:
         self.model = model
         self.isochs_path = isochs_path
