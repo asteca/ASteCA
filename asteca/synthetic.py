@@ -567,8 +567,8 @@ class Synthetic:
             M_i = mb.minit_LGB05(loga, M_a, gamma, t0, mu_ev)
 
             # Obtain evolutionary and dynamical masses
-            M_evol = M_i * (1 - mu_ev)
-            M_dyn = M_i - M_evol - M_a
+            M_evol = max(0, M_i * (1 - mu_ev))
+            M_dyn = max(0, M_i - M_evol - M_a)
 
             masses_all.append([M_obs, M_phot, M_evol, M_dyn])
 
