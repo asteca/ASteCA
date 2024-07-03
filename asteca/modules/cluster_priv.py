@@ -51,24 +51,19 @@ def get_Nd_dists(cents, data, dists_flag=False):
 
 
 def get_5D_center(
-    lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c, N_cluster, N_clust_min, N_cent=500
+    lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c, N_clust_min
 ):
     """
-    Estimate the 5-dimensional center of a cluster.
-
-    Steps:
+    Estimate the 5-dimensional center of a cluster:
 
     1. Keep only 'N_cent' stars if xy_c or plx_c are given
     2. (Re)Estimate the center in PMs (the value can be given as input)
     3. Obtain the 'N_cent' stars closest to the available center values
     4. Estimate the 5-dimensional final center using kNN
 
-    N_cent: estimated number of members
-
     """
-    # Re-write if this parameter is given
-    if N_cluster is not None:
-        N_cent = N_cluster
+    N_tot = len(lon)
+    N_cent = max(N_clust_min, min(250, int(.1 * N_tot)))
 
     # Get filtered stars close to given xy+Plx centers (if any) to use
     # in the PMs center estimation

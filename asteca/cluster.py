@@ -185,8 +185,6 @@ class Cluster:
         radec_c: tuple | None = None,
         pms_c: tuple | None = None,
         plx_c: float | None = None,
-        N_cluster: int | None = None,
-        N_clust_min: int = 25,
     ) -> None:
         """Estimate center coordinates for the cluster
 
@@ -206,10 +204,6 @@ class Cluster:
         :type pms_c: tuple | None
         :param plx_c: Estimated value for the plx center, defaults to ``None``
         :type plx_c: float | None
-        :param N_cluster: Estimated number of members, defaults to ``None``
-        :type N_cluster: int | None
-        :param N_clust_min: Minimum number of cluster members, defaults to ``25``
-        :type N_clust_min: int
 
         :raises ValueError: If the ``knn_5d`` algorithm is selected and any of these
             attributes ``(ra, dec, pmra, pmde, plx)`` are  missing from the
@@ -241,8 +235,7 @@ class Cluster:
                 xy_c=radec_c,
                 vpd_c=pms_c,
                 plx_c=plx_c,
-                N_cluster=N_cluster,
-                N_clust_min=N_clust_min,
+                N_clust_min=self.N_clust_min,
             )
             ra_c, dec_c = cp.lonlat2radec(x_c, y_c)
 
