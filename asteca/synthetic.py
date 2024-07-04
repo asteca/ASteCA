@@ -547,8 +547,8 @@ class Synthetic:
 
             # Estimate the actual mass, ie: the sum of the observed and photometric
             # masses
-            isoch = self.sampled_synthcls[i]
-            M_obs, M_phot = mb.get_M_actual(self, isoch, i)
+            sampled_synthcl = self.sampled_synthcls[i]
+            M_obs, M_phot = mb.get_M_actual(self, sampled_synthcl, i)
             M_a = M_obs + M_phot
 
             # Ambient density
@@ -576,7 +576,7 @@ class Synthetic:
 
         # Check the number of generated synthetic stars
         N_obs = len(self.mag_p)
-        if N_obs > isoch.shape[1]:
+        if N_obs > sampled_synthcl.shape[1]:
             warnings.warn(
                 "Number of synthetic stars is smaller than observed stars. Increase "
                 + "the 'max_mass' argument for a more accurate mass estimation"

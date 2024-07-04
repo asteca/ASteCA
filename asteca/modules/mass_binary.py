@@ -85,13 +85,13 @@ def galactic_coords(
     return Z, R_GC, R_xy
 
 
-def get_M_actual(synthcl, isoch, int_seed) -> tuple[float, float]:
+def get_M_actual(synthcl, sampled_synthcl, int_seed) -> tuple[float, float]:
     """Estimate the actual mass using the observed mass and the fraction of
     mass estimated to be beyond the maximum observed magnitude.
     """
 
-    mass_ini = isoch[synthcl.m_ini_idx]
-    mass_2nd = isoch[-1]
+    mass_ini = sampled_synthcl[synthcl.m_ini_idx]
+    mass_2nd = sampled_synthcl[-1]
     # Add secondary masses
     M_obs = np.nansum([mass_ini, mass_2nd])
 
