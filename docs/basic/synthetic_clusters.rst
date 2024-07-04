@@ -532,12 +532,12 @@ portion below the maximum magnitude cut, i.e. the photometric mass $M_{phot}$. A
 above, the sum of these two is equivalent to $M_{a}$.
 
 Following `Lamers et al. (2005)
-<https://www.aanda.org/articles/aa/abs/2005/37/aa2241-04/aa2241-04.html>`_, the initial
-mass can be estimated via:
+<https://www.aanda.org/articles/aa/abs/2005/37/aa2241-04/aa2241-04.html>`_ Eq. 7,
+the initial mass can be estimated via:
 
 .. math::
 
-    M_i \simeq \left\{ M_a^{\gamma} + \frac{\gamma t}{t_0} \right\}^{1\gamma} \mu_{\text
+    M_i \simeq \left\{ M_a^{\gamma} + \frac{\gamma t}{t_0} \right\}^{1/\gamma} \mu_{\text
     {ev}}(Z, t)^{-1}
 
 where $M_{a}$ is the actual mass, $t$ is the cluster's age, $\mu_{\text{ev}}(Z, t)$
