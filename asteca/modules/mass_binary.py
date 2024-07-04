@@ -88,6 +88,10 @@ def galactic_coords(
 def get_M_actual(synthcl, sampled_synthcl, int_seed) -> tuple[float, float]:
     """Estimate the actual mass using the observed mass and the fraction of
     mass estimated to be beyond the maximum observed magnitude.
+
+    The final actual mass is just:
+
+    M_actual = M_obs + M_phot
     """
 
     mass_ini = sampled_synthcl[synthcl.m_ini_idx]
