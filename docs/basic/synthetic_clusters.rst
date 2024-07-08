@@ -77,7 +77,7 @@ power-law, where ``gamma`` or $\gamma$ is the exponent or power:
     f(q) \approx q^{\gamma(m_1)}
 
 Here, $f(q)$ is the distribution of $q$ (the mass-ratio) where $\gamma(m_1)$ means that
-the value of $\gamma$ depends on the primary mass of the system.
+the value of $\gamma$ depends on the primary mass of the system (this dependence is only true for the Duchene & Kraus distribution, see below).
 
 The default selection is ``gamma=D&K``, with ``D&K`` meaning the primary mass-dependent
 distribution by
@@ -97,7 +97,7 @@ The Fisher distributions (top row) favor $q$ values closer to unity (i.e.: secon
 masses that are similar to the primary masses), while the Raghavan and Duchene & Kraus
 distributions (bottom row) look a bit more uniform.
 
-The user also select a float value for ``gamma``, which will be used as an
+The user can also select a float value for ``gamma``, which will be used as an
 exponent in the power-law function $f(q) \approx q^{\gamma}$. The figure below shows
 this distribution for three ``gamma`` ($\gamma$) values, where ``gamma=0`` means a
 uniform distribution.
@@ -105,6 +105,10 @@ uniform distribution.
 .. figure:: ../_static/qdist_unif.png
     :scale: 35%
     :align: center
+
+Only the Duchene & Kraus distribution is primary-mass dependent. The Fisher and Raghavan
+distributions, as well as the distributions set by the user via a float value for
+``gamma``, are independent of mass values.
 
 
 The ``ext_law`` argument defines the extinction law as one of either ``CCMO`` or
