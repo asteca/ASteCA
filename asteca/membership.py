@@ -3,7 +3,6 @@ from .cluster import Cluster
 from .modules import cluster_priv as cp
 from .modules.fastmp import fastMP
 from .modules.bayesian_da import bayesian_mp
-from .modules.newfastmp import newfastMP
 
 
 class Membership:
