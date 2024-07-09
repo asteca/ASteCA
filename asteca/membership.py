@@ -3,6 +3,7 @@ from .cluster import Cluster
 from .modules import cluster_priv as cp
 from .modules.fastmp import fastMP
 from .modules.bayesian_da import bayesian_mp
+from .modules.newfastmp import newfastMP
 
 
 class Membership:
@@ -28,13 +29,21 @@ class Membership:
     :param my_field: :py:class:`Cluster <asteca.cluster.Cluster>` object with the
         loaded data for the observed field
     :type my_field: Cluster
+    :param seed: Random seed. If ``None`` a random integer will be generated and used,
+        defaults to ``None``
+    :type seed: int | None
 
     :raises ValueError: If there are missing required attributes in the
         :py:class:`Cluster <asteca.cluster.Cluster>` object
     """
 
-    def __init__(self, my_field: Cluster) -> None:
+    def __init__(
+        self,
+        my_field: Cluster,
+        seed: int | None = None,
+    ) -> None:
         self.my_field = my_field
+        self.seed = seed
 
         noradeg_flag = False
         try:
@@ -55,6 +64,9 @@ class Membership:
                 "The 'Membership' class requires the 'N_cluster' attribute\n"
                 + "to be present in the 'cluster' object"
             )
+
+        # Set seed
+        self.rng = np.random.default_rng(seed)
 
     def bayesian(self, N_runs: int = 1000, eq_to_gal: bool = False) -> np.array:
         """Assign membership probabilities.
@@ -220,8 +232,117 @@ class Membership:
             self.my_field.N_cluster,
             self.my_field.N_clust_min,
             self.my_field.N_clust_max,
-            # centers_ex,
+            self.rng,
             N_resample,
         )
 
         return probs
+
+    def newfastmp(
+        self,
+        N_resample: int = 1000,
+    ):
+        """
+        """
+        print("\nRunning newfastMP...")
+        # print("{}       : ({:.4f}, {:.4f})".format(cent_str, *xy_center))
+        print("radec_c        : ({:.4f}, {:.4f})".format(*self.my_field.radec_c))
+        print("pms_c          : ({:.3f}, {:.3f})".format(*self.my_field.pms_c))
+        print(f"plx_c          : {self.my_field.plx_c}")
+        print(f"N_cluster      : {self.my_field.N_cluster}")
+        print(f"N_resample     : {N_resample}")
+
+        ra_c, dec_c = self.my_field.radec_c
+        pmra_c, pmde_c = self.my_field.pms_c
+
+        probs = newfastMP(
+            ra_c,
+            dec_c,
+            pmra_c,
+            pmde_c,
+            self.my_field.plx_c,
+            self.my_field.ra_v,
+            self.my_field.dec_v,
+            self.my_field.pmra_v,
+            self.my_field.pmde_v,
+            self.my_field.plx_v,
+            self.my_field.e_pmra_v,
+            self.my_field.e_pmde_v,
+            self.my_field.e_plx_v,
+            self.my_field.N_cluster,
+            self.rng,
+            N_resample
+        )
+
+        return probs
+
+    # def fastmp2(
+    #     self,
+    #     fixed_centers: bool = False,
+    #     N_resample: int = 1000,
+    #     eq_to_gal: bool = True,
+    # ) -> np.array:
+    #     """Assign membership probabilities.
+    #     """
+    #     for k in (
+    #         "ra",
+    #         "dec",
+    #         "pmra",
+    #         "pmde",
+    #         "plx",
+    #         "e_pmra",
+    #         "e_pmde",
+    #         "e_plx",
+    #         "radec_c",
+    #         "pms_c",
+    #         "plx_c",
+    #     ):
+    #         if hasattr(self.my_field, k) is False:
+    #             raise ValueError(f"'{k}' must be present as a 'cluster' attribute")
+
+    #     xv, yv = self.my_field.ra_v, self.my_field.dec_v
+    #     xy_center = self.my_field.radec_c
+    #     cent_str = "radec_c "
+    #     # Convert (RA, DEC) to (lon, lat)
+    #     if eq_to_gal is True:
+    #         xv, yv = cp.radec2lonlat(xv, yv)
+    #         xy_center = cp.radec2lonlat(*xy_center)
+    #         cent_str = "lonlat_c"
+
+    #     print("\nRunning fastMP2...")
+    #     print("{}       : ({:.4f}, {:.4f})".format(cent_str, *xy_center))
+    #     print("pms_c          : ({:.3f}, {:.3f})".format(*self.my_field.pms_c))
+    #     print(f"plx_c          : {self.my_field.plx_c}")
+    #     print(f"fixed_centers  : {fixed_centers}")
+    #     print(f"N_cluster      : {self.my_field.N_cluster}")
+    #     print(f"N_resample     : {N_resample}")
+
+    #     rng = np.random.default_rng(12345)  # TODO
+
+    #     # Generate input data array for fastMP
+    #     X = np.array(
+    #         [
+    #             xv,
+    #             yv,
+    #             self.my_field.pmra_v,
+    #             self.my_field.pmde_v,
+    #             self.my_field.plx_v,
+    #             self.my_field.e_pmra_v,
+    #             self.my_field.e_pmde_v,
+    #             self.my_field.e_plx_v,
+    #         ]
+    #     )
+    #     probs = fastMP2(
+    #         X,
+    #         list(xy_center),
+    #         list(self.my_field.pms_c),
+    #         self.my_field.plx_c,
+    #         fixed_centers,
+    #         self.my_field.N_cluster,
+    #         self.my_field.N_clust_min,
+    #         self.my_field.N_clust_max,
+    #         rng,
+    #         N_resample,
+    #     )
+
+    #     return probs
