@@ -1,12 +1,24 @@
 import warnings
 import numpy as np
 from scipy import spatial
-
 # from scipy.stats import gaussian_kde # NEEDS TEST, 05/24
 from . import cluster_priv as cp
 from . import membership_priv as mp
 
+from functools import wraps
+from time import time
+def timing(f):
+    @wraps(f)
+    def wrap(*args, **kw):
+        ts = time()
+        result = f(*args, **kw)
+        te = time()
+        print('func:%r took: %2.4f sec' % (f.__name__, te-ts))
+        return result
+    return wrap
 
+
+@timing
 def fastMP(
     X,
     xy_c,
@@ -17,6 +29,7 @@ def fastMP(
     N_clust_min,
     N_clust_max,
     # centers_ex,
+    rng,
     N_resample,
 ):
     """ """
@@ -65,20 +78,21 @@ def fastMP(
     # Ordered indexes according to smallest distances to 'cents_3d'
     d_pm_plx_idxs = cp.get_Nd_dists(cents_3d, data_3d)
     st_idx = d_pm_plx_idxs[:N_cluster]
-    # Define here 'dims_norm' value used for data normalization
+    # Move data to center
     data_5d = np.array([lon, lat, pmRA, pmDE, plx]).T
     cents_5d = np.array([xy_c + vpd_c + [plx_c]])
     data_mvd = data_5d - cents_5d
-    # if st_idx is not None:
+    # Define here 'dims_norm' value used for data normalization
     dims_norm = 2 * np.nanmedian(abs(data_mvd[st_idx]), 0)
     # else:
     #     dims_norm = 2 * np.nanmedian(abs(data_mvd), 0)
 
     idx_selected = []
     N_runs, N_05_old, prob_old, break_check = 0, 0, 1, 0
-    for _ in range(N_resample + 1):
+    for r in range(N_resample + 1):
         # Sample data
-        s_pmRA, s_pmDE, s_plx = data_sample(pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx)
+        s_pmRA, s_pmDE, s_plx = data_sample(
+            rng, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx)
 
         # Data normalization
         data_5d, cents_5d = mp.get_dims_norm(
@@ -100,23 +114,6 @@ def fastMP(
 
         # Star selection
         st_idx = d_idxs[:N_cluster]
-
-        # # Filter extra clusters in frame (if any)
-        # st_idx = filter_cls_in_frame(
-        #     lon[st_idx],
-        #     lat[st_idx],
-        #     pmRA[st_idx],
-        #     pmDE[st_idx],
-        #     plx[st_idx],
-        #     xy_c,
-        #     vpd_c,
-        #     plx_c,
-        #     st_idx,
-        #     extra_cls_dict,
-        #     dims_msk,
-        #     N_clust_min,
-        #     dims_norm,
-        # )
 
         # Re-estimate centers using the selected stars
         if len(st_idx) > N_clust_min:
@@ -151,7 +148,7 @@ def fastMP(
     probs_final = probs_0(N_clust_min, dims_norm, X, cents_init, probs_final)
 
     if break_check > N_break:
-        print(f"Convergence reached at {N_runs} runs")
+        print(f"Convergence reached at {r} runs")
     else:
         print(f"Maximum number of runs reached: {N_resample}")
 
@@ -163,16 +160,17 @@ def get_break_check(break_check, N_runs, idx_selected, prob_old, N_05_old):
     counts = np.unique(idx_selected, return_counts=True)[1]
     probs = counts / N_runs
     msk = probs > 0.5  # HARDCODED
-    N_05 = msk.sum()
-    if N_05 > 2:
-        prob_mean = np.mean(probs[msk])
-        delta_probs = abs(prob_mean - prob_old)
-        if N_05 == N_05_old or delta_probs < 0.001:  # HARDCODED
-            break_check += 1
-        else:
-            # Reset
-            break_check = 0
-        prob_old, N_05_old = prob_mean, N_05
+    N_05 = 0 #msk.sum()
+    # if N_05 > 2:
+    prob_mean = np.mean(probs[msk])
+    delta_probs = abs(prob_mean - prob_old)
+    # if N_05 == N_05_old or 
+    if delta_probs < 0.001:  # HARDCODED
+        break_check += 1
+    else:
+        # Reset
+        break_check = 0
+    prob_old, N_05_old = prob_mean, N_05
 
     return break_check, prob_old, N_05_old
 
@@ -285,10 +283,10 @@ def first_filter(
     return idx_all, lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx
 
 
-def data_sample(pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx):
+def data_sample(rng, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx):
     """Gaussian random sample"""
     data_3 = np.array([pmRA, pmDE, plx])
-    grs = np.random.normal(0.0, 1.0, data_3.shape[1])
+    grs = rng.normal(0.0, 1.0, data_3.shape[1])
     data_err = np.array([e_pmRA, e_pmDE, e_plx])
     return data_3 + grs * data_err
 
@@ -352,11 +350,13 @@ def probs_0(N_clust_min, dims_norm, X, cents_init, probs_final, p_min=0.1):
         p_min = probs_final[msk_0_5].min()
 
     # Linear relation for: (0, d_max), (p_min, d_min)
-    d_min, d_max = dists[msk_0].min(), dists[msk_0].max()
+    d_min, d_max = np.nanmin(dists[msk_0]), np.nanmax(dists[msk_0])
     m, h = (d_min - d_max) / p_min, d_max
     probs_0_v = (dists[msk_0] - h) / m
 
     # Assign new probabilities to 'msk_0' stars
     probs_final[msk_0] = probs_0_v
+
+    probs_final[np.isnan(probs_final)] = 0.
 
     return probs_final
