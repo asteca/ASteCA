@@ -1,24 +1,8 @@
-import warnings
 import numpy as np
 from scipy import spatial
-# from scipy.stats import gaussian_kde # NEEDS TEST, 05/24
 from . import cluster_priv as cp
-from . import membership_priv as mp
-
-from functools import wraps
-from time import time
-def timing(f):
-    @wraps(f)
-    def wrap(*args, **kw):
-        ts = time()
-        result = f(*args, **kw)
-        te = time()
-        print('func:%r took: %2.4f sec' % (f.__name__, te-ts))
-        return result
-    return wrap
 
 
-@timing
 def fastMP(
     X,
     xy_c,
@@ -28,22 +12,16 @@ def fastMP(
     N_cluster,
     N_clust_min,
     N_clust_max,
-    # centers_ex,
     rng,
     N_resample,
 ):
     """ """
-    # HARDCODED
-    N_break = max(50, int(N_resample * 0.05))
-    # HARDCODED
 
     # Remove 'nan' values
     N_all = X.shape[1]
     idx_clean, X_no_nan = cp.reject_nans(X)
     # Unpack input data with no 'nans'
     lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx = X_no_nan
-
-    cents_init = [xy_c, vpd_c, plx_c]
 
     # Remove the most obvious field stars to speed up the process
     idx_clean, lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx = first_filter(
@@ -61,43 +39,19 @@ def fastMP(
         e_plx,
     )
 
-    # Initiate here as None, will be estimated after the members estimation
-    # using a selection of probable members
-    # dims_norm = None
-
-    # # Estimate the number of members
-    # if N_cluster is None:
-    #     N_survived, st_idx = estimate_nmembs(
-    # else:
-    # N_survived = int(N_cluster)
-    # st_idx = None
-
-    # Select initial set of stars to estimate the 'dims_norm' parameter
-    cents_3d = np.array([list(vpd_c) + [plx_c]])
-    data_3d = np.array([pmRA, pmDE, plx]).T
-    # Ordered indexes according to smallest distances to 'cents_3d'
-    d_pm_plx_idxs = cp.get_Nd_dists(cents_3d, data_3d)
-    st_idx = d_pm_plx_idxs[:N_cluster]
-    # Move data to center
-    data_5d = np.array([lon, lat, pmRA, pmDE, plx]).T
-    cents_5d = np.array([xy_c + vpd_c + [plx_c]])
-    data_mvd = data_5d - cents_5d
-    # Define here 'dims_norm' value used for data normalization
-    dims_norm = 2 * np.nanmedian(abs(data_mvd[st_idx]), 0)
-    # else:
-    #     dims_norm = 2 * np.nanmedian(abs(data_mvd), 0)
-
-    idx_selected = []
-    N_runs, N_05_old, prob_old, break_check = 0, 0, 1, 0
+    st_idx = None
+    N_stars = len(idx_clean)
+    probs_all = np.zeros(N_stars)
+    prob_old_arr = np.zeros(N_stars)
+    N_break = 50
     for r in range(N_resample + 1):
         # Sample data
         s_pmRA, s_pmDE, s_plx = data_sample(
             rng, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx)
 
         # Data normalization
-        data_5d, cents_5d = mp.get_dims_norm(
-            N_clust_min,
-            dims_norm,
+        data_5d, cents_5d = get_dims_norm(
+            N_cluster,
             lon,
             lat,
             s_pmRA,
@@ -116,63 +70,65 @@ def fastMP(
         st_idx = d_idxs[:N_cluster]
 
         # Re-estimate centers using the selected stars
-        if len(st_idx) > N_clust_min:
-            xy_c, vpd_c, plx_c = get_center(
-                xy_c,
-                vpd_c,
-                plx_c,
-                fixed_centers,
-                N_cluster,
-                N_clust_min,
-                lon[st_idx],
-                lat[st_idx],
-                pmRA[st_idx],
-                pmDE[st_idx],
-                plx[st_idx],
-            )
+        xy_c, vpd_c, plx_c = get_center(
+            xy_c,
+            vpd_c,
+            plx_c,
+            fixed_centers,
+            N_cluster,
+            N_clust_min,
+            lon[st_idx],
+            lat[st_idx],
+            pmRA[st_idx],
+            pmDE[st_idx],
+            plx[st_idx],
+        )
 
-            idx_selected += list(st_idx)
-            N_runs += 1
+        probs_all[st_idx] += 1
+        probs = probs_all / (r+1)
 
-        # Convergence check
-        if idx_selected:
-            break_check, prob_old, N_05_old = get_break_check(
-                break_check, N_runs, idx_selected, prob_old, N_05_old
-            )
-            if break_check > N_break:
-                break
+        msk = probs > 0.5
+        # Check that all P>0.5 probabilities converged to 1%
+        if (abs(prob_old_arr[msk] - probs[msk]) < 0.01).all() and r > N_break:
+            break
+        else:
+            prob_old_arr = np.array(probs)
 
-    # Assign final probabilities
-    probs_final = assign_probs(N_all, idx_clean, idx_selected, N_runs)
-    # Change '0' probabilities using linear relation
-    probs_final = probs_0(N_clust_min, dims_norm, X, cents_init, probs_final)
-
-    if break_check > N_break:
+    if r < N_resample:
         print(f"Convergence reached at {r} runs")
     else:
         print(f"Maximum number of runs reached: {N_resample}")
 
+    probs_final = np.zeros(N_all)
+    probs_final[idx_clean] = probs
+
     return probs_final
 
 
-def get_break_check(break_check, N_runs, idx_selected, prob_old, N_05_old):
-    """ """
-    counts = np.unique(idx_selected, return_counts=True)[1]
-    probs = counts / N_runs
-    msk = probs > 0.5  # HARDCODED
-    N_05 = 0 #msk.sum()
-    # if N_05 > 2:
-    prob_mean = np.mean(probs[msk])
-    delta_probs = abs(prob_mean - prob_old)
-    # if N_05 == N_05_old or 
-    if delta_probs < 0.001:  # HARDCODED
-        break_check += 1
-    else:
-        # Reset
-        break_check = 0
-    prob_old, N_05_old = prob_mean, N_05
+def get_dims_norm(
+    N_cluster, lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c, st_idx
+):
+    """
+    Normalize dimensions using twice the median of the selected probable
+    members.
+    """
+    data_5d = np.array([lon, lat, pmRA, pmDE, plx]).T
+    cents_5d = np.array([xy_c + vpd_c + [plx_c]])
+    data_mvd = data_5d - cents_5d
 
-    return break_check, prob_old, N_05_old
+    if st_idx is None:
+        # Initial 'dims_norm' estimation
+        cents_3d = np.array([list(vpd_c) + [plx_c]])
+        data_3d = np.array([pmRA, pmDE, plx]).T
+        # Ordered indexes according to smallest distances to 'cents_3d'
+        d_pm_plx_idxs = cp.get_Nd_dists(cents_3d, data_3d)
+        st_idx = d_pm_plx_idxs[:N_cluster]
+
+    dims_norm = 2 * np.nanmedian(abs(data_mvd[st_idx]), 0)
+    data_norm = data_mvd / dims_norm
+    cents_norm = np.array([[0.0, 0.0, 0.0, 0.0, 0.0]])
+
+    return data_norm, cents_norm
 
 
 def get_center(
@@ -289,74 +245,3 @@ def data_sample(rng, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx):
     grs = rng.normal(0.0, 1.0, data_3.shape[1])
     data_err = np.array([e_pmRA, e_pmDE, e_plx])
     return data_3 + grs * data_err
-
-
-def assign_probs(N_all, idx_clean, idx_selected, N_runs):
-    """Assign final probabilities for all stars
-
-    N_all: Total number of stars in input frame
-    idx_clean: indexes of stars that survived the removal of 'nans' and
-    of stars that are clear field stars
-    """
-    # Initial 0 probabilities for *all* stars
-    probs_final = np.zeros(N_all)
-
-    # Number of processed stars (ie: not rejected as nans)
-    N_stars = len(idx_clean)
-    # Initial zero probabilities for the processed stars
-    probs_all = np.zeros(N_stars)
-    if idx_selected:
-        # Estimate probabilities as averages of counts
-        values, counts = np.unique(idx_selected, return_counts=True)
-        probs = counts / N_runs
-        # Store probabilities for processed stars
-        probs_all[values] = probs
-    else:
-        warnings.warn("No stars were identified as possible members")
-
-    # Assign the estimated probabilities to the processed stars
-    probs_final[idx_clean] = probs_all
-
-    return probs_final
-
-
-def probs_0(N_clust_min, dims_norm, X, cents_init, probs_final, p_min=0.1):
-    """
-    To all stars with prob=0 assign a probability from 0 to p_min
-    that follows a linear relation associated to their 5D distance to the
-    initial defined center
-    """
-    # Stars with '0' probabilities
-    msk_0 = probs_final == 0.0
-    # If no stars with prob=0, nothing to do
-    if msk_0.sum() == 0:
-        return probs_final
-
-    # Original full data
-    lon, lat, pmRA, pmDE, plx = X[:5]
-    xy_c, vpd_c, plx_c = cents_init
-
-    # Data normalization for all the stars
-    msk = np.full((len(lon)), True)
-    data_5d, cents_5d = mp.get_dims_norm(
-        N_clust_min, dims_norm, lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c, msk
-    )
-    # 5D distances to the estimated center
-    dists = cp.get_Nd_dists(cents_5d, data_5d, True)
-
-    # Select 'p_min' as the minimum probability between (0., 0.5)
-    msk_0_5 = (probs_final > 0.0) & (probs_final < 0.5)
-    if msk_0_5.sum() > 1:
-        p_min = probs_final[msk_0_5].min()
-
-    # Linear relation for: (0, d_max), (p_min, d_min)
-    d_min, d_max = np.nanmin(dists[msk_0]), np.nanmax(dists[msk_0])
-    m, h = (d_min - d_max) / p_min, d_max
-    probs_0_v = (dists[msk_0] - h) / m
-
-    # Assign new probabilities to 'msk_0' stars
-    probs_final[msk_0] = probs_0_v
-
-    probs_final[np.isnan(probs_final)] = 0.
-
-    return probs_final
