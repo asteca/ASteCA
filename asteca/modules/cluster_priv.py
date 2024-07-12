@@ -1,6 +1,7 @@
 import warnings
 import numpy as np
 from scipy import spatial
+from scipy import stats
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 
@@ -210,3 +211,56 @@ def get_kNN_center(N_clust_min, data):
     cent = np.median(data[idxs[:N_clust_min]], 0)
 
     return cent
+
+
+def get_2D_center(x, y):
+    """Estimate the 2-dimensional center of a cluster, using only its coordinates.
+
+    Find the KDE maximum value pointing to the center coordinates.
+    """
+    # Approximate center values
+    x_cent_pix, y_cent_pix = get_XY(x, y, gd=50)
+
+    # Restrict the KDE to a smaller area to improve performance
+    rad_x = np.percentile(x, 60) - np.percentile(x, 40)
+    rad_y = np.percentile(y, 60) - np.percentile(y, 40)
+    # Generate zoom around approx center value to speed things up.
+    xmin, xmax = x_cent_pix - rad_x, x_cent_pix + rad_x
+    ymin, ymax_z = y_cent_pix - rad_y, y_cent_pix + rad_y
+    # Use reduced region around the center.
+    msk = (xmin < x) & (x < xmax) & (ymin < y) & (y < ymax_z)
+
+    # Final center values
+    x_c, y_c = get_XY(x[msk], y[msk], gd=100)
+
+    return x_c, y_c
+
+
+def get_XY(x, y, gd, N_max=10000):
+    """ """
+    values = np.vstack([x, y])
+    # Use maximum number for performance
+    if values.shape[-1] > N_max:
+        idx = np.random.choice(values.shape[-1], N_max, replace=False)
+        values = values[:, idx]
+    xmin, ymin = values.min(1)
+    xmax, ymax = values.max(1)
+
+    # Obtain Gaussian KDE.
+    kernel = stats.gaussian_kde(values)
+
+    # Custom bandwith?
+    # bdw = kernel.covariance_factor() * np.max(values.std(axis=1)) * .5
+    # kernel = stats.gaussian_kde(values, bw_method=bdw / np.max(values.std(axis=1)))
+
+    # Grid density (number of points).
+    gd_c = complex(0, gd)
+    # Define x,y grid.
+    x_grid, y_grid = np.mgrid[xmin:xmax:gd_c, ymin:ymax:gd_c]
+    positions = np.vstack([x_grid.ravel(), y_grid.ravel()])
+    # Evaluate kernel in grid positions.
+    k_pos = kernel(positions)
+    # Coordinates of max value in x,y grid (ie: center position).
+    x_c, y_c = positions.T[np.argmax(k_pos)]
+
+    return x_c, y_c
