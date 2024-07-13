@@ -91,8 +91,8 @@ def cluster(
         ax.scatter(
             cluster.colors_p[color_idx][~msk_binar],
             cluster.mag_p[~msk_binar],
-            # c="green",
-            c=binar_probs[~msk_binar],
+            c="grey",
+            # c=binar_probs[~msk_binar],
             marker="o",
             alpha=0.5,
             label=f"Observed (single), N={len(cluster.mag_p[~msk_binar])}",
