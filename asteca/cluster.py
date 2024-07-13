@@ -264,8 +264,7 @@ class Cluster:
                 raise ValueError(
                     f"Algorithm '{algo}' requires the 'data_2d' argument to be defined"
                 )
-
-            if data_2d == ('ra', 'dec'):
+            elif data_2d == ('ra', 'dec'):
                 if any([_ is None for _ in (self.ra, self.dec)]):
                     raise ValueError("Data for  (ra, dec) data is required")
                 c_str = "radec_c"
@@ -275,6 +274,8 @@ class Cluster:
                     raise ValueError("Data for  (pmra, pmde) data is required")
                 c_str = "pms_c"
                 x, y = self.pmra_v, self.pmde_v
+            else:
+                raise ValueError(f"Algorithm '{data_2d}' argument not recognized")
 
             # Remove rows containing any NaNs
             array_2d = np.array([x, y])
