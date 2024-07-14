@@ -325,11 +325,12 @@ class Cluster:
         xv, yv = self.ra_v, self.dec_v
         xy_center = self.radec_c
 
-        radius = None
         if algo == "field_dens":
             radius = cp.fdens_radius(xv, yv, list(xy_center))
         elif algo == "king":
             radius = cp.king_radius(xv, yv, xy_center, self.N_cluster)
+        else:
+            raise ValueError(f"Unrecognized method '{algo}")
 
         print(f"\nRadius         : {radius}")
         self.radius = radius
