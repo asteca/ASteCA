@@ -40,7 +40,6 @@ def lkl_data(self):
     cl_histo_f_z = cl_histo_f[cl_z_idx]
 
     # Arguments below used by the functions called by the get() method
-    # self.bin_edges = bin_edges
     self.ranges = ranges
     self.Nbins = Nbins
     self.cl_z_idx = cl_z_idx
@@ -75,9 +74,6 @@ def bin_edges_f(bin_method, mag, colors):
         bin_edges.append(bayesian_blocks(mag[~np.isnan(mag)]))
         for col in colors:
             bin_edges.append(bayesian_blocks(col[~np.isnan(col)]))
-
-    elif bin_method == "manual":
-        bin_edges = bin_edges
 
     # Extract ranges and number of bins, used by histogram2d
     ranges, Nbins = [], []
@@ -316,3 +312,34 @@ def bins_distance(self, synth_clust):
     lkl = sum(dist * weights)
 
     return lkl
+
+
+def chi_square(self, synth_clust):
+    """From issue #372.
+    """
+    # If synthetic cluster is empty, assign a small likelihood value.
+    if not synth_clust.any():
+        return -1.0e09
+
+    # Obtain histogram for the synthetic cluster.
+    mag, colors = synth_clust[0], synth_clust[1:]
+    syn_histo_f = []
+    for i, col in enumerate(colors):
+        hess_diag = histogram2d(
+            mag,
+            col,
+            range=[
+                [self.ranges[0][0], self.ranges[0][1]],
+                [self.ranges[i + 1][0], self.ranges[i + 1][1]],
+            ],
+            bins=[self.Nbins[0], self.Nbins[i + 1]],
+        )
+        # Flatten array
+        syn_histo_f += list(hess_diag.ravel())
+    syn_histo_f = np.array(syn_histo_f)
+
+    # Remove all bins where n_i = 0 (no observed stars).
+    syn_histo_f_z = syn_histo_f[self.cl_z_idx]
+
+    chisq = ((self.cl_histo_f_z - syn_histo_f_z)**2).sum()
+    return chisq
