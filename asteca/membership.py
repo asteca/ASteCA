@@ -67,7 +67,7 @@ class Membership:
         # Set seed
         self.rng = np.random.default_rng(seed)
 
-    def bayesian(self, N_runs: int = 1000, eq_to_gal: bool = False) -> np.array:
+    def bayesian(self, N_runs: int = 1000, eq_to_gal: bool = False) -> np.ndarray:
         """Assign membership probabilities.
 
         Estimate the probability of being a true cluster member for all observed
@@ -86,7 +86,7 @@ class Membership:
             are missing from the :py:class:`Cluster <asteca.cluster.Cluster>` object
 
         :return: Membership probabilities for all stars in the frame
-        :rtype: np.array
+        :rtype: np.ndarray
         """
         for attrib in ("radec_c", "radius"):
             if hasattr(self.my_field, attrib) is False:
@@ -147,7 +147,7 @@ class Membership:
         # centers_ex: list[dict] | None = None,
         N_resample: int = 1000,
         eq_to_gal: bool = True,
-    ) -> np.array:
+    ) -> np.ndarray:
         """Assign membership probabilities.
 
         Estimate the probability of being a true cluster member for all observed
@@ -170,7 +170,7 @@ class Membership:
             ``(ra, dec, pmra, pmde, plx, e_pmra, e_pmde, e_plx, radec_c, pms_c, plx_c)``
 
         :return: Membership probabilities for all stars in the frame
-        :rtype: np.array
+        :rtype: np.ndarray
         """
         for k in (
             "ra",
