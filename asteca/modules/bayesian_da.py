@@ -25,12 +25,11 @@ def bayesian_mp(frame_arr, e_frame_arr, center, radius, N_cluster, bayesda_runs)
 
     # Initial null probabilities for all stars in the cluster region.
     prob_old_arr = np.zeros(N_cl_region)
-    N_break = 50
     # Probabilities for all stars in the cluster region.
     sum_cl_probs = np.zeros(N_cl_region)
 
     # Run 'bayesda_runs*fl_likelihoods' times.
-    N_total = 0
+    N_break = 50
     for r in range(bayesda_runs):
         # Select stars from the cluster region according to their
         # associated probabilities so far.
@@ -63,7 +62,6 @@ def bayesian_mp(frame_arr, e_frame_arr, center, radius, N_cluster, bayesda_runs)
 
         # Replace possible nan values with 0.
         bayes_prob[np.isnan(bayes_prob)] = 0.0
-        N_total += 1
         sum_cl_probs += bayes_prob
 
         probs = sum_cl_probs / (r+1)
