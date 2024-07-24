@@ -44,7 +44,7 @@ def fastMP(
     probs_all = np.zeros(N_stars)
     prob_old_arr = np.zeros(N_stars)
     N_break = 50
-    for r in range(N_resample + 1):
+    for r in range(N_resample):
         # Sample data
         s_pmRA, s_pmDE, s_plx = data_sample(
             rng, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx)
@@ -75,7 +75,6 @@ def fastMP(
             vpd_c,
             plx_c,
             fixed_centers,
-            N_cluster,
             N_clust_min,
             lon[st_idx],
             lat[st_idx],
@@ -86,7 +85,6 @@ def fastMP(
 
         probs_all[st_idx] += 1
         probs = probs_all / (r+1)
-
         msk = probs > 0.5
         # Check that all P>0.5 probabilities converged to 1%
         if (abs(prob_old_arr[msk] - probs[msk]) < 0.01).all() and r > N_break:
@@ -95,7 +93,7 @@ def fastMP(
             prob_old_arr = np.array(probs)
 
     if r < N_resample:
-        print(f"Convergence reached at {r} runs")
+        print(f"Convergence reached at {r+1} runs")
     else:
         print(f"Maximum number of runs reached: {N_resample}")
 
@@ -136,7 +134,6 @@ def get_center(
     vpd_c,
     plx_c,
     fixed_centers,
-    N_cluster,
     N_clust_min,
     lon,
     lat,
@@ -160,7 +157,7 @@ def get_center(
 
     # Estimate initial center
     x_c, y_c, pmra_c, pmde_c, plx_c = cp.get_5D_center(
-        lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c, N_cluster, N_clust_min
+        lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c, N_clust_min
     )
     # Re-write values if necessary
     if fixed_centers is True:
