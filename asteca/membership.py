@@ -146,7 +146,6 @@ class Membership:
     def fastmp(
         self,
         fixed_centers: bool = False,
-        # centers_ex: list[dict] | None = None,
         N_runs: int = 1000,
         eq_to_gal: bool = True,
     ) -> np.ndarray:
@@ -211,7 +210,7 @@ class Membership:
         # if centers_ex is not None:
         #     centers_ex_flag = True
         # print(f"centers_ex     : {centers_ex_flag}")
-        print(f"N_resample     : {N_resample}")
+        print(f"N_resample     : {N_runs}")
 
         # Generate input data array for fastMP
         X = np.array(
@@ -236,7 +235,7 @@ class Membership:
             self.my_field.N_clust_min,
             self.my_field.N_clust_max,
             self.rng,
-            N_resample,
+            N_runs,
         )
 
         return probs
