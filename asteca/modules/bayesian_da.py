@@ -16,6 +16,14 @@ def bayesian_mp(frame_arr, e_frame_arr, center, radius, N_cluster, bayesda_runs)
     N_cl_region = cl_region.shape[1]
     n_field = max(5, N_cl_region - N_cluster)
 
+    arr_shape = (N_cl_region, N_cluster, cl_region.shape[0])
+    size_Mb = np.prod(arr_shape) * np.dtype(np.float64).itemsize / (1024 * 1024)
+    if size_Mb > 1000:
+        warnings.warn(
+            f"\nThe array generated will be larger than {size_Mb:.0f} Mb."
+            + " Consider reducing the size\nof the frame or the radius."
+        )
+
     # Normalize data
     cl_region, e_cl_region2 = dataNorm(cl_region, e_cl_region)
     fl_region_all, e_fl_region2_all = dataNorm(fl_region_all, e_fl_region_all)
@@ -33,16 +41,19 @@ def bayesian_mp(frame_arr, e_frame_arr, center, radius, N_cluster, bayesda_runs)
     for r in range(bayesda_runs):
         # Select stars from the cluster region according to their
         # associated probabilities so far.
-        if r == 0:
-            # Initial run
-            p = np.random.choice(N_cl_region, N_cluster, replace=False)
+        if N_cl_region > N_cluster:
+            if r == 0:
+                # Initial run
+                p = np.random.choice(N_cl_region, N_cluster, replace=False)
+            else:
+                p = np.random.choice(
+                    N_cl_region,
+                    N_cluster,
+                    replace=False,
+                    p=sum_cl_probs / sum_cl_probs.sum(),
+                )
         else:
-            p = np.random.choice(
-                N_cl_region,
-                N_cluster,
-                replace=False,
-                p=sum_cl_probs / sum_cl_probs.sum(),
-            )
+            p = np.ones(N_cl_region, dtype=int)
 
         # Generate a random field region
         fl_region, e_fl_region2 = generate_field_region(
