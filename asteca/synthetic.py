@@ -179,6 +179,13 @@ class Synthetic:
                 "Two colors were defined in 'cluster' but a single color\n"
                 + "was defined in 'synthetic'."
             )
+        if len(cluster.mag_p) > cluster.N_clust_max:
+            raise ValueError(
+                f"The number of stars in this `Cluster` object ({len(cluster.mag_p)})\n"
+                + f"is larger than the N_clust_max={cluster.N_clust_max} parameter.\n"
+                + "Either define a `Cluster` object with fewer members or increase "
+                + "the N_clust_max value."
+            )
 
         # Data used by the `generate()` method
         self.m_ini_idx = 2  # (0->mag, 1->color, 2->mass_ini)
@@ -222,7 +229,7 @@ class Synthetic:
 
     def generate(
         self, fit_params: dict, plot_flag: bool = False, full_arr_flag: bool = False
-    ) -> np.array:
+    ) -> np.ndarray:
         """Generate a synthetic cluster.
 
         The synthetic cluster is generated according to the parameters given in
@@ -246,7 +253,7 @@ class Synthetic:
             with the shape ``[mag, c1, (c2)]``, where ``mag`` is the magnitude
             dimension, and``c1`` and ``c2`` (last one is optional) are the color
             dimension(s). This changes depending on the flags above.
-        :rtype: np.array
+        :rtype: np.ndarray
         """
 
         # Return proper values for fixed parameters and parameters required
