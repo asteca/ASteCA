@@ -67,6 +67,10 @@ class Membership:
         # Set seed
         self.rng = np.random.default_rng(seed)
 
+        print(f"\nN_cluster      : {self.my_field.N_cluster}")
+        print(f"Random seed    : {self.seed}")
+        print("Membership object generated")
+
     def bayesian(self, N_runs: int = 1000, eq_to_gal: bool = False) -> np.ndarray:
         """Assign membership probabilities.
 
