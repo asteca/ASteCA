@@ -293,47 +293,47 @@ class Cluster:
         else:
             raise ValueError(f"Selected method '{algo}' not recognized")
 
-    def _get_radius(self, algo: str = "field_dens") -> None:
-        """Estimate the cluster radius
+    # def _get_radius(self, algo: str = "field_dens") -> None:
+    #     """Estimate the cluster radius
 
-        - ``ripley``: Originally introduced with the ``fastMP`` membership method
-          in `Perren et al.
-          (2023) <https://academic.oup.com/mnras/article/526/3/4107/7276628>`__.
-          Requires ``(ra, dec)`` and their center estimates.
-        - ``density``: Simple algorithm that counts the number of stars within the
-          cluster region (center+radius) and subtracts the expected number of field
-          stars within that region. Requires the number of cluster members to be
-          defined.
+    #     - ``ripley``: Originally introduced with the ``fastMP`` membership method
+    #       in `Perren et al.
+    #       (2023) <https://academic.oup.com/mnras/article/526/3/4107/7276628>`__.
+    #       Requires ``(ra, dec)`` and their center estimates.
+    #     - ``density``: Simple algorithm that counts the number of stars within the
+    #       cluster region (center+radius) and subtracts the expected number of field
+    #       stars within that region. Requires the number of cluster members to be
+    #       defined.
 
-        :param algo: Algorithm used to estimate center values, one of
-            (``ripley, density``); defaults to ``ripley``
-        :type algo: str
+    #     :param algo: Algorithm used to estimate center values, one of
+    #         (``ripley, density``); defaults to ``ripley``
+    #     :type algo: str
 
-        :raises ValueError: If required attributes are  missing from the
-            :py:class:`Cluster <asteca.cluster.Cluster>` object
-        """
+    #     :raises ValueError: If required attributes are  missing from the
+    #         :py:class:`Cluster <asteca.cluster.Cluster>` object
+    #     """
 
-        if algo == "field_dens":
-            for k in ("ra", "dec", "radec_c"):
-                if hasattr(self, k) is False:
-                    raise ValueError(f"'{k}' must be present as a 'cluster' attribute")
-        elif algo == "king":
-            for k in ("ra", "dec", "radec_c"):
-                if hasattr(self, k) is False:
-                    raise ValueError(f"'{k}' must be present as a 'cluster' attribute")
+    #     if algo == "field_dens":
+    #         for k in ("ra", "dec", "radec_c"):
+    #             if hasattr(self, k) is False:
+    #                 raise ValueError(f"'{k}' must be present as a 'cluster' attribute")
+    #     elif algo == "king":
+    #         for k in ("ra", "dec", "radec_c"):
+    #             if hasattr(self, k) is False:
+    #                 raise ValueError(f"'{k}' must be present as a 'cluster' attribute")
 
-        xv, yv = self.ra_v, self.dec_v
-        xy_center = self.radec_c
+    #     xv, yv = self.ra_v, self.dec_v
+    #     xy_center = self.radec_c
 
-        if algo == "field_dens":
-            radius = cp.fdens_radius(xv, yv, list(xy_center))
-        elif algo == "king":
-            radius = cp.king_radius(xv, yv, xy_center, self.N_cluster)
-        else:
-            raise ValueError(f"Unrecognized method '{algo}")
+    #     if algo == "field_dens":
+    #         radius = cp.fdens_radius(xv, yv, list(xy_center))
+    #     elif algo == "king":
+    #         radius = cp.king_radius(xv, yv, xy_center, self.N_cluster)
+    #     else:
+    #         raise ValueError(f"Unrecognized method '{algo}")
 
-        print(f"\nRadius         : {radius}")
-        self.radius = radius
+    #     print(f"\nRadius         : {radius}")
+    #     self.radius = radius
 
     def get_nmembers(self, algo: str = "ripley", eq_to_gal: bool = True) -> None:
         """Estimate the number of members for the cluster
@@ -344,7 +344,8 @@ class Cluster:
           Requires ``(ra, dec, pmra, pmde, plx)`` and their center estimates.
         - ``density``: Simple algorithm that counts the number of stars within the
           cluster region (center+radius) and subtracts the expected number of field
-          stars within that region. Requires the radius of the cluster to be defined.
+          stars within that region. Requires the `(RA, DEC)` center and the radius of
+          the cluster to be defined.
 
         :param algo: Algorithm used to estimate center values, one of
             (``ripley, density``); defaults to ``ripley``
@@ -357,14 +358,8 @@ class Cluster:
         :raises ValueError: If required attributes are  missing from the
             :py:class:`Cluster <asteca.cluster.Cluster>` object
         """
-        if algo == "ripley":
-            for k in ("ra", "dec", "pmra", "pmde", "plx", "radec_c", "pms_c", "plx_c"):
-                if hasattr(self, k) is False:
-                    raise ValueError(f"'{k}' must be present as a 'cluster' attribute")
-        elif algo == "density":
-            for k in ("ra", "dec", "radec_c", "radius"):
-                if hasattr(self, k) is False:
-                    raise ValueError(f"'{k}' must be present as a 'cluster' attribute")
+        if algo not in ("ripley", "density"):
+            raise ValueError(f"'Argument algo={algo}' not recognized")
 
         xv, yv = self.ra_v, self.dec_v
         xy_center = self.radec_c
@@ -374,6 +369,9 @@ class Cluster:
             xy_center = cp.radec2lonlat(*xy_center)
 
         if algo == "ripley":
+            for k in ("ra", "dec", "pmra", "pmde", "plx", "radec_c", "pms_c", "plx_c"):
+                if hasattr(self, k) is False:
+                    raise ValueError(f"'{k}' must be present as a 'cluster' attribute")
             N_cluster = nm.ripley_nmembs(
                 xv,
                 yv,
@@ -385,6 +383,9 @@ class Cluster:
                 self.plx_c,
             )
         elif algo == "density":
+            for k in ("ra", "dec", "radec_c", "radius"):
+                if hasattr(self, k) is False:
+                    raise ValueError(f"'{k}' must be present as a 'cluster' attribute")
             N_cluster = nm.density_nmembs(xv, yv, xy_center, self.radius)
 
         if N_cluster < self.N_clust_min:
