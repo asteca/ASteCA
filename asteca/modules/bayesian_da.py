@@ -10,7 +10,7 @@ def bayesian_mp(frame_arr, e_frame_arr, center, radius, N_cluster, bayesda_runs)
     "density" method (which) is expected, but a smaller number of stars with
     P>0.5 (and a cleaner final sequence)
     """
-    cl_region, e_cl_region, fl_region_all, e_fl_region_all, cl_reg_idxs = get_cl_region(
+    cl_region, e_cl_region, fl_region_all, e_fl_region_all, cl_reg_idxs = get_regions(
         frame_arr, e_frame_arr, center, radius
     )
     N_cl_region = cl_region.shape[1]
@@ -83,7 +83,7 @@ def bayesian_mp(frame_arr, e_frame_arr, center, radius, N_cluster, bayesda_runs)
     return probs_final
 
 
-def get_cl_region(frame_arr, e_frame_arr2, center, radius):
+def get_regions(frame_arr, e_frame_arr2, center, radius):
     """Identify stars inside/outside the cluster region"""
     ra, dec = frame_arr[0], frame_arr[1]
     dist = np.sqrt((ra - center[0]) ** 2 + (dec - center[1]) ** 2)
