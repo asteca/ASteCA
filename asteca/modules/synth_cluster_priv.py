@@ -364,7 +364,7 @@ def mag_combine(m1: np.ndarray, m2: np.ndarray) -> np.ndarray:
 
 def properModel(
     met_age_dict: dict, fix_params: dict, fit_params: dict
-) -> tuple[float, float, float, float, float, float, float, int, int, int, int]:
+) -> tuple[float, float, float, float, float, float, float, float, int, int, int, int]:
     """Define the 'proper' model with values for (z, a) taken from its grid,
     and filled values for those parameters that are fixed.
 
