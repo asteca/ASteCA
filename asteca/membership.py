@@ -94,6 +94,8 @@ class Membership:
                     f"Attribute '{attrib}' is required to be present "
                     + "in the 'cluster' object"
                 )
+        if N_runs < 10:
+            raise AttributeError("Parameter 'N_runs' should be > 10")
 
         xc, yc = self.my_field.ra_v, self.my_field.dec_v
         center = self.my_field.radec_c
@@ -145,7 +147,7 @@ class Membership:
         self,
         fixed_centers: bool = False,
         # centers_ex: list[dict] | None = None,
-        N_resample: int = 1000,
+        N_runs: int = 1000,
         eq_to_gal: bool = True,
     ) -> np.ndarray:
         """Assign membership probabilities.
@@ -158,8 +160,8 @@ class Membership:
         :param fixed_centers: If ``True`` any center estimate (radec_c, pms_c, plx_c)
             given will be kept fixed throughout the process, defaults to ``False``
         :type fixed_centers: bool
-        :param N_resample: Maximum number of resamples, defaults to ``1000``
-        :type N_resample: int
+        :param N_runs: Maximum number of resamples, defaults to ``1000``
+        :type N_runs: int
         :param eq_to_gal: Convert ``(RA, DEC)`` to ``(lon, lat)``. Useful for clusters
             with large ``DEC`` values to reduce the frame's distortion,
             defaults to ``True``
@@ -187,6 +189,8 @@ class Membership:
         ):
             if hasattr(self.my_field, k) is False:
                 raise ValueError(f"'{k}' must be present as a 'cluster' attribute")
+        if N_runs < 10:
+            raise AttributeError("Parameter 'N_runs' should be > 10")
 
         xv, yv = self.my_field.ra_v, self.my_field.dec_v
         xy_center = self.my_field.radec_c
