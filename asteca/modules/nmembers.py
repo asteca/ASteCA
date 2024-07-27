@@ -60,138 +60,36 @@ def ripley_nmembs(
     N_clust=50,
     N_extra=5,
     N_step=10,
-    N_break=5,
-    # dims_norm,
-    # centers_ex={}
 ):
     """
     Estimate the number of cluster members
     """
-    # extra_cls_dict, dims_msk = prep_extra_cl_dict(centers_ex)
-
     rads, Kest, C_thresh_N = init_ripley(x, y)
 
-    # idx_survived = ripley_survive(
-    #     lon,
-    #     lat,
-    #     pmRA,
-    #     pmDE,
-    #     plx,
-    #     xy_c,
-    #     vpd_c,
-    #     plx_c,
-    #     N_clust,
-    #     N_extra,
-    #     N_step,
-    #     N_break,
-    #     C_thresh_N,
-    #     rads,
-    #     Kest,
-    #     # extra_cls_dict,
-    #     # dims_msk,
-    #     # dims_norm,
-    # )
-    # N_survived = len(idx_survived)
-
+    # Obtain the ordered indexes of the distances to the (pmra, pmde, plx) center
     cents_3d = np.array([list(vpd_c) + [plx_c]])
     data_3d = np.array([pmRA, pmDE, plx]).T
-    # Ordered indexes according to smallest distances to 'cents_3d'
     d_pm_plx_idxs = cp.get_Nd_dists(cents_3d, data_3d)
-    xy = np.array([x, y]).T
-    N_stars = xy.shape[0]
-
-    def core(N_clust_surv):
-        """
-        This is the core function that estimates the number of members
-        based on Ripley's K-function.
-        """
-        # Define K-function threshold
-        C_thresh = C_thresh_N / N_clust_surv
-        idx_survived = []
-        N_break_count, step_old = 0, 0
-        for step in np.arange(N_clust_surv, N_stars, N_clust_surv):
-            # Ring of stars around the VPD+Plx centers
-            msk_ring = d_pm_plx_idxs[step_old:step]
-            # Obtain their Ripely K estimator
-            C_s = rkfunc(xy[msk_ring], rads, Kest)
-
-            if not np.isnan(C_s):
-                # This group of stars survived
-                if C_s >= C_thresh:
-                    idx_survived += list(msk_ring)
-                else:
-                    # Increase break condition
-                    N_break_count += 1
-            if N_break_count > N_break:
-                break
-            step_old = step
-        return idx_survived
 
     # Select those clusters where the stars are different enough from a
     # random distribution
-    idx_survived = core(N_clust)
+    xy = np.array([x, y]).T
+    idx_survived = ripley_core(
+        rads, Kest, C_thresh_N, d_pm_plx_idxs, xy, N_clust)
+
+    # If the default clustering number did not work, try a few
+    # more values with an increasing number of cluster stars
     if not idx_survived:
-        # If the default clustering number did not work, try a few
-        # more values with an increasing number of cluster stars
         for _ in range(N_extra):
             N_clust_surv = int(N_clust + (_ + 1) * N_step)
-            idx_survived = core(N_clust_surv)
+            idx_survived = ripley_core(
+                rads, Kest, C_thresh_N, d_pm_plx_idxs, xy, N_clust_surv
+            )
             # Break out when (if) any value selected stars
             if len(idx_survived) > 0:
                 break
 
-    # if N_survived < N_clust_min:
-    #     warnings.warn("The estimated number of cluster members is " + f"<{N_clust_min}")
-    #     return N_clust_min
-
-    # Filter extra clusters in frame (if any)
-    # msk = np.array(idx_survived)
-    # idx_survived = filter_cls_in_frame(
-    #     lon[msk],
-    #     lat[msk],
-    #     pmRA[msk],
-    #     pmDE[msk],
-    #     plx[msk],
-    #     xy_c,
-    #     vpd_c,
-    #     plx_c,
-    #     msk,
-    #     extra_cls_dict,
-    #     dims_msk,
-    #     N_clust_min,
-    #     dims_norm,
-    # )
-
-    # DONT REMEMBER WHY I REMOVED THIS BLOCK, POOR PERFORMANCE MOST LIKELY. NEED TO TEST
-    # # Filter by (lon, lat) KDE
-    # kde_probs = self.kde_probs(lon, lat, idx_survived, msk)
-    # if kde_probs is not None:
-    #     kde_prob_cut = np.percentile(kde_probs, 25)
-    #     msk = kde_probs > kde_prob_cut
-    #     idx_survived = idx_survived[msk]
-
     N_survived = len(idx_survived)
-
-    # if N_survived > N_clust_max:
-    #     warnings.warn("The estimated number of cluster members is " + f">{N_clust_max}")
-    #     # # Select the maximum number of stars from those closest to the
-    #     # # center
-    #     # data_norm, cents_norm = mp.get_dims_norm(
-    #     #     N_clust_min,
-    #     #     dims_norm,
-    #     #     lon,
-    #     #     lat,
-    #     #     pmRA,
-    #     #     pmDE,
-    #     #     plx,
-    #     #     xy_c,
-    #     #     vpd_c,
-    #     #     plx_c,
-    #     #     idx_survived,
-    #     # )
-    #     # d_idxs = cp.get_Nd_dists(cents_norm, data_norm[idx_survived])
-    #     # idx_survived = idx_survived[d_idxs][:N_clust_max]
-    #     return N_clust_max
 
     return N_survived
 
@@ -220,6 +118,39 @@ def init_ripley(lon, lat):
     C_thresh_N = 1.68 * np.sqrt(area)  # HARDCODED
 
     return rads, Kest, C_thresh_N
+
+
+def ripley_core(
+    rads, Kest, C_thresh_N, d_pm_plx_idxs, xy, N_clust, N_break=5
+):
+    """
+    This is the core function that estimates the number of members
+    based on Ripley's K-function.
+    """
+    N_total_stars = xy.shape[0]
+
+    # Define K-function threshold
+    C_thresh = C_thresh_N / N_clust
+
+    idx_survived = []
+    N_break_count, step_old = 0, 0
+    for step in np.arange(N_clust, N_total_stars, N_clust):
+        # Ring of stars around the VPD+Plx centers
+        msk_ring = d_pm_plx_idxs[step_old:step]
+        # Obtain their Ripely K estimator
+        C_s = rkfunc(xy[msk_ring], rads, Kest)
+
+        if not np.isnan(C_s):
+            # This group of stars survived
+            if C_s >= C_thresh:
+                idx_survived += list(msk_ring)
+            else:
+                # Increase break condition
+                N_break_count += 1
+        if N_break_count > N_break:
+            break
+        step_old = step
+    return idx_survived
 
 
 def rkfunc(xy, rads, Kest):
