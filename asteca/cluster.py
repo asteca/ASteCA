@@ -182,7 +182,7 @@ class Cluster:
     def get_center(
         self,
         algo: str = "knn_5d",
-        data_2d: tuple[str, str] | None = None,
+        data_2d: str = "radec",
         radec_c: tuple[float, float] | None = None,
         pms_c: tuple[float, float] | None = None,
         plx_c: float | None = None,
@@ -202,9 +202,9 @@ class Cluster:
         :param algo: Algorithm used to estimate center values, one of
             (``knn_5d``, ``kde_2d``), defaults to ``knn_5d``
         :type algo: str
-        :param data_2d: Tuple of strings indicating the data to be used to estimate
-            the center value, either: ``(ra, dec)`` or ``(pmra, pmde)``.
-        :type data_2d: tuple[str, str] | None
+        :param data_2d: String indicating the data to be used to estimate
+            the center value, either: ``radec`` or ``pms``, defaults to ``radec``
+        :type data_2d: str
         :param radec_c: Estimated value for the (RA, DEC) center, defaults to ``None``
         :type radec_c: tuple[float, float] | None
         :param pms_c: Estimated value for the (pmRA, pmDE) center, defaults to ``None``
@@ -260,16 +260,12 @@ class Cluster:
             self.plx_c = plx_c
 
         elif algo == "kde_2d":
-            if data_2d is None:
-                raise ValueError(
-                    f"Algorithm '{algo}' requires the 'data_2d' argument to be defined"
-                )
-            elif data_2d == ('ra', 'dec'):
+            if data_2d == 'radec':
                 if any([_ is None for _ in (self.ra, self.dec)]):
                     raise ValueError("Data for  (ra, dec) data is required")
                 c_str = "radec_c"
                 x, y = self.ra_v, self.dec_v
-            elif data_2d == ('pmra', 'pmde'):
+            elif data_2d == 'pms':
                 if any([_ is None for _ in (self.pmra, self.pmde)]):
                     raise ValueError("Data for  (pmra, pmde) data is required")
                 c_str = "pms_c"
