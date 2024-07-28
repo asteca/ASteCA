@@ -36,7 +36,6 @@ def bayesian_mp(frame_arr, e_frame_arr, center, radius, N_cluster, bayesda_runs)
     # Probabilities for all stars in the cluster region.
     sum_cl_probs = np.zeros(N_cl_region)
 
-    # Run 'bayesda_runs*fl_likelihoods' times.
     N_break = 50
     for r in range(bayesda_runs):
         # Select stars from the cluster region according to their
