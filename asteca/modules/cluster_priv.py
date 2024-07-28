@@ -115,7 +115,8 @@ def filter_pms_stars(xy_c, plx_c, lon, lat, pmRA, pmDE, plx, N_cent):
     elif xy_c is not None and plx_c is None:
         cent = np.array([xy_c])
         data = np.array([lon, lat]).T
-    elif xy_c is not None and plx_c is not None:
+    else:
+        # xy_c is not None and plx_c is not None
         cent = np.array([list(xy_c) + [plx_c]])
         data = np.array([lon, lat, plx]).T
 
@@ -131,7 +132,7 @@ def get_pms_center(vpd_c, N_clust_min, pmRA, pmDE, N_bins=50, zoom_f=4, N_zoom=1
     vpd = np.array([pmRA, pmDE]).T
 
     # Center in PMs space
-    cx, cxm = None, None
+    cxym = None
     for _ in range(N_zoom):
         N_stars = vpd.shape[0]
         if N_stars < N_clust_min:
@@ -144,12 +145,11 @@ def get_pms_center(vpd_c, N_clust_min, pmRA, pmDE, N_bins=50, zoom_f=4, N_zoom=1
         cbx, cby = np.unravel_index(flat_idx, H.shape)
         cx = (edgx[cbx + 1] + edgx[cbx]) / 2.0
         cy = (edgy[cby + 1] + edgy[cby]) / 2.0
+        # Store the auto center values
+        cxym = (cx, cy)
 
-        # If a manual center was set, use it
+        # If a manual center was set, use these values to zoom in
         if vpd_c is not None:
-            # Store the auto center for later
-            cxm, cym = cx, cy
-            # Use the manual values to zoom in
             cx, cy = vpd_c
 
         # Zoom in
@@ -162,18 +162,14 @@ def get_pms_center(vpd_c, N_clust_min, pmRA, pmDE, N_bins=50, zoom_f=4, N_zoom=1
         )
         vpd = vpd[msk]
 
-    # If a manual center was set
-    if vpd_c is not None:
-        # If a better center value could be estimated
-        if cxm is not None:
-            cx, cy = cxm, cym
-        else:
-            cx, cy = vpd_c
-            warnings.warn("Could not estimate a better PMs center value")
+    if vpd_c is None and cxym is None:
+        raise Exception("Could not estimate the PMs center value")
+
+    if cxym is not None:
+        cx, cy = cxym
     else:
-        if cx is None:
-            cx, cy = vpd_c
-            raise Exception("Could not estimate the PMs center value")
+        cx, cy = vpd_c
+        warnings.warn("Could not estimate a better PMs center value")
 
     return [cx, cy]
 
@@ -191,7 +187,8 @@ def get_stars_close_center(lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c, N_cent
     elif xy_c is not None and plx_c is None:
         cent = np.array([list(xy_c) + vpd_c])
         data = np.array([lon, lat, pmRA, pmDE]).T
-    elif xy_c is not None and plx_c is not None:
+    else:
+        # xy_c is not None and plx_c is not None
         cent = np.array([list(xy_c) + vpd_c + [plx_c]])
         data = np.array([lon, lat, pmRA, pmDE, plx]).T
 
