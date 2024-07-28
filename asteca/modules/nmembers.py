@@ -21,18 +21,16 @@ def density_nmembs(x, y, center, radius):
     A_field = A_total - A_cl_region
     dens_field = N_field / A_field
 
-    n_field = int(dens_field * A_cl_region)
-    n_memb = int(N_cl_region - n_field)
+    N_field_in_cl_region = int(dens_field * A_cl_region)
+    n_memb = int(N_cl_region - N_field_in_cl_region)
 
-    # n_all = []
-    # ra, dec = frame_arr[0], frame_arr[1]
-    # for radius in np.linspace(0.001, 1, 100):
-    #     dist = np.sqrt((ra - center[0])**2 + (dec - center[1])**2)
-    #     msk = dist <= radius
-    #     cl_region = frame_arr[2:, msk]
-    #     N_cl_region = cl_region.shape[1]
+    # # n_all = []
+    # for rad in np.linspace(0.1*radius, radius, 100):
+    #     dist = np.sqrt((x - center[0])**2 + (y - center[1])**2)
+    #     msk_in_rad = dist <= rad
+    #     N_cl_region = msk_in_rad.sum()
 
-    #     A_cl_region = np.pi*radius**2
+    #     A_cl_region = np.pi*rad**2
     #     A_field = A_total - A_cl_region
     #     dens_field = N_field / A_field
 
@@ -41,9 +39,8 @@ def density_nmembs(x, y, center, radius):
     #     if n_memb < 0:
     #         break
 
-    #     n_all.append([n_memb, n_field])
-    #     print(round(radius, 3), N_cl_region, n_field, n_memb)
-    # breakpoint()
+    #     # n_all.append([n_memb, n_field])
+    #     print(round(rad, 3), N_cl_region, n_field, n_memb)
 
     return n_memb
 
