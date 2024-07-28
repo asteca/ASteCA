@@ -221,13 +221,27 @@ def get_kNN_center(N_clust_min, data):
     return cent
 
 
-def get_2D_center(x, y):
+def get_2D_center(x, y, N_max=10000):
     """Estimate the 2-dimensional center of a cluster, using only its coordinates.
 
     Find the KDE maximum value pointing to the center coordinates.
     """
+    values = np.vstack([x, y])
+    # Use maximum number for performance
+    if values.shape[-1] > N_max:
+        # idx = np.random.choice(values.shape[-1], N_max, replace=False)
+        xc, yc = np.median([x, y], 1)
+        warnings.warn(
+            f"\nUsing closest {N_max} stars to center of frame ({xc:.2f}, {yc:.2f})"
+            + " to avoid performance issues."
+        )
+        dist = np.sqrt((x - xc) ** 2 + (y - yc) ** 2)
+        idx = np.argsort(dist)[:N_max]
+        values = values[:, idx]
+        x, y = values
+
     # Approximate center values
-    x_cent_pix, y_cent_pix = get_XY(x, y, gd=50)
+    x_cent_pix, y_cent_pix = get_XY(values, gd=50)
 
     # Restrict the KDE to a smaller area to improve performance
     rad_x = np.percentile(x, 60) - np.percentile(x, 40)
@@ -239,18 +253,13 @@ def get_2D_center(x, y):
     msk = (xmin < x) & (x < xmax) & (ymin < y) & (y < ymax_z)
 
     # Final center values
-    x_c, y_c = get_XY(x[msk], y[msk], gd=100)
+    x_c, y_c = get_XY(values[:, msk], gd=100)
 
     return x_c, y_c
 
 
-def get_XY(x, y, gd, N_max=10000):
+def get_XY(values, gd):
     """ """
-    values = np.vstack([x, y])
-    # Use maximum number for performance
-    if values.shape[-1] > N_max:
-        idx = np.random.choice(values.shape[-1], N_max, replace=False)
-        values = values[:, idx]
     xmin, ymin = values.min(1)
     xmax, ymax = values.max(1)
 
