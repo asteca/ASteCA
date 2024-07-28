@@ -52,7 +52,7 @@ def get_Nd_dists(cents, data, dists_flag=False):
 
 
 def get_5D_center(
-    lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c, N_clust_min
+    lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c, N_clust_min, N_clust_max
 ):
     """
     Estimate the 5-dimensional center of a cluster:
@@ -64,11 +64,29 @@ def get_5D_center(
 
     """
     N_tot = len(lon)
+    # N_clust_min < N_cent < 250
     N_cent = max(N_clust_min, min(250, int(.1 * N_tot)))
 
-    # Get filtered stars close to given xy+Plx centers (if any) to use
-    # in the PMs center estimation
-    pmRA_i, pmDE_i = filter_pms_stars(xy_c, plx_c, lon, lat, pmRA, pmDE, plx, N_cent)
+    # Get filtered stars close to given xy+Plx centers (if given) to use
+    # in the PMs center estimation.
+    if xy_c is None and plx_c is None:
+        # If neither xy_c nor plx_c were given and the number of stars in the frame
+        # is larger than N_clust_max, select twice the N_clust_max stars closest to the
+        # center of the XY frame (i.e.: this assumes that the cluster is centered in
+        # XY). This prevents very large frames to deviate from the actual cluster's
+        # center because most stars in the VPD are distributed around another center
+        # value
+        if N_tot > N_clust_max:
+            data = np.array([lon, lat]).T
+            cent = np.array([np.median(data, 0)])
+            idx = get_Nd_dists(cent, data)[:2*N_clust_max]
+            pmRA_i, pmDE_i = pmRA[idx], pmDE[idx]
+        else:
+            pmRA_i, pmDE_i = np.array(pmRA), np.array(pmDE)
+    else:
+        pmRA_i, pmDE_i = filter_pms_stars(
+            xy_c, plx_c, lon, lat, pmRA, pmDE, plx, N_cent
+        )
 
     # (Re)estimate VPD center
     vpd_c = get_pms_center(vpd_c, N_clust_min, pmRA_i, pmDE_i)
@@ -90,11 +108,6 @@ def filter_pms_stars(xy_c, plx_c, lon, lat, pmRA, pmDE, plx, N_cent):
     """If either xy_c or plx_c values are given, select the 'N_cent' stars
     closest to this 1D/2D/3D center, and return their proper motions.
     """
-
-    # Distances to xy_c+plx_c centers
-    if xy_c is None and plx_c is None:
-        return pmRA, pmDE
-
     # Create arrays with required shape
     if xy_c is None and plx_c is not None:
         cent = np.array([[plx_c]])
@@ -115,8 +128,6 @@ def filter_pms_stars(xy_c, plx_c, lon, lat, pmRA, pmDE, plx, N_cent):
 
 def get_pms_center(vpd_c, N_clust_min, pmRA, pmDE, N_bins=50, zoom_f=4, N_zoom=10):
     """ """
-    # vpd_mc = self.vpd_c # TODO is this necessary?
-
     vpd = np.array([pmRA, pmDE]).T
 
     # Center in PMs space
