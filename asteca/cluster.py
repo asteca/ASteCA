@@ -119,59 +119,61 @@ class Cluster:
         dim_count = 0
 
         if self.ra is not None:
-            self.ra_v = np.array(self.obs_df[self.ra])
-            self.dec_v = np.array(self.obs_df[self.dec])
+            self.ra_v = np.array(self.obs_df[self.ra], dtype=float)
+            self.dec_v = np.array(self.obs_df[self.dec], dtype=float)
             print(f"(RA, DEC)      : ({self.ra}, {self.dec})")
             dim_count += 1
 
         # TODO: change _p to _v
         if self.magnitude is not None:
-            self.mag_p = np.array(self.obs_df[self.magnitude])
+            self.mag_p = np.array(self.obs_df[self.magnitude], dtype=float)
             if self.e_mag is not None:
-                self.e_mag_p = np.array(self.obs_df[self.e_mag])
+                self.e_mag_p = np.array(self.obs_df[self.e_mag], dtype=float)
             else:
                 raise ValueError("Magnitude uncertainty is required")
             print(f"Magnitude      : {self.magnitude} [{self.e_mag}]")
             dim_count += 1
 
         if self.color is not None:
-            self.colors_p = [np.array(self.obs_df[self.color])]
+            self.colors_p = [np.array(self.obs_df[self.color], dtype=float)]
             if self.e_color is not None:
-                self.e_colors_p = [np.array(self.obs_df[self.e_color])]
+                self.e_colors_p = [np.array(self.obs_df[self.e_color], dtype=float)]
             else:
                 raise ValueError("Color uncertainty is required")
             print(f"Color          : {self.color} [{self.e_color}]")
             dim_count += 1
             if self.color2 is not None:
-                self.colors_p.append(np.array(self.obs_df[self.color2]))
+                self.colors_p.append(np.array(self.obs_df[self.color2], dtype=float))
                 if self.e_color2 is not None:
-                    self.e_colors_p.append(np.array(self.obs_df[self.e_color2]))
+                    self.e_colors_p.append(
+                        np.array(self.obs_df[self.e_color2], dtype=float)
+                    )
                 else:
                     raise ValueError("Color2 uncertainty is required")
                 print(f"Color2         : {self.color2} [{self.e_color2}]")
                 dim_count += 1
 
         if self.plx is not None:
-            self.plx_v = np.array(self.obs_df[self.plx])
+            self.plx_v = np.array(self.obs_df[self.plx], dtype=float)
             if self.e_plx is not None:
-                self.e_plx_v = np.array(self.obs_df[self.e_plx])
+                self.e_plx_v = np.array(self.obs_df[self.e_plx], dtype=float)
             else:
                 raise ValueError("Parallax uncertainty is required")
             print(f"plx            : {self.plx} [{self.e_plx}]")
             dim_count += 1
 
         if self.pmra is not None:
-            self.pmra_v = np.array(self.obs_df[self.pmra])
+            self.pmra_v = np.array(self.obs_df[self.pmra], dtype=float)
             if self.e_pmra is not None:
-                self.e_pmra_v = np.array(self.obs_df[self.e_pmra])
+                self.e_pmra_v = np.array(self.obs_df[self.e_pmra], dtype=float)
             else:
                 raise ValueError("pmRA uncertainty is required")
             print(f"pmRA           : {self.pmra} [{self.e_pmra}]")
             dim_count += 1
         if self.pmde is not None:
-            self.pmde_v = np.array(self.obs_df[self.pmde])
+            self.pmde_v = np.array(self.obs_df[self.pmde], dtype=float)
             if self.e_pmra is not None:
-                self.e_pmde_v = np.array(self.obs_df[self.e_pmde])
+                self.e_pmde_v = np.array(self.obs_df[self.e_pmde], dtype=float)
             else:
                 raise ValueError("pmDE uncertainty is required")
             print(f"pmDE           : {self.pmra} [{self.e_pmde}]")
