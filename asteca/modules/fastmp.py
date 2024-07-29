@@ -136,6 +136,7 @@ def get_center(
     plx_c,
     fixed_centers,
     N_clust_min,
+    N_clust_max,
     lon,
     lat,
     pmRA,
