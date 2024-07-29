@@ -40,6 +40,7 @@ def fastMP(
     )
 
     st_idx = None
+    cents_5d = np.array([[0.0, 0.0, 0.0, 0.0, 0.0]])
     N_stars = len(idx_clean)
     probs_all = np.zeros(N_stars)
     prob_old_arr = np.zeros(N_stars)
@@ -50,7 +51,7 @@ def fastMP(
             rng, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx)
 
         # Data normalization
-        data_5d, cents_5d = get_dims_norm(
+        data_5d = get_dims_norm(
             N_cluster,
             lon,
             lat,
@@ -123,11 +124,16 @@ def get_dims_norm(
         d_pm_plx_idxs = cp.get_Nd_dists(cents_3d, data_3d)
         st_idx = d_pm_plx_idxs[:N_cluster]
 
-    dims_norm = 2 * np.nanmedian(abs(data_mvd[st_idx]), 0)
-    data_norm = data_mvd / dims_norm
-    cents_norm = np.array([[0.0, 0.0, 0.0, 0.0, 0.0]])
+    # This is the old way of normalizing the dimensions. Does not work well when the
+    # frame is not square (e.g.: when the declination is very large and transforming
+    # the frame to galactic coordinates visibly rotates it)
+    # dims_norm = 2 * np.nanmedian(abs(data_mvd[st_idx]), 0)
 
-    return data_norm, cents_norm
+    # Use the IQR
+    dims_norm = np.nanpercentile(data_mvd[st_idx, :], [25, 75], axis=0).ptp(axis=0)
+
+    data_norm = data_mvd / dims_norm
+    return data_norm
 
 
 def get_center(
