@@ -160,8 +160,9 @@ class Membership:
         ``(pmRA, pmDE, plx)``; photometry is not employed. Center estimates in
         ``(RA, DEC)``, as well as ``(pmRA, pmDE)`` and ``plx`` are required.
 
-        :param fixed_centers: If ``True`` any center estimate (radec_c, pms_c, plx_c)
-            given will be kept fixed throughout the process, defaults to ``False``
+        :param fixed_centers: If ``True`` the center values (radec_c, pms_c, plx_c)
+            stored in the :py:class:`Cluster <asteca.cluster.Cluster>` object will be
+            kept fixed throughout the process, defaults to ``False``
         :type fixed_centers: bool
         :param N_runs: Maximum number of resamples, defaults to ``1000``
         :type N_runs: int
