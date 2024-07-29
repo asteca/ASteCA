@@ -158,7 +158,7 @@ def get_center(
 
     # Estimate initial center
     x_c, y_c, pmra_c, pmde_c, plx_c = cp.get_5D_center(
-        lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c, N_clust_min
+        lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c, N_clust_min, N_clust_max
     )
     # Re-write values if necessary
     if fixed_centers is True:
