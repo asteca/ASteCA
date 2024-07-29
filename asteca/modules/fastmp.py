@@ -76,6 +76,7 @@ def fastMP(
             plx_c,
             fixed_centers,
             N_clust_min,
+            N_clust_max,
             lon[st_idx],
             lat[st_idx],
             pmRA[st_idx],
