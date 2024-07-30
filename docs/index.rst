@@ -91,7 +91,8 @@ TOC
    :maxdepth: 1
    :caption: Tutorials
 
-   tutorials/quickstart
+   tutorials/membership
+   tutorials/paramfit
 
 
 
