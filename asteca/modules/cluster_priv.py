@@ -1,6 +1,7 @@
 import warnings
 import numpy as np
 from scipy import spatial
+from scipy import stats
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 
@@ -51,28 +52,41 @@ def get_Nd_dists(cents, data, dists_flag=False):
 
 
 def get_5D_center(
-    lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c, N_cluster, N_clust_min, N_cent=500
+    lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c, N_clust_min, N_clust_max
 ):
     """
-    Estimate the 5-dimensional center of a cluster.
-
-    Steps:
+    Estimate the 5-dimensional center of a cluster:
 
     1. Keep only 'N_cent' stars if xy_c or plx_c are given
     2. (Re)Estimate the center in PMs (the value can be given as input)
     3. Obtain the 'N_cent' stars closest to the available center values
     4. Estimate the 5-dimensional final center using kNN
 
-    N_cent: estimated number of members
-
     """
-    # Re-write if this parameter is given
-    if N_cluster is not None:
-        N_cent = N_cluster
+    N_tot = len(lon)
+    # N_clust_min < N_cent < 250
+    N_cent = max(N_clust_min, min(250, int(0.1 * N_tot)))
 
-    # Get filtered stars close to given xy+Plx centers (if any) to use
-    # in the PMs center estimation
-    pmRA_i, pmDE_i = filter_pms_stars(xy_c, plx_c, lon, lat, pmRA, pmDE, plx, N_cent)
+    # Get filtered stars close to given xy+Plx centers (if given) to use
+    # in the PMs center estimation.
+    if xy_c is None and plx_c is None:
+        # If neither xy_c nor plx_c were given and the number of stars in the frame
+        # is larger than N_clust_max, select twice the N_clust_max stars closest to the
+        # center of the XY frame (i.e.: this assumes that the cluster is centered in
+        # XY). This prevents very large frames to deviate from the actual cluster's
+        # center because most stars in the VPD are distributed around another center
+        # value
+        if N_tot > N_clust_max:
+            data = np.array([lon, lat]).T
+            cent = np.array([np.median(data, 0)])
+            idx = get_Nd_dists(cent, data)[: 2 * N_clust_max]
+            pmRA_i, pmDE_i = pmRA[idx], pmDE[idx]
+        else:
+            pmRA_i, pmDE_i = np.array(pmRA), np.array(pmDE)
+    else:
+        pmRA_i, pmDE_i = filter_pms_stars(
+            xy_c, plx_c, lon, lat, pmRA, pmDE, plx, N_cent
+        )
 
     # (Re)estimate VPD center
     vpd_c = get_pms_center(vpd_c, N_clust_min, pmRA_i, pmDE_i)
@@ -94,11 +108,6 @@ def filter_pms_stars(xy_c, plx_c, lon, lat, pmRA, pmDE, plx, N_cent):
     """If either xy_c or plx_c values are given, select the 'N_cent' stars
     closest to this 1D/2D/3D center, and return their proper motions.
     """
-
-    # Distances to xy_c+plx_c centers
-    if xy_c is None and plx_c is None:
-        return pmRA, pmDE
-
     # Create arrays with required shape
     if xy_c is None and plx_c is not None:
         cent = np.array([[plx_c]])
@@ -106,7 +115,8 @@ def filter_pms_stars(xy_c, plx_c, lon, lat, pmRA, pmDE, plx, N_cent):
     elif xy_c is not None and plx_c is None:
         cent = np.array([xy_c])
         data = np.array([lon, lat]).T
-    elif xy_c is not None and plx_c is not None:
+    else:
+        # xy_c is not None and plx_c is not None
         cent = np.array([list(xy_c) + [plx_c]])
         data = np.array([lon, lat, plx]).T
 
@@ -119,12 +129,10 @@ def filter_pms_stars(xy_c, plx_c, lon, lat, pmRA, pmDE, plx, N_cent):
 
 def get_pms_center(vpd_c, N_clust_min, pmRA, pmDE, N_bins=50, zoom_f=4, N_zoom=10):
     """ """
-    # vpd_mc = self.vpd_c # TODO is this necessary?
-
     vpd = np.array([pmRA, pmDE]).T
 
     # Center in PMs space
-    cx, cxm = None, None
+    cxym = None
     for _ in range(N_zoom):
         N_stars = vpd.shape[0]
         if N_stars < N_clust_min:
@@ -137,12 +145,11 @@ def get_pms_center(vpd_c, N_clust_min, pmRA, pmDE, N_bins=50, zoom_f=4, N_zoom=1
         cbx, cby = np.unravel_index(flat_idx, H.shape)
         cx = (edgx[cbx + 1] + edgx[cbx]) / 2.0
         cy = (edgy[cby + 1] + edgy[cby]) / 2.0
+        # Store the auto center values
+        cxym = (cx, cy)
 
-        # If a manual center was set, use it
+        # If a manual center was set, use these values to zoom in
         if vpd_c is not None:
-            # Store the auto center for later
-            cxm, cym = cx, cy
-            # Use the manual values to zoom in
             cx, cy = vpd_c
 
         # Zoom in
@@ -155,18 +162,14 @@ def get_pms_center(vpd_c, N_clust_min, pmRA, pmDE, N_bins=50, zoom_f=4, N_zoom=1
         )
         vpd = vpd[msk]
 
-    # If a manual center was set
-    if vpd_c is not None:
-        # If a better center value could be estimated
-        if cxm is not None:
-            cx, cy = cxm, cym
-        else:
-            cx, cy = vpd_c
-            warnings.warn("Could not estimate a better PMs center value")
+    if vpd_c is None and cxym is None:
+        raise Exception("Could not estimate the PMs center value")
+
+    if cxym is not None:
+        cx, cy = cxym
     else:
-        if cx is None:
-            cx, cy = vpd_c
-            raise Exception("Could not estimate the PMs center value")
+        cx, cy = vpd_c
+        warnings.warn("Could not estimate a better PMs center value")
 
     return [cx, cy]
 
@@ -184,7 +187,8 @@ def get_stars_close_center(lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c, N_cent
     elif xy_c is not None and plx_c is None:
         cent = np.array([list(xy_c) + vpd_c])
         data = np.array([lon, lat, pmRA, pmDE]).T
-    elif xy_c is not None and plx_c is not None:
+    else:
+        # xy_c is not None and plx_c is not None
         cent = np.array([list(xy_c) + vpd_c + [plx_c]])
         data = np.array([lon, lat, pmRA, pmDE, plx]).T
 
@@ -215,3 +219,65 @@ def get_kNN_center(N_clust_min, data):
     cent = np.median(data[idxs[:N_clust_min]], 0)
 
     return cent
+
+
+def get_2D_center(x, y, N_max=10000):
+    """Estimate the 2-dimensional center of a cluster, using only its coordinates.
+
+    Find the KDE maximum value pointing to the center coordinates.
+    """
+    values = np.vstack([x, y])
+    # Use maximum number for performance
+    if values.shape[-1] > N_max:
+        # idx = np.random.choice(values.shape[-1], N_max, replace=False)
+        xc, yc = np.median([x, y], 1)
+        warnings.warn(
+            f"\nUsing closest {N_max} stars to center of frame ({xc:.2f}, {yc:.2f})"
+            + " to avoid performance issues."
+        )
+        dist = np.sqrt((x - xc) ** 2 + (y - yc) ** 2)
+        idx = np.argsort(dist)[:N_max]
+        values = values[:, idx]
+        x, y = values
+
+    # Approximate center values
+    x_cent_pix, y_cent_pix = get_XY(values, gd=50)
+
+    # Restrict the KDE to a smaller area to improve performance
+    rad_x = np.percentile(x, 60) - np.percentile(x, 40)
+    rad_y = np.percentile(y, 60) - np.percentile(y, 40)
+    # Generate zoom around approx center value to speed things up.
+    xmin, xmax = x_cent_pix - rad_x, x_cent_pix + rad_x
+    ymin, ymax_z = y_cent_pix - rad_y, y_cent_pix + rad_y
+    # Use reduced region around the center.
+    msk = (xmin < x) & (x < xmax) & (ymin < y) & (y < ymax_z)
+
+    # Final center values
+    x_c, y_c = get_XY(values[:, msk], gd=100)
+
+    return x_c, y_c
+
+
+def get_XY(values, gd):
+    """ """
+    xmin, ymin = values.min(1)
+    xmax, ymax = values.max(1)
+
+    # Obtain Gaussian KDE.
+    kernel = stats.gaussian_kde(values)
+
+    # Custom bandwith?
+    # bdw = kernel.covariance_factor() * np.max(values.std(axis=1)) * .5
+    # kernel = stats.gaussian_kde(values, bw_method=bdw / np.max(values.std(axis=1)))
+
+    # Grid density (number of points).
+    gd_c = complex(0, gd)
+    # Define x,y grid.
+    x_grid, y_grid = np.mgrid[xmin:xmax:gd_c, ymin:ymax:gd_c]
+    positions = np.vstack([x_grid.ravel(), y_grid.ravel()])
+    # Evaluate kernel in grid positions.
+    k_pos = kernel(positions)
+    # Coordinates of max value in x,y grid (ie: center position).
+    x_c, y_c = positions.T[np.argmax(k_pos)]
+
+    return x_c, y_c

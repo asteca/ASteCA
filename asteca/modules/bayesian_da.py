@@ -10,11 +10,19 @@ def bayesian_mp(frame_arr, e_frame_arr, center, radius, N_cluster, bayesda_runs)
     "density" method (which) is expected, but a smaller number of stars with
     P>0.5 (and a cleaner final sequence)
     """
-    cl_region, e_cl_region, fl_region_all, e_fl_region_all, cl_reg_idxs = get_cl_region(
+    cl_region, e_cl_region, fl_region_all, e_fl_region_all, cl_reg_idxs = get_regions(
         frame_arr, e_frame_arr, center, radius
     )
     N_cl_region = cl_region.shape[1]
     n_field = max(5, N_cl_region - N_cluster)
+
+    arr_shape = (N_cl_region, N_cluster, cl_region.shape[0])
+    size_Mb = np.prod(arr_shape) * np.dtype(np.float64).itemsize / (1024 * 1024)
+    if size_Mb > 1000:
+        warnings.warn(
+            f"\nThe array generated will be larger than {size_Mb:.0f} Mb."
+            + " Consider reducing the size\nof the frame or the radius."
+        )
 
     # Normalize data
     cl_region, e_cl_region2 = dataNorm(cl_region, e_cl_region)
@@ -24,25 +32,27 @@ def bayesian_mp(frame_arr, e_frame_arr, center, radius, N_cluster, bayesda_runs)
     cl_region_T, e_cl_region2_T = cl_region.T[:, None], e_cl_region2.T[:, None]
 
     # Initial null probabilities for all stars in the cluster region.
-    prob_avrg_old = np.zeros(N_cl_region)
+    prob_old_arr = np.zeros(N_cl_region)
     # Probabilities for all stars in the cluster region.
     sum_cl_probs = np.zeros(N_cl_region)
 
-    # Run 'bayesda_runs*fl_likelihoods' times.
-    N_total = 0
-    for N_run in range(bayesda_runs):
+    N_break = 50
+    for r in range(bayesda_runs):
         # Select stars from the cluster region according to their
         # associated probabilities so far.
-        if N_run == 0:
-            # Initial run
-            p = np.random.choice(N_cl_region, N_cluster, replace=False)
+        if N_cl_region > N_cluster:
+            if r == 0:
+                # Initial run
+                p = np.random.choice(N_cl_region, N_cluster, replace=False)
+            else:
+                p = np.random.choice(
+                    N_cl_region,
+                    N_cluster,
+                    replace=False,
+                    p=sum_cl_probs / sum_cl_probs.sum(),
+                )
         else:
-            p = np.random.choice(
-                N_cl_region,
-                N_cluster,
-                replace=False,
-                p=sum_cl_probs / sum_cl_probs.sum(),
-            )
+            p = np.ones(N_cl_region, dtype=int)
 
         # Generate a random field region
         fl_region, e_fl_region2 = generate_field_region(
@@ -59,34 +69,31 @@ def bayesian_mp(frame_arr, e_frame_arr, center, radius, N_cluster, bayesda_runs)
             warnings.simplefilter("ignore")
             # Bayesian probability for each star within the cluster region.
             bayes_prob = 1.0 / (1.0 + (fl_lkl / cl_lkl))
+
         # Replace possible nan values with 0.
         bayes_prob[np.isnan(bayes_prob)] = 0.0
-        N_total += 1
         sum_cl_probs += bayes_prob
 
-        # If probabilities converged break out
-        prob_avrg_old, break_flag = break_check(
-            prob_avrg_old, sum_cl_probs, bayesda_runs, N_total
-        )
-        if break_flag:
+        probs = sum_cl_probs / (r + 1)
+        msk = probs > 0.5
+        # Check that all P>0.5 probabilities converged to 1%
+        if (abs(prob_old_arr[msk] - probs[msk]) < 0.01).all() and r > N_break:
             break
+        else:
+            prob_old_arr = np.array(probs)
 
-    if break_flag:
-        print(f"Convergence reached at {N_run} runs")
+    if r < bayesda_runs:
+        print(f"Convergence reached at {r+1} runs")
     else:
         print(f"Maximum number of runs reached: {bayesda_runs}")
 
-    # Average all Bayesian membership probabilities into a single value for
-    # each star inside 'cl_region'.
-    probs_cl_region = sum_cl_probs / N_total
+    probs_final = np.zeros(frame_arr.shape[1])
+    probs_final[cl_reg_idxs] = probs
 
-    probs = np.zeros(frame_arr.shape[1])
-    probs[cl_reg_idxs] = probs_cl_region
-
-    return probs
+    return probs_final
 
 
-def get_cl_region(frame_arr, e_frame_arr2, center, radius):
+def get_regions(frame_arr, e_frame_arr2, center, radius):
     """Identify stars inside/outside the cluster region"""
     ra, dec = frame_arr[0], frame_arr[1]
     dist = np.sqrt((ra - center[0]) ** 2 + (dec - center[1]) ** 2)
@@ -181,23 +188,3 @@ def likelihood(cl_region_T, e_cl_region2_T, region, e_region2):
     Lkl = np.nansum(sum_M_j, axis=-1)
 
     return Lkl
-
-
-def break_check(prob_avrg_old, runs_fields_probs, bayesda_runs, N_total):
-    """
-    Check if DA converged to MPs within a 0.1% tolerance, for all stars inside
-    the cluster region.
-    """
-    # Check that at least 5% of iterations have passed.
-    if N_total < max(5, int(0.05 * bayesda_runs)):
-        return prob_avrg_old, False
-
-    # Average all probabilities
-    prob_avrg = runs_fields_probs / N_total
-
-    break_flag = False
-    # Check if mean probabilities changed within 0.1%
-    if np.mean(abs(prob_avrg_old - prob_avrg)) < 0.001:
-        break_flag = True
-
-    return prob_avrg, break_flag

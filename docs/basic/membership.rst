@@ -8,28 +8,34 @@ for all the stars in a given observed field. There are currently two methods inc
 this class: :py:meth:`asteca.membership.Membership.bayesian` and
 :py:meth:`asteca.membership.Membership.fastmp`.
 
-The *bayesian* method was described in detail in the
-`article <https://doi.org/10.1051/0004-6361/201424946>`__ were we originally introduced
-``ASteCA``. The method requires ``(RA, DEC)``  data and will use any extra data
-dimensions stored in the :py:class:`Cluster <asteca.cluster.Cluster>` object, i.e.:
+The :py:meth:`bayesian` method was described in detail in the
+`article <https://doi.org/10.1051/0004-6361/201424946>`__ where **ASteCA** was
+originally introduced. The method requires ``(RA, DEC)``  data and will use any extra
+data dimensions stored in the :py:class:`Cluster <asteca.cluster.Cluster>` object, i.e.:
 photometry, proper motions, and parallax. A minimum of two data dimensions are required,
 in addition to ``(RA, DEC)``. This method can produce membership probabilities on
 photometric data alone.
 
-The *fastmp* method was described in detail in the
+The :py:meth:`fastmp` method was described in detail in the
 `article <https://academic.oup.com/mnras/article/526/3/4107/7276628>`__
-were we introduced the `Unified Cluster Catalogue
-(UCC) <https://ucc.ar/>`__. The method requires proper motions, and parallax data
-dimensions stored in the :py:class:`Cluster <asteca.cluster.Cluster>` object.
-Photometric data is not employed.
+where the `Unified Cluster Catalogue (UCC) <https://ucc.ar/>`__ was introduced. The
+method requires proper motions, and parallax data dimensions stored in the
+:py:obj:`Cluster` object. Photometric data is not employed.
+
+.. important::
+    The only advantage of the :py:meth:`bayesian` method over the :py:meth:`fastmp`
+    method is that the former works with photometric data. Hence it should only be used
+    in cases were only photometric data is available, as :py:meth:`fastmp` is not only
+    much faster but also more precise in those cases where proper motions and/or
+    parallax data is available.
 
 To use these methods the first step is to load an observed field, for example:
 
 .. figure:: ../_static/field.webp
    :align: center
 
-into a :class:`Cluster` object and estimate the cluster's center and radius
-(a radius value is only required by the ``bayesian()`` method):
+into a :py:obj:`Cluster` object and estimate the cluster's
+center and radius (a radius value is only required by the :py:meth:`bayesian` method):
 
 .. code-block:: python
 
@@ -53,13 +59,13 @@ into a :class:`Cluster` object and estimate the cluster's center and radius
     # Estimate the cluster's center coordinates
     my_field.get_center()
 
-    # Add a radius attribute, required for the ``bayesian()`` method
+    # Add a radius attribute, required for the ``bayesian`` method
     my_field.radius = 0.15
 
     # Estimate the number of cluster members
-    my_cluster.get_nmembers()
+    my_field.get_nmembers()
 
-With this in place, you can define a ``membership`` object and apply either method or
+With this in place, you can define a :py:obj:`membership` object and apply either method or
 all or them following:
 
 .. code-block:: python
@@ -78,5 +84,5 @@ The results will naturally not be equivalent as both algorithms are rather diffe
 .. figure:: ../_static/membership.png
    :align: center
 
-The ``bayesian`` algorithm for example tends to assign lower probabilities than the
-``fastmp`` algorithm.
+The :py:meth:`bayesian` algorithm for example tends to assign lower probabilities than
+the :py:meth:`fastmp` algorithm.

@@ -179,6 +179,13 @@ class Synthetic:
                 "Two colors were defined in 'cluster' but a single color\n"
                 + "was defined in 'synthetic'."
             )
+        if len(cluster.mag_p) > cluster.N_clust_max:
+            raise ValueError(
+                f"The number of stars in this `Cluster` object ({len(cluster.mag_p)})\n"
+                + f"is larger than the N_clust_max={cluster.N_clust_max} parameter.\n"
+                + "Either define a `Cluster` object with fewer members or increase "
+                + "the N_clust_max value."
+            )
 
         # Data used by the `generate()` method
         self.m_ini_idx = 2  # (0->mag, 1->color, 2->mass_ini)
@@ -222,7 +229,7 @@ class Synthetic:
 
     def generate(
         self, fit_params: dict, plot_flag: bool = False, full_arr_flag: bool = False
-    ) -> np.array:
+    ) -> np.ndarray:
         """Generate a synthetic cluster.
 
         The synthetic cluster is generated according to the parameters given in
@@ -246,7 +253,7 @@ class Synthetic:
             with the shape ``[mag, c1, (c2)]``, where ``mag`` is the magnitude
             dimension, and``c1`` and ``c2`` (last one is optional) are the color
             dimension(s). This changes depending on the flags above.
-        :rtype: np.array
+        :rtype: np.ndarray
         """
 
         # Return proper values for fixed parameters and parameters required
@@ -547,8 +554,8 @@ class Synthetic:
 
             # Estimate the actual mass, ie: the sum of the observed and photometric
             # masses
-            isoch = self.sampled_synthcls[i]
-            M_obs, M_phot = mb.get_M_actual(self, isoch, i)
+            sampled_synthcl = self.sampled_synthcls[i]
+            M_obs, M_phot = mb.get_M_actual(self, sampled_synthcl, i)
             M_a = M_obs + M_phot
 
             # Ambient density
@@ -567,8 +574,8 @@ class Synthetic:
             M_i = mb.minit_LGB05(loga, M_a, gamma, t0, mu_ev)
 
             # Obtain evolutionary and dynamical masses
-            M_evol = M_i * (1 - mu_ev)
-            M_dyn = M_i - M_evol - M_a
+            M_evol = max(0, M_i * (1 - mu_ev))
+            M_dyn = max(0, M_i - M_evol - M_a)
 
             masses_all.append([M_obs, M_phot, M_evol, M_dyn])
 
@@ -576,7 +583,7 @@ class Synthetic:
 
         # Check the number of generated synthetic stars
         N_obs = len(self.mag_p)
-        if N_obs > isoch.shape[1]:
+        if N_obs > sampled_synthcl.shape[1]:
             warnings.warn(
                 "Number of synthetic stars is smaller than observed stars. Increase "
                 + "the 'max_mass' argument for a more accurate mass estimation"

@@ -164,6 +164,7 @@ html_theme_options = {
     "navigation_with_keys": False,
     "repository_branch": "main",
     "launch_buttons": {
+        "colab_url": "https://colab.research.google.com",
         "binderhub_url": "https://mybinder.org",
         "notebook_interface": "classic",
     },

@@ -15,7 +15,7 @@ extinction, distance, metallicity, age, binarity, mass, etc..
 
 
 .. important::
-   Version |ProjectVersion| released on the 25th of June, 2024. See :ref:`changelog`
+   Version |ProjectVersion| released on the 31st of July, 2024. See :ref:`changelog`
    for a detailed list of the changes implemented.
 
 
@@ -91,7 +91,8 @@ TOC
    :maxdepth: 1
    :caption: Tutorials
 
-   tutorials/quickstart
+   tutorials/membership
+   tutorials/paramfit
 
 
 

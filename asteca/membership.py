@@ -28,13 +28,21 @@ class Membership:
     :param my_field: :py:class:`Cluster <asteca.cluster.Cluster>` object with the
         loaded data for the observed field
     :type my_field: Cluster
+    :param seed: Random seed. If ``None`` a random integer will be generated and used,
+        defaults to ``None``
+    :type seed: int | None
 
     :raises ValueError: If there are missing required attributes in the
         :py:class:`Cluster <asteca.cluster.Cluster>` object
     """
 
-    def __init__(self, my_field: Cluster) -> None:
+    def __init__(
+        self,
+        my_field: Cluster,
+        seed: int | None = None,
+    ) -> None:
         self.my_field = my_field
+        self.seed = seed
 
         noradeg_flag = False
         try:
@@ -56,7 +64,14 @@ class Membership:
                 + "to be present in the 'cluster' object"
             )
 
-    def bayesian(self, N_runs: int = 1000, eq_to_gal: bool = False) -> np.array:
+        # Set seed
+        self.rng = np.random.default_rng(seed)
+
+        print(f"\nN_cluster      : {self.my_field.N_cluster}")
+        print(f"Random seed    : {self.seed}")
+        print("Membership object generated")
+
+    def bayesian(self, N_runs: int = 1000, eq_to_gal: bool = False) -> np.ndarray:
         """Assign membership probabilities.
 
         Estimate the probability of being a true cluster member for all observed
@@ -75,7 +90,7 @@ class Membership:
             are missing from the :py:class:`Cluster <asteca.cluster.Cluster>` object
 
         :return: Membership probabilities for all stars in the frame
-        :rtype: np.array
+        :rtype: np.ndarray
         """
         for attrib in ("radec_c", "radius"):
             if hasattr(self.my_field, attrib) is False:
@@ -83,6 +98,8 @@ class Membership:
                     f"Attribute '{attrib}' is required to be present "
                     + "in the 'cluster' object"
                 )
+        if N_runs < 10:
+            raise AttributeError("Parameter 'N_runs' should be > 10")
 
         xc, yc = self.my_field.ra_v, self.my_field.dec_v
         center = self.my_field.radec_c
@@ -133,10 +150,9 @@ class Membership:
     def fastmp(
         self,
         fixed_centers: bool = False,
-        # centers_ex: list[dict] | None = None,
-        N_resample: int = 1000,
+        N_runs: int = 1000,
         eq_to_gal: bool = True,
-    ) -> np.array:
+    ) -> np.ndarray:
         """Assign membership probabilities.
 
         Estimate the probability of being a true cluster member for all observed
@@ -144,11 +160,12 @@ class Membership:
         ``(pmRA, pmDE, plx)``; photometry is not employed. Center estimates in
         ``(RA, DEC)``, as well as ``(pmRA, pmDE)`` and ``plx`` are required.
 
-        :param fixed_centers: If ``True`` any center estimate (radec_c, pms_c, plx_c)
-            given will be kept fixed throughout the process, defaults to ``False``
+        :param fixed_centers: If ``True`` the center values (radec_c, pms_c, plx_c)
+            stored in the :py:class:`Cluster <asteca.cluster.Cluster>` object will be
+            kept fixed throughout the process, defaults to ``False``
         :type fixed_centers: bool
-        :param N_resample: Maximum number of resamples, defaults to ``1000``
-        :type N_resample: int
+        :param N_runs: Maximum number of resamples, defaults to ``1000``
+        :type N_runs: int
         :param eq_to_gal: Convert ``(RA, DEC)`` to ``(lon, lat)``. Useful for clusters
             with large ``DEC`` values to reduce the frame's distortion,
             defaults to ``True``
@@ -159,7 +176,7 @@ class Membership:
             ``(ra, dec, pmra, pmde, plx, e_pmra, e_pmde, e_plx, radec_c, pms_c, plx_c)``
 
         :return: Membership probabilities for all stars in the frame
-        :rtype: np.array
+        :rtype: np.ndarray
         """
         for k in (
             "ra",
@@ -176,6 +193,8 @@ class Membership:
         ):
             if hasattr(self.my_field, k) is False:
                 raise ValueError(f"'{k}' must be present as a 'cluster' attribute")
+        if N_runs < 10:
+            raise AttributeError("Parameter 'N_runs' should be > 10")
 
         xv, yv = self.my_field.ra_v, self.my_field.dec_v
         xy_center = self.my_field.radec_c
@@ -196,7 +215,7 @@ class Membership:
         # if centers_ex is not None:
         #     centers_ex_flag = True
         # print(f"centers_ex     : {centers_ex_flag}")
-        print(f"N_resample     : {N_resample}")
+        print(f"N_resample     : {N_runs}")
 
         # Generate input data array for fastMP
         X = np.array(
@@ -220,8 +239,8 @@ class Membership:
             self.my_field.N_cluster,
             self.my_field.N_clust_min,
             self.my_field.N_clust_max,
-            # centers_ex,
-            N_resample,
+            self.rng,
+            N_runs,
         )
 
         return probs
