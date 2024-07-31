@@ -22,11 +22,12 @@ where the `Unified Cluster Catalogue (UCC) <https://ucc.ar/>`__ was introduced. 
 method requires proper motions, and parallax data dimensions stored in the
 :py:obj:`Cluster` object. Photometric data is not employed.
 
-The only advantage of the :py:meth:`bayesian` method over the :py:meth:`fastmp` method
-is that the former works with photometric data. Hence it should only be used in cases
-were only photometric data is available, as :py:meth:`fastmp` is not only much faster
-but also more precise in those cases where proper motions and/or parallax data is
-available.
+.. important::
+    The only advantage of the :py:meth:`bayesian` method over the :py:meth:`fastmp`
+    method is that the former works with photometric data. Hence it should only be used
+    in cases were only photometric data is available, as :py:meth:`fastmp` is not only
+    much faster but also more precise in those cases where proper motions and/or
+    parallax data is available.
 
 To use these methods the first step is to load an observed field, for example:
 
