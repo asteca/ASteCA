@@ -1,5 +1,17 @@
 .. :changelog:
 
+`[v0.5.7] <https://github.com/asteca/asteca/releases/tag/v0.5.7>`__ - 2024-07-31
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+- Faster (and cleaner) :py:meth:`asteca.membership.Membership.fastmp` and
+  :py:meth:`asteca.membership.Membership.bayesian`
+- Change the normalization constant used in ``fastmp`` (from 2*median to IQR)
+- Add ``kde_2d`` method to :py:meth:`asteca.cluster.Cluster.get_center`
+- Fix ``knn_5d`` method to better handle large frames
+- Minor fixes to center and total masses estimation
+
+
+
 `[v0.5.6] <https://github.com/asteca/asteca/releases/tag/v0.5.6>`__ - 2024-06-25
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
