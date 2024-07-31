@@ -65,7 +65,7 @@ def get_5D_center(
     """
     N_tot = len(lon)
     # N_clust_min < N_cent < 250
-    N_cent = max(N_clust_min, min(250, int(.1 * N_tot)))
+    N_cent = max(N_clust_min, min(250, int(0.1 * N_tot)))
 
     # Get filtered stars close to given xy+Plx centers (if given) to use
     # in the PMs center estimation.
@@ -79,7 +79,7 @@ def get_5D_center(
         if N_tot > N_clust_max:
             data = np.array([lon, lat]).T
             cent = np.array([np.median(data, 0)])
-            idx = get_Nd_dists(cent, data)[:2*N_clust_max]
+            idx = get_Nd_dists(cent, data)[: 2 * N_clust_max]
             pmRA_i, pmDE_i = pmRA[idx], pmDE[idx]
         else:
             pmRA_i, pmDE_i = np.array(pmRA), np.array(pmDE)

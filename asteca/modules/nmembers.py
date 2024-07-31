@@ -71,8 +71,7 @@ def ripley_nmembs(
     # Select those clusters where the stars are different enough from a
     # random distribution
     xy = np.array([x, y]).T
-    idx_survived = ripley_core(
-        rads, Kest, C_thresh_N, d_pm_plx_idxs, xy, N_clust)
+    idx_survived = ripley_core(rads, Kest, C_thresh_N, d_pm_plx_idxs, xy, N_clust)
 
     # If the default clustering number did not work, try a few
     # more values with an increasing number of cluster stars
@@ -117,9 +116,7 @@ def init_ripley(lon, lat):
     return rads, Kest, C_thresh_N
 
 
-def ripley_core(
-    rads, Kest, C_thresh_N, d_pm_plx_idxs, xy, N_clust, N_break=5
-):
+def ripley_core(rads, Kest, C_thresh_N, d_pm_plx_idxs, xy, N_clust, N_break=5):
     """
     This is the core function that estimates the number of members
     based on Ripley's K-function.

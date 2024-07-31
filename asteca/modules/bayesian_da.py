@@ -74,7 +74,7 @@ def bayesian_mp(frame_arr, e_frame_arr, center, radius, N_cluster, bayesda_runs)
         bayes_prob[np.isnan(bayes_prob)] = 0.0
         sum_cl_probs += bayes_prob
 
-        probs = sum_cl_probs / (r+1)
+        probs = sum_cl_probs / (r + 1)
         msk = probs > 0.5
         # Check that all P>0.5 probabilities converged to 1%
         if (abs(prob_old_arr[msk] - probs[msk]) < 0.01).all() and r > N_break:

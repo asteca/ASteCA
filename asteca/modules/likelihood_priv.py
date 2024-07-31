@@ -315,8 +315,7 @@ def bins_distance(self, synth_clust):
 
 
 def chi_square(self, synth_clust):
-    """From issue #372.
-    """
+    """From issue #372."""
     # If synthetic cluster is empty, assign a small likelihood value.
     if not synth_clust.any():
         return -1.0e09
@@ -341,5 +340,5 @@ def chi_square(self, synth_clust):
     # Remove all bins where n_i = 0 (no observed stars).
     syn_histo_f_z = syn_histo_f[self.cl_z_idx]
 
-    chisq = ((self.cl_histo_f_z - syn_histo_f_z)**2).sum()
+    chisq = ((self.cl_histo_f_z - syn_histo_f_z) ** 2).sum()
     return chisq

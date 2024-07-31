@@ -263,12 +263,12 @@ class Cluster:
             self.plx_c = plx_c
 
         elif algo == "kde_2d":
-            if data_2d == 'radec':
+            if data_2d == "radec":
                 if any([_ is None for _ in (self.ra, self.dec)]):
                     raise ValueError("Data for  (ra, dec) data is required")
                 c_str = "radec_c"
                 x, y = self.ra_v, self.dec_v
-            elif data_2d == 'pms':
+            elif data_2d == "pms":
                 if any([_ is None for _ in (self.pmra, self.pmde)]):
                     raise ValueError("Data for  (pmra, pmde) data is required")
                 c_str = "pms_c"

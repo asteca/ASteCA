@@ -47,8 +47,7 @@ def fastMP(
     N_break = 50
     for r in range(N_resample):
         # Sample data
-        s_pmRA, s_pmDE, s_plx = data_sample(
-            rng, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx)
+        s_pmRA, s_pmDE, s_plx = data_sample(rng, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx)
 
         # Data normalization
         data_5d = get_dims_norm(
@@ -86,7 +85,7 @@ def fastMP(
         )
 
         probs_all[st_idx] += 1
-        probs = probs_all / (r+1)
+        probs = probs_all / (r + 1)
         msk = probs > 0.5
         # Check that all P>0.5 probabilities converged to 1%
         if (abs(prob_old_arr[msk] - probs[msk]) < 0.01).all() and r > N_break:
@@ -105,9 +104,7 @@ def fastMP(
     return probs_final
 
 
-def get_dims_norm(
-    N_cluster, lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c, st_idx
-):
+def get_dims_norm(N_cluster, lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c, st_idx):
     """
     Normalize dimensions using twice the median of the selected probable
     members.
