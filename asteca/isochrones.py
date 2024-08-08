@@ -162,7 +162,7 @@ class Isochrones:
         # Replace old values
         self.met_age_dict["met"] = feh_r
 
-    def _min_max(self) -> tuple[float]:
+    def _min_max(self) -> tuple[float, float, float, float]:
         """Return the minimum and maximum values for the metallicity and age defined
         in the theoretical isochrones.
 

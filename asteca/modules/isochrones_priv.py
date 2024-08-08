@@ -17,7 +17,7 @@ phot_syst_col_names = {
 }
 
 
-def load(self) -> tuple[np.ndarray, list, dict]:
+def load(self) -> tuple[np.ndarray, list, dict, int]:
     r"""Load the theoretical isochrones and return a dictionary with the data.
 
     Returns
@@ -113,7 +113,7 @@ def extract_paths(self) -> list:
 
 def read(
     model, N_interp, parsec_rm_stage_9, f_paths, met_col, age_col, cols_keep
-) -> tuple[list, list]:
+) -> dict:
     """ """
 
     group_col = {"PARSEC": met_col, "MIST": age_col, "BASTI": None}
