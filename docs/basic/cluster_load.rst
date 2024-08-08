@@ -59,10 +59,8 @@ or a color-magnitude plot with the :py:func:`asteca.plot.cluster` function:
 
 .. code-block:: python
 
-    import matplotlib.pyplot as plt
-
-    ax = plt.subplot(111)
-    ax = my_cluster.clustplot(ax1)
+    ax = plt.subplot()
+    asteca.plot.cluster(my_cluster, ax)
     plt.show()
 
 which should results in something like this:
