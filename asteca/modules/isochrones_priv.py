@@ -92,21 +92,26 @@ def get_columns(self) -> tuple[list, str, str, str]:
 
 def extract_paths(self) -> list:
     r"""Extract isochrone files from `isochs_path`."""
-    f_paths = []
-    # Iterate over files in directory
-    for path, folders, files in os.walk(self.isochs_path):
-        # Skip hidden folders
-        if path.split("/")[-1].startswith("."):
-            continue
-        for filename in files:
-            # Skip hidden files
-            if not filename.startswith("."):
-                f_paths.append(os.path.join(path, filename))
 
-    if len(f_paths) == 0:
-        raise FileNotFoundError(
-            f"No files found in isochrones path '{self.isochs_path}'"
-        )
+    # Check if path is to file or folder
+    if os.path.isfile(self.isochs_path):
+        f_paths = [self.isochs_path]
+    else:
+        f_paths = []
+        # Iterate over files in directory
+        for path, folders, files in os.walk(self.isochs_path):
+            # Skip hidden folders
+            if path.split("/")[-1].startswith("."):
+                continue
+            for filename in files:
+                # Skip hidden files
+                if not filename.startswith("."):
+                    f_paths.append(os.path.join(path, filename))
+
+        if len(f_paths) == 0:
+            raise FileNotFoundError(
+                f"No files found in isochrones path '{self.isochs_path}'"
+            )
 
     return f_paths
 
@@ -194,6 +199,9 @@ def get_header(file_path):
             if not line.startswith("#"):
                 break
             column_names = line
+
+        if column_names == "":
+            raise ValueError(f"Could not extract header from file: {file_path}")
 
         column_names = column_names.replace("#", "").split()
 

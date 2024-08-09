@@ -15,8 +15,8 @@ class Isochrones:
         `MIST <https://waps.cfa.harvard.edu/MIST/>`__, or
         `BASTI <http://basti-iac.oa-abruzzo.inaf.it/isocs.html>`__.
     :type model: str
-    :param isochs_path: Path to the folder that contains the files for the theoretical
-        isochrones
+    :param isochs_path: Path to the file or folder that contains the files for the
+        theoretical isochrones
     :type isochs_path: str
     :param magnitude: Magnitude's filter name as defined in the theoretical isochrones.
         Example for Gaia's ``G`` magnitude: ``"Gmag"``
@@ -115,10 +115,6 @@ class Isochrones:
             raise ValueError(
                 f"Model '{self.model}' not recognized. Should be one of {models}"
             )
-
-        # Check path to isochrones
-        if os.path.isdir(self.isochs_path) is False:
-            raise ValueError(f"Path '{self.isochs_path}' not found")
 
         print("\nInstantiating isochrones...")
         # Load isochrone files
