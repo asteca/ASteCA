@@ -10,7 +10,6 @@ from contextlib import suppress
 import importlib.metadata
 from pathlib import Path
 import requests
-from packaging import version
 
 
 __all__ = ["cluster", "membership", "isochrones", "synthetic", "likelihood", "plot"]
@@ -40,7 +39,7 @@ __version__ = extract_version()
 
 # Check if an updated version exists.
 # If this file exists, skip update check
-if os.path.isfile("update_off.txt") is False:
+if os.path.isfile("asteca_disable_check.txt") is False:
 
     # Get the latest version from PyPI
     pypi_url = "https://pypi.org/pypi/asteca/json"
@@ -49,7 +48,7 @@ if os.path.isfile("update_off.txt") is False:
     new_v = pypi_data["info"]["version"]
 
     # Parse and compare versions
-    if version.parse(new_v) != version.parse(__version__):
+    if new_v != __version__:
         print("\n--------------------------------------------------")
         print(f"New version of ASteCA is available: {__version__} -> {new_v}")
         print("   Update with: pip install --upgrade asteca\n")
