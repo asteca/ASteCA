@@ -127,7 +127,7 @@ def get_dims_norm(N_cluster, lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c, st_i
     # dims_norm = 2 * np.nanmedian(abs(data_mvd[st_idx]), 0)
 
     # Use the IQR
-    dims_norm = np.nanpercentile(data_mvd[st_idx, :], [25, 75], axis=0).ptp(axis=0)
+    dims_norm = np.ptp(np.nanpercentile(data_mvd[st_idx, :], [25, 75], axis=0), axis=0)
 
     data_norm = data_mvd / dims_norm
     return data_norm

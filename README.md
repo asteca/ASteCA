@@ -1,6 +1,6 @@
 <div align="center">
   <br>
-  <img src="/docs/_static/asteca_icon.webp" alt="UCC" width="200"/>
+  <img src="https://raw.githubusercontent.com/asteca/ASteCA/main/docs/_static/asteca_icon.webp" alt="asteca" width="200"/>
   <br>
 </div>
 

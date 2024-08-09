@@ -17,7 +17,7 @@ phot_syst_col_names = {
 }
 
 
-def load(self) -> tuple[np.ndarray, list, dict]:
+def load(self) -> tuple[np.ndarray, list, dict, int]:
     r"""Load the theoretical isochrones and return a dictionary with the data.
 
     Returns
@@ -92,28 +92,33 @@ def get_columns(self) -> tuple[list, str, str, str]:
 
 def extract_paths(self) -> list:
     r"""Extract isochrone files from `isochs_path`."""
-    f_paths = []
-    # Iterate over files in directory
-    for path, folders, files in os.walk(self.isochs_path):
-        # Skip hidden folders
-        if path.split("/")[-1].startswith("."):
-            continue
-        for filename in files:
-            # Skip hidden files
-            if not filename.startswith("."):
-                f_paths.append(os.path.join(path, filename))
 
-    if len(f_paths) == 0:
-        raise FileNotFoundError(
-            f"No files found in isochrones path '{self.isochs_path}'"
-        )
+    # Check if path is to file or folder
+    if os.path.isfile(self.isochs_path):
+        f_paths = [self.isochs_path]
+    else:
+        f_paths = []
+        # Iterate over files in directory
+        for path, folders, files in os.walk(self.isochs_path):
+            # Skip hidden folders
+            if path.split("/")[-1].startswith("."):
+                continue
+            for filename in files:
+                # Skip hidden files
+                if not filename.startswith("."):
+                    f_paths.append(os.path.join(path, filename))
+
+        if len(f_paths) == 0:
+            raise FileNotFoundError(
+                f"No files found in isochrones path '{self.isochs_path}'"
+            )
 
     return f_paths
 
 
 def read(
     model, N_interp, parsec_rm_stage_9, f_paths, met_col, age_col, cols_keep
-) -> tuple[list, list]:
+) -> dict:
     """ """
 
     group_col = {"PARSEC": met_col, "MIST": age_col, "BASTI": None}
@@ -185,7 +190,7 @@ def read(
 def get_header(file_path):
     """Iterate through each line in the file to get the header"""
     with open(file_path, mode="r") as f_iso:
-        full_header = []
+        full_header, column_names = [], ""
         for i, line in enumerate(f_iso):
             # Skip BASTI lines that look like this
             if line.startswith("#====="):
@@ -194,6 +199,9 @@ def get_header(file_path):
             if not line.startswith("#"):
                 break
             column_names = line
+
+        if column_names == "":
+            raise ValueError(f"Could not extract header from file: {file_path}")
 
         column_names = column_names.replace("#", "").split()
 

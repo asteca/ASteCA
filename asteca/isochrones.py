@@ -1,4 +1,3 @@
-import os
 import numpy as np
 from .modules import isochrones_priv
 
@@ -15,8 +14,8 @@ class Isochrones:
         `MIST <https://waps.cfa.harvard.edu/MIST/>`__, or
         `BASTI <http://basti-iac.oa-abruzzo.inaf.it/isocs.html>`__.
     :type model: str
-    :param isochs_path: Path to the folder that contains the files for the theoretical
-        isochrones
+    :param isochs_path: Path to the file or folder that contains the files for the
+        theoretical isochrones
     :type isochs_path: str
     :param magnitude: Magnitude's filter name as defined in the theoretical isochrones.
         Example for Gaia's ``G`` magnitude: ``"Gmag"``
@@ -116,10 +115,6 @@ class Isochrones:
                 f"Model '{self.model}' not recognized. Should be one of {models}"
             )
 
-        # Check path to isochrones
-        if os.path.isdir(self.isochs_path) is False:
-            raise ValueError(f"Path '{self.isochs_path}' not found")
-
         print("\nInstantiating isochrones...")
         # Load isochrone files
         self.theor_tracks, self.color_filters, self.met_age_dict, N_isoch_files = (
@@ -162,13 +157,13 @@ class Isochrones:
         # Replace old values
         self.met_age_dict["met"] = feh_r
 
-    def _min_max(self) -> tuple[float]:
+    def _min_max(self) -> tuple[float, float, float, float]:
         """Return the minimum and maximum values for the metallicity and age defined
         in the theoretical isochrones.
 
         :return: Tuple of (minimum_metallicity, maximum_metallicity, minimum_age,
             maximum_age)
-        :rtype: tuple[float]
+        :rtype: tuple[float, float, float, float]
         """
         zmin = self.met_age_dict["met"].min()
         zmax = self.met_age_dict["met"].max()
