@@ -40,7 +40,6 @@ __version__ = extract_version()
 # Check if an updated version exists.
 # If this file exists, skip update check
 if os.path.isfile("asteca_disable_check.txt") is False:
-
     # Get the latest version from PyPI
     pypi_url = "https://pypi.org/pypi/asteca/json"
     pypi_response = requests.get(pypi_url, timeout=3)
