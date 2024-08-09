@@ -163,7 +163,7 @@ class Isochrones:
 
         :return: Tuple of (minimum_metallicity, maximum_metallicity, minimum_age,
             maximum_age)
-        :rtype: tuple[float]
+        :rtype: tuple[float, float, float, float]
         """
         zmin = self.met_age_dict["met"].min()
         zmax = self.met_age_dict["met"].max()
