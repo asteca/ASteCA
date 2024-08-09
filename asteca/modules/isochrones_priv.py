@@ -185,7 +185,7 @@ def read(
 def get_header(file_path):
     """Iterate through each line in the file to get the header"""
     with open(file_path, mode="r") as f_iso:
-        full_header = []
+        full_header, column_names = [], ""
         for i, line in enumerate(f_iso):
             # Skip BASTI lines that look like this
             if line.startswith("#====="):
