@@ -3,8 +3,24 @@
 Installation
 ############
 
-I recommend using the `conda`_ package and environment manager to install **ASteCA**
-in an isolated Python environment. To install ``conda``, follow these steps:
+**ASteCA** can be installed locally or in a
+`Google Colaboratory <https://colab.google/>`_ notebook. To install in Google
+Colaboratory use the following command in a new notebook:
+
+.. code-block:: bash
+
+  !pip install asteca
+
+To check that the installation was successful, import **ASteCA** and print the
+installed version number with:
+
+.. code-block:: bash
+
+  import asteca
+  asteca.__version__
+
+If you want to install the package locally, I recommend using the `conda`_ package and environment manager to install **ASteCA** in an isolated Python environment.
+To install with ``conda``, follow these steps:
 
 1. Go to https://conda.io/miniconda.html and download the appropriate version
    for your system. I will assume in what follows that you are running a 64 bit Linux
