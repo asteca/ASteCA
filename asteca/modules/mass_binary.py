@@ -5,7 +5,12 @@ import astropy.coordinates as coord
 from scipy.spatial import KDTree
 
 
-def ranModels(fit_params: dict, model_std: dict, N_models: int, seed: int) -> list:
+def ranModels(
+    fit_params: dict,
+    model_std: dict,
+    N_models: int,
+    seed: int
+) -> list:
     """
     Generate the 'N_models' models via sampling a Gaussian centered on 'fit_params',
     with standard deviation given by 'model_std'.
@@ -32,7 +37,7 @@ def get_close_idxs(self, obs_phot, isoch):
     return idxs
 
 
-def get_m1m2(self, isoch: np.array, idxs: np.array):
+def get_m1m2(self, isoch: np.ndarray, idxs: np.ndarray):
     """ """
     # Masses
     mass_1, mass_2 = isoch[self.m_ini_idx], isoch[-1]
@@ -43,7 +48,7 @@ def get_m1m2(self, isoch: np.array, idxs: np.array):
     return m1_obs, m2_obs
 
 
-def get_bpr(self, isoch: np.array, idxs: np.array):
+def get_bpr(self, isoch: np.ndarray, idxs: np.ndarray):
     """ """
     # Secondary masses
     mass_2 = isoch[-1]
@@ -63,8 +68,8 @@ def get_bpr(self, isoch: np.array, idxs: np.array):
 
 def galactic_coords(
     synthcl,
-    radec_c: float,
-) -> tuple[np.array, np.array]:
+    radec_c: tuple,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Convert equatorial coordinates to cylindrical, and obtain the vertical distance
     Z and the galactocentric distance R_GC
     """
@@ -78,7 +83,7 @@ def galactic_coords(
     cgal = SkyCoord(l=lon, b=lat, distance=dist_pc * u.pc, frame="galactic")
     c_GC = cgal.transform_to(coord.Galactocentric())
 
-    X, Y, Z = c_GC.x.value, c_GC.y.value, c_GC.z.value
+    X, Y, Z = np.array(c_GC.x), np.array(c_GC.y), np.array(c_GC.z)
     R_GC = np.sqrt(X**2 + Y**2 + Z**2)
     R_xy = np.sqrt(X**2 + Y**2)
 

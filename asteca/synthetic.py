@@ -453,11 +453,11 @@ class Synthetic:
 
     def binary_fraction(
         self,
-    ) -> np.array:
+    ) -> np.ndarray:
         """Estimate the total binary fraction for the observed cluster.
 
         :return: Distribution of total binary fraction values for the cluster
-        :rtype: np.array
+        :rtype: np.ndarray
         """
         b_fr_all = []
         for i, isoch in enumerate(self.sampled_synthcls):

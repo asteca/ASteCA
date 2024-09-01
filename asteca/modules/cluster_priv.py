@@ -53,7 +53,7 @@ def get_Nd_dists(cents, data, dists_flag=False):
 
 def get_5D_center(
     lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c, N_clust_min, N_clust_max
-):
+) -> tuple[float, float, float, float, float]:
     """
     Estimate the 5-dimensional center of a cluster:
 
