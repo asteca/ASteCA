@@ -250,6 +250,6 @@ def minit_LGB05(loga, M_actual, gamma, t0, mu_ev):
     Initial mass estimation from Lamers et al. 2005
     """
     t = 10**loga
-    M_init = (M_actual**gamma + gamma * (t / t0)) ** (1 / gamma) / mu_ev
+    M_init = ((M_actual**gamma + gamma * (t / t0)) ** (1 / gamma)) / mu_ev
 
     return M_init
