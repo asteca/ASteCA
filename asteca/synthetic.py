@@ -327,8 +327,8 @@ class Synthetic:
 
     def get_models(
         self,
-        model: dict,
-        model_std: dict,
+        model: dict[str, float],
+        model_std: dict[str, float],
         radec_c: tuple[float, float],
         N_models: int = 200,
     ) -> None:
