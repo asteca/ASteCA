@@ -227,10 +227,15 @@ def get_MIST_z_val(met_col, full_header):
     """
     Extract metallicity value for MIST files.
     """
+    z_header_vals, z_header_cols = None, None
     for i, line in enumerate(full_header):
         if met_col in line:
             z_header_cols = line.split()[1:]
             z_header_vals = full_header[i + 1].split()[1:]
+
+    if z_header_vals is None or z_header_cols is None:
+        raise ValueError("Could not read header from MIST isochrone")
+
     z_df = pd.DataFrame([z_header_vals], columns=z_header_cols)
     zinit = z_df[met_col].values
     return str(zinit[0])
@@ -240,6 +245,7 @@ def get_BASTI_z_a_val(full_header, met_col, age_col):
     """
     Extract metallicity and age values for BASTI files.
     """
+    zval, aval = None, None
     for line in full_header:
         if met_col in line:
             spl_1 = line.split(met_col)[1].replace("=", " ")
@@ -249,6 +255,10 @@ def get_BASTI_z_a_val(full_header, met_col, age_col):
             aval = np.log10(float(spl_2) * 1e6)
             aval = str(round(aval, 5))
             break
+
+    if zval is None or aval is None:
+        raise ValueError("Could not read header from Basti isochrone")
+
     return zval, aval
 
 
@@ -294,7 +304,10 @@ def interp_df(N_interp, cols_keep_ps, df, isochrones, zinit, age):
     return isochrones
 
 
-def met_order_merge_massini_check(mass_col: str, isochrones: dict) -> list:
+def met_order_merge_massini_check(
+    mass_col: str,
+    isochrones: dict
+) -> tuple[list, list]:
     """
     1. Order by metallicity.
     2. Combine photometric systems if more than one was used.
@@ -303,7 +316,6 @@ def met_order_merge_massini_check(mass_col: str, isochrones: dict) -> list:
     The isochrone parameter 'mass_col' is assumed to be equal across
     photometric systems, for a given metallicity and age. We check here that
     this is the case.
-
 
     """
     # Metallicities in order
