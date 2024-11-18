@@ -1,10 +1,12 @@
 import warnings
+
 import numpy as np
 import pandas as pd
+
 from .cluster import Cluster
 from .isochrones import Isochrones
-from .modules import synth_cluster_priv as scp
 from .modules import mass_binary as mb
+from .modules import synth_cluster_priv as scp
 
 
 class Synthetic:
