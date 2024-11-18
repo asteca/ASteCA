@@ -245,7 +245,7 @@ class Synthetic:
             cut  is applied. Used mainly for plotting, defaults to ``False``
         :type plot_flag: bool
         :param full_arr_flag: If ``True`` returns the full array for the synthetic
-            cluster, inclusing the binary data (if any). Used mainly for plotting,
+            cluster, including the binary data (if any). Used mainly for plotting,
             defaults to ``False``
         :type full_arr_flag: bool
 
