@@ -1,8 +1,9 @@
-from .cluster import Cluster
-from .synthetic import Synthetic
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+
+from .cluster import Cluster
+from .synthetic import Synthetic
 
 
 def radec(cluster: Cluster, ax: matplotlib.axes.Axes) -> matplotlib.axes.Axes:
