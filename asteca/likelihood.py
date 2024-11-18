@@ -16,7 +16,7 @@ class Likelihood:
     :type my_cluster: Cluster
     :param lkl_name: Currently only the Poisson likelihood ratio (``plr``) defined in
         `Tremmel et al. (2013)
-        <https://ui.adsabs.harvard.edu/abs/2013ApJ...766...19T/abstract)>`__
+        <https://ui.adsabs.harvard.edu/abs/2013ApJ...766...19T/abstract>`__
         is accepted, defaults to ``plr``
     :type lkl_name: str
     :param bin_method: Bin method used to split the color-magnitude diagram into cells
