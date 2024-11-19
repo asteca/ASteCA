@@ -163,7 +163,7 @@ def synthetic(
         binar_idx = ~np.isnan(synth_clust[-1])
     else:
         # No binary systems
-        binar_idx = np.full(synth_clust.shape[1], full_arr_flag=False)
+        binar_idx = np.full(synth_clust.shape[1], False)
 
     y_synth = synth_clust[0]
     x_synth = synth_clust[1]
