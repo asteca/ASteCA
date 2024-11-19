@@ -47,6 +47,7 @@ def cluster(
     ax: matplotlib.axes.Axes,
     color_idx: int = 0,
     binar_probs: np.ndarray | None = None,
+    prob_binar_cut: float = 0.5,
 ) -> matplotlib.axes.Axes:
     """Generate a color-magnitude plot.
 
@@ -61,6 +62,9 @@ def cluster(
     :param binar_probs: Array with probabilities of being a binary system for each
         observed star; defaults to ``None``
     :type binar_probs: np.ndarray | None
+    :param prob_binar_cut: Probabilities value that separates single systems from
+        binary systems; defaults to ``0.5``
+    :type prob_binar_cut: float
 
     :raises ValueError: If ``color_idx`` is not ``0`` or ``1``
 
@@ -72,14 +76,6 @@ def cluster(
             f"Wrong 'color_idx' value ({color_idx}), should be one of: [0, 1]"
         )
 
-    if binar_probs is not None:
-        msk_binar = binar_probs > 0.5
-
-    mag_col = cluster.magnitude
-    col_col = cluster.color
-    if color_idx == 1:
-        col_col = cluster.color2
-
     if binar_probs is None:
         ax.scatter(
             cluster.colors_p[color_idx],
@@ -89,6 +85,7 @@ def cluster(
             label=f"Observed, N={len(cluster.mag_p)}",
         )
     else:
+        msk_binar = binar_probs > prob_binar_cut
         ax.scatter(
             cluster.colors_p[color_idx][~msk_binar],
             cluster.mag_p[~msk_binar],
@@ -108,7 +105,12 @@ def cluster(
             label=f"Observed (binary), N={len(cluster.mag_p[msk_binar])}",
         )
 
-    ax.set_ylim(max(cluster.mag_p) + 0.5, min(cluster.mag_p) - 0.5)
+    ax.set_ylim(max(cluster.mag_p) + 0.5, min(cluster.mag_p) - 1)
+
+    mag_col = cluster.magnitude
+    col_col = cluster.color
+    if color_idx == 1:
+        col_col = cluster.color2
     ax.set_xlabel(col_col)
     ax.set_ylabel(mag_col)
     ax.legend()
@@ -120,8 +122,8 @@ def synthetic(
     synth: Synthetic,
     ax: matplotlib.axes.Axes,
     fit_params: dict,
+    isoch_arr: np.ndarray | None = None,
     color_idx: int = 0,
-    isochplot: bool = False,
 ) -> matplotlib.axes.Axes:
     """Generate a color-magnitude plot for a synthetic cluster.
 
@@ -160,6 +162,7 @@ def synthetic(
     if synth.binar_flag is True:
         binar_idx = ~np.isnan(synth_clust[-1])
     else:
+        # No binary systems
         binar_idx = np.full(synth_clust.shape[1], full_arr_flag=False)
 
     y_synth = synth_clust[0]
@@ -190,23 +193,40 @@ def synthetic(
     if color_idx == 1:
         c1, c2 = synth.isochs.color2
     plt.xlabel(f"{c1}-{c2}")
-    ax.set_ylim(max(synth.mag_p) + 0.5, min(synth.mag_p) - 0.5)
+    ax.set_ylim(max(y_synth) + 0.5, min(y_synth) - 1)
     ax.legend()
 
-    if isochplot is False:
-        return ax
-
-    # Generate displaced isochrone
-    fit_params_copy = dict(fit_params)
-    fit_params_copy["DR"] = 0.0
-    isochrone = synth.generate(fit_params_copy, plot_flag=True)
-    # Remove stars beyond the color limits
-    xmin, xmax = x_synth[~binar_idx].min(), x_synth[~binar_idx].max()
-    c_idx = 1
-    if color_idx == 1:
-        c_idx = 2
-    msk = (isochrone[c_idx] >= xmin) & (isochrone[c_idx] <= xmax)
-    isochrone = isochrone[:, msk]
-    ax.plot(isochrone[c_idx], isochrone[0], c="k")
+    if isoch_arr is not None:
+        c_idx = 1
+        if color_idx == 1:
+            c_idx = 2
+        ax.plot(isoch_arr[c_idx], isoch_arr[0], c="k")
 
     return ax
+
+
+def get_isochrone(
+    synth: Synthetic,
+    fit_params: dict,
+    color_idx: int = 0,
+) -> np.ndarray:
+    """ """
+    # Generate displaced isochrone
+    fit_params_copy = dict(fit_params)
+
+    # Generate physical synthetic cluster to extract the mas mass
+    isochrone_full = synth.generate(fit_params_copy, full_arr_flag=True)
+    # Extract max mass
+    max_mass = isochrone_full[synth.m_ini_idx].max()
+
+    # Generate displaced isochrone
+    fit_params_copy["DR"] = 0.0
+    isochrone = synth.generate(fit_params_copy, plot_flag=True)
+
+    # Apply max mass filter to isochrone
+    msk = isochrone[synth.m_ini_idx] < max_mass
+
+    # Generate proper array for plotting
+    isochrone = np.array([isochrone[0], isochrone[color_idx + 1]])[:, msk]
+
+    return isochrone
