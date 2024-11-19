@@ -1,12 +1,12 @@
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.axes import Axes
 
 from .cluster import Cluster
 from .synthetic import Synthetic
 
 
-def radec(cluster: Cluster, ax: matplotlib.axes.Axes) -> matplotlib.axes.Axes:
+def radec(cluster: Cluster, ax: Axes) -> Axes:
     """Generate a (RA, DEC) plot.
 
     :param cluster: :py:class:`Cluster <asteca.cluster.Cluster>` object with the
@@ -16,7 +16,7 @@ def radec(cluster: Cluster, ax: matplotlib.axes.Axes) -> matplotlib.axes.Axes:
     :type ax: matplotlib.axes.Axes
 
     :return: Matplotlib axis object
-    :rtype: matplotlib.axes.Axes
+    :rtype: Axes
     """
     ra = cluster.ra_v
     dec = cluster.dec_v
@@ -44,18 +44,18 @@ def radec(cluster: Cluster, ax: matplotlib.axes.Axes) -> matplotlib.axes.Axes:
 
 def cluster(
     cluster: Cluster,
-    ax: matplotlib.axes.Axes,
+    ax: Axes,
     color_idx: int = 0,
     binar_probs: np.ndarray | None = None,
     prob_binar_cut: float = 0.5,
-) -> matplotlib.axes.Axes:
+) -> Axes:
     """Generate a color-magnitude plot.
 
     :param cluster: :py:class:`Cluster <asteca.cluster.Cluster>` object with the
         loaded data for the observed cluster
     :type cluster: Cluster
     :param ax: Matplotlib axis where to draw the plot
-    :type ax: matplotlib.axes.Axes
+    :type ax: Axes
     :param color_idx: Index of the color to plot. If ``0`` (default), plot the
         first color. If ``1`` plot the second color. Defaults to ``0``
     :type color_idx: int
@@ -69,7 +69,7 @@ def cluster(
     :raises ValueError: If ``color_idx`` is not ``0`` or ``1``
 
     :return: Matplotlib axis object
-    :rtype: matplotlib.axes.Axes
+    :rtype: Axes
     """
     if color_idx > 1:
         raise ValueError(
@@ -120,11 +120,11 @@ def cluster(
 
 def synthetic(
     synth: Synthetic,
-    ax: matplotlib.axes.Axes,
+    ax: Axes,
     fit_params: dict,
     isoch_arr: np.ndarray | None = None,
     color_idx: int = 0,
-) -> matplotlib.axes.Axes:
+) -> Axes:
     """Generate a color-magnitude plot for a synthetic cluster.
 
     The synthetic cluster is generated using the fundamental parameter values
@@ -134,7 +134,7 @@ def synthetic(
         data required to generate synthetic clusters
     :type synth: Synthetic
     :param ax: Matplotlib axis where to draw the plot
-    :type ax: matplotlib.axes.Axes
+    :type ax: Axes
     :param fit_params: Dictionary with the values for the fundamental parameters
         that were **not** included in the ``fix_params`` dictionary when the
         :py:class:`Synthetic` object was calibrated
@@ -150,7 +150,7 @@ def synthetic(
     :raises ValueError: If ``color_idx`` is not ``0`` or ``1``
 
     :return: Matplotlib axis object
-    :rtype: matplotlib.axes.Axes
+    :rtype: Axes
     """
     if color_idx > 1:
         raise ValueError(
@@ -191,6 +191,8 @@ def synthetic(
     plt.ylabel(synth.isochs.magnitude)
     c1, c2 = synth.isochs.color
     if color_idx == 1:
+        if synth.isochs.color2 is None:
+            raise ValueError("No second color available")
         c1, c2 = synth.isochs.color2
     plt.xlabel(f"{c1}-{c2}")
     ax.set_ylim(max(y_synth) + 0.5, min(y_synth) - 1)
