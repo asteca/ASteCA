@@ -1,8 +1,9 @@
 import numpy as np
+
 from .cluster import Cluster
 from .modules import cluster_priv as cp
-from .modules.fastmp import fastMP
 from .modules.bayesian_da import bayesian_mp
+from .modules.fastmp import fastMP
 
 
 class Membership:
@@ -208,7 +209,7 @@ class Membership:
         print("\nRunning fastMP...")
         print("{}       : ({:.4f}, {:.4f})".format(cent_str, *xy_center))
         print("pms_c          : ({:.3f}, {:.3f})".format(*self.my_field.pms_c))
-        print(f"plx_c          : {self.my_field.plx_c}")
+        print(f"plx_c          : {self.my_field.plx_c:.3f}")
         print(f"fixed_centers  : {fixed_centers}")
         print(f"N_cluster      : {self.my_field.N_cluster}")
         # centers_ex_flag = False
