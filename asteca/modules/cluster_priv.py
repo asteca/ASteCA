@@ -1,9 +1,9 @@
 import warnings
-import numpy as np
-from scipy import spatial
-from scipy import stats
+
 import astropy.units as u
+import numpy as np
 from astropy.coordinates import SkyCoord
+from scipy import spatial, stats
 
 
 def radec2lonlat(ra, dec):
@@ -204,7 +204,7 @@ def get_kNN_center(N_clust_min, data):
     # Better results are obtained not using the parallax data?
     data_noplx = data[:, :4]  # <-- HARDCODED
 
-    tree = spatial.cKDTree(data_noplx)
+    tree = spatial.KDTree(data_noplx)
     inx = tree.query(data_noplx, k=N_clust_min + 1)
     NN_dist = inx[0].max(1)
     # Convert to densities
