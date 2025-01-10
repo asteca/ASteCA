@@ -6,11 +6,10 @@ from astropy.coordinates import SkyCoord
 from scipy import spatial, stats
 
 
-def radec2lonlat(ra, dec):
+def radec2lonlat(ra, dec) -> np.ndarray:
     gc = SkyCoord(ra=ra * u.degree, dec=dec * u.degree)
     lb = gc.transform_to("galactic")
-    lon, lat = lb.l.value, lb.b.value
-    return [lon, lat]
+    return np.array([lb.l.value, lb.b.value])
 
 
 def lonlat2radec(lon, lat):

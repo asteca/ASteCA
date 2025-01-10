@@ -264,14 +264,13 @@ class Cluster:
             )
             ra_c, dec_c = cp.lonlat2radec(x_c, y_c)
 
-            self._vp("\nCenter coordinates found")
-            self._vp("radec_c        : ({:.4f}, {:.4f})".format(ra_c, dec_c), 1)
-            self._vp("pms_c          : ({:.3f}, {:.3f})".format(pmra_c, pmde_c), 1)
-            self._vp("plx_c          : {:.3f}".format(plx_c), 1)
-
             self.radec_c = [ra_c, dec_c]
             self.pms_c = [pmra_c, pmde_c]
             self.plx_c = plx_c
+
+            mssg = "radec_c        : ({:.4f}, {:.4f})\n".format(ra_c, dec_c)
+            mssg += "pms_c          : ({:.3f}, {:.3f})\n".format(pmra_c, pmde_c)
+            mssg += "plx_c          : {:.3f}".format(plx_c)
 
         elif algo == "kde_2d":
             if data_2d == "radec":
@@ -293,15 +292,22 @@ class Cluster:
 
             x_c, y_c = cp.get_2D_center(x, y)
 
-            self._vp("\nCenter coordinates found")
-            self._vp("{}        : ({:.4f}, {:.4f})".format(c_str, x_c, y_c), 1)
             if c_str == "radec_c":
                 self.radec_c = [x_c, y_c]
             if c_str == "pms_c":
                 self.pms_c = [x_c, y_c]
 
+            mssg = "{}        : ({:.4f}, {:.4f})".format(c_str, x_c, y_c)
+
         else:
             raise ValueError(f"Selected method '{algo}' not recognized")
+
+        self._vp("\nCenter coordinates found")
+        self._vp(mssg, 1)
+
+    def _get_radius(self, radius: float) -> None:
+        self._vp(f"Radius         : {radius}", 1)
+        self.radius = radius
 
     # def get_radius(self, algo: str = "field_dens") -> None:
     #     """Estimate the cluster radius
@@ -404,4 +410,5 @@ class Cluster:
             N_cluster = self.N_clust_max
 
         self.N_cluster = N_cluster
-        self._vp(f"\nN_cluster      : {N_cluster}")
+        self._vp("\nNumber of members estimated")
+        self._vp(f"N_cluster      : {N_cluster}", 1)

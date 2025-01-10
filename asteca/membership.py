@@ -72,9 +72,9 @@ class Membership:
         # Set seed
         self.rng = np.random.default_rng(seed)
 
-        self._vp(f"\nN_cluster      : {self.my_field.N_cluster}", 1)
+        self._vp("\nMembership object generated")
+        self._vp(f"N_cluster      : {self.my_field.N_cluster}", 1)
         self._vp(f"Random seed    : {self.seed}", 1)
-        self._vp("Membership object generated")
 
     def _vp(self, mssg: str, level: int = 0) -> None:
         """Verbose print method"""
@@ -120,11 +120,11 @@ class Membership:
             center = cp.radec2lonlat(*center)
             cent_str = "lonlat_c"
 
-        print("\nRunning Bayesian DA...")
-        print("{}       : ({:.4f}, {:.4f})".format(cent_str, *center))
-        print(f"radius         : {self.my_field.radius} [deg]")
-        print(f"N_cluster      : {self.my_field.N_cluster}")
-        print(f"N_runs         : {N_runs}")
+        self._vp("\nRunning Bayesian DA...")
+        self._vp("{}       : ({:.4f}, {:.4f})".format(cent_str, *center), 1)
+        self._vp(f"radius         : {self.my_field.radius} [deg]", 1)
+        self._vp(f"N_cluster      : {self.my_field.N_cluster}", 1)
+        self._vp(f"N_runs         : {N_runs}", 1)
 
         # Generate input data array
         X = [xc, yc]
@@ -152,9 +152,11 @@ class Membership:
         X = np.array(X)
         e_X = np.array(e_X)
 
-        probs = bayesian_mp(
+        out_mssg, probs = bayesian_mp(
             X, e_X, center, self.my_field.radius, self.my_field.N_cluster, N_runs
         )
+        self._vp(out_mssg, 1)
+
         return probs
 
     def fastmp(
@@ -207,7 +209,7 @@ class Membership:
             raise AttributeError("Parameter 'N_runs' should be > 10")
 
         xv, yv = self.my_field.ra_v, self.my_field.dec_v
-        xy_center = self.my_field.radec_c
+        xy_center = np.array(self.my_field.radec_c)
         cent_str = "radec_c "
         # Convert (RA, DEC) to (lon, lat)
         if eq_to_gal is True:
@@ -215,17 +217,17 @@ class Membership:
             xy_center = cp.radec2lonlat(*xy_center)
             cent_str = "lonlat_c"
 
-        print("\nRunning fastMP...")
-        print("{}       : ({:.4f}, {:.4f})".format(cent_str, *xy_center))
-        print("pms_c          : ({:.3f}, {:.3f})".format(*self.my_field.pms_c))
-        print(f"plx_c          : {self.my_field.plx_c:.3f}")
-        print(f"fixed_centers  : {fixed_centers}")
-        print(f"N_cluster      : {self.my_field.N_cluster}")
+        self._vp("\nRunning fastMP...")
+        self._vp("{}       : ({:.4f}, {:.4f})".format(cent_str, *xy_center), 1)
+        self._vp("pms_c          : ({:.3f}, {:.3f})".format(*self.my_field.pms_c), 1)
+        self._vp(f"plx_c          : {self.my_field.plx_c:.3f}", 1)
+        self._vp(f"fixed_centers  : {fixed_centers}", 1)
+        self._vp(f"N_cluster      : {self.my_field.N_cluster}", 1)
         # centers_ex_flag = False
         # if centers_ex is not None:
         #     centers_ex_flag = True
-        # print(f"centers_ex     : {centers_ex_flag}")
-        print(f"N_resample     : {N_runs}")
+        # self._vp(f"centers_ex     : {centers_ex_flag}", 1)
+        self._vp(f"N_resample     : {N_runs}", 1)
 
         # Generate input data array for fastMP
         X = np.array(
@@ -240,7 +242,7 @@ class Membership:
                 self.my_field.e_plx_v,
             ]
         )
-        probs = fastMP(
+        out_mssg, probs = fastMP(
             X,
             list(xy_center),
             list(self.my_field.pms_c),
@@ -252,5 +254,7 @@ class Membership:
             self.rng,
             N_runs,
         )
+
+        self._vp(out_mssg, 1)
 
         return probs

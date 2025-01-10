@@ -1,5 +1,6 @@
 import numpy as np
 from scipy import spatial
+
 from . import cluster_priv as cp
 
 
@@ -14,7 +15,7 @@ def fastMP(
     N_clust_max: int,
     rng: np.random.Generator,
     N_resample: int,
-) -> np.ndarray:
+) -> tuple[str, np.ndarray]:
     """Perform a fast iterative Monte Carlo process to identify cluster members.
 
     :param X: Input data array containing coordinates, proper motions, and parallax
@@ -39,6 +40,8 @@ def fastMP(
     :param N_resample: Number of resampling iterations.
     :type N_resample: int
 
+    :returns: Output message
+    :rtype: str
     :returns: Array of final membership probabilities for each star.
     :rtype: np.ndarray
     """
@@ -71,6 +74,7 @@ def fastMP(
     probs_all = np.zeros(N_stars)
     prob_old_arr = np.zeros(N_stars)
     N_break = 50
+    r, probs = 0, []
     for r in range(N_resample):
         # Sample data
         s_pmRA, s_pmDE, s_plx = data_sample(rng, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx)
@@ -120,14 +124,14 @@ def fastMP(
             prob_old_arr = np.array(probs)
 
     if r < N_resample:
-        print(f"Convergence reached at {r+1} runs")
+        out_mssg = f"Convergence reached at {r+1} runs"
     else:
-        print(f"Maximum number of runs reached: {N_resample}")
+        out_mssg = f"Maximum number of runs reached: {N_resample}"
 
     probs_final = np.zeros(N_all)
     probs_final[idx_clean] = probs
 
-    return probs_final
+    return out_mssg, probs_final
 
 
 def get_dims_norm(
@@ -231,7 +235,7 @@ def get_center(
     :param plx: Parallax values of the stars.
     :type plx: np.ndarray
 
-    :returns: 
+    :returns:
         - Refined center coordinates (longitude, latitude).
         - Refined center proper motion values (pmRA, pmDE).
         - Refined center parallax value.
@@ -284,8 +288,16 @@ def first_filter(
     pm_max: float = 3.0,
     N_times: int = 5,
 ) -> tuple[
-        np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray,
-        np.ndarray, np.ndarray, np.ndarray]:
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+]:
     """Perform an initial filtering of stars based on parallax and proper motion.
 
     :param N_clust_max: Maximum number of stars in the cluster.

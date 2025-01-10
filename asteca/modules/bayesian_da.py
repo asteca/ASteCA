@@ -1,8 +1,11 @@
-import numpy as np
 import warnings
 
+import numpy as np
 
-def bayesian_mp(frame_arr, e_frame_arr, center, radius, N_cluster, bayesda_runs):
+
+def bayesian_mp(
+    frame_arr, e_frame_arr, center, radius, N_cluster, bayesda_runs
+) -> tuple[str, np.ndarray]:
     """
     Bayesian field decontamination algorithm. See Perren et al. (2015)
 
@@ -37,6 +40,7 @@ def bayesian_mp(frame_arr, e_frame_arr, center, radius, N_cluster, bayesda_runs)
     sum_cl_probs = np.zeros(N_cl_region)
 
     N_break = 50
+    r, probs = 0, []
     for r in range(bayesda_runs):
         # Select stars from the cluster region according to their
         # associated probabilities so far.
@@ -83,14 +87,14 @@ def bayesian_mp(frame_arr, e_frame_arr, center, radius, N_cluster, bayesda_runs)
             prob_old_arr = np.array(probs)
 
     if r < bayesda_runs:
-        print(f"Convergence reached at {r+1} runs")
+        out_mssg = f"Convergence reached at {r+1} runs"
     else:
-        print(f"Maximum number of runs reached: {bayesda_runs}")
+        out_mssg = f"Maximum number of runs reached: {bayesda_runs}"
 
     probs_final = np.zeros(frame_arr.shape[1])
     probs_final[cl_reg_idxs] = probs
 
-    return probs_final
+    return out_mssg, probs_final
 
 
 def get_regions(frame_arr, e_frame_arr2, center, radius):
@@ -149,7 +153,7 @@ def dataNorm(arr, e_arr, sigma_max=4.0):
 
 
 def likelihood(cl_region_T, e_cl_region2_T, region, e_region2):
-    """
+    r"""
     Obtain the likelihood, for each star in the cluster region ('cl_reg_prep'),
     of being a member of the region passed ('region').
 
