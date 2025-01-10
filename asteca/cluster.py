@@ -1,6 +1,8 @@
 import warnings
+
 import numpy as np
 import pandas as pd
+
 from .modules import cluster_priv as cp
 from .modules import nmembers as nm
 
@@ -60,6 +62,8 @@ class Cluster:
     :type N_clust_min: int
     :param N_clust_max: Maximum number of cluster members, defaults to ``5000``
     :type N_clust_max: int
+    :param verbose: Verbose level. A value of ``0`` hides all output, defaults to ``1``
+    :type verbose: int
 
     :raises ValueError: If there are missing required attributes to generate the
         :py:class:`Cluster <asteca.cluster.Cluster>` object
@@ -84,6 +88,7 @@ class Cluster:
         e_pmde: str | None = None,
         N_clust_min: int = 25,
         N_clust_max: int = 5000,
+        verbose: int = 1,
     ) -> None:
         self.obs_df = obs_df
         self.ra = ra
@@ -102,18 +107,24 @@ class Cluster:
         self.e_pmde = e_pmde
         self.N_clust_min = N_clust_min
         self.N_clust_max = N_clust_max
+        self.verbose = verbose
 
         self.N_stars = len(self.obs_df)
-        print("\nInstantiating cluster...")
-        print(f"N_stars        : {self.N_stars}")
-        print(f"N_clust_min    : {self.N_clust_min}")
-        print(f"N_clust_max    : {self.N_clust_max}")
+        self._vp("\nInstantiating cluster...")
+        self._vp(f"N_stars        : {self.N_stars}", 1)
+        self._vp(f"N_clust_min    : {self.N_clust_min}", 1)
+        self._vp(f"N_clust_max    : {self.N_clust_max}", 1)
 
         dim_count = self._load()
         if dim_count > 0:
-            print("Cluster object generated")
+            self._vp("Cluster object generated")
         else:
             raise ValueError("No column names defined for cluster")
+
+    def _vp(self, mssg: str, level: int = 0) -> None:
+        """Verbose print method"""
+        if self.verbose > level:
+            print(mssg)
 
     def _load(self):
         dim_count = 0
@@ -121,7 +132,7 @@ class Cluster:
         if self.ra is not None:
             self.ra_v = np.array(self.obs_df[self.ra], dtype=float)
             self.dec_v = np.array(self.obs_df[self.dec], dtype=float)
-            print(f"(RA, DEC)      : ({self.ra}, {self.dec})")
+            self._vp(f"(RA, DEC)      : ({self.ra}, {self.dec})", 1)
             dim_count += 1
 
         # TODO: change _p to _v
@@ -131,7 +142,7 @@ class Cluster:
                 self.e_mag_p = np.array(self.obs_df[self.e_mag], dtype=float)
             else:
                 raise ValueError("Magnitude uncertainty is required")
-            print(f"Magnitude      : {self.magnitude} [{self.e_mag}]")
+            self._vp(f"Magnitude      : {self.magnitude} [{self.e_mag}]", 1)
             dim_count += 1
 
         if self.color is not None:
@@ -140,7 +151,7 @@ class Cluster:
                 self.e_colors_p = [np.array(self.obs_df[self.e_color], dtype=float)]
             else:
                 raise ValueError("Color uncertainty is required")
-            print(f"Color          : {self.color} [{self.e_color}]")
+            self._vp(f"Color          : {self.color} [{self.e_color}]", 1)
             dim_count += 1
             if self.color2 is not None:
                 self.colors_p.append(np.array(self.obs_df[self.color2], dtype=float))
@@ -150,7 +161,7 @@ class Cluster:
                     )
                 else:
                     raise ValueError("Color2 uncertainty is required")
-                print(f"Color2         : {self.color2} [{self.e_color2}]")
+                self._vp(f"Color2         : {self.color2} [{self.e_color2}]", 1)
                 dim_count += 1
 
         if self.plx is not None:
@@ -159,7 +170,7 @@ class Cluster:
                 self.e_plx_v = np.array(self.obs_df[self.e_plx], dtype=float)
             else:
                 raise ValueError("Parallax uncertainty is required")
-            print(f"plx            : {self.plx} [{self.e_plx}]")
+            self._vp(f"plx            : {self.plx} [{self.e_plx}]", 1)
             dim_count += 1
 
         if self.pmra is not None:
@@ -168,7 +179,7 @@ class Cluster:
                 self.e_pmra_v = np.array(self.obs_df[self.e_pmra], dtype=float)
             else:
                 raise ValueError("pmRA uncertainty is required")
-            print(f"pmRA           : {self.pmra} [{self.e_pmra}]")
+            self._vp(f"pmRA           : {self.pmra} [{self.e_pmra}]", 1)
             dim_count += 1
         if self.pmde is not None:
             self.pmde_v = np.array(self.obs_df[self.pmde], dtype=float)
@@ -176,7 +187,7 @@ class Cluster:
                 self.e_pmde_v = np.array(self.obs_df[self.e_pmde], dtype=float)
             else:
                 raise ValueError("pmDE uncertainty is required")
-            print(f"pmDE           : {self.pmra} [{self.e_pmde}]")
+            self._vp(f"pmDE           : {self.pmra} [{self.e_pmde}]", 1)
             dim_count += 1
 
         return dim_count
@@ -253,10 +264,10 @@ class Cluster:
             )
             ra_c, dec_c = cp.lonlat2radec(x_c, y_c)
 
-            print("\nCenter coordinates found:")
-            print("radec_c        : ({:.4f}, {:.4f})".format(ra_c, dec_c))
-            print("pms_c          : ({:.3f}, {:.3f})".format(pmra_c, pmde_c))
-            print("plx_c          : {:.3f}".format(plx_c))
+            self._vp("\nCenter coordinates found")
+            self._vp("radec_c        : ({:.4f}, {:.4f})".format(ra_c, dec_c), 1)
+            self._vp("pms_c          : ({:.3f}, {:.3f})".format(pmra_c, pmde_c), 1)
+            self._vp("plx_c          : {:.3f}".format(plx_c), 1)
 
             self.radec_c = [ra_c, dec_c]
             self.pms_c = [pmra_c, pmde_c]
@@ -282,8 +293,8 @@ class Cluster:
 
             x_c, y_c = cp.get_2D_center(x, y)
 
-            print("\nCenter coordinates found:")
-            print("{}        : ({:.4f}, {:.4f})".format(c_str, x_c, y_c))
+            self._vp("\nCenter coordinates found")
+            self._vp("{}        : ({:.4f}, {:.4f})".format(c_str, x_c, y_c), 1)
             if c_str == "radec_c":
                 self.radec_c = [x_c, y_c]
             if c_str == "pms_c":
@@ -292,20 +303,14 @@ class Cluster:
         else:
             raise ValueError(f"Selected method '{algo}' not recognized")
 
-    # def _get_radius(self, algo: str = "field_dens") -> None:
+    # def get_radius(self, algo: str = "field_dens") -> None:
     #     """Estimate the cluster radius
 
-    #     - ``ripley``: Originally introduced with the ``fastMP`` membership method
-    #       in `Perren et al.
-    #       (2023) <https://academic.oup.com/mnras/article/526/3/4107/7276628>`__.
-    #       Requires ``(ra, dec)`` and their center estimates.
-    #     - ``density``: Simple algorithm that counts the number of stars within the
-    #       cluster region (center+radius) and subtracts the expected number of field
-    #       stars within that region. Requires the number of cluster members to be
-    #       defined.
+    #     - ``field_dens``: xxx
+    #     - ``king``: xxx
 
-    #     :param algo: Algorithm used to estimate center values, one of
-    #         (``ripley, density``); defaults to ``ripley``
+    #     :param algo: Algorithm used to estimate the radius, one of
+    #         (``field_dens, king``); defaults to ``field_dens``
     #     :type algo: str
 
     #     :raises ValueError: If required attributes are  missing from the
@@ -399,4 +404,4 @@ class Cluster:
             N_cluster = self.N_clust_max
 
         self.N_cluster = N_cluster
-        print(f"\nN_cluster      : {N_cluster}")
+        self._vp(f"\nN_cluster      : {N_cluster}")

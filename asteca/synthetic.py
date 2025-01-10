@@ -48,6 +48,8 @@ class Synthetic:
     :param seed: Random seed. If ``None`` a random integer will be generated and used,
         defaults to ``None``
     :type seed: int | None
+    :param verbose: Verbose level. A value of ``0`` hides all output, defaults to ``1``
+    :type verbose: int
 
     :raises ValueError: If any of the attributes is not recognized as a valid option
     """
@@ -61,6 +63,7 @@ class Synthetic:
         max_mass: int = 100_000,
         gamma: float | str = "D&K",
         seed: int | None = None,
+        verbose: int = 1,
     ) -> None:
         self.isochs = isochs
         self.ext_law = ext_law
@@ -69,6 +72,7 @@ class Synthetic:
         self.max_mass = max_mass
         self.gamma = gamma
         self.seed = seed
+        self.verbose = verbose
 
         if self.seed is None:
             self.seed = np.random.randint(100000)
@@ -117,7 +121,7 @@ class Synthetic:
         #             + "and 'BP-RP', respectively)."
         #         )
 
-        print("\nInstantiating synthetic...")
+        self._vp("\nInstantiating synthetic...")
 
         # Sample the selected IMF
         Nmets, Nages = self.isochs.theor_tracks.shape[:2]
@@ -137,13 +141,18 @@ class Synthetic:
         # Store for internal usage
         self.met_age_dict = self.isochs.met_age_dict
 
-        print(f"IMF            : {self.IMF_name}")
-        print(f"Max init mass  : {self.max_mass}")
-        print(f"Gamma dist     : {self.gamma}")
-        print(f"Extinction law : {self.ext_law}")
-        print(f"Diff reddening : {self.DR_distribution}")
-        print(f"Random seed    : {self.seed}")
-        print("Synthetic clusters object generated")
+        self._vp(f"IMF            : {self.IMF_name}", 1)
+        self._vp(f"Max init mass  : {self.max_mass}", 1)
+        self._vp(f"Gamma dist     : {self.gamma}", 1)
+        self._vp(f"Extinction law : {self.ext_law}", 1)
+        self._vp(f"Diff reddening : {self.DR_distribution}", 1)
+        self._vp(f"Random seed    : {self.seed}", 1)
+        self._vp("Synthetic clusters object generated")
+
+    def _vp(self, mssg: str, level: int = 0) -> None:
+        """Verbose print method"""
+        if self.verbose > level:
+            print(mssg)
 
     def calibrate(self, cluster: Cluster, fix_params: dict = {}):
         """Calibrate a :py:class:`Synthetic` object based on a

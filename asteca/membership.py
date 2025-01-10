@@ -32,6 +32,8 @@ class Membership:
     :param seed: Random seed. If ``None`` a random integer will be generated and used,
         defaults to ``None``
     :type seed: int | None
+    :param verbose: Verbose level. A value of ``0`` hides all output, defaults to ``1``
+    :type verbose: int
 
     :raises ValueError: If there are missing required attributes in the
         :py:class:`Cluster <asteca.cluster.Cluster>` object
@@ -41,9 +43,11 @@ class Membership:
         self,
         my_field: Cluster,
         seed: int | None = None,
+        verbose: int = 1,
     ) -> None:
         self.my_field = my_field
         self.seed = seed
+        self.verbose = verbose
 
         noradeg_flag = False
         try:
@@ -68,9 +72,14 @@ class Membership:
         # Set seed
         self.rng = np.random.default_rng(seed)
 
-        print(f"\nN_cluster      : {self.my_field.N_cluster}")
-        print(f"Random seed    : {self.seed}")
-        print("Membership object generated")
+        self._vp(f"\nN_cluster      : {self.my_field.N_cluster}", 1)
+        self._vp(f"Random seed    : {self.seed}", 1)
+        self._vp("Membership object generated")
+
+    def _vp(self, mssg: str, level: int = 0) -> None:
+        """Verbose print method"""
+        if self.verbose > level:
+            print(mssg)
 
     def bayesian(self, N_runs: int = 1000, eq_to_gal: bool = False) -> np.ndarray:
         """Assign membership probabilities.
