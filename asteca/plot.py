@@ -13,7 +13,7 @@ def radec(cluster: Cluster, ax: Axes) -> Axes:
         loaded data for the observed cluster
     :type cluster: Cluster
     :param ax: Matplotlib axis where to draw the plot
-    :type ax: matplotlib.axes.Axes
+    :type ax: Axes
 
     :return: Matplotlib axis object
     :rtype: Axes
@@ -111,8 +111,10 @@ def cluster(
     col_col = cluster.color
     if color_idx == 1:
         col_col = cluster.color2
-    ax.set_xlabel(col_col)
-    ax.set_ylabel(mag_col)
+    if col_col is not None:
+        ax.set_xlabel(col_col)
+    if mag_col is not None:
+        ax.set_ylabel(mag_col)
     ax.legend()
 
     return ax
@@ -140,12 +142,11 @@ def synthetic(
         :py:class:`Synthetic` object was calibrated
         (:py:meth:`calibrate` method).
     :type fit_params: dict
+    :param isoch_arr: Array with the isochrone data to plot; defaults to ``None``
+    :type isoch_arr: np.ndarray | None
     :param color_idx: Index of the color to plot. If ``0`` (default), plot the
         first color. If ``1`` plot the second color. Defaults to ``0``
     :type color_idx: int
-    :param isochplot: If ``True``, the accompanying isochrone will be plotted,
-        defaults to ``False``
-    :type isochplot: bool
 
     :raises ValueError: If ``color_idx`` is not ``0`` or ``1``
 

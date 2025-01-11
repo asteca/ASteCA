@@ -183,9 +183,10 @@ class Membership:
             defaults to ``True``
         :type eq_to_gal: bool
 
-        :raises ValueError: If the :py:class:`Cluster <asteca.cluster.Cluster>` object
-            is missing a required attribute:
+        :raises AttributeError: If the :py:class:`Cluster <asteca.cluster.Cluster>`
+            object is missing a required attribute:
             ``(ra, dec, pmra, pmde, plx, e_pmra, e_pmde, e_plx, radec_c, pms_c, plx_c)``
+        :raises ValueError: If the ``N_runs` parameter is less than 10
 
         :return: Membership probabilities for all stars in the frame
         :rtype: np.ndarray
@@ -204,9 +205,9 @@ class Membership:
             "plx_c",
         ):
             if hasattr(self.my_field, k) is False:
-                raise ValueError(f"'{k}' must be present as a 'cluster' attribute")
+                raise AttributeError(f"'{k}' must be present as a 'cluster' attribute")
         if N_runs < 10:
-            raise AttributeError("Parameter 'N_runs' should be > 10")
+            raise ValueError("Parameter 'N_runs' should be > 10")
 
         xv, yv = self.my_field.ra_v, self.my_field.dec_v
         xy_center = np.array(self.my_field.radec_c)

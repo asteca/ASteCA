@@ -40,10 +40,10 @@ def fastMP(
     :param N_resample: Number of resampling iterations.
     :type N_resample: int
 
-    :returns: Output message
-    :rtype: str
-    :returns: Array of final membership probabilities for each star.
-    :rtype: np.ndarray
+    :returns: A tuple containing:
+        - The output message (str)
+        - Array of final membership probabilities for each star (np.ndarray)
+    :rtype: tuple[str, np.ndarray]
     """
 
     # Remove 'nan' values

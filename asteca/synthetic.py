@@ -173,10 +173,11 @@ class Synthetic:
             defaults to ``{}``
         :type fix_params: dict
 
-        :raises ValueError: If the number of colors defined in the
+        :raises ValueError:
+            - If the number of colors defined in the
             :py:class:`Cluster <asteca.cluster.Cluster>` and
             :py:class:`Synthetic <asteca.synthetic.Synthetic>` objects do not match
-        :raises ValueError: If the metallicity or age parameters are not fixed to a
+            - If the metallicity or age parameters are not fixed to a
             single value but there ranges are.
         """
         # Check that the number of colors match
@@ -350,10 +351,10 @@ class Synthetic:
             were **not** included in the ``fix_params`` dictionary when the
             :py:class:`Synthetic` object was calibrated
             (:py:meth:`synthetic.Synthetic.calibrate` method)
-        :type model: dict
+        :type model: dict[str, float]
         :param model_std: Dictionary with the standard deviations for the fundamental
             parameters in the ``model`` argument
-        :type model_std: dict
+        :type model_std: dict[str, float]
         :param radec_c: Right ascension and declination center coordinates for the
             cluster
         :type radec_c: tuple[float, float]
