@@ -174,10 +174,10 @@ class Synthetic:
         :type fix_params: dict
 
         :raises ValueError:
-            - If the number of colors defined in the
+            -If the number of colors defined in the
             :py:class:`Cluster <asteca.cluster.Cluster>` and
             :py:class:`Synthetic <asteca.synthetic.Synthetic>` objects do not match
-            - If the metallicity or age parameters are not fixed to a
+            -If the metallicity or age parameters are not fixed to a
             single value but there ranges are.
         """
         # Check that the number of colors match

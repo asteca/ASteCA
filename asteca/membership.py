@@ -186,7 +186,7 @@ class Membership:
         :raises AttributeError: If the :py:class:`Cluster <asteca.cluster.Cluster>`
             object is missing a required attribute:
             ``(ra, dec, pmra, pmde, plx, e_pmra, e_pmde, e_plx, radec_c, pms_c, plx_c)``
-        :raises ValueError: If the ``N_runs` parameter is less than 10
+        :raises ValueError: If the ``N_runs`` parameter is less than 10
 
         :return: Membership probabilities for all stars in the frame
         :rtype: np.ndarray
