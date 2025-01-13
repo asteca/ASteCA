@@ -4,7 +4,13 @@ import numpy as np
 
 
 def bayesian_mp(
-    frame_arr, e_frame_arr, center, radius, N_cluster, bayesda_runs
+    N_cluster: int,
+    frame_arr: np.ndarray,
+    e_frame_arr: np.ndarray,
+    center: np.ndarray,
+    radius: float,
+    bayesda_runs: int,
+    rng: np.random.Generator,
 ) -> tuple[str, np.ndarray]:
     """
     Bayesian field decontamination algorithm. See Perren et al. (2015)
@@ -47,9 +53,9 @@ def bayesian_mp(
         if N_cl_region > N_cluster:
             if r == 0:
                 # Initial run
-                p = np.random.choice(N_cl_region, N_cluster, replace=False)
+                p = rng.choice(N_cl_region, N_cluster, replace=False)
             else:
-                p = np.random.choice(
+                p = rng.choice(
                     N_cl_region,
                     N_cluster,
                     replace=False,
@@ -60,7 +66,7 @@ def bayesian_mp(
 
         # Generate a random field region
         fl_region, e_fl_region2 = generate_field_region(
-            fl_region_all, e_fl_region2_all, n_field
+            rng, fl_region_all, e_fl_region2_all, n_field
         )
         # Compare cluster region with this field region
         fl_lkl = likelihood(cl_region_T, e_cl_region2_T, fl_region, e_fl_region2)
@@ -115,9 +121,9 @@ def get_regions(frame_arr, e_frame_arr2, center, radius):
     return cl_region, e_cl_region2, fl_region_all, e_fl_region2_all, cl_reg_idxs
 
 
-def generate_field_region(fl_region_all, e_fl_region2_all, n_field):
+def generate_field_region(rng, fl_region_all, e_fl_region2_all, n_field):
     """Generate random field regions."""
-    idxs = np.random.choice(fl_region_all.shape[1], n_field, replace=False)
+    idxs = rng.choice(fl_region_all.shape[1], n_field, replace=False)
 
     fl_region = fl_region_all[:, idxs]
     e_fl_region2 = e_fl_region2_all[:, idxs]
