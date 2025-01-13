@@ -12,12 +12,30 @@ def bayesian_mp(
     bayesda_runs: int,
     rng: np.random.Generator,
 ) -> tuple[str, np.ndarray]:
-    """
-    Bayesian field decontamination algorithm. See Perren et al. (2015)
+    """Bayesian field decontamination algorithm.
+
+    See Perren et al. (2015) for details.
 
     A larger radius appears to translate to more estimated members using the
     "density" method (which) is expected, but a smaller number of stars with
     P>0.5 (and a cleaner final sequence)
+
+    :param N_cluster: Number of cluster members.
+    :type N_cluster: int
+    :param frame_arr: Array with the data.
+    :type frame_arr: np.ndarray
+    :param e_frame_arr: Array with the errors.
+    :type e_frame_arr: np.ndarray
+    :param center: Center of the cluster.
+    :type center: np.ndarray
+    :param radius: Radius of the cluster.
+    :type radius: float
+    :param bayesda_runs: Number of iterations.
+    :type bayesda_runs: int
+    :param rng: Random number generator.
+    :type rng: np.random.Generator
+    :return: Message and array with the membership probabilities.
+    :rtype: tuple[str, np.ndarray]
     """
     cl_region, e_cl_region, fl_region_all, e_fl_region_all, cl_reg_idxs = get_regions(
         frame_arr, e_frame_arr, center, radius
@@ -103,8 +121,22 @@ def bayesian_mp(
     return out_mssg, probs_final
 
 
-def get_regions(frame_arr, e_frame_arr2, center, radius):
-    """Identify stars inside/outside the cluster region"""
+def get_regions(
+    frame_arr: np.ndarray, e_frame_arr2: np.ndarray, center: np.ndarray, radius: float
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Identify stars inside/outside the cluster region.
+
+    :param frame_arr: Array with the data.
+    :type frame_arr: np.ndarray
+    :param e_frame_arr2: Array with the errors.
+    :type e_frame_arr2: np.ndarray
+    :param center: Center of the cluster.
+    :type center: np.ndarray
+    :param radius: Radius of the cluster.
+    :type radius: float
+    :return: Arrays with the cluster region, errors, field region, errors and indexes.
+    :rtype: tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]
+    """
     ra, dec = frame_arr[0], frame_arr[1]
     dist = np.sqrt((ra - center[0]) ** 2 + (dec - center[1]) ** 2)
     msk_in_rad = dist <= radius
@@ -121,8 +153,25 @@ def get_regions(frame_arr, e_frame_arr2, center, radius):
     return cl_region, e_cl_region2, fl_region_all, e_fl_region2_all, cl_reg_idxs
 
 
-def generate_field_region(rng, fl_region_all, e_fl_region2_all, n_field):
-    """Generate random field regions."""
+def generate_field_region(
+    rng: np.random.Generator,
+    fl_region_all: np.ndarray,
+    e_fl_region2_all: np.ndarray,
+    n_field: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Generate random field regions.
+
+    :param rng: Random number generator.
+    :type rng: np.random.Generator
+    :param fl_region_all: Array with the field region data.
+    :type fl_region_all: np.ndarray
+    :param e_fl_region2_all: Array with the field region errors.
+    :type e_fl_region2_all: np.ndarray
+    :param n_field: Number of field stars.
+    :type n_field: int
+    :return: Arrays with the field region and errors.
+    :rtype: tuple[np.ndarray, np.ndarray]
+    """
     idxs = rng.choice(fl_region_all.shape[1], n_field, replace=False)
 
     fl_region = fl_region_all[:, idxs]
@@ -158,30 +207,45 @@ def dataNorm(arr, e_arr, sigma_max=4.0):
     return data_norm.T, e_scaled2.T
 
 
-def likelihood(cl_region_T, e_cl_region2_T, region, e_region2):
-    r"""
-    Obtain the likelihood, for each star in the cluster region ('cl_reg_prep'),
+def likelihood(
+    cl_region_T: np.ndarray,
+    e_cl_region2_T: np.ndarray,
+    region: np.ndarray,
+    e_region2: np.ndarray,
+) -> np.ndarray:
+    r"""Obtain the likelihood, for each star in the cluster region ('cl_reg_prep'),
     of being a member of the region passed ('region').
 
     This is basically the core of the 'tolstoy' likelihood with some added
     weights.
 
-    L_i = \sum_{j=1}^{N_r}
-             \frac{1}{\sqrt{\prod_{k=1}^d \sigma_{ijk}^2}}\;\;
-                exp \left[-\frac{1}{2} \sum_{k=1}^d
-                   \frac{(q_{ik}-q_{jk})^2}{\sigma_{ijk}^2} \right ]
+    .. math::
+        L_i = \sum_{j=1}^{N_r}
+                 \frac{1}{\sqrt{\prod_{k=1}^d \sigma_{ijk}^2}}\;\;
+                    exp \left[-\frac{1}{2} \sum_{k=1}^d
+                       \frac{(q_{ik}-q_{jk})^2}{\sigma_{ijk}^2} \right ]
 
-    where
-    i: cluster region star
-    j: field region star
-    k: data dimension
-    L_i: likelihood for star i in the cluster region
-    N_r: number of stars in field region
-    d: number of data dimensions
-    \sigma_{ijk}^2: sum of squared uncertainties for stars i,j in dimension k
-    q_{ik}: data for star i in dimension k
-    q_{jk}: data for star j in dimension k
+    where:
+        - i: cluster region star
+        - j: field region star
+        - k: data dimension
+        - :math:`L_i`: likelihood for star i in the cluster region
+        - :math:`N_r`: number of stars in field region
+        - d: number of data dimensions
+        - :math:`\sigma_{ijk}^2`: sum of squared uncertainties for stars i,j in dimension k
+        - :math:`q_{ik}`: data for star i in dimension k
+        - :math:`q_{jk}`: data for star j in dimension k
 
+    :param cl_region_T: Array with the cluster region data.
+    :type cl_region_T: np.ndarray
+    :param e_cl_region2_T: Array with the cluster region errors.
+    :type e_cl_region2_T: np.ndarray
+    :param region: Array with the field region data.
+    :type region: np.ndarray
+    :param e_region2: Array with the field region errors.
+    :type e_region2: np.ndarray
+    :return: Array with the likelihoods.
+    :rtype: np.ndarray
     """
     arr_diff = cl_region_T - region.T[None, :]
     e_sum2 = e_cl_region2_T + e_region2.T[None, :]
