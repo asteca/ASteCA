@@ -213,7 +213,26 @@ def get_isochrone(
     fit_params: dict,
     color_idx: int = 0,
 ) -> np.ndarray:
-    """ """
+    """Generate an isochrone for plotting.
+
+    The isochrone is generated using the fundamental parameter values
+    given in the ``fit_params`` dictionary.
+
+    :param synth: :py:class:`Synthetic <asteca.synthetic.Synthetic>` object with the
+        data required to generate synthetic clusters
+    :type synth: Synthetic
+    :param fit_params: Dictionary with the values for the fundamental parameters
+        that were **not** included in the ``fix_params`` dictionary when the
+        :py:class:`Synthetic` object was calibrated
+        (:py:meth:`calibrate` method).
+    :type fit_params: dict
+    :param color_idx: Index of the color to plot. If ``0`` (default), plot the
+        first color. If ``1`` plot the second color. Defaults to ``0``
+    :type color_idx: int
+
+    :return: Array with the isochrone data to plot
+    :rtype: np.ndarray
+    """
     # Generate displaced isochrone
     fit_params_copy = dict(fit_params)
 
