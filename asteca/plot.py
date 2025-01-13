@@ -223,8 +223,7 @@ def get_isochrone(
     :type synth: Synthetic
     :param fit_params: Dictionary with the values for the fundamental parameters
         that were **not** included in the ``fix_params`` dictionary when the
-        :py:class:`Synthetic` object was calibrated
-        (:py:meth:`calibrate` method).
+        :py:class:`Synthetic` object was calibrated (:py:meth:`calibrate` method).
     :type fit_params: dict
     :param color_idx: Index of the color to plot. If ``0`` (default), plot the
         first color. If ``1`` plot the second color. Defaults to ``0``
