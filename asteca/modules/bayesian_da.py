@@ -180,10 +180,22 @@ def generate_field_region(
     return fl_region, e_fl_region2
 
 
-def dataNorm(arr, e_arr, sigma_max=4.0):
-    """
-    Mask 'sigma_max' sigma outliers (particularly important when PMs are used),
-    and normalize arrays.
+def dataNorm(
+    arr: np.ndarray, e_arr: np.ndarray, sigma_max: float = 4.0
+) -> tuple[np.ndarray, np.ndarray]:
+    """Mask 'sigma_max' sigma outliers and normalize arrays.
+
+    This function masks outliers based on a given sigma threshold,
+    and normalizes the input arrays.
+
+    :param arr: Array with the data.
+    :type arr: np.ndarray
+    :param e_arr: Array with the errors.
+    :type e_arr: np.ndarray
+    :param sigma_max: Sigma threshold for outlier masking.
+    :type sigma_max: float
+    :return: Normalized data and scaled errors.
+    :rtype: tuple[np.ndarray, np.ndarray]
     """
     for tarr in (arr, e_arr):
         for dim in tarr:
