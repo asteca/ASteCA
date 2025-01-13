@@ -76,7 +76,7 @@ TOC
 
    contents/installation
    contents/changelog
-   contents/api
+   apidocs/index
 
 .. toctree::
    :maxdepth: 1
