@@ -397,17 +397,17 @@ class Synthetic:
         self.R_GC = R_GC
         self.R_xy = R_xy
 
-        print("")
-        print(
-            "Model          :",
-            ", ".join(f"{k}: {round(v, 3)}" for k, v in model.items()),
+        self._vp("\nGenerate synthetic models...", 1)
+        self._vp(f"N_models       : {N_models}", 1)
+        self._vp(
+            "Model          :" +
+            ", ".join(f"{k}: {round(v, 3)}" for k, v in model.items()), 2
         )
-        print(
-            "Model STDDEV   :",
-            ", ".join(f"{k}: {round(v, 3)}" for k, v in model_std.items()),
+        self._vp(
+            "Model STDDEV   :" +
+            ", ".join(f"{k}: {round(v, 3)}" for k, v in model_std.items()), 2
         )
-        print(f"N_models       : {N_models}")
-        print("Attributes stored in Synthetic object")
+        self._vp("Attributes stored in Synthetic object", 1)
 
     def stellar_masses(
         self,
@@ -460,6 +460,8 @@ class Synthetic:
                 + "These will be assigned 'nan' values\nfor masses and "
                 + "binarity probability"
             )
+
+        self._vp("\nBinary fraction estimated", 1)
 
         return df
 
@@ -603,6 +605,8 @@ class Synthetic:
 
         M_actual = masses_all[0] + masses_all[1]
         M_init = M_actual + masses_all[2] + masses_all[3]
+
+        self._vp("\nMass values estimated", 1)
 
         return {
             "M_init": M_init,
