@@ -18,18 +18,13 @@ phot_syst_col_names = {
 
 
 def load(self) -> tuple[np.ndarray, list, dict, int]:
-    r"""Load the theoretical isochrones and return a dictionary with the data.
+    """Load the theoretical isochrones and return a dictionary with the data.
 
-    Returns
-    -------
-    theor_tracks: np.ndarray
-        Array of isochrones. Updated by `synth_clusters.synthcl_load()`
-    color_filters : list
-        Individual filters for each color defined. Used by
-        `synth_clusters.synthcl_load.add_binarity()`
-    met_age_dict : dict
-        Used by `synth_clusters.synthcl_generate()`
-
+    :param self: Isochrones class object
+    :type self: Isochrones
+    :return: Array of isochrones, Individual filters for each color defined,
+        dictionary with metallicities and ages, and number of files read.
+    :rtype: tuple[np.ndarray, list, dict, int]
     """
     cols_keep, mass_col, met_col, age_col = get_columns(self)
 
@@ -71,7 +66,14 @@ def load(self) -> tuple[np.ndarray, list, dict, int]:
 
 
 def get_columns(self) -> tuple[list, str, str, str]:
-    """ """
+    """Get the column names for the isochrones.
+
+    :param self: Isochrones class object
+    :type self: Isochrones
+    :return: List of columns to keep, mass column name, metallicity column name,
+        and age column name.
+    :rtype: tuple[list, str, str, str]
+    """
     if self.column_names is None:
         mass_col = phot_syst_col_names[self.model]["mass_col"]
         met_col = phot_syst_col_names[self.model]["met_col"]
@@ -91,8 +93,14 @@ def get_columns(self) -> tuple[list, str, str, str]:
 
 
 def extract_paths(self) -> list:
-    r"""Extract isochrone files from `isochs_path`."""
+    """Extract isochrone files from `isochs_path`.
 
+    :param self: Isochrones class object
+    :type self: Isochrones
+    :return: List of isochrone file paths.
+    :rtype: list
+    :raises FileNotFoundError: If no files are found in the isochrones path.
+    """
     # Check if path is to file or folder
     if os.path.isfile(self.isochs_path):
         f_paths = [self.isochs_path]
@@ -117,9 +125,33 @@ def extract_paths(self) -> list:
 
 
 def read(
-    model, N_interp, parsec_rm_stage_9, f_paths, met_col, age_col, cols_keep
+    model: str,
+    N_interp: int,
+    parsec_rm_stage_9: bool,
+    f_paths: list,
+    met_col: str,
+    age_col: str,
+    cols_keep: list,
 ) -> dict:
-    """ """
+    """Read isochrone files and store them in a dictionary.
+
+    :param model: Isochrone model name.
+    :type model: str
+    :param N_interp: Number of points to interpolate.
+    :type N_interp: int
+    :param parsec_rm_stage_9: Remove post-AGB stage for PARSEC models.
+    :type parsec_rm_stage_9: bool
+    :param f_paths: List of isochrone file paths.
+    :type f_paths: list
+    :param met_col: Metallicity column name.
+    :type met_col: str
+    :param age_col: Age column name.
+    :type age_col: str
+    :param cols_keep: List of columns to keep.
+    :type cols_keep: list
+    :return: Dictionary of isochrones.
+    :rtype: dict
+    """
 
     group_col = {"PARSEC": met_col, "MIST": age_col, "BASTI": None}
 
@@ -187,8 +219,15 @@ def read(
     return isochrones
 
 
-def get_header(file_path):
-    """Iterate through each line in the file to get the header"""
+def get_header(file_path: str) -> tuple[list, list]:
+    """Iterate through each line in the file to get the header.
+
+    :param file_path: Path to the isochrone file.
+    :type file_path: str
+    :return: List of column names and full header.
+    :rtype: tuple[list, list]
+    :raises ValueError: If the header cannot be extracted from the file.
+    """
     with open(file_path, mode="r") as f_iso:
         full_header, column_names = [], ""
         for i, line in enumerate(f_iso):
@@ -208,8 +247,18 @@ def get_header(file_path):
     return column_names, full_header
 
 
-def get_data_blocks(file_path, header, block_col=None):
-    """Extract data in 'block_col' blocks"""
+def get_data_blocks(file_path: str, header: list, block_col: str | None = None) -> pd.DataFrame | pd.core.groupby.generic.DataFrameGroupBy:
+    """Extract data in 'block_col' blocks.
+
+    :param file_path: Path to the isochrone file.
+    :type file_path: str
+    :param header: List of column names.
+    :type header: list
+    :param block_col: Column to group by, defaults to None
+    :type block_col: str | None, optional
+    :return: DataFrame or DataFrameGroupBy object.
+    :rtype: pd.DataFrame | pd.core.groupby.generic.DataFrameGroupBy
+    """
 
     # IMPORTANT
     # We are assuming that all models use spaces to separate columns. If this ever
@@ -223,9 +272,16 @@ def get_data_blocks(file_path, header, block_col=None):
     return grouped
 
 
-def get_MIST_z_val(met_col, full_header):
-    """
-    Extract metallicity value for MIST files.
+def get_MIST_z_val(met_col: str, full_header: list) -> str:
+    """Extract metallicity value for MIST files.
+
+    :param met_col: Metallicity column name.
+    :type met_col: str
+    :param full_header: Full header of the isochrone file.
+    :type full_header: list
+    :return: Metallicity value.
+    :rtype: str
+    :raises ValueError: If the metallicity cannot be read from the header.
     """
     z_header_vals, z_header_cols = None, None
     for i, line in enumerate(full_header):
@@ -241,9 +297,18 @@ def get_MIST_z_val(met_col, full_header):
     return str(zinit[0])
 
 
-def get_BASTI_z_a_val(full_header, met_col, age_col):
-    """
-    Extract metallicity and age values for BASTI files.
+def get_BASTI_z_a_val(full_header: list, met_col: str, age_col: str) -> tuple[str, str]:
+    """Extract metallicity and age values for BASTI files.
+
+    :param full_header: Full header of the isochrone file.
+    :type full_header: list
+    :param met_col: Metallicity column name.
+    :type met_col: str
+    :param age_col: Age column name.
+    :type age_col: str
+    :return: Metallicity and age values.
+    :rtype: tuple[str, str]
+    :raises ValueError: If the metallicity or age cannot be read from the header.
     """
     zval, aval = None, None
     for line in full_header:
@@ -262,8 +327,31 @@ def get_BASTI_z_a_val(full_header, met_col, age_col):
     return zval, aval
 
 
-def interp_df(N_interp, cols_keep_ps, df, isochrones, zinit, age):
-    """ """
+def interp_df(
+    N_interp: int,
+    cols_keep_ps: list,
+    df: pd.DataFrame,
+    isochrones: dict,
+    zinit: str,
+    age: str,
+) -> dict:
+    """Interpolate the isochrone data.
+
+    :param N_interp: Number of points to interpolate.
+    :type N_interp: int
+    :param cols_keep_ps: List of columns to keep.
+    :type cols_keep_ps: list
+    :param df: DataFrame with the isochrone data.
+    :type df: pd.DataFrame
+    :param isochrones: Dictionary of isochrones.
+    :type isochrones: dict
+    :param zinit: Metallicity value.
+    :type zinit: str
+    :param age: Age value.
+    :type age: str
+    :return: Dictionary of isochrones.
+    :rtype: dict
+    """
 
     # Drop columns not in list
     df = df[df.columns.intersection(cols_keep_ps)]
@@ -308,7 +396,8 @@ def met_order_merge_massini_check(
     mass_col: str,
     isochrones: dict
 ) -> tuple[list, list]:
-    """
+    """Order by metallicity, combine photometric systems, and check initial masses.
+
     1. Order by metallicity.
     2. Combine photometric systems if more than one was used.
     3. Check that initial masses are equal across all systems
@@ -317,6 +406,13 @@ def met_order_merge_massini_check(
     photometric systems, for a given metallicity and age. We check here that
     this is the case.
 
+    :param mass_col: Name of the mass column.
+    :type mass_col: str
+    :param isochrones: Dictionary of isochrones.
+    :type isochrones: dict
+    :return: Ordered isochrones and metallicity-age array.
+    :rtype: tuple[list, list]
+    :raises ValueError: If initial mass values differ across photometric systems.
     """
     # Metallicities in order
     idx_met_sort = np.argsort(list(map(float, isochrones.keys())))
@@ -353,7 +449,8 @@ def met_order_merge_massini_check(
 def shape_isochrones(
     self, initial_mass: str, isochrones: list
 ) -> tuple[np.ndarray, list]:
-    """
+    """Reshape the isochrones array.
+
     isochrones.shape = Nz, Na, Ni, Nd
     Nz: number of metallicities
     Na: number of log(age)s
@@ -381,6 +478,15 @@ def shape_isochrones(
     Na: number of log(age)s
     Nd: number of data columns
     Ni: number of interpolated values
+
+    :param self: Isochrones class object
+    :type self: Isochrones
+    :param initial_mass: Name of the initial mass column.
+    :type initial_mass: str
+    :param isochrones: List of isochrones.
+    :type isochrones: list
+    :return: Reshaped isochrones array and list of color filters.
+    :rtype: tuple[np.ndarray, list]
     """
 
     Nz, Na, Ni, Nd = np.shape(isochrones)
