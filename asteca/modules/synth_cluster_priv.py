@@ -1,6 +1,42 @@
 import numpy as np
 from scipy import stats
+
 from .imfs import invTrnsfSmpl, sampleInv
+
+
+def sample_imf(self, Nmets: int, Nages: int) -> tuple[list, list]:
+    """Returns the number of stars per interval of mass for the selected IMF.
+
+    Parameters
+    ----------
+    IMF_name : str
+      Name of the IMF to be used.
+    max_mass: float
+      Maximum mass defined.
+
+    Returns
+    -------
+    st_dist_mass : list
+      Tuple that contains: a given number of stars sampled from the selected
+      IMF, that (approximately) sum to the associated total mass; the
+      cumulative sum of those masses.
+      One list per metallicity and age values defined is returned. This is to add some
+      variety to the sampled IMF.
+
+    """
+    inv_cdf = invTrnsfSmpl(self.IMF_name)
+
+    st_dist_mass, st_dist_mass_ordered = [], []
+    for i in range(Nmets):
+        met_lst, met_lst_ord = [], []
+        for j in range(Nages):
+            sampled_IMF = sampleInv(self.rng, self.max_mass, inv_cdf)
+            met_lst.append(sampled_IMF)
+            met_lst_ord.append(np.sort(sampled_IMF))
+        st_dist_mass.append(met_lst)
+        st_dist_mass_ordered.append(met_lst_ord)
+
+    return st_dist_mass, st_dist_mass_ordered
 
 
 def error_distribution(mag, e_mag, e_colors, rand_norm_vals):
@@ -72,7 +108,7 @@ def add_binarity(self) -> np.ndarray:
             mass_ini = isoch[m_ini_idx]
 
             # Mass-ratio distribution
-            mass_ratios = qDistribution(mass_ini, self.gamma, self.seed + mx + ax)
+            mass_ratios = qDistribution(mass_ini, self.gamma, self.rng)
             # Secondary masses
             m2 = mass_ratios * mass_ini
 
@@ -106,17 +142,16 @@ def ccmo_ext_coeffs(self) -> list:
     """
     ext_coefs = [[], []]
     if self.ext_law != "GAIADR3":
-        # For the magnitude.
         # Effective wavelength in Armstrong.
         eff_wave = self.isochs.magnitude_effl
-        # Effective wavelength in inverse microns.
-        ext_coefs[0] = ccmo_model(10000.0 / eff_wave)
-
-        # For colors.
         eff_wave1, eff_wave2 = self.isochs.color_effl
-        ext_coefs[1] = [
-            ccmo_model(10000.0 / eff_wave1),
-            ccmo_model(10000.0 / eff_wave2),
+        # Effective wavelength in inverse microns.
+        ext_coefs = [
+            ccmo_model(10000.0 / eff_wave),
+            [
+                ccmo_model(10000.0 / eff_wave1),
+                ccmo_model(10000.0 / eff_wave2),
+            ],
         ]
 
     if self.isochs.color2_effl is not None:
@@ -128,7 +163,7 @@ def ccmo_ext_coeffs(self) -> list:
     return ext_coefs
 
 
-def ccmo_model(mw: float) -> list:
+def ccmo_model(mw: float) -> tuple[float, float]:
     """Cardelli, Clayton, and Mathis (1989 ApJ. 345, 245) model for extinction
     coefficients with updated coefficients for near-UV from O'Donnell
     (1994, ApJ, 422, 158).
@@ -161,7 +196,8 @@ def ccmo_model(mw: float) -> list:
         c2 = [0.0, 1.952, 2.908, -3.989, -7.985, 11.102, 5.491, -10.805, 3.347]
         y = mw - 1.82
         # Reverse because polyval starts from the highest degree.
-        c1.reverse(), c2.reverse()
+        c1.reverse()
+        c2.reverse()
         a, b = np.polyval(c1, y), np.polyval(c2, y)
 
     elif 3.3 <= mw < 8.0:
@@ -179,7 +215,8 @@ def ccmo_model(mw: float) -> list:
         c1 = [-1.073, -0.628, 0.137, -0.070]
         c2 = [13.670, 4.257, -0.420, 0.374]
         y = mw - 8.0
-        c1.reverse(), c2.reverse()
+        c1.reverse()
+        c2.reverse()
         a, b = np.polyval(c1, y), np.polyval(c2, y)
     else:
         raise ValueError(
@@ -187,42 +224,7 @@ def ccmo_model(mw: float) -> list:
             "the CCM model limit (10 [1/micron]).".format(mw)
         )
 
-    return a, b
-
-
-def sample_imf(self, Nmets: int, Nages: int) -> list:
-    """Returns the number of stars per interval of mass for the selected IMF.
-
-    Parameters
-    ----------
-    IMF_name : str
-      Name of the IMF to be used.
-    max_mass: float
-      Maximum mass defined.
-
-    Returns
-    -------
-    st_dist_mass : list
-      Tuple that contains: a given number of stars sampled from the selected
-      IMF, that (approximately) sum to the associated total mass; the
-      cumulative sum of those masses.
-      One list per metallicity and age values defined is returned. This is to add some
-      variety to the sampled IMF.
-
-    """
-    inv_cdf = invTrnsfSmpl(self.IMF_name)
-
-    st_dist_mass, st_dist_mass_ordered = [], []
-    for i in range(Nmets):
-        met_lst, met_lst_ord = [], []
-        for j in range(Nages):
-            sampled_IMF = sampleInv(i + j + self.seed, self.max_mass, inv_cdf)
-            met_lst.append(sampled_IMF)
-            met_lst_ord.append(np.sort(sampled_IMF))
-        st_dist_mass.append(met_lst)
-        st_dist_mass_ordered.append(met_lst_ord)
-
-    return st_dist_mass, st_dist_mass_ordered
+    return float(a), float(b)
 
 
 def randVals(self) -> dict:
@@ -238,17 +240,19 @@ def randVals(self) -> dict:
 
     # Used by `move_isochrone()` and `add_errors`
     # rand_norm_vals = np.random.normal(0.0, 1.0, (2, N_mass))
-    rand_norm_vals = np.random.default_rng(self.seed).normal(0.0, 1.0, (2, N_mass))
+    rand_norm_vals = self.rng.normal(0.0, 1.0, (2, N_mass))
 
     # Used by `move_isochrone()`, `binarity()`
     # rand_unif_vals = np.random.uniform(0.0, 1.0, (2, N_mass))
-    rand_unif_vals = np.random.default_rng(self.seed).uniform(0.0, 1.0, (2, N_mass))
+    rand_unif_vals = self.rng.uniform(0.0, 1.0, (2, N_mass))
 
     rand_floats = {"norm": rand_norm_vals, "unif": rand_unif_vals}
     return rand_floats
 
 
-def qDistribution(M1: np.ndarray, gamma: [float, str], seed: int) -> np.ndarray:
+def qDistribution(
+    M1: np.ndarray, gamma: float | str, rng: np.random.Generator
+) -> np.ndarray:
     """Distribution of q=m2/m1 for binary systems
     float : Power-law distribution with shape parameter 'gamma'. Not mass
     dependent.
@@ -264,8 +268,9 @@ def qDistribution(M1: np.ndarray, gamma: [float, str], seed: int) -> np.ndarray:
 
     try:
         gamma = float(gamma)
-        # mass_ratios = np.random.power(gamma + 1, N)
-        mass_ratios = np.random.default_rng(seed).power(gamma + 1, N)
+        # mass_ratios = np.random.power(gamma + 1, N)  # DEPRECATED 13/01/25
+        mass_ratios = rng.power(gamma + 1, N)
+
     except ValueError:
         if gamma == "D&K":
             msk1, gamma1 = M1 <= 0.1, 4.2
@@ -285,66 +290,123 @@ def qDistribution(M1: np.ndarray, gamma: [float, str], seed: int) -> np.ndarray:
                 (msk6, gamma6),
             ):
                 # q = np.random.power(gammaX + 1, msk.sum())
-                q = np.random.default_rng(seed).power(gammaX + 1, msk.sum())
+                q = rng.power(gammaX + 1, msk.sum())
                 mass_ratios[msk] = q
-
-        # Fisher's distribution
-        elif gamma == "fisher_stepped":
-            # Fisher, Schröder & Smith (2005); Table 3, stepped
-            # https://doi.org/10.1111/j.1365-2966.2005.09193.x
-            xk = np.linspace(0.0, 1.0, 10)
-            pk = np.array([29.0, 29.0, 30.0, 32.0, 31.0, 32.0, 36.0, 45.0, 27.0, 76.0])
-
-        elif gamma == "fisher_peaked":
-            # Fisher, Schröder & Smith (2005); Table 3, peaked
-            # https://doi.org/10.1111/j.1365-2966.2005.09193.x
-            xk = np.linspace(0.0, 1.0, 10)
-            pk = np.array([27.0, 30.0, 34.0, 33.0, 29.0, 26.0, 27.0, 33.0, 41.0, 89.0])
-
-        elif gamma == "raghavan":
-            # Raghavan et al. (2010); Fig 16 (left)
-            # https://iopscience.iop.org/article/10.1088/0067-0049/190/1/1
-            xk = np.linspace(0.0, 1.0, 20)
-            pk = np.array(
-                [
-                    0.53,
-                    2.61,
-                    0.53,
-                    4.67,
-                    7.81,
-                    3.64,
-                    9.89,
-                    5.71,
-                    4.69,
-                    5.73,
-                    4.67,
-                    6.76,
-                    5.75,
-                    5.73,
-                    2.61,
-                    5.71,
-                    4.72,
-                    5.71,
-                    3.64,
-                    12.99,
-                ]
-            )
-
-        if gamma != "D&K":
+        else:
 
             def fQ(xk, pk):
                 """
                 Discrete function
                 """
                 pk /= pk.sum()
+                # pyright error: https://github.com/scipy/scipy/issues/22327
                 fq = stats.rv_discrete(a=0.0, b=1.0, values=(xk, pk))
                 return fq
+
+            # Fisher's distribution
+            # "fisher_stepped":
+            # Fisher, Schröder & Smith (2005); Table 3, stepped
+            # https://doi.org/10.1111/j.1365-2966.2005.09193.x
+            #
+            # "fisher_peaked":
+            # Fisher, Schröder & Smith (2005); Table 3, peaked
+            # https://doi.org/10.1111/j.1365-2966.2005.09193.x
+            #
+            # "raghavan":
+            # Raghavan et al. (2010); Fig 16 (left)
+            # https://iopscience.iop.org/article/10.1088/0067-0049/190/1/1
+
+            xy_dict = {
+                "fisher_stepped": [
+                    np.linspace(0.0, 1.0, 10),
+                    np.array(
+                        [29.0, 29.0, 30.0, 32.0, 31.0, 32.0, 36.0, 45.0, 27.0, 76.0]
+                    ),
+                ],
+                "fisher_peaked": [
+                    np.linspace(0.0, 1.0, 10),
+                    np.array(
+                        [27.0, 30.0, 34.0, 33.0, 29.0, 26.0, 27.0, 33.0, 41.0, 89.0]
+                    ),
+                ],
+                "raghavan": [
+                    np.linspace(0.0, 1.0, 20),
+                    np.array(
+                        [
+                            0.53,
+                            2.61,
+                            0.53,
+                            4.67,
+                            7.81,
+                            3.64,
+                            9.89,
+                            5.71,
+                            4.69,
+                            5.73,
+                            4.67,
+                            6.76,
+                            5.75,
+                            5.73,
+                            2.61,
+                            5.71,
+                            4.72,
+                            5.71,
+                            3.64,
+                            12.99,
+                        ]
+                    ),
+                ],
+            }
+
+            xk, pk = xy_dict[str(gamma)]
+
+            # # Fisher's distribution
+            # if gamma == "fisher_stepped":
+            #     # Fisher, Schröder & Smith (2005); Table 3, stepped
+            #     # https://doi.org/10.1111/j.1365-2966.2005.09193.x
+            #     xk = np.linspace(0.0, 1.0, 10)
+            #     pk = np.array([29.0, 29.0, 30.0, 32.0, 31.0, 32.0, 36.0, 45.0, 27.0, 76.0])
+
+            # elif gamma == "fisher_peaked":
+            #     # Fisher, Schröder & Smith (2005); Table 3, peaked
+            #     # https://doi.org/10.1111/j.1365-2966.2005.09193.x
+            #     xk = np.linspace(0.0, 1.0, 10)
+            #     pk = np.array([27.0, 30.0, 34.0, 33.0, 29.0, 26.0, 27.0, 33.0, 41.0, 89.0])
+
+            # elif gamma == "raghavan":
+            #     # Raghavan et al. (2010); Fig 16 (left)
+            #     # https://iopscience.iop.org/article/10.1088/0067-0049/190/1/1
+            #     xk = np.linspace(0.0, 1.0, 20)
+            #     pk = np.array(
+            #         [
+            #             0.53,
+            #             2.61,
+            #             0.53,
+            #             4.67,
+            #             7.81,
+            #             3.64,
+            #             9.89,
+            #             5.71,
+            #             4.69,
+            #             5.73,
+            #             4.67,
+            #             6.76,
+            #             5.75,
+            #             5.73,
+            #             2.61,
+            #             5.71,
+            #             4.72,
+            #             5.71,
+            #             3.64,
+            #             12.99,
+            #         ]
+            #     )
 
             fq = fQ(xk, pk)
             # 'ppf' is the inverse CDF
             mass_ratios = fq.ppf(
                 # np.random.uniform(0.0, 1.0, N)
-                np.random.default_rng(seed).uniform(0.0, 1.0, N)
+                rng.uniform(0.0, 1.0, N)
             )
 
     return mass_ratios
@@ -600,6 +662,7 @@ def extinction(
     if dr > 0.0:
         Ns = isochrone.shape[-1]
 
+        Av_dr = 0
         if DR_distribution == "uniform":
             # Av_dr = rand_unif[:Ns] * dr
             Av_dr = (2 * rand_unif[:Ns] - 1) * dr
@@ -625,6 +688,8 @@ def extinction(
         # If this model is used the first color is always expected to be BP-RP
         # BP_RP = isochrone[1]
         ec_mag, ec_col1 = dustapprox(isochrone[1], Av)
+    else:
+        raise ValueError(f"Unknown extinction law: {ext_law}")
 
     Ax = ec_mag * Av
     isochrone[0] += Ax
