@@ -60,7 +60,7 @@ class Synthetic:
         ext_law: str = "CCMO",
         DR_distribution: str = "uniform",
         IMF_name: str = "chabrier_2014",
-        max_mass: int = 100_000,
+        max_mass: int = 20_000,
         gamma: float | str = "D&K",
         seed: int | None = None,
         verbose: int = 1,
@@ -74,8 +74,8 @@ class Synthetic:
         self.seed = seed
         self.verbose = verbose
 
-        if self.seed is None:
-            self.seed = np.random.randint(100000)
+        # Set seed
+        self.rng = np.random.default_rng(self.seed)
 
         # Check gamma distribution
         gammas = ("D&K", "fisher_stepped", "fisher_peaked", "raghavan")
@@ -371,7 +371,7 @@ class Synthetic:
         obs_phot[:, nan_msk] = -10.0
         obs_phot = obs_phot.T
 
-        sampled_models = mb.ranModels(model, model_std, N_models, self.seed)
+        sampled_models = mb.ranModels(model, model_std, N_models, self.rng)
 
         sampled_synthcls, close_stars_idxs = [], []
         remove_model_index = []
@@ -385,8 +385,8 @@ class Synthetic:
             close_stars_idxs.append(idxs)
 
         if len(remove_model_index) > 0:
-            sampled_models = np.delete(sampled_models, remove_model_index).tolist()
-        self.sampled_models = sampled_models
+            sampled_models = np.delete(sampled_models, remove_model_index)
+        self.sampled_models = list(sampled_models)
         self.sampled_synthcls = sampled_synthcls
         self.close_stars_idxs = close_stars_idxs
         self.obs_nan_msk = nan_msk
@@ -400,12 +400,14 @@ class Synthetic:
         self._vp("\nGenerate synthetic models...", 1)
         self._vp(f"N_models       : {N_models}", 1)
         self._vp(
-            "Model          :" +
-            ", ".join(f"{k}: {round(v, 3)}" for k, v in model.items()), 2
+            "Model          :"
+            + ", ".join(f"{k}: {round(v, 3)}" for k, v in model.items()),
+            2,
         )
         self._vp(
-            "Model STDDEV   :" +
-            ", ".join(f"{k}: {round(v, 3)}" for k, v in model_std.items()), 2
+            "Model STDDEV   :"
+            + ", ".join(f"{k}: {round(v, 3)}" for k, v in model_std.items()),
+            2,
         )
         self._vp("Attributes stored in Synthetic object", 1)
 
@@ -557,6 +559,19 @@ class Synthetic:
             ``M_init, M_actual, M_obs, M_phot, M_evol, M_dyn``
         :rtype: dict
         """
+        if len(self.sampled_models) == 0:
+            raise ValueError(
+                "No models were generated. Run the `get_models()` method before "
+                + "estimating the cluster masses."
+            )
+
+        # Check the number of generated synthetic stars
+        N_obs = len(self.mag_p)
+        if N_obs > np.shape(self.sampled_synthcls)[-1]:
+            warnings.warn(
+                "Number of synthetic stars is smaller than observed stars. Increase "
+                + "the 'max_mass' argument for a more accurate mass estimation"
+            )
 
         masses_all = []
         for i, model in enumerate(self.sampled_models):
@@ -569,7 +584,8 @@ class Synthetic:
             # Estimate the actual mass, ie: the sum of the observed and photometric
             # masses
             sampled_synthcl = self.sampled_synthcls[i]
-            M_obs, M_phot = mb.get_M_actual(self, sampled_synthcl, i)
+            # TODO: don't pass the entire object, just the necessary values
+            M_obs, M_phot = mb.get_M_actual(self, sampled_synthcl)
             M_a = M_obs + M_phot
 
             # Ambient density
@@ -594,14 +610,6 @@ class Synthetic:
             masses_all.append([M_obs, M_phot, M_evol, M_dyn])
 
         masses_all = np.array(masses_all).T
-
-        # Check the number of generated synthetic stars
-        N_obs = len(self.mag_p)
-        if N_obs > sampled_synthcl.shape[1]:
-            warnings.warn(
-                "Number of synthetic stars is smaller than observed stars. Increase "
-                + "the 'max_mass' argument for a more accurate mass estimation"
-            )
 
         M_actual = masses_all[0] + masses_all[1]
         M_init = M_actual + masses_all[2] + masses_all[3]
