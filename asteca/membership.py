@@ -70,7 +70,7 @@ class Membership:
             )
 
         # Set seed
-        self.rng = np.random.default_rng(seed)
+        self.rng = np.random.default_rng(self.seed)
 
         self._vp("\nMembership object generated")
         self._vp(f"N_cluster      : {self.my_field.N_cluster}", 1)
@@ -122,7 +122,7 @@ class Membership:
 
         self._vp("\nRunning Bayesian DA...")
         self._vp("{}       : ({:.4f}, {:.4f})".format(cent_str, *center), 1)
-        self._vp(f"radius         : {self.my_field.radius} [deg]", 1)
+        self._vp(f"radius         : {self.my_field.radius:.4f} [deg]", 1)
         self._vp(f"N_cluster      : {self.my_field.N_cluster}", 1)
         self._vp(f"N_runs         : {N_runs}", 1)
 
@@ -153,7 +153,13 @@ class Membership:
         e_X = np.array(e_X)
 
         out_mssg, probs = bayesian_mp(
-            X, e_X, center, self.my_field.radius, self.my_field.N_cluster, N_runs
+            N_runs,
+            X,
+            e_X,
+            np.array(center),
+            self.my_field.radius,
+            self.my_field.N_cluster,
+            self.rng,
         )
         self._vp(out_mssg, 1)
 
