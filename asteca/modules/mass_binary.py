@@ -1,7 +1,7 @@
+import astropy.coordinates as coord
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-import astropy.coordinates as coord
 from scipy.spatial import KDTree
 
 
@@ -9,20 +9,19 @@ def ranModels(
     fit_params: dict,
     model_std: dict,
     N_models: int,
-    seed: int
+    rng: np.random.Generator,
 ) -> list:
     """
     Generate the 'N_models' models via sampling a Gaussian centered on 'fit_params',
     with standard deviation given by 'model_std'.
     """
-    models_ran, int_seed = {}, np.random.default_rng(seed).integers(1)
+    models_ran = {}
+    # int_seed = rng.integers(1)
     for k, f_val in fit_params.items():
         std = model_std[k]
         # models_ran[k] = np.random.normal(f_val, std, N_models)
-        models_ran[k] = np.random.default_rng(seed + int_seed).normal(
-            f_val, std, N_models
-        )
-        int_seed += 1
+        models_ran[k] = rng.normal(f_val, std, N_models)
+        # int_seed += 1
     # Transpose dict of arrays into list of dicts
     ran_models = [dict(zip(models_ran, t)) for t in zip(*models_ran.values())]
 
@@ -90,7 +89,7 @@ def galactic_coords(
     return Z, R_GC, R_xy
 
 
-def get_M_actual(synthcl, sampled_synthcl, int_seed) -> tuple[float, float]:
+def get_M_actual(synthcl, sampled_synthcl) -> tuple[float, float]:
     """Estimate the actual mass using the observed mass and the fraction of
     mass estimated to be beyond the maximum observed magnitude.
 
@@ -106,8 +105,8 @@ def get_M_actual(synthcl, sampled_synthcl, int_seed) -> tuple[float, float]:
 
     # Select a random IMF sampling array (faster than sampling the IMF in place)
     Nmets, Nages = len(synthcl.st_dist_mass), len(synthcl.st_dist_mass[0])
-    i = np.random.default_rng(synthcl.seed + int_seed).integers(Nmets)
-    j = np.random.default_rng(synthcl.seed + int_seed).integers(Nages)
+    i = synthcl.rng.integers(Nmets)
+    j = synthcl.rng.integers(Nages)
     sorted_masses = synthcl.st_dist_mass_ordered[i][j]
 
     idx_min = np.argmin(abs(sorted_masses - mass_ini.min()))
