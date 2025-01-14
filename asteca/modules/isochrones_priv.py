@@ -1,7 +1,7 @@
 import os
+
 import numpy as np
 import pandas as pd
-
 
 # IMPORTANT
 # These are the default column names for the initial mass, metallicity, and age for the
@@ -17,25 +17,36 @@ phot_syst_col_names = {
 }
 
 
-def load(self) -> tuple[np.ndarray, list, dict, int]:
-    """Load the theoretical isochrones and return a dictionary with the data.
+def load(
+    model: str,
+    isochs_path: str,
+    magnitude: str,
+    color: tuple,
+    color2: tuple | None,
+    column_names: dict | None,
+    N_interp: int,
+    parsec_rm_stage_9: bool,
+) -> tuple[np.ndarray, list, dict, int]:
+    """Load the theoretical isochrones and return processed data.
 
-    :param self: Isochrones class object
-    :type self: Isochrones
-    :return: Array of isochrones, Individual filters for each color defined,
+    :return: Array of isochrones, individual filters for each color defined,
         dictionary with metallicities and ages, and number of files read.
     :rtype: tuple[np.ndarray, list, dict, int]
-    """
-    cols_keep, mass_col, met_col, age_col = get_columns(self)
 
-    f_paths = extract_paths(self)
+    :raises ValueError: If there is a shape mismatch in the loaded isochrones
+    """
+    cols_keep, mass_col, met_col, age_col = get_columns(
+        column_names, model, magnitude, color, color2
+    )
+
+    f_paths = extract_paths(isochs_path)
 
     # isochrones.shape = (N_photsyst, N_z, N_a, N_interp, N_cols)
     # met_age_arr.shape = (N_photsyst, N_z*N_a, 2)
     isochrones = read(
-        self.model,
-        self.N_interp,
-        self.parsec_rm_stage_9,
+        model,
+        N_interp,
+        parsec_rm_stage_9,
         f_paths,
         met_col,
         age_col,
@@ -60,54 +71,58 @@ def load(self) -> tuple[np.ndarray, list, dict, int]:
     met_age_dict = {"met": all_m, "loga": all_a}
 
     # theor_tracks.shape = (N_z, N_a, N_cols, N_interp)
-    theor_tracks, color_filters = shape_isochrones(self, mass_col, isochrones)
+    theor_tracks, color_filters = shape_isochrones(
+        magnitude, color, color2, mass_col, isochrones
+    )
 
     return theor_tracks, color_filters, met_age_dict, len(f_paths)
 
 
-def get_columns(self) -> tuple[list, str, str, str]:
+def get_columns(
+    column_names: dict | None,
+    model: str,
+    magnitude: str,
+    color: tuple,
+    color2: tuple | None,
+) -> tuple[list, str, str, str]:
     """Get the column names for the isochrones.
 
-    :param self: Isochrones class object
-    :type self: Isochrones
     :return: List of columns to keep, mass column name, metallicity column name,
         and age column name.
     :rtype: tuple[list, str, str, str]
     """
-    if self.column_names is None:
-        mass_col = phot_syst_col_names[self.model]["mass_col"]
-        met_col = phot_syst_col_names[self.model]["met_col"]
-        age_col = phot_syst_col_names[self.model]["age_col"]
+    if column_names is None:
+        mass_col = phot_syst_col_names[model]["mass_col"]
+        met_col = phot_syst_col_names[model]["met_col"]
+        age_col = phot_syst_col_names[model]["age_col"]
     else:
-        mass_col = self.column_names["mass_col"]
-        met_col = self.column_names["met_col"]
-        age_col = self.column_names["age_col"]
+        mass_col = column_names["mass_col"]
+        met_col = column_names["met_col"]
+        age_col = column_names["age_col"]
 
     # Select columns to keep
-    all_filters = [self.magnitude] + list(self.color)
-    if self.color2 is not None:
-        all_filters += list(self.color2)
+    all_filters = [magnitude] + list(color)
+    if color2 is not None:
+        all_filters += list(color2)
     cols_keep = list(dict.fromkeys(all_filters)) + [mass_col]
 
     return cols_keep, mass_col, met_col, age_col
 
 
-def extract_paths(self) -> list:
+def extract_paths(isochs_path: str) -> list:
     """Extract isochrone files from `isochs_path`.
 
-    :param self: Isochrones class object
-    :type self: Isochrones
     :return: List of isochrone file paths.
     :rtype: list
     :raises FileNotFoundError: If no files are found in the isochrones path.
     """
     # Check if path is to file or folder
-    if os.path.isfile(self.isochs_path):
-        f_paths = [self.isochs_path]
+    if os.path.isfile(isochs_path):
+        f_paths = [isochs_path]
     else:
         f_paths = []
         # Iterate over files in directory
-        for path, folders, files in os.walk(self.isochs_path):
+        for path, folders, files in os.walk(isochs_path):
             # Skip hidden folders
             if path.split("/")[-1].startswith("."):
                 continue
@@ -118,7 +133,7 @@ def extract_paths(self) -> list:
 
         if len(f_paths) == 0:
             raise FileNotFoundError(
-                f"No files found in isochrones path '{self.isochs_path}'"
+                f"No files found in isochrones path '{isochs_path}'"
             )
 
     return f_paths
@@ -247,7 +262,9 @@ def get_header(file_path: str) -> tuple[list, list]:
     return column_names, full_header
 
 
-def get_data_blocks(file_path: str, header: list, block_col: str | None = None) -> pd.DataFrame | pd.core.groupby.generic.DataFrameGroupBy:
+def get_data_blocks(
+    file_path: str, header: list, block_col: str | None = None
+) -> pd.DataFrame | pd.core.groupby.generic.DataFrameGroupBy:
     """Extract data in 'block_col' blocks.
 
     :param file_path: Path to the isochrone file.
@@ -262,7 +279,7 @@ def get_data_blocks(file_path: str, header: list, block_col: str | None = None) 
 
     # IMPORTANT
     # We are assuming that all models use spaces to separate columns. If this ever
-    # changes, this line will not longer work
+    # changes, this line will no longer work
     df = pd.read_csv(file_path, comment="#", header=None, names=header, sep=r"\s+")
 
     if block_col is None:
@@ -392,10 +409,7 @@ def interp_df(
     return isochrones
 
 
-def met_order_merge_massini_check(
-    mass_col: str,
-    isochrones: dict
-) -> tuple[list, list]:
+def met_order_merge_massini_check(mass_col: str, isochrones: dict) -> tuple[list, list]:
     """Order by metallicity, combine photometric systems, and check initial masses.
 
     1. Order by metallicity.
@@ -447,7 +461,11 @@ def met_order_merge_massini_check(
 
 
 def shape_isochrones(
-    self, initial_mass: str, isochrones: list
+    magnitude: str,
+    color: tuple,
+    color2: tuple | None,
+    initial_mass: str,
+    isochrones: list,
 ) -> tuple[np.ndarray, list]:
     """Reshape the isochrones array.
 
@@ -479,8 +497,6 @@ def shape_isochrones(
     Nd: number of data columns
     Ni: number of interpolated values
 
-    :param self: Isochrones class object
-    :type self: Isochrones
     :param initial_mass: Name of the initial mass column.
     :type initial_mass: str
     :param isochrones: List of isochrones.
@@ -491,9 +507,9 @@ def shape_isochrones(
 
     Nz, Na, Ni, Nd = np.shape(isochrones)
 
-    all_colors = [self.color]
-    if self.color2 is not None:
-        all_colors.append(self.color2)
+    all_colors = [color]
+    if color2 is not None:
+        all_colors.append(color2)
     N_colors = len(all_colors)
 
     # Array that will store all the interpolated tracks
@@ -507,7 +523,7 @@ def shape_isochrones(
         met_lst = []
         for j, df_age in enumerate(met):
             # Store magnitude
-            theor_tracks[i][j][0] = df_age[self.magnitude]
+            theor_tracks[i][j][0] = df_age[magnitude]
             # Store colors
             cols_dict = {}
             for k, color_filts in enumerate(all_colors):
@@ -522,7 +538,7 @@ def shape_isochrones(
 
             met_lst.append(cols_dict)
 
-            theor_tracks[i][j][k + 2] = df_age[initial_mass]
+            theor_tracks[i][j][k + 2] = df_age[initial_mass]  # TODO: k value?
         color_filters.append(met_lst)
 
     return theor_tracks, color_filters
