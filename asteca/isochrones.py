@@ -123,7 +123,16 @@ class Isochrones:
         self._vp("\nInstantiating isochrones...")
         # Load isochrone files
         self.theor_tracks, self.color_filters, self.met_age_dict, N_isoch_files = (
-            isochrones_priv.load(self)
+            isochrones_priv.load(
+                self.model,
+                self.isochs_path,
+                self.magnitude,
+                self.color,
+                self.color2,
+                self.column_names,
+                self.N_interp,
+                self.parsec_rm_stage_9,
+            )
         )
 
         # Convert z to FeH if requested

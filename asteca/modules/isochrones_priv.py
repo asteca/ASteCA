@@ -39,10 +39,10 @@ def load(
     :type color: tuple
     :param color2: Tuple with the two filters to generate the second color,
         defaults to None
-    :type color2: tuple | None, optional
+    :type color2: tuple | None
     :param column_names: Dictionary with the column names for the isochrones,
         defaults to None
-    :type column_names: dict | None, optional
+    :type column_names: dict | None
     :param N_interp: Number of points to interpolate.
     :type N_interp: int
     :param parsec_rm_stage_9: Remove post-AGB stage for PARSEC models,
@@ -107,7 +107,7 @@ def get_columns(
 
     :param column_names: Dictionary with the column names for the isochrones,
         defaults to None
-    :type column_names: dict | None, optional
+    :type column_names: dict | None
     :param model: Isochrone model name.
     :type model: str
     :param magnitude: Magnitude filter to load.
@@ -116,7 +116,7 @@ def get_columns(
     :type color: tuple
     :param color2: Tuple with the two filters to generate the second color,
         defaults to None
-    :type color2: tuple | None, optional
+    :type color2: tuple | None
     :return: List of columns to keep, mass column name, metallicity column name,
         and age column name.
     :rtype: tuple[list, str, str, str]
@@ -304,7 +304,7 @@ def get_data_blocks(
     :param header: List of column names.
     :type header: list
     :param block_col: Column to group by, defaults to None
-    :type block_col: str | None, optional
+    :type block_col: str | None
     :return: DataFrame or DataFrameGroupBy object.
     :rtype: pd.DataFrame | pd.core.groupby.generic.DataFrameGroupBy
     """
@@ -535,7 +535,7 @@ def shape_isochrones(
     :type color: tuple
     :param color2: Tuple with the two filters to generate the second color,
         defaults to None
-    :type color2: tuple | None, optional
+    :type color2: tuple | None
     :param initial_mass: Name of the initial mass column.
     :type initial_mass: str
     :param isochrones: List of isochrones.
