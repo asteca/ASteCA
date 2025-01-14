@@ -29,11 +29,29 @@ def load(
 ) -> tuple[np.ndarray, list, dict, int]:
     """Load the theoretical isochrones and return processed data.
 
+    :param model: The model must be one of the supported isochrone services.
+    :type model: str
+    :param isochs_path: Path to the isochrone files.
+    :type isochs_path: str
+    :param magnitude: Magnitude filter to load.
+    :type magnitude: str
+    :param color: Tuple with the two filters to generate the first color.
+    :type color: tuple
+    :param color2: Tuple with the two filters to generate the second color,
+        defaults to None
+    :type color2: tuple | None, optional
+    :param column_names: Dictionary with the column names for the isochrones,
+        defaults to None
+    :type column_names: dict | None, optional
+    :param N_interp: Number of points to interpolate.
+    :type N_interp: int
+    :param parsec_rm_stage_9: Remove post-AGB stage for PARSEC models,
+        defaults to False
+    :type parsec_rm_stage_9: bool
+    :raises ValueError: If there is a shape mismatch in the loaded isochrones
     :return: Array of isochrones, individual filters for each color defined,
         dictionary with metallicities and ages, and number of files read.
     :rtype: tuple[np.ndarray, list, dict, int]
-
-    :raises ValueError: If there is a shape mismatch in the loaded isochrones
     """
     cols_keep, mass_col, met_col, age_col = get_columns(
         column_names, model, magnitude, color, color2
@@ -87,6 +105,18 @@ def get_columns(
 ) -> tuple[list, str, str, str]:
     """Get the column names for the isochrones.
 
+    :param column_names: Dictionary with the column names for the isochrones,
+        defaults to None
+    :type column_names: dict | None, optional
+    :param model: Isochrone model name.
+    :type model: str
+    :param magnitude: Magnitude filter to load.
+    :type magnitude: str
+    :param color: Tuple with the two filters to generate the first color.
+    :type color: tuple
+    :param color2: Tuple with the two filters to generate the second color,
+        defaults to None
+    :type color2: tuple | None, optional
     :return: List of columns to keep, mass column name, metallicity column name,
         and age column name.
     :rtype: tuple[list, str, str, str]
@@ -112,9 +142,11 @@ def get_columns(
 def extract_paths(isochs_path: str) -> list:
     """Extract isochrone files from `isochs_path`.
 
+    :param isochs_path: Path to the isochrone files.
+    :type isochs_path: str
+    :raises FileNotFoundError: If no files are found in the isochrones path.
     :return: List of isochrone file paths.
     :rtype: list
-    :raises FileNotFoundError: If no files are found in the isochrones path.
     """
     # Check if path is to file or folder
     if os.path.isfile(isochs_path):
@@ -239,9 +271,9 @@ def get_header(file_path: str) -> tuple[list, list]:
 
     :param file_path: Path to the isochrone file.
     :type file_path: str
+    :raises ValueError: If the header cannot be extracted from the file.
     :return: List of column names and full header.
     :rtype: tuple[list, list]
-    :raises ValueError: If the header cannot be extracted from the file.
     """
     with open(file_path, mode="r") as f_iso:
         full_header, column_names = [], ""
@@ -296,9 +328,9 @@ def get_MIST_z_val(met_col: str, full_header: list) -> str:
     :type met_col: str
     :param full_header: Full header of the isochrone file.
     :type full_header: list
+    :raises ValueError: If the metallicity cannot be read from the header.
     :return: Metallicity value.
     :rtype: str
-    :raises ValueError: If the metallicity cannot be read from the header.
     """
     z_header_vals, z_header_cols = None, None
     for i, line in enumerate(full_header):
@@ -323,9 +355,9 @@ def get_BASTI_z_a_val(full_header: list, met_col: str, age_col: str) -> tuple[st
     :type met_col: str
     :param age_col: Age column name.
     :type age_col: str
+    :raises ValueError: If the metallicity or age cannot be read from the header.
     :return: Metallicity and age values.
     :rtype: tuple[str, str]
-    :raises ValueError: If the metallicity or age cannot be read from the header.
     """
     zval, aval = None, None
     for line in full_header:
@@ -424,9 +456,9 @@ def met_order_merge_massini_check(mass_col: str, isochrones: dict) -> tuple[list
     :type mass_col: str
     :param isochrones: Dictionary of isochrones.
     :type isochrones: dict
+    :raises ValueError: If initial mass values differ across photometric systems.
     :return: Ordered isochrones and metallicity-age array.
     :rtype: tuple[list, list]
-    :raises ValueError: If initial mass values differ across photometric systems.
     """
     # Metallicities in order
     idx_met_sort = np.argsort(list(map(float, isochrones.keys())))
@@ -497,6 +529,13 @@ def shape_isochrones(
     Nd: number of data columns
     Ni: number of interpolated values
 
+    :param magnitude: Magnitude filter to load.
+    :type magnitude: str
+    :param color: Tuple with the two filters to generate the first color.
+    :type color: tuple
+    :param color2: Tuple with the two filters to generate the second color,
+        defaults to None
+    :type color2: tuple | None, optional
     :param initial_mass: Name of the initial mass column.
     :type initial_mass: str
     :param isochrones: List of isochrones.
