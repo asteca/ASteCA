@@ -34,6 +34,7 @@ def bayesian_mp(
     :type bayesda_runs: int
     :param rng: Random number generator.
     :type rng: np.random.Generator
+
     :return: Message and array with the membership probabilities.
     :rtype: tuple[str, np.ndarray]
     """
@@ -111,7 +112,7 @@ def bayesian_mp(
             prob_old_arr = np.array(probs)
 
     if r < bayesda_runs:
-        out_mssg = f"Convergence reached at {r+1} runs"
+        out_mssg = f"Convergence reached at {r + 1} runs"
     else:
         out_mssg = f"Maximum number of runs reached: {bayesda_runs}"
 
@@ -134,6 +135,7 @@ def get_regions(
     :type center: np.ndarray
     :param radius: Radius of the cluster.
     :type radius: float
+
     :return: Arrays with the cluster region, errors, field region, errors and indexes.
     :rtype: tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]
     """
@@ -169,6 +171,7 @@ def generate_field_region(
     :type e_fl_region2_all: np.ndarray
     :param n_field: Number of field stars.
     :type n_field: int
+
     :return: Arrays with the field region and errors.
     :rtype: tuple[np.ndarray, np.ndarray]
     """
@@ -194,6 +197,7 @@ def dataNorm(
     :type e_arr: np.ndarray
     :param sigma_max: Sigma threshold for outlier masking.
     :type sigma_max: float
+
     :return: Normalized data and scaled errors.
     :rtype: tuple[np.ndarray, np.ndarray]
     """
@@ -256,6 +260,7 @@ def likelihood(
     :type region: np.ndarray
     :param e_region2: Array with the field region errors.
     :type e_region2: np.ndarray
+
     :return: Array with the likelihoods.
     :rtype: np.ndarray
     """
