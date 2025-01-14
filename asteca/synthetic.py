@@ -360,7 +360,6 @@ class Synthetic:
         :type radec_c: tuple[float, float]
         :param N_models: Number of sampled models, defaults to ``200``
         :type N_models: int
-
         """
         # Observed photometry
         obs_phot = np.array([self.mag_p] + [_ for _ in self.colors_p])
@@ -558,6 +557,8 @@ class Synthetic:
             observed, photometric, evolutionary, and dynamical masses:
             ``M_init, M_actual, M_obs, M_phot, M_evol, M_dyn``
         :rtype: dict
+
+        :raises ValueError: if no synthetic models were generated.
         """
         if len(self.sampled_models) == 0:
             raise ValueError(
