@@ -39,7 +39,14 @@ def lonlat2radec(lon: np.ndarray, lat: np.ndarray) -> np.ndarray:
 
 
 def reject_nans(_data):
-    """Remove nans in _data"""
+    """Remove nans in _data
+
+    :param _data: Array of data.
+    :type _data: np.ndarray
+
+    :return: Indexes of non-nan data and the transposed non-nan data.
+    :rtype: tuple[np.ndarray, np.ndarray]
+    """
     msk_all = []
     # Process each dimension separately
     for arr in _data:
@@ -53,7 +60,7 @@ def reject_nans(_data):
     # Indexes that survived
     idx_clean = np.arange(_data.shape[1])[msk_accpt]
 
-    return idx_clean, data.T[msk_accpt].T
+    return idx_clean, _data.T[msk_accpt].T
 
 
 def get_Nd_dists(
