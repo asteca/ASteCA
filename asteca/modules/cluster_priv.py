@@ -203,6 +203,8 @@ def filter_pms_stars(
     :param N_cent: Number of stars to select.
     :type N_cent: int
 
+    :raises ValueError: If xy_c and plx_c are both None.
+
     :return: Proper motions of the selected stars.
     :rtype: tuple[np.ndarray, np.ndarray]
     """
@@ -332,6 +334,9 @@ def get_stars_close_center(
     :type plx_c: float | None
     :param N_cent: Number of stars to select.
     :type N_cent: int
+
+    :raises ValueError: If xy_c and plx_c are both None.
+
     :return: Coordinates and proper motions of the selected stars.
     :rtype: tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]
     """
@@ -344,10 +349,11 @@ def get_stars_close_center(
     elif xy_c is not None and plx_c is None:
         cent = np.array([list(xy_c) + vpd_c])
         data = np.array([lon, lat, pmRA, pmDE]).T
-    else:
-        # xy_c is not None and plx_c is not None
+    elif xy_c is not None and plx_c is not None:
         cent = np.array([list(xy_c) + vpd_c + [plx_c]])
         data = np.array([lon, lat, pmRA, pmDE, plx]).T
+    else:
+        raise ValueError("Either xy_c or plx_c must be given")
 
     # Closest stars to the selected center
     idx = get_Nd_dists(cent, data)[:N_cent]
