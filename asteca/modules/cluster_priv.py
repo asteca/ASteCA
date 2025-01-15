@@ -251,6 +251,7 @@ def get_pms_center(
     :type zoom_f: int, optional
     :param N_zoom: Number of zoom iterations.
     :type N_zoom: int, optional
+
     :return: Center coordinates in proper motions (pmRA, pmDE).
     :rtype: list[float]
     """
@@ -287,12 +288,11 @@ def get_pms_center(
         )
         vpd = vpd[msk]
 
-    if vpd_c is None and cxym is None:
-        raise Exception("Could not estimate the PMs center value")
-
     if cxym is not None:
         cx, cy = cxym
     else:
+        if vpd_c is None:
+            raise Exception("Could not estimate the PMs center value")
         cx, cy = vpd_c
         warnings.warn("Could not estimate a better PMs center value")
 
