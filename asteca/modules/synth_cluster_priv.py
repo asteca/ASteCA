@@ -4,7 +4,9 @@ from scipy import stats
 from .imfs import invTrnsfSmpl, sampleInv
 
 
-def sample_imf(self, Nmets: int, Nages: int) -> tuple[list, list]:
+def sample_imf(
+    rng: np.random.Generator, IMF_name: str, max_mass: float, Nmets: int, Nages: int
+) -> tuple[list, list]:
     """Returns the number of stars per interval of mass for the selected IMF.
 
     Parameters
@@ -24,13 +26,13 @@ def sample_imf(self, Nmets: int, Nages: int) -> tuple[list, list]:
       variety to the sampled IMF.
 
     """
-    inv_cdf = invTrnsfSmpl(self.IMF_name)
+    inv_cdf = invTrnsfSmpl(IMF_name)
 
     st_dist_mass, st_dist_mass_ordered = [], []
     for i in range(Nmets):
         met_lst, met_lst_ord = [], []
         for j in range(Nages):
-            sampled_IMF = sampleInv(self.rng, self.max_mass, inv_cdf)
+            sampled_IMF = sampleInv(rng, max_mass, inv_cdf)
             met_lst.append(sampled_IMF)
             met_lst_ord.append(np.sort(sampled_IMF))
         st_dist_mass.append(met_lst)
@@ -70,7 +72,7 @@ def error_distribution(mag, e_mag, e_colors, rand_norm_vals):
     return err_dist
 
 
-def add_binarity(self) -> np.ndarray:
+def add_binarity(rng: np.random.Generator, gamma: float | str, isochs) -> np.ndarray:
     """For each theoretical isochrone defined.
         1. Draw random secondary masses for *all* stars.
         2. Interpolate magnitude values for these masses
@@ -86,18 +88,18 @@ def add_binarity(self) -> np.ndarray:
         N_cols: magnitude + colors + initial mass
 
     """
-    all_colors = [self.isochs.color]
-    if self.isochs.color2 is not None:
-        all_colors.append(self.isochs.color2)
+    all_colors = [isochs.color]
+    if isochs.color2 is not None:
+        all_colors.append(isochs.color2)
     N_colors = len(all_colors)
 
     mag_idx = 0
     m_ini_idx = mag_idx + N_colors + 1
 
     # Extend to accommodate binary data
-    Nz, Na, Nd, Ni = self.isochs.theor_tracks.shape
+    Nz, Na, Nd, Ni = isochs.theor_tracks.shape
     theor_tracks = np.concatenate(
-        (self.isochs.theor_tracks, np.zeros([Nz, Na, Nd, Ni])), axis=2
+        (isochs.theor_tracks, np.zeros([Nz, Na, Nd, Ni])), axis=2
     )
 
     # For each metallicity defined.
@@ -108,7 +110,7 @@ def add_binarity(self) -> np.ndarray:
             mass_ini = isoch[m_ini_idx]
 
             # Mass-ratio distribution
-            mass_ratios = qDistribution(mass_ini, self.gamma, self.rng)
+            mass_ratios = qDistribution(mass_ini, gamma, rng)
             # Secondary masses
             m2 = mass_ratios * mass_ini
 
@@ -119,8 +121,8 @@ def add_binarity(self) -> np.ndarray:
 
             # Calculate unresolved color for each color defined.
             for ic, color in enumerate(all_colors):
-                mc1 = self.isochs.color_filters[mx][ax][color[0]]
-                mc2 = self.isochs.color_filters[mx][ax][color[1]]
+                mc1 = isochs.color_filters[mx][ax][color[0]]
+                mc2 = isochs.color_filters[mx][ax][color[1]]
                 f_m1 = np.interp(m2, mass_ini, mc1)
                 f1 = mag_combine(mc1, f_m1)
                 f_m2 = np.interp(m2, mass_ini, mc2)
@@ -133,18 +135,17 @@ def add_binarity(self) -> np.ndarray:
     return theor_tracks
 
 
-def ccmo_ext_coeffs(self) -> list:
+def ccmo_ext_coeffs(ext_law: str, isochs) -> list | None:
     """Obtain extinction coefficients for all the observed filters and colors,
     in the order in which they are stored in theor_tracks.
 
     ext_coefs = [ec_mag, ec_col1, ...]
 
     """
-    ext_coefs = [[], []]
-    if self.ext_law != "GAIADR3":
+    if ext_law == "CCMO":
         # Effective wavelength in Armstrong.
-        eff_wave = self.isochs.magnitude_effl
-        eff_wave1, eff_wave2 = self.isochs.color_effl
+        eff_wave = isochs.magnitude_effl
+        eff_wave1, eff_wave2 = isochs.color_effl
         # Effective wavelength in inverse microns.
         ext_coefs = [
             ccmo_model(10000.0 / eff_wave),
@@ -154,11 +155,15 @@ def ccmo_ext_coeffs(self) -> list:
             ],
         ]
 
-    if self.isochs.color2_effl is not None:
-        eff_wave1, eff_wave2 = self.isochs.color2_effl
-        ext_coefs += [
-            [ccmo_model(10000.0 / eff_wave1), ccmo_model(10000.0 / eff_wave2)]
-        ]
+        if isochs.color2_effl is not None:
+            eff_wave1, eff_wave2 = isochs.color2_effl
+            ext_coefs += [
+                [ccmo_model(10000.0 / eff_wave1), ccmo_model(10000.0 / eff_wave2)]
+            ]
+    elif ext_law == "GAIADR3":
+        ext_coefs = None
+    else:
+        raise ValueError(f"Extinction law '{ext_law}' not recognized.")
 
     return ext_coefs
 
@@ -227,24 +232,24 @@ def ccmo_model(mw: float) -> tuple[float, float]:
     return float(a), float(b)
 
 
-def randVals(self) -> dict:
+def randVals(rng, theor_tracks, st_dist_mass) -> dict:
     """Generate lists of random values used by the synthetic cluster generating
     function.
 
     """
     # This is the maximum number of stars that will ever be interpolated into
     # an isochrone
-    N_isoch, N_mass = self.theor_tracks.shape[-1], 0
-    for sdm in self.st_dist_mass:
+    N_isoch, N_mass = theor_tracks.shape[-1], 0
+    for sdm in st_dist_mass:
         N_mass = max(len(sdm[0]), N_mass, N_isoch)
 
     # Used by `move_isochrone()` and `add_errors`
     # rand_norm_vals = np.random.normal(0.0, 1.0, (2, N_mass))
-    rand_norm_vals = self.rng.normal(0.0, 1.0, (2, N_mass))
+    rand_norm_vals = rng.normal(0.0, 1.0, (2, N_mass))
 
     # Used by `move_isochrone()`, `binarity()`
     # rand_unif_vals = np.random.uniform(0.0, 1.0, (2, N_mass))
-    rand_unif_vals = self.rng.uniform(0.0, 1.0, (2, N_mass))
+    rand_unif_vals = rng.uniform(0.0, 1.0, (2, N_mass))
 
     rand_floats = {"norm": rand_norm_vals, "unif": rand_unif_vals}
     return rand_floats
@@ -294,7 +299,7 @@ def qDistribution(
                 mass_ratios[msk] = q
         else:
 
-            def fQ(xk, pk):
+            def fQ(xk: np.ndarray, pk: np.ndarray):
                 """
                 Discrete function
                 """
