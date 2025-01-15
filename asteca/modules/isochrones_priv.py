@@ -271,13 +271,15 @@ def get_header(file_path: str) -> tuple[list, list]:
 
     :param file_path: Path to the isochrone file.
     :type file_path: str
-    :raises ValueError: If the header cannot be extracted from the file.
+
     :return: List of column names and full header.
     :rtype: tuple[list, list]
+
+    :raises ValueError: If the header cannot be extracted from the file.
     """
     with open(file_path, mode="r") as f_iso:
         full_header, column_names = [], ""
-        for i, line in enumerate(f_iso):
+        for line in f_iso:
             # Skip BASTI lines that look like this
             if line.startswith("#====="):
                 continue
@@ -305,6 +307,7 @@ def get_data_blocks(
     :type header: list
     :param block_col: Column to group by, defaults to None
     :type block_col: str | None
+
     :return: DataFrame or DataFrameGroupBy object.
     :rtype: pd.DataFrame | pd.core.groupby.generic.DataFrameGroupBy
     """
@@ -314,6 +317,7 @@ def get_data_blocks(
     # changes, this line will no longer work
     df = pd.read_csv(file_path, comment="#", header=None, names=header, sep=r"\s+")
 
+    # BASTI files
     if block_col is None:
         return df
 
@@ -398,14 +402,19 @@ def interp_df(
     :type zinit: str
     :param age: Age value.
     :type age: str
+
     :return: Dictionary of isochrones.
     :rtype: dict
     """
 
+    # DEPRECATED 15/01/25
+    # df = df[df.columns.intersection(cols_keep_ps)]
+    # df = df.apply(pd.to_numeric)
+
     # Drop columns not in list
-    df = df[df.columns.intersection(cols_keep_ps)]
+    df_cols = pd.DataFrame(df[cols_keep_ps])
     # Dataframe to floats
-    df = df.apply(pd.to_numeric)
+    df = df_cols.astype(float)
 
     # Only interpolate if there are extra points to add
     if len(df) >= N_interp:
@@ -519,6 +528,8 @@ def shape_isochrones(
     f     : magnitude
     cX    : colors
     Mini  : initial mass
+
+    # These columns are added later by the synthetic class:
     fb    : binary magnitude --
     cXb   : binary colors     |
     Minib : binary masses -----
@@ -540,19 +551,24 @@ def shape_isochrones(
     :type initial_mass: str
     :param isochrones: List of isochrones.
     :type isochrones: list
+
     :return: Reshaped isochrones array and list of color filters.
     :rtype: tuple[np.ndarray, list]
     """
 
-    Nz, Na, Ni, Nd = np.shape(isochrones)
+    # Notice that Ni and Nd are inverted here compared to the shape of the final
+    # 'theor_tracks' array
+    Nz, Na, Ni, Nd = np.array(isochrones).shape
 
     all_colors = [color]
     if color2 is not None:
         all_colors.append(color2)
     N_colors = len(all_colors)
 
-    # Array that will store all the interpolated tracks
-    theor_tracks = np.zeros([Nz, Na, (1 + 1 + N_colors), Ni])
+    # Array that will store all the interpolated tracks. The '2' makes room for the
+    # magnitude and first color which are required. Adding 'N_colors' to that value
+    # makes room for an optional second color, and the initial mass column.
+    theor_tracks = np.zeros([Nz, Na, (2 + N_colors), Ni])
 
     # Store the magnitudes to generate the colors separately. Used only by the
     # binarity process
@@ -568,7 +584,7 @@ def shape_isochrones(
             for k, color_filts in enumerate(all_colors):
                 f1 = df_age[color_filts[0]]
                 f2 = df_age[color_filts[1]]
-                # Store color
+                # Store color. The '1' makes room for the magnitude that goes first.
                 theor_tracks[i][j][1 + k] = f1 - f2
 
                 # Individual filters for colors, used for binarity
@@ -577,7 +593,8 @@ def shape_isochrones(
 
             met_lst.append(cols_dict)
 
-            theor_tracks[i][j][k + 2] = df_age[initial_mass]  # TODO: k value?
+            # Add initial mass column to the end of the array
+            theor_tracks[i][j][2 + N_colors - 1] = df_age[initial_mass]
         color_filters.append(met_lst)
 
     return theor_tracks, color_filters
