@@ -107,36 +107,53 @@ class Synthetic:
                 f"Extinction law '{self.ext_law}' not recognized. Should be "
                 + f"one of {ext_laws}"
             )
-        # if self.ext_law == "CCMO":
-        #     if self.isochs.magnitude_effl is None or self.isochs.color_effl is None:
-        #         raise ValueError(
-        #             f"Extinction law '{self.ext_law}' requires effective lambda\n"
-        #             + "values for the magnitude and first color."
-        #         )
-        # if self.ext_law == "GAIADR3":
-        #     if self.isochs.magnitude_effl is not None or self.isochs.color_effl is not None:
-        #         warnings.warn(
-        #             f"\nExtinction law '{self.ext_law}' does not require effective lambda"
-        #             + " values for the\nmagnitude and first color (assumed to be 'G' "
-        #             + "and 'BP-RP', respectively)."
-        #         )
 
         self._vp("\nInstantiating synthetic...")
 
         # Sample the selected IMF
         Nmets, Nages = self.isochs.theor_tracks.shape[:2]
         self.st_dist_mass, self.st_dist_mass_ordered = scp.sample_imf(
-            self, Nmets, Nages
+            self.rng, self.IMF_name, self.max_mass, Nmets, Nages
         )
 
         # Add binary systems
-        self.theor_tracks = scp.add_binarity(self)
+        self.theor_tracks = scp.add_binarity(
+            self.rng,
+            self.gamma,
+            self.isochs.color,
+            self.isochs.color2,
+            self.isochs.theor_tracks,
+            self.isochs.color_filters,
+        )
 
         # Get extinction coefficients for these filters
-        self.ext_coefs = scp.ccmo_ext_coeffs(self)
+        self.ext_coefs = [] # It is important to pass an empty list because the
+        # function `extinction()` checks its length later on
+        if self.ext_law == "CCMO":
+            if self.isochs.magnitude_effl is None or self.isochs.color_effl is None:
+                raise ValueError(
+                    f"Extinction law '{self.ext_law}' requires effective lambda\n"
+                    + "values for the magnitude and first color."
+                )
+
+            self.ext_coefs = scp.ccmo_ext_coeffs(
+                self.isochs.magnitude_effl,
+                self.isochs.color_effl,
+                self.isochs.color2_effl,
+            )
+        if self.ext_law == "GAIADR3":
+            if (
+                self.isochs.magnitude_effl is not None
+                or self.isochs.color_effl is not None
+            ):
+                warnings.warn(
+                    f"\nExtinction law '{self.ext_law}' does not require effective lambda"
+                    + " values for the\nmagnitude and first color (assumed to be 'G' "
+                    + "and 'BP-RP', respectively)."
+                )
 
         # Generate random floats used by `synth_clusters.synthcl_generate()`
-        self.rand_floats = scp.randVals(self)
+        self.rand_floats = scp.randVals(self.rng, self.theor_tracks, self.st_dist_mass)
 
         # Store for internal usage
         self.met_age_dict = self.isochs.met_age_dict
@@ -566,12 +583,17 @@ class Synthetic:
                 + "estimating the cluster masses."
             )
 
-        # Check the number of generated synthetic stars
+        # Number of observed stars
         N_obs = len(self.mag_p)
-        if N_obs > np.shape(self.sampled_synthcls)[-1]:
+        # The number of stars in a synthetic isochrones is not constant so we estimate
+        # its median
+        N_stars_isoch = int(np.median([np.shape(_)[-1] for _ in self.sampled_synthcls]))
+        # Compare the number of observed vs generated synthetic stars
+        if N_stars_isoch < N_obs:
             warnings.warn(
-                "Number of synthetic stars is smaller than observed stars. Increase "
-                + "the 'max_mass' argument for a more accurate mass estimation"
+                f"\nNumber of synthetic stars ({N_stars_isoch}) is smaller than "
+                + f"observed stars ({N_obs}). Increase the 'max_mass' argument for "
+                + "a more accurate mass estimation"
             )
 
         masses_all = []
