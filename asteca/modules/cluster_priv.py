@@ -173,9 +173,37 @@ def get_5D_center(
     return x_c, y_c, pmra_c, pmde_c, plx_c
 
 
-def filter_pms_stars(xy_c, plx_c, lon, lat, pmRA, pmDE, plx, N_cent):
+def filter_pms_stars(
+    xy_c: list[float] | None,
+    plx_c: float | None,
+    lon: np.ndarray,
+    lat: np.ndarray,
+    pmRA: np.ndarray,
+    pmDE: np.ndarray,
+    plx: np.ndarray,
+    N_cent: int,
+) -> tuple[np.ndarray, np.ndarray]:
     """If either xy_c or plx_c values are given, select the 'N_cent' stars
     closest to this 1D/2D/3D center, and return their proper motions.
+
+    :param xy_c: Center coordinates in (lon, lat).
+    :type xy_c: list[float] | None
+    :param plx_c: Center coordinate in parallax.
+    :type plx_c: float | None
+    :param lon: Galactic Longitude.
+    :type lon: np.ndarray
+    :param lat: Galactic Latitude.
+    :type lat: np.ndarray
+    :param pmRA: Proper motion in Right Ascension.
+    :type pmRA: np.ndarray
+    :param pmDE: Proper motion in Declination.
+    :type pmDE: np.ndarray
+    :param plx: Parallax.
+    :type plx: np.ndarray
+    :param N_cent: Number of stars to select.
+    :type N_cent: int
+    :return: Proper motions of the selected stars.
+    :rtype: tuple[np.ndarray, np.ndarray]
     """
     # Create arrays with required shape
     if xy_c is None and plx_c is not None:
