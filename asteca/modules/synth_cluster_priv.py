@@ -9,22 +9,18 @@ def sample_imf(
 ) -> tuple[list, list]:
     """Returns the number of stars per interval of mass for the selected IMF.
 
-    Parameters
-    ----------
-    IMF_name : str
-      Name of the IMF to be used.
-    max_mass: float
-      Maximum mass defined.
-
-    Returns
-    -------
-    st_dist_mass : list
-      Tuple that contains: a given number of stars sampled from the selected
-      IMF, that (approximately) sum to the associated total mass; the
-      cumulative sum of those masses.
-      One list per metallicity and age values defined is returned. This is to add some
-      variety to the sampled IMF.
-
+    :param rng: Random number generator.
+    :type rng: np.random.Generator
+    :param IMF_name: Name of the IMF to be used.
+    :type IMF_name: str
+    :param max_mass: Maximum mass defined.
+    :type max_mass: float
+    :param Nmets: Number of metallicity values.
+    :type Nmets: int
+    :param Nages: Number of age values.
+    :type Nages: int
+    :returns: A tuple containing two lists. The first list contains the sampled masses, and the second list contains the ordered sampled masses.
+    :rtype: tuple[list, list]
     """
     inv_cdf = invTrnsfSmpl(IMF_name)
 
@@ -41,10 +37,20 @@ def sample_imf(
     return st_dist_mass, st_dist_mass_ordered
 
 
-def error_distribution(mag, e_mag, e_colors, rand_norm_vals):
-    """
-    Extract the magnitude and color(s) uncertainties to use as error model for the
+def error_distribution(mag: np.ndarray, e_mag: np.ndarray, e_colors: list[np.ndarray], rand_norm_vals: np.ndarray) -> list[np.ndarray]:
+    """Extract the magnitude and color(s) uncertainties to use as error model for the
     synthetic clusters.
+
+    :param mag: Array of magnitudes.
+    :type mag: np.ndarray
+    :param e_mag: Array of magnitude uncertainties.
+    :type e_mag: np.ndarray
+    :param e_colors: List of arrays of color uncertainties.
+    :type e_colors: list[np.ndarray]
+    :param rand_norm_vals: Array of random normal values.
+    :type rand_norm_vals: np.ndarray
+    :returns: List of arrays of error distributions.
+    :rtype: list[np.ndarray]
     """
 
     def filnans(data):
@@ -78,6 +84,15 @@ def add_binarity(rng: np.random.Generator, gamma: float | str, isochs) -> np.nda
         2. Interpolate magnitude values for these masses
         3. Calculate the magnitudes for the binary system.
         4. Calculate the colors for the binary system.
+
+    :param rng: Random number generator.
+    :type rng: np.random.Generator
+    :param gamma: Mass-ratio distribution.
+    :type gamma: float | str
+    :param isochs: Isochrone object.
+    :type isochs: Isochrones
+    :returns: Array of isochrones with binary data.
+    :rtype: np.ndarray
 
     theor_tracks.shape = (Nz, Na, N_cols, N_interp)
 
@@ -139,6 +154,13 @@ def ccmo_ext_coeffs(ext_law: str, isochs) -> list | None:
     """Obtain extinction coefficients for all the observed filters and colors,
     in the order in which they are stored in theor_tracks.
 
+    :param ext_law: Extinction law to be used.
+    :type ext_law: str
+    :param isochs: Isochrone object.
+    :type isochs: Isochrones
+    :returns: List of extinction coefficients.
+    :rtype: list | None
+
     ext_coefs = [ec_mag, ec_col1, ...]
 
     """
@@ -172,6 +194,11 @@ def ccmo_model(mw: float) -> tuple[float, float]:
     """Cardelli, Clayton, and Mathis (1989 ApJ. 345, 245) model for extinction
     coefficients with updated coefficients for near-UV from O'Donnell
     (1994, ApJ, 422, 158).
+
+    :param mw: Wavelength in inverse microns.
+    :type mw: float
+    :returns: Extinction coefficients a and b.
+    :rtype: tuple[float, float]
 
     ccm_coef = a + b / Rv
 
@@ -232,10 +259,18 @@ def ccmo_model(mw: float) -> tuple[float, float]:
     return float(a), float(b)
 
 
-def randVals(rng, theor_tracks, st_dist_mass) -> dict:
+def randVals(rng: np.random.Generator, theor_tracks: np.ndarray, st_dist_mass: list) -> dict:
     """Generate lists of random values used by the synthetic cluster generating
     function.
 
+    :param rng: Random number generator.
+    :type rng: np.random.Generator
+    :param theor_tracks: Array of theoretical isochrones.
+    :type theor_tracks: np.ndarray
+    :param st_dist_mass: List of sampled masses.
+    :type st_dist_mass: list
+    :returns: Dictionary of random values.
+    :rtype: dict
     """
     # This is the maximum number of stars that will ever be interpolated into
     # an isochrone
@@ -259,6 +294,16 @@ def qDistribution(
     M1: np.ndarray, gamma: float | str, rng: np.random.Generator
 ) -> np.ndarray:
     """Distribution of q=m2/m1 for binary systems
+
+    :param M1: Array of primary masses.
+    :type M1: np.ndarray
+    :param gamma: Mass-ratio distribution.
+    :type gamma: float | str
+    :param rng: Random number generator.
+    :type rng: np.random.Generator
+    :returns: Array of mass ratios.
+    :rtype: np.ndarray
+
     float : Power-law distribution with shape parameter 'gamma'. Not mass
     dependent.
     D&K : Distribution of mass-ratios versus primary masses
@@ -419,6 +464,14 @@ def qDistribution(
 
 def mag_combine(m1: np.ndarray, m2: np.ndarray) -> np.ndarray:
     """Combine two magnitudes.
+
+    :param m1: Array of magnitudes.
+    :type m1: np.ndarray
+    :param m2: Array of magnitudes.
+    :type m2: np.ndarray
+    :returns: Array of combined magnitudes.
+    :rtype: np.ndarray
+
     This is a faster re-ordering of the standard formula:
 
     -2.5 * np.log10(10 ** (-0.4 * m1) + 10 ** (-0.4 * m2))
@@ -435,19 +488,14 @@ def properModel(
     """Define the 'proper' model with values for (z, a) taken from its grid,
     and filled values for those parameters that are fixed.
 
-    Parameters
-    ----------
-    model : array
-      Array of *free* fundamental parameters only (ie: in varIdxs).
-
-    Returns
-    -------
-    fix_params  : array
-      All fundamental parameters, including the fixed parameters that are
-      missing from 'model'.
-    ml, mh, al, ah : ints
-      Indexes of the (z, a) values in the grid that define the box that enclose
-      the proper (z, a) values.
+    :param met_age_dict: Dictionary of metallicity and age values.
+    :type met_age_dict: dict
+    :param fix_params: Dictionary of fixed parameters.
+    :type fix_params: dict
+    :param fit_params: Dictionary of fitted parameters.
+    :type fit_params: dict
+    :returns: A tuple containing all fundamental parameters, and the indexes of the (z, a) values in the grid that define the box that enclose the proper (z, a) values.
+    :rtype: tuple[float, float, float, float, float, float, float, float, int, int, int, int]
 
     """
     # If any parameter is repeated in both dictionaries, this order gives priority
@@ -478,9 +526,30 @@ def properModel(
     return *model_full, ml, mh, al, ah
 
 
-def zaWAverage(theor_tracks, met_age_dict, m_ini_idx, z_model, a_model, ml, mh, al, ah):
+def zaWAverage(theor_tracks: np.ndarray, met_age_dict: dict, m_ini_idx: int, z_model: float, a_model: float, ml: int, mh: int, al: int, ah: int) -> np.ndarray:
     """Generate a new "weighted" isochrone from the four closest points in the
     (z, a) grid.
+
+    :param theor_tracks: Array of theoretical isochrones.
+    :type theor_tracks: np.ndarray
+    :param met_age_dict: Dictionary of metallicity and age values.
+    :type met_age_dict: dict
+    :param m_ini_idx: Index of the initial mass.
+    :type m_ini_idx: int
+    :param z_model: Metallicity value.
+    :type z_model: float
+    :param a_model: Age value.
+    :type a_model: float
+    :param ml: Index of the lower metallicity.
+    :type ml: int
+    :param mh: Index of the higher metallicity.
+    :type mh: int
+    :param al: Index of the lower age.
+    :type al: int
+    :param ah: Index of the higher age.
+    :type ah: int
+    :returns: Weighted isochrone.
+    :rtype: np.ndarray
 
     theor_tracks = [m1, m2, .., mN]
     mX = [age1, age2, ..., ageM]
@@ -602,10 +671,18 @@ def zaWAverage(theor_tracks, met_age_dict, m_ini_idx, z_model, a_model, ml, mh, 
     return isochrone
 
 
-def move_isochrone(isochrone, m_ini_idx, dm):
-    """
-    Receives an isochrone of a given age and metallicity and modifies
+def move_isochrone(isochrone: np.ndarray, m_ini_idx: int, dm: float) -> np.ndarray:
+    """Receives an isochrone of a given age and metallicity and modifies
     its magnitude values according to a given distance modulus.
+
+    :param isochrone: Isochrone array.
+    :type isochrone: np.ndarray
+    :param m_ini_idx: Index of the initial mass.
+    :type m_ini_idx: int
+    :param dm: Distance modulus.
+    :type dm: float
+    :returns: Modified isochrone array.
+    :rtype: np.ndarray
     """
     # Move magnitude
     isochrone[0] += dm
@@ -617,22 +694,46 @@ def move_isochrone(isochrone, m_ini_idx, dm):
 
 
 def extinction(
-    ext_law,
-    ext_coefs,
-    rand_norm,
-    rand_unif,
-    DR_distribution,
-    m_ini_idx,
-    binar_flag,
-    Av,
-    dr,
-    Rv,
-    isochrone,
-):
-    """
-    Modifies magnitude and color(s) according to given values for the
+    ext_law: str,
+    ext_coefs: list,
+    rand_norm: np.ndarray,
+    rand_unif: np.ndarray,
+    DR_distribution: str,
+    m_ini_idx: int,
+    binar_flag: bool,
+    Av: float,
+    dr: float,
+    Rv: float,
+    isochrone: np.ndarray,
+) -> np.ndarray:
+    """Modifies magnitude and color(s) according to given values for the
     total absorption Av. Using this parameter instead of the E(B-V) extinction
     reduces the correlation with Rv.
+
+    :param ext_law: Extinction law to be used.
+    :type ext_law: str
+    :param ext_coefs: List of extinction coefficients.
+    :type ext_coefs: list
+    :param rand_norm: Array of random normal values.
+    :type rand_norm: np.ndarray
+    :param rand_unif: Array of random uniform values.
+    :type rand_unif: np.ndarray
+    :param DR_distribution: Distribution of the differential reddening.
+    :type DR_distribution: str
+    :param m_ini_idx: Index of the initial mass.
+    :type m_ini_idx: int
+    :param binar_flag: Flag to indicate if binarity is being used.
+    :type binar_flag: bool
+    :param Av: Total absorption.
+    :type Av: float
+    :param dr: Differential reddening.
+    :type dr: float
+    :param Rv: Total-to-selective extinction ratio.
+    :type Rv: float
+    :param isochrone: Isochrone array.
+    :type isochrone: np.ndarray
+    :returns: Modified isochrone array.
+    :rtype: np.ndarray
 
     The distance modulus was applied before this function.
 
@@ -720,9 +821,16 @@ def extinction(
     return isochrone
 
 
-def dustapprox(X_, Av):
+def dustapprox(X_: np.ndarray, Av: float) -> tuple[np.ndarray, np.ndarray]:
     """
     The 'coeffs' values are the main sequence values taken from:
+
+    :param X_: Array of BP-RP colors.
+    :type X_: np.ndarray
+    :param Av: Total absorption.
+    :type Av: float
+    :returns: Extinction coefficients for G and BP-RP.
+    :rtype: tuple[np.ndarray, np.ndarray]
 
     https://www.cosmos.esa.int/web/gaia/edr3-extinction-law
 
@@ -800,20 +908,36 @@ def dustapprox(X_, Av):
     return ec_G, ec_BPRP
 
 
-def cut_max_mag(isoch_moved, max_mag_syn):
-    """
-    Remove stars from isochrone with magnitude values larger that the maximum
+def cut_max_mag(isoch_moved: np.ndarray, max_mag_syn: float) -> np.ndarray:
+    """Remove stars from isochrone with magnitude values larger that the maximum
     observed value.
+
+    :param isoch_moved: Isochrone array.
+    :type isoch_moved: np.ndarray
+    :param max_mag_syn: Maximum magnitude value.
+    :type max_mag_syn: float
+    :returns: Isochrone array with stars above the maximum magnitude removed.
+    :rtype: np.ndarray
     """
     # Discard stars in isochrone beyond max_mag_syn limit.
     msk = isoch_moved[0] < max_mag_syn
     return isoch_moved[:, msk]
 
 
-def mass_interp(isoch_cut, m_ini_idx, st_dist_mass, N_obs_stars):
-    """
-    For each mass in the sampled IMF mass distribution, interpolate its value
+def mass_interp(isoch_cut: np.ndarray, m_ini_idx: int, st_dist_mass: np.ndarray, N_obs_stars: int) -> np.ndarray:
+    """For each mass in the sampled IMF mass distribution, interpolate its value
     (and those of all the sub-arrays in 'isoch_cut') into the isochrone.
+
+    :param isoch_cut: Isochrone array.
+    :type isoch_cut: np.ndarray
+    :param m_ini_idx: Index of the initial mass.
+    :type m_ini_idx: int
+    :param st_dist_mass: Array of sampled masses.
+    :type st_dist_mass: np.ndarray
+    :param N_obs_stars: Number of observed stars.
+    :type N_obs_stars: int
+    :returns: Interpolated isochrone array.
+    :rtype: np.ndarray
 
     Masses that fall outside of the isochrone's mass range have been previously
     rejected.
@@ -859,9 +983,17 @@ def mass_interp(isoch_cut, m_ini_idx, st_dist_mass, N_obs_stars):
     return isoch_mass
 
 
-def interp_mass_isoch(isoch_cut, mass_ini, mass_dist):
-    """
-    Find where in the original data, the values to interpolate would be inserted.
+def interp_mass_isoch(isoch_cut: np.ndarray, mass_ini: np.ndarray, mass_dist: np.ndarray) -> np.ndarray:
+    """Find where in the original data, the values to interpolate would be inserted.
+
+    :param isoch_cut: Isochrone array.
+    :type isoch_cut: np.ndarray
+    :param mass_ini: Array of initial masses.
+    :type mass_ini: np.ndarray
+    :param mass_dist: Array of sampled masses.
+    :type mass_dist: np.ndarray
+    :returns: Interpolated isochrone array.
+    :rtype: np.ndarray
 
     NOTE: I already tried to speed this block up using numba (@jit(nopython=True))
     but it does not help. The code runs even slower.
@@ -885,9 +1017,23 @@ def interp_mass_isoch(isoch_cut, mass_ini, mass_dist):
     return isoch_mass
 
 
-def binarity(alpha, beta, binar_flag, m_ini_idx, rand_unif_vals, isoch_mass):
-    """
-    Select a fraction of stars to be binaries, given a chosen method.
+def binarity(alpha: float, beta: float, binar_flag: bool, m_ini_idx: int, rand_unif_vals: np.ndarray, isoch_mass: np.ndarray) -> np.ndarray:
+    """Select a fraction of stars to be binaries, given a chosen method.
+
+    :param alpha: Alpha parameter for the binary fraction.
+    :type alpha: float
+    :param beta: Beta parameter for the binary fraction.
+    :type beta: float
+    :param binar_flag: Flag to indicate if binarity is being used.
+    :type binar_flag: bool
+    :param m_ini_idx: Index of the initial mass.
+    :type m_ini_idx: int
+    :param rand_unif_vals: Array of random uniform values.
+    :type rand_unif_vals: np.ndarray
+    :param isoch_mass: Isochrone array.
+    :type isoch_mass: np.ndarray
+    :returns: Isochrone array with binary stars.
+    :rtype: np.ndarray
     """
     # No binarity process defined
     if binar_flag is False:
@@ -926,9 +1072,15 @@ def binarity(alpha, beta, binar_flag, m_ini_idx, rand_unif_vals, isoch_mass):
     return isoch_mass
 
 
-def add_errors(isoch_binar, err_dist):
-    """
-    Add random synthetic uncertainties to the magnitude and color(s)
+def add_errors(isoch_binar: np.ndarray, err_dist: list[np.ndarray]) -> np.ndarray:
+    """Add random synthetic uncertainties to the magnitude and color(s)
+
+    :param isoch_binar: Isochrone array.
+    :type isoch_binar: np.ndarray
+    :param err_dist: List of arrays of error distributions.
+    :type err_dist: list[np.ndarray]
+    :returns: Isochrone array with added errors.
+    :rtype: np.ndarray
     """
 
     N = len(isoch_binar[0])
