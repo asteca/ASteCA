@@ -202,6 +202,7 @@ def filter_pms_stars(
     :type plx: np.ndarray
     :param N_cent: Number of stars to select.
     :type N_cent: int
+
     :return: Proper motions of the selected stars.
     :rtype: tuple[np.ndarray, np.ndarray]
     """
@@ -212,10 +213,11 @@ def filter_pms_stars(
     elif xy_c is not None and plx_c is None:
         cent = np.array([xy_c])
         data = np.array([lon, lat]).T
-    else:
-        # xy_c is not None and plx_c is not None
+    elif xy_c is not None and plx_c is not None:
         cent = np.array([list(xy_c) + [plx_c]])
         data = np.array([lon, lat, plx]).T
+    else:
+        raise ValueError("Either xy_c or plx_c must be given")
 
     # Closest stars to the selected center
     idx = get_Nd_dists(cent, data)[:N_cent]
