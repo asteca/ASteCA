@@ -299,9 +299,41 @@ def get_pms_center(
     return [cx, cy]
 
 
-def get_stars_close_center(lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c, N_cent):
-    """
+def get_stars_close_center(
+    lon: np.ndarray,
+    lat: np.ndarray,
+    pmRA: np.ndarray,
+    pmDE: np.ndarray,
+    plx: np.ndarray,
+    xy_c: list[float] | None,
+    vpd_c: list[float],
+    plx_c: float | None,
+    N_cent: int,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Select the 'N_cent' stars closest to the given center.
+
     Distances to centers using the vpd_c and other available data
+
+    :param lon: Galactic Longitude.
+    :type lon: np.ndarray
+    :param lat: Galactic Latitude.
+    :type lat: np.ndarray
+    :param pmRA: Proper motion in Right Ascension.
+    :type pmRA: np.ndarray
+    :param pmDE: Proper motion in Declination.
+    :type pmDE: np.ndarray
+    :param plx: Parallax.
+    :type plx: np.ndarray
+    :param xy_c: Center coordinates in (lon, lat).
+    :type xy_c: list[float] | None
+    :param vpd_c: Center coordinates in proper motions (pmRA, pmDE).
+    :type vpd_c: list[float]
+    :param plx_c: Center coordinate in parallax.
+    :type plx_c: float | None
+    :param N_cent: Number of stars to select.
+    :type N_cent: int
+    :return: Coordinates and proper motions of the selected stars.
+    :rtype: tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]
     """
     if xy_c is None and plx_c is None:
         cent = np.array([vpd_c])
