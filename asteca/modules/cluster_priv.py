@@ -13,6 +13,7 @@ def radec2lonlat(ra: np.ndarray, dec: np.ndarray) -> np.ndarray:
     :type ra: np.ndarray
     :param dec: Declination.
     :type dec: np.ndarray
+
     :return: Galactic longitude and latitude.
     :rtype: np.ndarray
     """
@@ -21,50 +22,52 @@ def radec2lonlat(ra: np.ndarray, dec: np.ndarray) -> np.ndarray:
     return np.array([lb.l.value, lb.b.value])
 
 
-def lonlat2radec(lon: np.ndarray, lat: np.ndarray) -> list[float]:
+def lonlat2radec(lon: np.ndarray, lat: np.ndarray) -> np.ndarray:
     """Convert from galactic longitude and latitude to right ascension and declination.
 
     :param lon: Galactic longitude.
     :type lon: np.ndarray
     :param lat: Galactic latitude.
     :type lat: np.ndarray
+
     :return: Right ascension and declination.
-    :rtype: list[float]
+    :rtype: np.ndarray
     """
     gc = SkyCoord(l=lon * u.degree, b=lat * u.degree, frame="galactic")
     ra, dec = gc.fk5.ra.value, gc.fk5.dec.value
-    return [ra, dec]
+    return np.array([ra, dec])
 
 
-def reject_nans(data):
-    """Remove nans in 'data'"""
+def reject_nans(_data):
+    """Remove nans in _data"""
     msk_all = []
     # Process each dimension separately
-    for arr in data:
-        # Identify non-nan data
+    for arr in _data:
+        # Identify non-nan _data
         msk = ~np.isnan(arr)
-        # Keep this non-nan data
-        msk_all.append(msk.data)
+        # Keep this non-nan _data
+        msk_all.append(msk._data)
     # Combine into a single mask
     msk_accpt = np.logical_and.reduce(msk_all)
 
     # Indexes that survived
-    idx_clean = np.arange(data.shape[1])[msk_accpt]
+    idx_clean = np.arange(_data.shape[1])[msk_accpt]
 
     return idx_clean, data.T[msk_accpt].T
 
 
 def get_Nd_dists(
-    cents: np.ndarray,  np.ndarray, dists_flag: bool = False
+    cents: np.ndarray, data: np.ndarray, dists_flag: bool = False
 ) -> np.ndarray:
     """Obtain indexes and distances of stars to the given center
 
     :param cents: Center coordinates.
     :type cents: np.ndarray
-    :param  Array of data.
-    :type  np.ndarray
+    :param data: Array of data.
+    :type data: np.ndarray
     :param dists_flag: If True, return distances instead of indexes.
     :type dists_flag: bool, optional
+
     :return: Indexes or distances of stars to the given center.
     :rtype: np.ndarray
     """
