@@ -226,8 +226,34 @@ def filter_pms_stars(
     return pmRA_i, pmDE_i
 
 
-def get_pms_center(vpd_c, N_clust_min, pmRA, pmDE, N_bins=50, zoom_f=4, N_zoom=10):
-    """ """
+def get_pms_center(
+    vpd_c: list[float] | None,
+    N_clust_min: int,
+    pmRA: np.ndarray,
+    pmDE: np.ndarray,
+    N_bins: int = 50,
+    zoom_f: int = 4,
+    N_zoom: int = 10,
+) -> list[float]:
+    """Estimate the center in proper motion space.
+
+    :param vpd_c: Center coordinates in proper motions (pmRA, pmDE).
+    :type vpd_c: list[float] | None
+    :param N_clust_min: Minimum number of stars in the cluster.
+    :type N_clust_min: int
+    :param pmRA: Proper motion in Right Ascension.
+    :type pmRA: np.ndarray
+    :param pmDE: Proper motion in Declination.
+    :type pmDE: np.ndarray
+    :param N_bins: Number of bins for the 2D histogram.
+    :type N_bins: int, optional
+    :param zoom_f: Zoom factor for the iterative center estimation.
+    :type zoom_f: int, optional
+    :param N_zoom: Number of zoom iterations.
+    :type N_zoom: int, optional
+    :return: Center coordinates in proper motions (pmRA, pmDE).
+    :rtype: list[float]
+    """
     vpd = np.array([pmRA, pmDE]).T
 
     # Center in PMs space
