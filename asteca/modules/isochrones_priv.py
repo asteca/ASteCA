@@ -48,7 +48,9 @@ def load(
     :param parsec_rm_stage_9: Remove post-AGB stage for PARSEC models,
         defaults to False
     :type parsec_rm_stage_9: bool
+
     :raises ValueError: If there is a shape mismatch in the loaded isochrones
+
     :return: Array of isochrones, individual filters for each color defined,
         dictionary with metallicities and ages, and number of files read.
     :rtype: tuple[np.ndarray, list, dict, int]
