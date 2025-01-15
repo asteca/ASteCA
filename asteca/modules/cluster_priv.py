@@ -6,13 +6,31 @@ from astropy.coordinates import SkyCoord
 from scipy import spatial, stats
 
 
-def radec2lonlat(ra, dec) -> np.ndarray:
+def radec2lonlat(ra: np.ndarray, dec: np.ndarray) -> np.ndarray:
+    """Convert from right ascension and declination to galactic longitude and latitude.
+
+    :param ra: Right ascension.
+    :type ra: np.ndarray
+    :param dec: Declination.
+    :type dec: np.ndarray
+    :return: Galactic longitude and latitude.
+    :rtype: np.ndarray
+    """
     gc = SkyCoord(ra=ra * u.degree, dec=dec * u.degree)
     lb = gc.transform_to("galactic")
     return np.array([lb.l.value, lb.b.value])
 
 
-def lonlat2radec(lon, lat):
+def lonlat2radec(lon: np.ndarray, lat: np.ndarray) -> list[float]:
+    """Convert from galactic longitude and latitude to right ascension and declination.
+
+    :param lon: Galactic longitude.
+    :type lon: np.ndarray
+    :param lat: Galactic latitude.
+    :type lat: np.ndarray
+    :return: Right ascension and declination.
+    :rtype: list[float]
+    """
     gc = SkyCoord(l=lon * u.degree, b=lat * u.degree, frame="galactic")
     ra, dec = gc.fk5.ra.value, gc.fk5.dec.value
     return [ra, dec]
@@ -36,8 +54,20 @@ def reject_nans(data):
     return idx_clean, data.T[msk_accpt].T
 
 
-def get_Nd_dists(cents, data, dists_flag=False):
-    """Obtain indexes and distances of stars to the given center"""
+def get_Nd_dists(
+    cents: np.ndarray,  np.ndarray, dists_flag: bool = False
+) -> np.ndarray:
+    """Obtain indexes and distances of stars to the given center
+
+    :param cents: Center coordinates.
+    :type cents: np.ndarray
+    :param  Array of data.
+    :type  np.ndarray
+    :param dists_flag: If True, return distances instead of indexes.
+    :type dists_flag: bool, optional
+    :return: Indexes or distances of stars to the given center.
+    :rtype: np.ndarray
+    """
     # Distances to center
     dist_Nd = spatial.distance.cdist(data, cents).T[0]
     if dists_flag:
