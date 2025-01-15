@@ -361,9 +361,18 @@ def get_stars_close_center(
     return lon[idx], lat[idx], pmRA[idx], pmDE[idx], plx[idx]
 
 
-def get_kNN_center(N_clust_min, data):
-    """Estimate 5D center with kNN."""
+def get_kNN_center(
+    N_clust_min: int,  np.ndarray
+) -> np.ndarray:
+    """Estimate 5D center with kNN.
 
+    :param N_clust_min: Minimum number of stars in the cluster.
+    :type N_clust_min: int
+    :param  Array of data.
+    :type  np.ndarray
+    :return: Center coordinates in (lon, lat, pmRA, pmDE, plx).
+    :rtype: np.ndarray
+    """
     # Better results are obtained not using the parallax data?
     data_noplx = data[:, :4]  # <-- HARDCODED
 
