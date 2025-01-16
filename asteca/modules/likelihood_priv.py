@@ -1,23 +1,21 @@
 import numpy as np
-from scipy.special import loggamma
-from astropy.stats import knuth_bin_width, bayesian_blocks
+from astropy.stats import bayesian_blocks, knuth_bin_width
 from fast_histogram import histogram2d
+from scipy.special import loggamma
 
 
-def lkl_data(self):
+def lkl_data(bin_method, mag_p, colors_p):
     """ """
     # Obtain bin edges for each dimension, defining a grid.
-    bin_edges, ranges, Nbins = bin_edges_f(
-        self.bin_method, self.my_cluster.mag_p, self.my_cluster.colors_p
-    )
+    ranges, Nbins = bin_edges_f(bin_method, mag_p, colors_p)
 
     # Obtain histogram for observed cluster.
     hess_diag = []
-    for i, col in enumerate(self.my_cluster.colors_p):
+    for i, col in enumerate(colors_p):
         # Fast 2D histogram
         hess_diag.append(
             histogram2d(
-                self.my_cluster.mag_p,
+                mag_p,
                 col,
                 range=[
                     [ranges[0][0], ranges[0][1]],
@@ -39,14 +37,11 @@ def lkl_data(self):
     # Remove all bins where n_i=0 (no observed stars)
     cl_histo_f_z = cl_histo_f[cl_z_idx]
 
-    # Arguments below used by the functions called by the get() method
-    self.ranges = ranges
-    self.Nbins = Nbins
-    self.cl_z_idx = cl_z_idx
-    self.cl_histo_f_z = cl_histo_f_z
+    # These variables are used by the likelihood functions called by the get() method
+    return ranges, Nbins, cl_z_idx, cl_histo_f_z
 
 
-def bin_edges_f(bin_method, mag, colors):
+def bin_edges_f(bin_method: str, mag: np.ndarray, colors: np.ndarray):
     """ """
 
     bin_edges = []
@@ -81,7 +76,7 @@ def bin_edges_f(bin_method, mag, colors):
         ranges.append([be[0], be[-1]])
         Nbins.append(len(be))
 
-    return bin_edges, ranges, Nbins
+    return ranges, Nbins
 
 
 def tremmel(self, synth_clust):
