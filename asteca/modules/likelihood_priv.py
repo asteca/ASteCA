@@ -4,8 +4,21 @@ from fast_histogram import histogram2d
 from scipy.special import loggamma
 
 
-def lkl_data(bin_method, mag_p, colors_p):
-    """ """
+def lkl_data(bin_method: str, mag_p: np.ndarray, colors_p: list[np.ndarray]) -> tuple[list, list, np.ndarray, np.ndarray]:
+    """Prepare data for likelihood calculation.
+
+    This function calculates the Hess diagram of the observed cluster and
+    prepares the data for the likelihood calculation.
+
+    :param bin_method: Method to use for binning the data.
+    :type bin_method: str
+    :param mag_p: Array of magnitudes.
+    :type mag_p: np.ndarray
+    :param colors_p: List of arrays of colors.
+    :type colors_p: list[np.ndarray]
+    :return: Bin ranges, number of bins, indexes of bins with stars, and flattened histogram.
+    :rtype: tuple[list, list, np.ndarray, np.ndarray]
+    """
     # Obtain bin edges for each dimension, defining a grid.
     ranges, Nbins = bin_edges_f(bin_method, mag_p, colors_p)
 
@@ -41,8 +54,21 @@ def lkl_data(bin_method, mag_p, colors_p):
     return ranges, Nbins, cl_z_idx, cl_histo_f_z
 
 
-def bin_edges_f(bin_method: str, mag: np.ndarray, colors: np.ndarray):
-    """ """
+def bin_edges_f(bin_method: str, mag: np.ndarray, colors: list[np.ndarray]) -> tuple[list, list]:
+    """Calculate bin edges for the Hess diagram.
+
+    This function calculates the bin edges for the Hess diagram, using
+    different methods.
+
+    :param bin_method: Method to use for binning the data.
+    :type bin_method: str
+    :param mag: Array of magnitudes.
+    :type mag: np.ndarray
+    :param colors: List of arrays of colors.
+    :type colors: list[np.ndarray]
+    :return: Bin ranges and number of bins.
+    :rtype: tuple[list, list]
+    """
 
     bin_edges = []
 
@@ -79,10 +105,47 @@ def bin_edges_f(bin_method: str, mag: np.ndarray, colors: np.ndarray):
     return ranges, Nbins
 
 
-def tremmel(self, synth_clust):
-    r"""
-    Poisson likelihood ratio as defined in Tremmel et al (2013), Eq 10 with
+def tremmel(self, synth_clust: np.ndarray) -> float:
+    r"""Poisson likelihood ratio as defined in Tremmel et al (2013), Eq 10 with
     v_{i,j}=1. This returns the log likelihood.
+
+    .. math::
+
+        p(d|\theta) = \prod_i^N \frac{\Gamma(n_i+m_i+\frac{1}{2})}
+        {2^{n_i+m_i+\frac{1}{2}} n_i!\Gamma(m_i+\frac{1}{2}))}
+
+    .. math::
+
+        \log(p) = \sum_i^N \left[\log\Gamma(n_i+m_i+\frac{1}{2})
+        - (m_i+n_i+\frac{1}{2})\log2 -\log n_i!
+        - \log \Gamma(m_i+\frac{1}{2}) \right]
+
+    Minus logarithm:
+
+    .. math::
+
+        \log(p) = \sum_i^N \left[\log\Gamma(n_i+m_i+\frac{1}{2})-
+        \log \Gamma(m_i+\frac{1}{2}) \right]
+        - 0.693  (M+N+\frac{1}{2}) - \sum_i^N \log n_i!
+
+    .. math::
+
+        \log(p) = SumLogGamma(n_i, m_i) -0.693 (N+\frac{1}{2}) -
+        \sum_i^N \log n_i! - 0.693\,M
+
+    .. math::
+
+        \log(p) = f(n_i) + SumLogGamma(n_i, m_i) - 0.693\,M
+
+    .. math::
+
+        \log(p)\approx SumLogGamma(n_i, m_i) - 0.693\,M
+
+    :param synth_clust: Synthetic cluster data.
+    :type synth_clust: np.ndarray
+    :return: Log likelihood value.
+    :rtype: float
+    """
 
     p(d|\theta) = \prod_i^N \frac{\Gamma(n_i+m_i+\frac{1}{2})}
         {2^{n_i+m_i+\frac{1}{2}} n_i!\Gamma(m_i+\frac{1}{2}))}
@@ -266,8 +329,14 @@ def tremmel(self, synth_clust):
 #     return P_val
 
 
-def bins_distance(self, synth_clust):
-    """Sum of distances to corresponding bins in he Hess diagram."""
+def bins_distance(self, synth_clust: np.ndarray) -> float:
+    """Sum of distances to corresponding bins in he Hess diagram.
+
+    :param synth_clust: Synthetic cluster data.
+    :type synth_clust: np.ndarray
+    :return: Sum of distances.
+    :rtype: float
+    """
     if not synth_clust.any():
         return 1.0e09
 
@@ -309,8 +378,17 @@ def bins_distance(self, synth_clust):
     return lkl
 
 
-def chi_square(self, synth_clust):
-    """From issue #372."""
+def chi_square(self, synth_clust: np.ndarray) -> float:
+    """Calculate the chi-square value.
+
+    This function calculates the chi-square value between the observed and
+    synthetic clusters.
+
+    :param synth_clust: Synthetic cluster data.
+    :type synth_clust: np.ndarray
+    :return: Chi-square value.
+    :rtype: float
+    """
     # If synthetic cluster is empty, assign a small likelihood value.
     if not synth_clust.any():
         return -1.0e09
