@@ -2,9 +2,17 @@ import numpy as np
 from scipy.interpolate import make_interp_spline
 
 
-def invTrnsfSmpl(IMF_name: str, m_low=0.08, m_high=100):
-    """
-    IMF inverse transform sampling.
+def invTrnsfSmpl(IMF_name: str, m_low: float = 0.08, m_high: float = 100) ->  make_interp_spline:
+    """IMF inverse transform sampling.
+
+    :param IMF_name: Name of the IMF to use.
+    :type IMF_name: str
+    :param m_low: Lower mass limit.
+    :type m_low: float, optional
+    :param m_high: Higher mass limit.
+    :type m_high: float, optional
+    :return: Interpolated function of the inverse cumulative distribution function.
+    :rtype: make_interp_spline
     """
 
     # The lower mass region needs to be sampled more accurately
@@ -47,10 +55,16 @@ def invTrnsfSmpl(IMF_name: str, m_low=0.08, m_high=100):
 
 
 def get_imf(IMF_name: str, m_star_array: np.ndarray) -> np.ndarray:
-    """
-    Define any number of IMFs.
+    """Define any number of IMFs.
 
     The package https://github.com/keflavich/imf has some more (I think).
+
+    :param IMF_name: Name of the IMF to use.
+    :type IMF_name: str
+    :param m_star_array: Array of stellar masses.
+    :type m_star_array: np.ndarray
+    :return: Array of IMF values.
+    :rtype: np.ndarray
     """
     if IMF_name == "salpeter_1955":
         # Salpeter (1955)  IMF.
@@ -116,9 +130,17 @@ def get_imf(IMF_name: str, m_star_array: np.ndarray) -> np.ndarray:
     return imf_vals
 
 
-def sampleInv(rng: np.random.Generator, Max_mass: float, inv_cdf) -> np.ndarray:
-    """
-    Sample the inverse CDF up to `Max_mass`
+def sampleInv(rng: np.random.Generator, Max_mass: float, inv_cdf: make_interp_spline) -> np.ndarray:
+    """Sample the inverse CDF up to `Max_mass`
+
+    :param rng: Random number generator.
+    :type rng: np.random.Generator
+    :param Max_mass: Maximum mass to sample.
+    :type Max_mass: float
+    :param inv_cdf: Interpolated function of the inverse cumulative distribution function.
+    :type inv_cdf: make_interp_spline
+    :return: Array of sampled masses.
+    :rtype: np.ndarray
     """
 
     # DEPRECATED 13/01/25
