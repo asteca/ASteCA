@@ -72,8 +72,8 @@ def get_Nd_dists(
     :type cents: np.ndarray
     :param data: Array of data.
     :type data: np.ndarray
-    :param dists_flag: If True, return distances instead of indexes.
-    :type dists_flag: bool, optional
+    :param dists_flag: If True, return distances instead of indexes. Defaults to False
+    :type dists_flag: bool
 
     :return: Indexes or distances of stars to the given center.
     :rtype: np.ndarray
@@ -188,7 +188,7 @@ def filter_pms_stars(
     closest to this 1D/2D/3D center, and return their proper motions.
 
     :param xy_c: Center coordinates in (lon, lat).
-    :type xy_c: list[float] | None
+    :type xy_c: np.ndarray | None
     :param plx_c: Center coordinate in parallax.
     :type plx_c: float | None
     :param lon: Galactic Longitude.
@@ -248,15 +248,17 @@ def get_pms_center(
     :type pmRA: np.ndarray
     :param pmDE: Proper motion in Declination.
     :type pmDE: np.ndarray
-    :param N_bins: Number of bins for the 2D histogram.
-    :type N_bins: int, optional
-    :param zoom_f: Zoom factor for the iterative center estimation.
-    :type zoom_f: int, optional
-    :param N_zoom: Number of zoom iterations.
-    :type N_zoom: int, optional
+    :param N_bins: Number of bins for the 2D histogram, defaults to 50
+    :type N_bins: int
+    :param zoom_f: Zoom factor for the iterative center estimation, defaults to 4
+    :type zoom_f: int
+    :param N_zoom: Number of zoom iterations, defaults to 10
+    :type N_zoom: int
+
+    :raises ValueError: If the PMs center could not be estimated
 
     :return: Center coordinates in proper motions (pmRA, pmDE).
-    :rtype: list[float]
+    :rtype: tuple[float, float]
     """
     vpd = np.array([pmRA, pmDE]).T
 
@@ -295,7 +297,7 @@ def get_pms_center(
         cx, cy = cxym
     else:
         if vpd_c is None:
-            raise Exception("Could not estimate the PMs center value")
+            raise ValueError("Could not estimate the PMs center value")
         cx, cy = vpd_c
         warnings.warn("Could not estimate a better PMs center value")
 
@@ -328,7 +330,7 @@ def get_stars_close_center(
     :param plx: Parallax.
     :type plx: np.ndarray
     :param xy_c: Center coordinates in (lon, lat).
-    :type xy_c: list[float] | None
+    :type xy_c: np.ndarray | None
     :param vpd_c_i: Center coordinates in proper motions (pmRA, pmDE).
     :type vpd_c_i: tuple[float, float]
     :param plx_c: Center coordinate in parallax.
@@ -373,7 +375,7 @@ def get_kNN_center(
     :type data: np.ndarray
 
     :return: Center coordinates in (lon, lat, pmRA, pmDE, plx).
-    :rtype: np.ndarray
+    :rtype: tuple[float, float, float, float, float]
     """
     # Better results are obtained not using the parallax data?
     data_noplx = data[:, :4]  # <-- HARDCODED
@@ -395,7 +397,9 @@ def get_kNN_center(
     return x_c, y_c, pmra_c, pmde_c, plx_c
 
 
-def get_2D_center(x: np.ndarray, y: np.ndarray, N_max: int = 10000) -> tuple[float, float]:
+def get_2D_center(
+    x: np.ndarray, y: np.ndarray, N_max: int = 10_000
+) -> tuple[float, float]:
     """Estimate the 2-dimensional center of a cluster, using only its coordinates.
 
     Find the KDE maximum value pointing to the center coordinates.
@@ -404,8 +408,10 @@ def get_2D_center(x: np.ndarray, y: np.ndarray, N_max: int = 10000) -> tuple[flo
     :type x: np.ndarray
     :param y: Y coordinates.
     :type y: np.ndarray
-    :param N_max: Maximum number of stars to use for performance reasons.
-    :type N_max: int, optional
+    :param N_max: Maximum number of stars to use for performance reasons, defaults
+     to 10_000
+    :type N_max: int
+
     :return: Center coordinates in (x, y).
     :rtype: tuple[float, float]
     """
@@ -448,6 +454,7 @@ def get_XY(values: np.ndarray, gd: int) -> tuple[float, float]:
     :type values: np.ndarray
     :param gd: Grid density (number of points).
     :type gd: int
+
     :return: Center coordinates in (x, y).
     :rtype: tuple[float, float]
     """
