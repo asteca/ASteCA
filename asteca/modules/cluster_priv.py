@@ -395,10 +395,19 @@ def get_kNN_center(
     return x_c, y_c, pmra_c, pmde_c, plx_c
 
 
-def get_2D_center(x, y, N_max=10000):
+def get_2D_center(x: np.ndarray, y: np.ndarray, N_max: int = 10000) -> tuple[float, float]:
     """Estimate the 2-dimensional center of a cluster, using only its coordinates.
 
     Find the KDE maximum value pointing to the center coordinates.
+
+    :param x: X coordinates.
+    :type x: np.ndarray
+    :param y: Y coordinates.
+    :type y: np.ndarray
+    :param N_max: Maximum number of stars to use for performance reasons.
+    :type N_max: int, optional
+    :return: Center coordinates in (x, y).
+    :rtype: tuple[float, float]
     """
     values = np.vstack([x, y])
     # Use maximum number for performance
@@ -432,8 +441,16 @@ def get_2D_center(x, y, N_max=10000):
     return x_c, y_c
 
 
-def get_XY(values, gd):
-    """ """
+def get_XY(values: np.ndarray, gd: int) -> tuple[float, float]:
+    """Estimate the center coordinates using a Gaussian Kernel Density Estimation.
+
+    :param values: Array of x and y coordinates.
+    :type values: np.ndarray
+    :param gd: Grid density (number of points).
+    :type gd: int
+    :return: Center coordinates in (x, y).
+    :rtype: tuple[float, float]
+    """
     xmin, ymin = values.min(1)
     xmax, ymax = values.max(1)
 
