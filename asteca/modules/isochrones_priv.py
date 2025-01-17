@@ -212,10 +212,17 @@ def read(
         # Columns to keep for this photometric system
         cols_keep_ps = list(set(col_names) & set(cols_keep))
 
-        # Group file in blocks as required
-        df_blocks = get_data_blocks(file_path, col_names, group_col[model])
+        # IMPORTANT
+        # We are assuming that all models use spaces to separate columns. If this
+        # ever changes, this line will no longer work
+        df_file_path = pd.read_csv(
+            file_path, comment="#", header=None, names=col_names, sep=r"\s+"
+        )
 
         if model == "PARSEC":
+            # Group by metallicity
+            df_blocks = df_file_path.groupby(group_col[model], sort=False)
+
             # Process metallicity blocks
             for _, met_df in df_blocks:
                 # Group by age
@@ -232,6 +239,9 @@ def read(
                         msk = df["label"] != "9"
                         df = df[msk]
 
+                    # GroupBy object to DataFrame (avoid static type errors)
+                    df = pd.DataFrame(df)
+
                     age = df[age_col].values[0]
                     # Interpolated isochrone
                     isochrones = interp_df(
@@ -244,6 +254,9 @@ def read(
                 isochrones[zinit]
             except KeyError:
                 isochrones[zinit] = {}
+
+            # Group by age
+            df_blocks = df_file_path.groupby(group_col[model], sort=False)
 
             # Process age blocks
             for _, df in df_blocks:
@@ -262,7 +275,7 @@ def read(
 
             # Interpolated isochrone
             isochrones = interp_df(
-                N_interp, cols_keep_ps, df_blocks, isochrones, zinit, age
+                N_interp, cols_keep_ps, df_file_path, isochrones, zinit, age
             )
 
     return isochrones
@@ -296,35 +309,6 @@ def get_header(file_path: str) -> tuple[list, list]:
         column_names = column_names.replace("#", "").split()
 
     return column_names, full_header
-
-
-def get_data_blocks(
-    file_path: str, header: list, block_col: str | None = None
-) -> pd.DataFrame | pd.core.groupby.generic.DataFrameGroupBy:
-    """Extract data in 'block_col' blocks.
-
-    :param file_path: Path to the isochrone file.
-    :type file_path: str
-    :param header: List of column names.
-    :type header: list
-    :param block_col: Column to group by, defaults to None
-    :type block_col: str | None
-
-    :return: DataFrame or DataFrameGroupBy object.
-    :rtype: pd.DataFrame | pd.core.groupby.generic.DataFrameGroupBy
-    """
-
-    # IMPORTANT
-    # We are assuming that all models use spaces to separate columns. If this ever
-    # changes, this line will no longer work
-    df = pd.read_csv(file_path, comment="#", header=None, names=header, sep=r"\s+")
-
-    # BASTI files
-    if block_col is None:
-        return df
-
-    grouped = df.groupby(block_col, sort=False)
-    return grouped
 
 
 def get_MIST_z_val(met_col: str, full_header: list) -> str:
