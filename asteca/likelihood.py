@@ -56,6 +56,15 @@ class Likelihood:
             np.array([self.my_cluster.mag_p, *self.my_cluster.colors_p])
         )
 
+        self.max_lkl = 1
+        if self.lkl_name == "plr":
+            # Evaluate cluster against itself to obtain the maximum likelihood.
+            # Since the initial max_lkl=1, subtracting 1 inverts it back to the
+            # original likelihood value
+            self.max_lkl = 1 - self.get(
+                np.array([self.my_cluster.mag_p, *self.my_cluster.colors_p])
+            )
+
         print("\nLikelihood object generated")
 
     def get(self, synth_clust: np.array) -> float:
@@ -71,7 +80,14 @@ class Likelihood:
         :rtype: float
         """
         if self.lkl_name == "plr":
-            return lpriv.tremmel(self, synth_clust)
+            return lpriv.tremmel(
+                self.ranges,
+                self.Nbins,
+                self.cl_z_idx,
+                self.cl_histo_f_z,
+                self.max_lkl,
+                synth_clust,
+            )
         # if self.lkl_name == "visual":
         #     return lpriv.visual(self, synth_clust)
         # if self.lkl_name == "mean_dist":

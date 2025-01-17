@@ -105,7 +105,14 @@ def bin_edges_f(bin_method: str, mag: np.ndarray, colors: list[np.ndarray]) -> t
     return ranges, Nbins
 
 
-def tremmel(self, synth_clust: np.ndarray) -> float:
+def tremmel(
+    ranges: list,
+    Nbins: list,
+    cl_z_idx: np.ndarray,
+    cl_histo_f_z: np.ndarray,
+    max_lkl: float,
+    synth_clust: np.ndarray,
+) -> float:
     r"""Poisson likelihood ratio as defined in Tremmel et al (2013), Eq 10 with
     v_{i,j}=1. This returns the log likelihood.
 
@@ -206,7 +213,7 @@ def tremmel(self, synth_clust: np.ndarray) -> float:
     # ln(2) ~ 0.693
     tremmel_lkl = SumLogGamma - 0.693 * syn_histo_f_z.sum()
 
-    return tremmel_lkl
+    return 1 - tremmel_lkl / max_lkl
 
 
 # def visual(cluster_dict, synth_clust):
