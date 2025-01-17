@@ -90,8 +90,8 @@ def get_imf(IMF_name: str, m_star_array: np.ndarray) -> np.ndarray:
         ]
 
         # Conditions for m_star_array <= m0 and m_star_array > m0
-        lower_msk = (m0 <= m_star_array) and (m_star_array <= m1)
-        middle_msk = (m1 < m_star_array) and (m_star_array <= m2)
+        lower_msk = (m0 <= m_star_array) & (m_star_array <= m1)
+        middle_msk = (m1 < m_star_array) & (m_star_array <= m2)
         upper_msk = m_star_array > m2
 
         # Initialize output array
