@@ -341,7 +341,7 @@ class Synthetic:
         isoch_binar = scp.binarity(
             alpha,
             beta,
-            self.gamma,
+            self.binar_flag,
             self.m_ini_idx,
             self.rand_floats["unif"][1],
             isoch_mass,
