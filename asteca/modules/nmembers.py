@@ -62,16 +62,6 @@ def density_nmembs(
 
 
 def ripley_nmembs(
-    x,
-    y,
-    pmRA,
-    pmDE,
-    plx,
-    vpd_c,
-    plx_c,
-    N_clust=50,
-    N_extra=5,
-def ripley_nmembs(
     x: np.ndarray,
     y: np.ndarray,
     pmRA: np.ndarray,
