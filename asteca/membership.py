@@ -251,8 +251,8 @@ class Membership:
         )
         out_mssg, probs = fastMP(
             X,
-            list(xy_center),
-            list(self.my_field.pms_c),
+            xy_center,
+            self.my_field.pms_c,
             self.my_field.plx_c,
             fixed_centers,
             self.my_field.N_cluster,

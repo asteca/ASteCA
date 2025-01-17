@@ -127,7 +127,7 @@ class Synthetic:
         )
 
         # Get extinction coefficients for these filters
-        self.ext_coefs = [] # It is important to pass an empty list because the
+        self.ext_coefs = []  # It is important to pass an empty list because the
         # function `extinction()` checks its length later on
         if self.ext_law == "CCMO":
             if self.isochs.magnitude_effl is None or self.isochs.color_effl is None:
@@ -397,18 +397,23 @@ class Synthetic:
                 remove_model_index.append(i)
                 continue
             sampled_synthcls.append(isoch)
-            idxs = mb.get_close_idxs(self, obs_phot, isoch)
+            idxs = mb.get_close_idxs(self.m_ini_idx, obs_phot, isoch)
             close_stars_idxs.append(idxs)
 
+        # Remove models associated to empty isochrones
         if len(remove_model_index) > 0:
-            sampled_models = np.delete(sampled_models, remove_model_index)
-        self.sampled_models = list(sampled_models)
+            sampled_models = list(
+                np.delete(np.array(sampled_models), np.array(remove_model_index))
+            )
+        self.sampled_models = sampled_models
         self.sampled_synthcls = sampled_synthcls
         self.close_stars_idxs = close_stars_idxs
         self.obs_nan_msk = nan_msk
 
         # Obtain galactic vertical distance and distance to center
-        Z, R_GC, R_xy = mb.galactic_coords(self, radec_c)
+        Z, R_GC, R_xy = mb.galactic_coords(
+            self.sampled_models, self.fix_params, radec_c
+        )
         self.Z = Z
         self.R_GC = R_GC
         self.R_xy = R_xy
@@ -440,7 +445,9 @@ class Synthetic:
         """
         m12_masses = []
         for i, isoch in enumerate(self.sampled_synthcls):
-            m1_obs, m2_obs = mb.get_m1m2(self, isoch, self.close_stars_idxs[i])
+            m1_obs, m2_obs = mb.get_m1m2(
+                self.m_ini_idx, isoch, self.close_stars_idxs[i]
+            )
             m12_masses.append([m1_obs, m2_obs])
         m12_masses = np.array(m12_masses)
 
@@ -493,7 +500,7 @@ class Synthetic:
         """
         b_fr_all = []
         for i, isoch in enumerate(self.sampled_synthcls):
-            b_fr = mb.get_bpr(self, isoch, self.close_stars_idxs[i])
+            b_fr = mb.get_bpr(isoch, self.close_stars_idxs[i])
             b_fr_all.append(b_fr)
 
         return np.array(b_fr_all)
@@ -608,7 +615,13 @@ class Synthetic:
             # masses
             sampled_synthcl = self.sampled_synthcls[i]
             # TODO: don't pass the entire object, just the necessary values
-            M_obs, M_phot = mb.get_M_actual(self, sampled_synthcl)
+            M_obs, M_phot = mb.get_M_actual(
+                self.rng,
+                self.m_ini_idx,
+                self.st_dist_mass,
+                self.st_dist_mass_ordered,
+                sampled_synthcl,
+            )
             M_a = M_obs + M_phot
 
             # Ambient density

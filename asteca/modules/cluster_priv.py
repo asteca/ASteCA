@@ -17,9 +17,9 @@ def radec2lonlat(ra: float | np.ndarray, dec: float | np.ndarray) -> np.ndarray:
     :return: Galactic longitude and latitude.
     :rtype: np.ndarray
     """
-    gc = SkyCoord(ra=ra * u.degree, dec=dec * u.degree)
+    gc = SkyCoord(ra=ra * u.degree, dec=dec * u.degree)  # pyright: ignore
     lb = gc.transform_to("galactic")
-    return np.array([lb.l.value, lb.b.value])
+    return np.array([lb.l.value, lb.b.value])  # pyright: ignore
 
 
 def lonlat2radec(lon: float | np.ndarray, lat: float | np.ndarray) -> np.ndarray:
@@ -33,8 +33,8 @@ def lonlat2radec(lon: float | np.ndarray, lat: float | np.ndarray) -> np.ndarray
     :return: Right ascension and declination.
     :rtype: np.ndarray
     """
-    gc = SkyCoord(l=lon * u.degree, b=lat * u.degree, frame="galactic")
-    ra, dec = gc.fk5.ra.value, gc.fk5.dec.value
+    gc = SkyCoord(l=lon * u.degree, b=lat * u.degree, frame="galactic")  # pyright: ignore
+    ra, dec = gc.fk5.ra.value, gc.fk5.dec.value  # pyright: ignore
     return np.array([ra, dec])
 
 
@@ -97,7 +97,7 @@ def get_5D_center(
     pmDE: np.ndarray,
     plx: np.ndarray,
     xy_c: np.ndarray | None,
-    vpd_c: tuple[float, float] | None,
+    vpd_c: np.ndarray | None,
     plx_c: float | None,
     N_clust_min: int,
     N_clust_max: int,
@@ -122,7 +122,7 @@ def get_5D_center(
     :param xy_c: Center coordinates in (lon, lat).
     :type xy_c: np.ndarray | None
     :param vpd_c: Center coordinates in proper motions (pmRA, pmDE).
-    :type vpd_c: tuple[float, float] | None
+    :type vpd_c: np.ndarray | None
     :param plx_c: Center coordinate in parallax.
     :type plx_c: float | None
     :param N_clust_min: Minimum number of stars in the cluster.
@@ -230,7 +230,7 @@ def filter_pms_stars(
 
 
 def get_pms_center(
-    vpd_c: tuple[float, float] | None,
+    vpd_c: np.ndarray | None,
     N_clust_min: int,
     pmRA: np.ndarray,
     pmDE: np.ndarray,
@@ -241,7 +241,7 @@ def get_pms_center(
     """Estimate the center in proper motion space.
 
     :param vpd_c: Center coordinates in proper motions (pmRA, pmDE).
-    :type vpd_c: tuple[float, float] | None
+    :type vpd_c: np.ndarray | None
     :param N_clust_min: Minimum number of stars in the cluster.
     :type N_clust_min: int
     :param pmRA: Proper motion in Right Ascension.

@@ -7,7 +7,7 @@ from . import cluster_priv as cp
 
 
 def density_nmembs(
-    x: np.ndarray, y: np.ndarray, center: tuple[float, float], radius: float
+    x: np.ndarray, y: np.ndarray, center: np.ndarray, radius: float
 ) -> int:
     """Estimate the number of cluster members based on a density calculation.
 
@@ -16,9 +16,10 @@ def density_nmembs(
     :param y: Array of y-coordinates.
     :type y: np.ndarray
     :param center: Center coordinates (x, y).
-    :type center: tuple[float, float]
+    :type center: np.ndarray
     :param radius: Radius of the cluster.
     :type radius: float
+
     :return: Estimated number of cluster members.
     :rtype: int
     """
@@ -67,7 +68,7 @@ def ripley_nmembs(
     pmRA: np.ndarray,
     pmDE: np.ndarray,
     plx: np.ndarray,
-    vpd_c: tuple[float, float],
+    vpd_c: np.ndarray,
     plx_c: float,
     N_clust: int = 50,
     N_extra: int = 5,
@@ -86,21 +87,23 @@ def ripley_nmembs(
     :param plx: Array of parallax values.
     :type plx: np.ndarray
     :param vpd_c: Center coordinates in proper motion (pmRA, pmDE).
-    :type vpd_c: tuple[float, float]
+    :type vpd_c: np.ndarray
     :param plx_c: Center parallax value.
     :type plx_c: float
-    :param N_clust: Initial number of stars to consider as a cluster.
-    :type N_clust: int, optional
+    :param N_clust: Initial number of stars to consider as a cluster, defaults to 50
+    :type N_clust: int
     :param N_extra: Number of extra iterations to perform if the initial
-        clustering fails.
-    :type N_extra: int, optional
-    :param N_step: Step size for increasing the number of cluster stars.
-    :type N_step: int, optional
+        clustering fails, defaults to 5
+    :type N_extra: int
+    :param N_step: Step size for increasing the number of cluster stars, defaults to 10
+    :type N_step: int
+
     :return: Estimated number of cluster members.
     :rtype: int
     """
     rads, Kest, C_thresh_N = init_ripley(x, y)
 
+    # Obtain the ordered indexes of the distances to the (pmra, pmde, plx) center
     cents_3d = np.array([list(vpd_c) + [plx_c]])
     data_3d = np.array([pmRA, pmDE, plx]).T
     d_pm_plx_idxs = cp.get_Nd_dists(cents_3d, data_3d)
@@ -127,8 +130,9 @@ def ripley_nmembs(
     return N_survived
 
 
-def init_ripley(lon, lat):
-def init_ripley(lon: np.ndarray, lat: np.ndarray) -> tuple[np.ndarray, RipleysKEstimator, float]:
+def init_ripley(
+    lon: np.ndarray, lat: np.ndarray
+) -> tuple[np.ndarray, RipleysKEstimator, float]:
     """Initialize Ripley's K-function estimator.
 
     https://rdrr.io/cran/spatstat/man/Kest.html
@@ -140,6 +144,7 @@ def init_ripley(lon: np.ndarray, lat: np.ndarray) -> tuple[np.ndarray, RipleysKE
     :type lon: np.ndarray
     :param lat: Array of latitude values.
     :type lat: np.ndarray
+
     :return: Radii, Ripley's K-estimator, and threshold value.
     :rtype: tuple[np.ndarray, RipleysKEstimator, float]
     """
@@ -162,7 +167,6 @@ def init_ripley(lon: np.ndarray, lat: np.ndarray) -> tuple[np.ndarray, RipleysKE
     return rads, Kest, C_thresh_N
 
 
-def ripley_core(rads, Kest, C_thresh_N, d_pm_plx_idxs, xy, N_clust, N_break=5):
 def ripley_core(
     rads: np.ndarray,
     Kest: RipleysKEstimator,
@@ -180,18 +184,22 @@ def ripley_core(
     :type Kest: RipleysKEstimator
     :param C_thresh_N: Threshold value.
     :type C_thresh_N: float
-    :param d_pm_plx_idxs: Ordered indexes of the distances to the (pmra, pmde, plx) center.
+    :param d_pm_plx_idxs: Ordered indexes of the distances to the (pmra, pmde, plx)
+     center.
     :type d_pm_plx_idxs: np.ndarray
     :param xy: Array of (x, y) coordinates.
     :type xy: np.ndarray
     :param N_clust: Number of stars to consider as a cluster.
     :type N_clust: int
-    :param N_break: Number of breaks before stopping the loop.
-    :type N_break: int, optional
+    :param N_break: Number of breaks before stopping the loop, defaults to 5
+    :type N_break: int
+
     :return: List of indexes of the survived stars.
     :rtype: list[int]
     """
     N_total_stars = xy.shape[0]
+
+    # Define K-function threshold
     C_thresh = C_thresh_N / N_clust
 
     idx_survived = []
@@ -215,7 +223,6 @@ def ripley_core(
     return idx_survived
 
 
-def rkfunc(xy, rads, Kest):
 def rkfunc(xy: np.ndarray, rads: np.ndarray, Kest: RipleysKEstimator) -> float:
     """Test how similar this cluster's (x, y) distribution is compared
     to a uniform random distribution using Ripley's K.
@@ -231,10 +238,18 @@ def rkfunc(xy: np.ndarray, rads: np.ndarray, Kest: RipleysKEstimator) -> float:
     :return: Ripley's K-function value.
     :rtype: float
     """
+    # Avoid large memory consumption if the data array is too big
+    # if xy.shape[0] > 5000:
+    #     mode = "none"
+    # else:
+    #     mode = 'translation'
+
+    # Hide RunTimeWarning
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         L_t = Kest.Lfunction(xy, rads, mode="translation")
 
+    # Catch all-nans. Avoid 'RuntimeWarning: All-NaN slice encountered'
     if np.isnan(L_t).all():
         C_s = np.nan
     else:

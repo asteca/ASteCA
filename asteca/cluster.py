@@ -256,21 +256,21 @@ class Cluster:
                 pmRA,
                 pmDE,
                 plx,
-                xy_c=lonlat_c,
-                vpd_c=pms_c,
+                xy_c=np.array(lonlat_c),
+                vpd_c=np.array(pms_c),
                 plx_c=plx_c,
                 N_clust_min=self.N_clust_min,
                 N_clust_max=self.N_clust_max,
             )
             ra_c, dec_c = cp.lonlat2radec(x_c, y_c)
 
-            self.radec_c = [ra_c, dec_c]
-            self.pms_c = [pmra_c, pmde_c]
+            self.radec_c = np.array([ra_c, dec_c])
+            self.pms_c = np.array([pmra_c, pmde_c])
             self.plx_c = plx_c
 
-            mssg = "radec_c        : ({:.4f}, {:.4f})\n".format(ra_c, dec_c)
-            mssg += "pms_c          : ({:.3f}, {:.3f})\n".format(pmra_c, pmde_c)
-            mssg += "plx_c          : {:.3f}".format(plx_c)
+            mssg = f"radec_c        : ({ra_c:.4f}, {dec_c:.4f})\n"
+            mssg += f"pms_c          : ({pmra_c:.3f}, {pmde_c:.3f})\n"
+            mssg += f"plx_c          : {plx_c:.3f}"
 
         elif algo == "kde_2d":
             if data_2d == "radec":
@@ -293,9 +293,9 @@ class Cluster:
             x_c, y_c = cp.get_2D_center(x, y)
 
             if c_str == "radec_c":
-                self.radec_c = [x_c, y_c]
+                self.radec_c = np.array([x_c, y_c])
             if c_str == "pms_c":
-                self.pms_c = [x_c, y_c]
+                self.pms_c = np.array([x_c, y_c])
 
             mssg = "{}        : ({:.4f}, {:.4f})".format(c_str, x_c, y_c)
 
@@ -372,7 +372,7 @@ class Cluster:
             raise ValueError(f"'Argument algo={algo}' not recognized")
 
         xv, yv = self.ra_v, self.dec_v
-        xy_center = self.radec_c
+        xy_center = np.array(self.radec_c)
         # Convert (RA, DEC) to (lon, lat)
         if eq_to_gal is True:
             xv, yv = cp.radec2lonlat(xv, yv)
@@ -388,7 +388,6 @@ class Cluster:
                 self.pmra_v,
                 self.pmde_v,
                 self.plx_v,
-                list(xy_center),
                 self.pms_c,
                 self.plx_c,
             )

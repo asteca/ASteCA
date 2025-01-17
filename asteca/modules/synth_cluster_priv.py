@@ -7,7 +7,7 @@ from .imfs import invTrnsfSmpl, sampleInv
 def sample_imf(
     rng: np.random.Generator, IMF_name: str, max_mass: float, Nmets: int, Nages: int
 ) -> tuple[list, list]:
-    """Returns the number of stars per interval of mass for the selected IMF.
+    """Returns arrays of sampled stars for the selected IMF.
 
     :param rng: Random number generator.
     :type rng: np.random.Generator
@@ -375,7 +375,7 @@ def qDistribution(
                 """
                 pk /= pk.sum()
                 # pyright error: https://github.com/scipy/scipy/issues/22327
-                fq = stats.rv_discrete(a=0.0, b=1.0, values=(xk, pk))
+                fq = stats.rv_discrete(a=0.0, b=1.0, values=(xk, pk))  # pyright: ignore
                 return fq
 
             # Fisher's distribution

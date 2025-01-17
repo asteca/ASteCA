@@ -22,6 +22,7 @@ def ranModels(
     :type N_models: int
     :param rng: Random number generator.
     :type rng: np.random.Generator
+
     :return: List of dictionaries, each containing a set of sampled parameters.
     :rtype: list[dict]
     """
@@ -34,45 +35,56 @@ def ranModels(
     return ran_models
 
 
-def get_close_idxs(self, obs_phot: np.ndarray, isoch: np.ndarray) -> np.ndarray:
+def get_close_idxs(
+    m_ini_idx: int, obs_phot: np.ndarray, isoch: np.ndarray
+) -> np.ndarray:
     """Indexes of the closest synthetic stars to observed stars
 
+    :param m_ini_idx: Index of the initial mass column
+    :type m_ini_idx: int
     :param obs_phot: Observed photometry.
     :type obs_phot: np.ndarray
     :param isoch: Isochrone data.
     :type isoch: np.ndarray
+
     :return: Indexes of the closest synthetic stars.
     :rtype: np.ndarray
     """
-    synth_photom = isoch[: self.m_ini_idx].T
+    synth_photom = isoch[:m_ini_idx].T
     tree = KDTree(synth_photom)
     _, idxs = tree.query(obs_phot, k=1)
-    return idxs
+    return np.array(idxs)
 
 
-def get_m1m2(self, isoch: np.ndarray, idxs: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def get_m1m2(
+    m_ini_idx: int, isoch: np.ndarray, idxs: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
     """Assign primary and secondary (synthetic) masses to each observed star.
 
+    :param m_ini_idx: Index of the initial mass column
+    :type m_ini_idx: int
     :param isoch: Isochrone data.
     :type isoch: np.ndarray
     :param idxs: Indexes of the closest synthetic stars.
     :type idxs: np.ndarray
+
     :return: Primary and secondary masses for each observed star.
     :rtype: tuple[np.ndarray, np.ndarray]
     """
-    mass_1, mass_2 = isoch[self.m_ini_idx], isoch[-1]
+    mass_1, mass_2 = isoch[m_ini_idx], isoch[-1]
     m1_obs, m2_obs = mass_1[idxs], mass_2[idxs]
 
     return m1_obs, m2_obs
 
 
-def get_bpr(self, isoch: np.ndarray, idxs: np.ndarray) -> float:
+def get_bpr(isoch: np.ndarray, idxs: np.ndarray) -> float:
     """Calculate the binary fraction for the observed cluster.
 
     :param isoch: Isochrone data.
     :type isoch: np.ndarray
     :param idxs: Indexes of the closest synthetic stars.
     :type idxs: np.ndarray
+
     :return: Binary fraction.
     :rtype: float
     """
@@ -85,27 +97,32 @@ def get_bpr(self, isoch: np.ndarray, idxs: np.ndarray) -> float:
 
 
 def galactic_coords(
-    synthcl,
+    sampled_models: list[dict],
+    fix_params: dict,
     radec_c: tuple[float, float],
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Convert equatorial coordinates to cylindrical, and obtain the vertical
     distance Z and the galactocentric distance R_GC.
 
-    :param synthcl: Synthetic cluster object.
-    :type synthcl: Synthetic
+    :param sampled_models: List of dictionaries, each containing a set of sampled
+     parameters associated to non empty isochrones.
+    :type sampled_models: list[dict]
+    :param fix_params: Dictionary of fixed fundamental parameters
+    :type fix_params: dict
     :param radec_c: Right ascension and declination of the cluster center.
     :type radec_c: tuple[float, float]
+
     :return: Vertical distance Z, galactocentric distance R_GC, and projected
         galactocentric distance R_xy.
     :rtype: tuple[np.ndarray, np.ndarray, np.ndarray]
     """
-    c = SkyCoord(ra=radec_c[0] * u.degree, dec=radec_c[1] * u.degree)
-    lon, lat = c.galactic.l, c.galactic.b
+    c = SkyCoord(ra=radec_c[0] * u.degree, dec=radec_c[1] * u.degree)  # pyright: ignore
+    lon, lat = c.galactic.l, c.galactic.b  # pyright: ignore
     dist_pc = []
-    for model in synthcl.sampled_models:
-        model_comb = synthcl.fix_params | model
+    for model in sampled_models:
+        model_comb = fix_params | model
         dist_pc.append(10 ** (0.2 * (model_comb["dm"] + 5)))
-    cgal = SkyCoord(l=lon, b=lat, distance=dist_pc * u.pc, frame="galactic")
+    cgal = SkyCoord(l=lon, b=lat, distance=dist_pc * u.pc, frame="galactic")  # pyright: ignore
     c_GC = cgal.transform_to(coord.Galactocentric())
 
     X, Y, Z = np.array(c_GC.x), np.array(c_GC.y), np.array(c_GC.z)
@@ -115,7 +132,13 @@ def galactic_coords(
     return Z, R_GC, R_xy
 
 
-def get_M_actual(synthcl, sampled_synthcl: np.ndarray) -> tuple[float, float]:
+def get_M_actual(
+    rng: np.random.Generator,
+    m_ini_idx: int,
+    st_dist_mass: list[list],
+    st_dist_mass_ordered: list[list],
+    sampled_synthcl: np.ndarray,
+) -> tuple[float, float]:
     """Estimate the actual mass using the observed mass and the fraction of
     mass estimated to be beyond the maximum observed magnitude.
 
@@ -123,21 +146,28 @@ def get_M_actual(synthcl, sampled_synthcl: np.ndarray) -> tuple[float, float]:
 
     M_actual = M_obs + M_phot
 
-    :param synthcl: Synthetic cluster object.
-    :type synthcl: Synthetic
+    :param rng: Random number generator
+    :type rng: np.random.Generator
+    :param m_ini_idx: Index of the initial mass column
+    :type m_ini_idx: int
+    :param st_dist_mass: List of sampled masses
+    :type st_dist_mass: list[list]
+    :param st_dist_mass_ordered: List of ordered sampled masses
+    :type st_dist_mass_ordered: list[list]
     :param sampled_synthcl: Sampled synthetic cluster data.
     :type sampled_synthcl: np.ndarray
+
     :return: Observed mass and photometric mass.
     :rtype: tuple[float, float]
     """
-    mass_ini = sampled_synthcl[synthcl.m_ini_idx]
+    mass_ini = sampled_synthcl[m_ini_idx]
     mass_2nd = sampled_synthcl[-1]
     M_obs = np.nansum([mass_ini, mass_2nd])
 
-    Nmets, Nages = len(synthcl.st_dist_mass), len(synthcl.st_dist_mass[0])
-    i = synthcl.rng.integers(Nmets)
-    j = synthcl.rng.integers(Nages)
-    sorted_masses = synthcl.st_dist_mass_ordered[i][j]
+    Nmets, Nages = len(st_dist_mass), len(st_dist_mass[0])
+    i = rng.integers(Nmets)
+    j = rng.integers(Nages)
+    sorted_masses = st_dist_mass_ordered[i][j]
 
     idx_min = np.argmin(abs(sorted_masses - mass_ini.min()))
     idx_max = np.argmin(abs(sorted_masses - mass_ini.max()))
@@ -159,6 +189,7 @@ def stellar_evol_mass_loss(z_met: float, loga: float) -> float:
     :type z_met: float
     :param loga: Logarithm of the age.
     :type loga: float
+
     :return: Fraction of mass lost by stellar evolution.
     :rtype: float
     """
@@ -193,7 +224,7 @@ def ambient_density(
     Z: np.ndarray,
     R_GC: np.ndarray,
     R_xy: np.ndarray,
-) -> np.ndarray:
+) -> float:
     """Calculate the ambient density.
 
     Source: Angelo et al. (2023); 10.1093/mnras/stad1038
@@ -220,8 +251,9 @@ def ambient_density(
     :type R_GC: np.ndarray
     :param R_xy: Projected galactocentric distance.
     :type R_xy: np.ndarray
+
     :return: Ambient density.
-    :rtype: np.ndarray
+    :rtype: float
     """
     Phi_B_Laplacian = 2 * M_B * r_B / (R_GC * (R_GC + r_B) ** 3)
     numerator = (
@@ -244,7 +276,7 @@ def ambient_density(
 
 
 def dissolution_param(
-    C_env: float, epsilon: float, gamma: float, rho_amb: np.ndarray
+    C_env: float, epsilon: float, gamma: float, rho_amb: float
 ) -> np.ndarray:
     """Calculate the dissolution parameter.
 
@@ -292,7 +324,8 @@ def dissolution_param(
     :param gamma: Parameter related to the mass-loss rate.
     :type gamma: float
     :param rho_amb: Ambient density.
-    :type rho_amb: np.ndarray
+    :type rho_amb: float
+
     :return: Dissolution parameter.
     :rtype: np.ndarray
     """
@@ -303,7 +336,7 @@ def dissolution_param(
 
 def minit_LGB05(
     loga: float, M_actual: float, gamma: float, t0: np.ndarray, mu_ev: float
-) -> np.ndarray:
+) -> float:
     """Estimate the initial mass from Lamers et al. 2005.
 
     :param loga: Logarithm of the age.
@@ -316,8 +349,9 @@ def minit_LGB05(
     :type t0: np.ndarray
     :param mu_ev: Fraction of mass lost by stellar evolution.
     :type mu_ev: float
+
     :return: Initial mass.
-    :rtype: np.ndarray
+    :rtype: float
     """
     t = 10**loga
     M_init = ((M_actual**gamma + gamma * (t / t0)) ** (1 / gamma)) / mu_ev
