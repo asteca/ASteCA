@@ -6,8 +6,8 @@ from . import cluster_priv as cp
 
 def fastMP(
     X: np.ndarray,
-    xy_c: list[float],
-    vpd_c: list[float],
+    xy_c: np.ndarray,
+    vpd_c: np.ndarray,
     plx_c: float,
     fixed_centers: bool,
     N_cluster: int,
@@ -22,9 +22,9 @@ def fastMP(
         values.
     :type X: np.ndarray
     :param xy_c: Initial center coordinates (longitude, latitude).
-    :type xy_c: list[float]
+    :type xy_c: np.ndarray
     :param vpd_c: Initial center proper motion values (pmRA, pmDE).
-    :type vpd_c: list[float]
+    :type vpd_c: np.ndarray
     :param plx_c: Initial center parallax value.
     :type plx_c: float
     :param fixed_centers: If True, keep the centers fixed during the iterative process.
@@ -124,7 +124,7 @@ def fastMP(
             prob_old_arr = np.array(probs)
 
     if r < N_resample:
-        out_mssg = f"Convergence reached at {r+1} runs"
+        out_mssg = f"Convergence reached at {r + 1} runs"
     else:
         out_mssg = f"Maximum number of runs reached: {N_resample}"
 
@@ -141,8 +141,8 @@ def get_dims_norm(
     pmRA: np.ndarray,
     pmDE: np.ndarray,
     plx: np.ndarray,
-    xy_c: list[float],
-    vpd_c: list[float],
+    xy_c: np.ndarray,
+    vpd_c: np.ndarray,
     plx_c: float,
     st_idx: np.ndarray | None,
 ) -> np.ndarray:
@@ -162,9 +162,9 @@ def get_dims_norm(
     :param plx: Parallax values.
     :type plx: np.ndarray
     :param xy_c: Center coordinates (longitude, latitude).
-    :type xy_c: list[float]
+    :type xy_c: np.ndarray
     :param vpd_c: Center proper motion values (pmRA, pmDE).
-    :type vpd_c: list[float]
+    :type vpd_c: np.ndarray
     :param plx_c: Center parallax value.
     :type plx_c: float
     :param st_idx: Indices of the selected stars.
@@ -198,8 +198,8 @@ def get_dims_norm(
 
 
 def get_center(
-    xy_c: list[float] | None,
-    vpd_c: list[float] | None,
+    xy_c: np.ndarray | None,
+    vpd_c: np.ndarray | None,
     plx_c: float | None,
     fixed_centers: bool,
     N_clust_min: int,
@@ -209,13 +209,13 @@ def get_center(
     pmRA: np.ndarray,
     pmDE: np.ndarray,
     plx: np.ndarray,
-) -> tuple[list[float], list[float], float]:
+) -> tuple[np.ndarray, np.ndarray, float]:
     """Return 5-dimensional center values, within the given constrains
 
     :param xy_c: Initial center coordinates (longitude, latitude).
-    :type xy_c: list[float] | None
+    :type xy_c: np.ndarray | None
     :param vpd_c: Initial center proper motion values (pmRA, pmDE).
-    :type vpd_c: list[float] | None
+    :type vpd_c: np.ndarray | None
     :param plx_c: Initial center parallax value.
     :type plx_c: float | None
     :param fixed_centers: If True, keep the centers fixed during the iterative process.
@@ -239,7 +239,7 @@ def get_center(
         - Refined center coordinates (longitude, latitude).
         - Refined center proper motion values (pmRA, pmDE).
         - Refined center parallax value.
-    :rtype: tuple[list[float], list[float], float]
+    :rtype: tuple[np.ndarray, np.ndarray, float]
     """
 
     # Skip process if all centers are fixed
@@ -252,7 +252,7 @@ def get_center(
         x_c, y_c = xy_c
         pmra_c, pmde_c = vpd_c
         plx_c = plx_c
-        return [x_c, y_c], [pmra_c, pmde_c], plx_c
+        return np.array([x_c, y_c]), np.array([pmra_c, pmde_c]), plx_c
 
     # Estimate initial center
     x_c, y_c, pmra_c, pmde_c, plx_c = cp.get_5D_center(
@@ -267,13 +267,13 @@ def get_center(
         if plx_c is not None:
             plx_c = plx_c
 
-    return [x_c, y_c], [pmra_c, pmde_c], plx_c
+    return np.array([x_c, y_c]), np.array([pmra_c, pmde_c]), plx_c
 
 
 def first_filter(
     N_clust_max: int,
     idx_all: np.ndarray,
-    vpd_c: list[float],
+    vpd_c: np.ndarray,
     plx_c: float,
     lon: np.ndarray,
     lat: np.ndarray,
@@ -305,7 +305,7 @@ def first_filter(
     :param idx_all: Indexes of the input stars.
     :type idx_all: np.ndarray
     :param vpd_c: Center proper motion values (pmRA, pmDE).
-    :type vpd_c: list[float]
+    :type vpd_c: np.ndarray
     :param plx_c: Center parallax value.
     :type plx_c: float
     :param lon: Longitude of the stars.
