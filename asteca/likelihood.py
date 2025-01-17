@@ -1,4 +1,5 @@
 import numpy as np
+
 from .cluster import Cluster
 from .modules import likelihood_priv as lpriv
 
@@ -21,8 +22,8 @@ class Likelihood:
     :type lkl_name: str
     :param bin_method: Bin method used to split the color-magnitude diagram into cells
         (`Hess diagram <https://en.wikipedia.org/wiki/Hess_diagram>`__); one of:
-        ``knuth, fixed, bayes_blocks``, ``fixed`` uses (15, 10) bins in magnitude and
-        color(s) respectively; defaults to ``knuth``
+        ``knuth, blocks, scott, freedman or fixed``.The method ``fixed`` uses (15, 10)
+        bins in magnitude and color(s) respectively; defaults to ``knuth``
     :type bin_method: str
 
     :raises ValueError: If any of the attributes is not recognized as a valid option
@@ -41,7 +42,7 @@ class Likelihood:
                 f"'{self.lkl_name}' not recognized. Should be one of {likelihoods}"
             )
 
-        bin_methods = ("knuth", "fixed", "bayes_blocks")
+        bin_methods = ("knuth", "blocks", "scott", "freedman", "fixed")
         if self.bin_method not in bin_methods:
             raise ValueError(
                 f"Binning '{self.bin_method}' not recognized. "
@@ -49,11 +50,8 @@ class Likelihood:
             )
 
         # Obtain data used by the ``likelihood.get()`` method
-        lpriv.lkl_data(self)
-
-        # Evaluate cluster against itself
-        self.max_lkl = self.get(
-            np.array([self.my_cluster.mag_p, *self.my_cluster.colors_p])
+        self.ranges, self.Nbins, self.cl_z_idx, self.cl_histo_f_z = lpriv.lkl_data(
+            bin_method, my_cluster.mag_p, my_cluster.colors_p
         )
 
         self.max_lkl = 1
@@ -67,14 +65,16 @@ class Likelihood:
 
         print("\nLikelihood object generated")
 
-    def get(self, synth_clust: np.array) -> float:
+    def get(self, synth_clust: np.ndarray) -> float:
         """Evaluate the selected likelihood function.
 
         :param synth_clust:  Numpy array containing the synthetic cluster. The shape of
             this array must be: ``[magnitude, color1, (color2)]``, where ``magnitude``
             and ``color`` are arrays with the magnitude and color photometric data
             (``color2`` is the optional second color defined)
-        :type synth_clust: np.array
+        :type synth_clust: np.ndarray
+
+        :raise ValueError: If the likelihood function is not recognized
 
         :return: Likelihood value
         :rtype: float
@@ -92,7 +92,13 @@ class Likelihood:
         #     return lpriv.visual(self, synth_clust)
         # if self.lkl_name == "mean_dist":
         #     return lpriv.mean_dist(self, synth_clust)
-        if self.lkl_name == "bins_distance":
-            return lpriv.bins_distance(self, synth_clust)
-        if self.lkl_name == "chisq":
-            return lpriv.chi_square(self, synth_clust)
+        elif self.lkl_name == "bins_distance":
+            return lpriv.bins_distance(
+                self.my_cluster.mag_p, self.my_cluster.colors_p, synth_clust
+            )
+        elif self.lkl_name == "chisq":
+            return lpriv.chi_square(
+                self.ranges, self.Nbins, self.cl_z_idx, self.cl_histo_f_z, synth_clust
+            )
+        else:
+            raise ValueError(f"Likelihood '{self.lkl_name}' not recognized")

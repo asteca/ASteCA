@@ -1,10 +1,12 @@
 import numpy as np
-from astropy.stats import bayesian_blocks, knuth_bin_width
+from astropy.stats import calculate_bin_edges
 from fast_histogram import histogram2d
 from scipy.special import loggamma
 
 
-def lkl_data(bin_method: str, mag_p: np.ndarray, colors_p: list[np.ndarray]) -> tuple[list, list, np.ndarray, np.ndarray]:
+def lkl_data(
+    bin_method: str, mag_p: np.ndarray, colors_p: list[np.ndarray]
+) -> tuple[list, list, np.ndarray, np.ndarray]:
     """Prepare data for likelihood calculation.
 
     This function calculates the Hess diagram of the observed cluster and
@@ -16,6 +18,7 @@ def lkl_data(bin_method: str, mag_p: np.ndarray, colors_p: list[np.ndarray]) -> 
     :type mag_p: np.ndarray
     :param colors_p: List of arrays of colors.
     :type colors_p: list[np.ndarray]
+
     :return: Bin ranges, number of bins, indexes of bins with stars, and flattened histogram.
     :rtype: tuple[list, list, np.ndarray, np.ndarray]
     """
@@ -54,7 +57,9 @@ def lkl_data(bin_method: str, mag_p: np.ndarray, colors_p: list[np.ndarray]) -> 
     return ranges, Nbins, cl_z_idx, cl_histo_f_z
 
 
-def bin_edges_f(bin_method: str, mag: np.ndarray, colors: list[np.ndarray]) -> tuple[list, list]:
+def bin_edges_f(
+    bin_method: str, mag: np.ndarray, colors: list[np.ndarray]
+) -> tuple[list, list]:
     """Calculate bin edges for the Hess diagram.
 
     This function calculates the bin edges for the Hess diagram, using
@@ -66,22 +71,14 @@ def bin_edges_f(bin_method: str, mag: np.ndarray, colors: list[np.ndarray]) -> t
     :type mag: np.ndarray
     :param colors: List of arrays of colors.
     :type colors: list[np.ndarray]
+
     :return: Bin ranges and number of bins.
     :rtype: tuple[list, list]
     """
 
     bin_edges = []
 
-    if bin_method == "knuth":
-        bin_edges.append(
-            knuth_bin_width(mag[~np.isnan(mag)], return_bins=True, quiet=True)[1]
-        )
-        for col in colors:
-            bin_edges.append(
-                knuth_bin_width(col[~np.isnan(col)], return_bins=True, quiet=True)[1]
-            )
-
-    elif bin_method == "fixed":
+    if bin_method == "fixed":
         N_mag, N_col = 15, 10
         # Magnitude
         mag_min, mag_max = np.nanmin(mag), np.nanmax(mag)
@@ -90,13 +87,15 @@ def bin_edges_f(bin_method: str, mag: np.ndarray, colors: list[np.ndarray]) -> t
         for col in colors:
             col_min, col_max = np.nanmin(col), np.nanmax(col)
             bin_edges.append(np.linspace(col_min, col_max, N_col))
-
-    elif bin_method == "bayes_blocks":
-        bin_edges.append(bayesian_blocks(mag[~np.isnan(mag)]))
+    else:
+        bin_edges.append(calculate_bin_edges(mag[~np.isnan(mag)], bins=bin_method)[1])
         for col in colors:
-            bin_edges.append(bayesian_blocks(col[~np.isnan(col)]))
+            bin_edges.append(
+                calculate_bin_edges(col[~np.isnan(col)], bins=bin_method)[1]
+            )
 
-    # Extract ranges and number of bins, used by histogram2d
+    # Extract ranges and number of bins for each dimension (magnitude and colors),
+    # used by histogram2d
     ranges, Nbins = [], []
     for be in bin_edges:
         ranges.append([be[0], be[-1]])
@@ -148,34 +147,22 @@ def tremmel(
 
         \log(p)\approx SumLogGamma(n_i, m_i) - 0.693\,M
 
+    :param ranges: Per-dimension ranges.
+    :type ranges: list
+    :param Nbins: Per-dimension total number of bins
+    :type Nbins: list
+    :param cl_z_idx: Index of bins where the number of stars is not 0
+    :type cl_z_idx: np.ndarray
+    :param cl_histo_f_z: Flattened observed Hess diagram with the empty bins removed
+    :type cl_histo_f_z: np.ndarray
+    :param max_lkl: Maximum likelihood value, used for normalization
+    :type max_lkl: float
     :param synth_clust: Synthetic cluster data.
     :type synth_clust: np.ndarray
+
     :return: Log likelihood value.
     :rtype: float
     """
-
-    p(d|\theta) = \prod_i^N \frac{\Gamma(n_i+m_i+\frac{1}{2})}
-        {2^{n_i+m_i+\frac{1}{2}} n_i!\Gamma(m_i+\frac{1}{2}))}
-
-    \log(p) = \sum_i^N \left[\log\Gamma(n_i+m_i+\frac{1}{2})
-        - (m_i+n_i+\frac{1}{2})\log2 -\log n_i!
-        - \log \Gamma(m_i+\frac{1}{2}) \right]
-
-    Minus logarithm:
-
-    \log(p) = \sum_i^N \left[\log\Gamma(n_i+m_i+\frac{1}{2})-
-        \log \Gamma(m_i+\frac{1}{2}) \right]
-        - 0.693  (M+N+\frac{1}{2}) - \sum_i^N \log n_i!
-
-    \log(p) = SumLogGamma(n_i, m_i) -0.693 (N+\frac{1}{2}) -
-        \sum_i^N \log n_i! - 0.693\,M
-
-    \log(p) = f(n_i) + SumLogGamma(n_i, m_i) - 0.693\,M
-
-    \log(p)\approx SumLogGamma(n_i, m_i) - 0.693\,M
-
-    """
-
     # If synthetic cluster is empty, assign a small likelihood value.
     if not synth_clust.any():
         return -1.0e09
@@ -191,10 +178,10 @@ def tremmel(
             mag,
             col,
             range=[
-                [self.ranges[0][0], self.ranges[0][1]],
-                [self.ranges[i + 1][0], self.ranges[i + 1][1]],
+                [ranges[0][0], ranges[0][1]],
+                [ranges[i + 1][0], ranges[i + 1][1]],
             ],
-            bins=[self.Nbins[0], self.Nbins[i + 1]],
+            bins=[Nbins[0], Nbins[i + 1]],
         )
 
         # Flatten array
@@ -202,11 +189,10 @@ def tremmel(
     syn_histo_f = np.array(syn_histo_f)
 
     # Remove all bins where n_i = 0 (no observed stars).
-    syn_histo_f_z = syn_histo_f[self.cl_z_idx]
+    syn_histo_f_z = syn_histo_f[cl_z_idx]
 
     SumLogGamma = np.sum(
-        loggamma(self.cl_histo_f_z + syn_histo_f_z + 0.5)
-        - loggamma(syn_histo_f_z + 0.5)
+        loggamma(cl_histo_f_z + syn_histo_f_z + 0.5) - loggamma(syn_histo_f_z + 0.5)
     )
 
     # M = syn_histo_f_z.sum()
@@ -336,31 +322,42 @@ def tremmel(
 #     return P_val
 
 
-def bins_distance(self, synth_clust: np.ndarray) -> float:
-    """Sum of distances to corresponding bins in he Hess diagram.
+def bins_distance(
+    mag_p: np.ndarray, colors_p: list[np.ndarray], synth_clust: np.ndarray
+) -> float:
+    """Sum of distances to corresponding bins in the Hess diagram. Only applied
+    on the first two dimensions (magnitude +  first color)
 
+    :param mag_p: Array of magnitudes.
+    :type mag_p: np.ndarray
+    :param colors_p: List of arrays of colors.
+    :type colors_p: list[np.ndarray]
     :param synth_clust: Synthetic cluster data.
     :type synth_clust: np.ndarray
+
     :return: Sum of distances.
     :rtype: float
     """
     if not synth_clust.any():
         return 1.0e09
 
-    mag_o, colors_o = self.my_cluster.mag_p, self.my_cluster.colors_p[0]
-    mag_s, colors_s = synth_clust[0], synth_clust[1]
-
+    # Fixed percentiles for magnitude and color
     mpercs = (0.5, 10, 20, 30, 40, 50, 60, 70, 80, 90)
     cpercs = (0.5, 10, 20, 30, 40, 50, 60, 70, 75, 80, 85, 90, 95)
 
-    perc_mag_o = np.nanpercentile(mag_o, mpercs)
-    perc_colors_o = np.nanpercentile(colors_o, cpercs)
+    # Evaluate the magnitude and color in the defined percentiles
+    perc_mag_o = np.nanpercentile(mag_p, mpercs)
+    perc_colors_o = np.nanpercentile(colors_p[0], cpercs)
+
+    # Create a 2-dimensional array of shape: (2, len(mpercs) * len(cpercs))
     pts_o = []
     for pm in perc_mag_o:
         for pc in perc_colors_o:
             pts_o.append([pm, pc])
     pts_o = np.array(pts_o).T
 
+    # Same for the synthetic cluster
+    mag_s, colors_s = synth_clust[0], synth_clust[1]
     perc_mag_s = np.nanpercentile(mag_s, mpercs)
     perc_colors_s = np.nanpercentile(colors_s, cpercs)
     pts_s = []
@@ -369,30 +366,51 @@ def bins_distance(self, synth_clust: np.ndarray) -> float:
             pts_s.append([pm, pc])
     pts_s = np.array(pts_s).T
 
-    # import matplotlib.pyplot as plt
-    # plt.scatter(colors_o, mag_o, alpha=.25, c='r')
-    # plt.scatter(colors_s, mag_s, alpha=.25, c='b')
-    # plt.scatter(pts_o[1], pts_o[0], c='r')
-    # plt.scatter(pts_s[1], pts_s[0], c='b')
-    # plt.gca().invert_yaxis()
-    # plt.show()
-
-    # dist = np.sqrt((pts_s[0] - pts_o[0]) ** 2 + (pts_s[1] - pts_o[1]) ** 2)
+    # Distance (non root squared) between the two arrays
     dist = (pts_s[0] - pts_o[0]) ** 2 + (pts_s[1] - pts_o[1]) ** 2
+    # More weight to smaller magnitudes and color (top left of Hess diagram)
     weights = np.linspace(1, 0.05, len(mpercs) * len(cpercs))
     lkl = sum(dist * weights)
+
+    # import matplotlib.pyplot as plt
+    # plt.title(f"lkl={lkl:.3f}")
+    # plt.scatter(colors_p[0], mag_p, alpha=0.25, c="r", label='obs')
+    # plt.scatter(colors_s, mag_s, alpha=0.25, c="b", label='synth')
+    # # This shows the positions where the observed Hess diagram is defined by the
+    # # percentiles
+    # plt.scatter(pts_o[1], pts_o[0], c="r", marker="*")
+    # # Same for the synthetic Hess diagram
+    # plt.scatter(pts_s[1], pts_s[0], c="b", marker="x")
+    # plt.gca().invert_yaxis()
+    # plt.legend()
+    # plt.show()
 
     return lkl
 
 
-def chi_square(self, synth_clust: np.ndarray) -> float:
+def chi_square(
+    ranges: list,
+    Nbins: list,
+    cl_z_idx: np.ndarray,
+    cl_histo_f_z: np.ndarray,
+    synth_clust: np.ndarray,
+) -> float:
     """Calculate the chi-square value.
 
     This function calculates the chi-square value between the observed and
     synthetic clusters.
 
+    :param ranges: Per-dimension ranges.
+    :type ranges: list
+    :param Nbins: Per-dimension total number of bins
+    :type Nbins: list
+    :param cl_z_idx: Index of bins where the number of stars is not 0
+    :type cl_z_idx: np.ndarray
+    :param cl_histo_f_z: Flattened observed Hess diagram with the empty bins removed
+    :type cl_histo_f_z: np.ndarray
     :param synth_clust: Synthetic cluster data.
     :type synth_clust: np.ndarray
+
     :return: Chi-square value.
     :rtype: float
     """
@@ -408,17 +426,17 @@ def chi_square(self, synth_clust: np.ndarray) -> float:
             mag,
             col,
             range=[
-                [self.ranges[0][0], self.ranges[0][1]],
-                [self.ranges[i + 1][0], self.ranges[i + 1][1]],
+                [ranges[0][0], ranges[0][1]],
+                [ranges[i + 1][0], ranges[i + 1][1]],
             ],
-            bins=[self.Nbins[0], self.Nbins[i + 1]],
+            bins=[Nbins[0], Nbins[i + 1]],
         )
         # Flatten array
         syn_histo_f += list(hess_diag.ravel())
     syn_histo_f = np.array(syn_histo_f)
 
     # Remove all bins where n_i = 0 (no observed stars).
-    syn_histo_f_z = syn_histo_f[self.cl_z_idx]
+    syn_histo_f_z = syn_histo_f[cl_z_idx]
 
-    chisq = ((self.cl_histo_f_z - syn_histo_f_z) ** 2).sum()
+    chisq = ((cl_histo_f_z - syn_histo_f_z) ** 2).sum()
     return chisq
