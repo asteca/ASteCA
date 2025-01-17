@@ -1,6 +1,8 @@
 import warnings
+
 import numpy as np
 from astropy.stats import RipleysKEstimator
+
 from . import cluster_priv as cp
 
 
@@ -51,7 +53,6 @@ def ripley_nmembs(
     pmRA,
     pmDE,
     plx,
-    xy_c,
     vpd_c,
     plx_c,
     N_clust=50,
