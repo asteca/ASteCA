@@ -26,11 +26,15 @@ def sample_imf(
     """
     inv_cdf = invTrnsfSmpl(IMF_name)
 
+    # Sample in chunks until the maximum defined mass is reached. A simple
+    # analysis points to this being the optimal N_chunk
+    N_chunk = max(100, int(max_mass / 40))
+
     st_dist_mass, st_dist_mass_ordered = [], []
     for i in range(Nmets):
         met_lst, met_lst_ord = [], []
         for j in range(Nages):
-            sampled_IMF = sampleInv(rng, max_mass, inv_cdf)
+            sampled_IMF = sampleInv(rng, max_mass, inv_cdf, N_chunk)
             met_lst.append(sampled_IMF)
             met_lst_ord.append(np.sort(sampled_IMF))
         st_dist_mass.append(met_lst)
