@@ -88,10 +88,10 @@ def bin_edges_f(
             col_min, col_max = np.nanmin(col), np.nanmax(col)
             bin_edges.append(np.linspace(col_min, col_max, N_col))
     else:
-        bin_edges.append(calculate_bin_edges(mag[~np.isnan(mag)], bins=bin_method)[1])  # pyright: ignore
+        bin_edges.append(calculate_bin_edges(mag[~np.isnan(mag)], bins=bin_method))  # pyright: ignore
         for col in colors:
             bin_edges.append(
-                calculate_bin_edges(col[~np.isnan(col)], bins=bin_method)[1]  # pyright: ignore
+                calculate_bin_edges(col[~np.isnan(col)], bins=bin_method)  # pyright: ignore
             )
 
     # Extract ranges and number of bins for each dimension (magnitude and colors),
