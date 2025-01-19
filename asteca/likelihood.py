@@ -22,8 +22,11 @@ class Likelihood:
     :type lkl_name: str
     :param bin_method: Bin method used to split the color-magnitude diagram into cells
         (`Hess diagram <https://en.wikipedia.org/wiki/Hess_diagram>`__); one of:
-        ``knuth, blocks, scott, freedman or fixed``.The method ``fixed`` uses (15, 10)
-        bins in magnitude and color(s) respectively; defaults to ``knuth``
+        ``knuth, blocks, scott, freedman or fixed``. See
+        `Choosing Histogram Bins <https://docs.astropy.org/en/stable/visualization/histogram.html>`__
+        in `astropy <https://www.astropy.org/>`__ documentation for details on the
+        ``knuth, blocks, scott, freedman`` methods.  The method ``fixed``
+        uses (15, 10) bins in magnitude and color(s) respectively. Defaults to ``knuth``
     :type bin_method: str
 
     :raises ValueError: If any of the attributes is not recognized as a valid option
