@@ -68,7 +68,7 @@ def ripley_nmembs(
     pmRA: np.ndarray,
     pmDE: np.ndarray,
     plx: np.ndarray,
-    vpd_c: np.ndarray,
+    vpd_c: tuple[float, float],
     plx_c: float,
     N_clust: int = 50,
     N_extra: int = 5,
@@ -87,7 +87,7 @@ def ripley_nmembs(
     :param plx: Array of parallax values.
     :type plx: np.ndarray
     :param vpd_c: Center coordinates in proper motion (pmRA, pmDE).
-    :type vpd_c: np.ndarray
+    :type vpd_c: tuple[float, float]
     :param plx_c: Center parallax value.
     :type plx_c: float
     :param N_clust: Initial number of stars to consider as a cluster, defaults to 50

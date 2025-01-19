@@ -242,7 +242,8 @@ class Cluster:
             glon, glat = cp.radec2lonlat(self.ra_v, self.dec_v)
             lonlat_c = None
             if radec_c is not None:
-                lonlat_c = cp.radec2lonlat(radec_c[0], radec_c[1])
+                lon, lat = cp.radec2lonlat(radec_c[0], radec_c[1])
+                lonlat_c = (lon, lat)
 
             # Remove nans
             X = np.array([glon, glat, self.pmra_v, self.pmde_v, self.plx_v])
@@ -250,22 +251,22 @@ class Cluster:
             _, X_no_nan = cp.reject_nans(X)
             lon, lat, pmRA, pmDE, plx = X_no_nan
 
-            x_c, y_c, pmra_c, pmde_c, plx_c = cp.get_5D_center(
+            x_c, y_c, pmra_c, pmde_c, plx_c = cp.get_knn_5D_center(
                 lon,
                 lat,
                 pmRA,
                 pmDE,
                 plx,
-                xy_c=np.array(lonlat_c),
-                vpd_c=np.array(pms_c),
+                xy_c=lonlat_c,
+                vpd_c=pms_c,
                 plx_c=plx_c,
                 N_clust_min=self.N_clust_min,
                 N_clust_max=self.N_clust_max,
             )
             ra_c, dec_c = cp.lonlat2radec(x_c, y_c)
 
-            self.radec_c = np.array([ra_c, dec_c])
-            self.pms_c = np.array([pmra_c, pmde_c])
+            self.radec_c = (ra_c, dec_c)
+            self.pms_c = (pmra_c, pmde_c)
             self.plx_c = plx_c
 
             mssg = f"radec_c        : ({ra_c:.4f}, {dec_c:.4f})\n"
@@ -293,9 +294,9 @@ class Cluster:
             x_c, y_c = cp.get_2D_center(x, y)
 
             if c_str == "radec_c":
-                self.radec_c = np.array([x_c, y_c])
+                self.radec_c = (x_c, y_c)
             if c_str == "pms_c":
-                self.pms_c = np.array([x_c, y_c])
+                self.pms_c = (x_c, y_c)
 
             mssg = "{}        : ({:.4f}, {:.4f})".format(c_str, x_c, y_c)
 

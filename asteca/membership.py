@@ -216,12 +216,13 @@ class Membership:
             raise ValueError("Parameter 'N_runs' should be > 10")
 
         xv, yv = self.my_field.ra_v, self.my_field.dec_v
-        xy_center = np.array(self.my_field.radec_c)
+        xy_center = self.my_field.radec_c
         cent_str = "radec_c "
         # Convert (RA, DEC) to (lon, lat)
         if eq_to_gal is True:
             xv, yv = cp.radec2lonlat(xv, yv)
-            xy_center = cp.radec2lonlat(*xy_center)
+            xc, yc = cp.radec2lonlat(*xy_center)
+            xy_center = (float(xc), float(yc))
             cent_str = "lonlat_c"
 
         self._vp("\nRunning fastMP...")
@@ -250,15 +251,15 @@ class Membership:
             ]
         )
         out_mssg, probs = fastMP(
-            X,
+            self.rng,
             xy_center,
             self.my_field.pms_c,
             self.my_field.plx_c,
-            fixed_centers,
             self.my_field.N_cluster,
             self.my_field.N_clust_min,
             self.my_field.N_clust_max,
-            self.rng,
+            fixed_centers,
+            X,
             N_runs,
         )
 

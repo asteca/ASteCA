@@ -63,41 +63,14 @@ def reject_nans(arr_data: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     return idx_clean, arr_data.T[msk_accpt].T
 
 
-def get_Nd_dists(
-    cents: np.ndarray, data: np.ndarray, dists_flag: bool = False
-) -> np.ndarray:
-    """Obtain indexes and distances of stars to the given center
-
-    :param cents: Center coordinates.
-    :type cents: np.ndarray
-    :param data: Array of data.
-    :type data: np.ndarray
-    :param dists_flag: If True, return distances instead of indexes. Defaults to False
-    :type dists_flag: bool
-
-    :return: Indexes or distances of stars to the given center.
-    :rtype: np.ndarray
-    """
-    # Distances to center
-    dist_Nd = spatial.distance.cdist(data, cents).T[0]
-    if dists_flag:
-        # Return the distances
-        return dist_Nd
-
-    # Indexes that sort the distances
-    d_idxs = dist_Nd.argsort()
-    # Return the indexes that sort the distances
-    return d_idxs
-
-
-def get_5D_center(
+def get_knn_5D_center(
     lon: np.ndarray,
     lat: np.ndarray,
     pmRA: np.ndarray,
     pmDE: np.ndarray,
     plx: np.ndarray,
-    xy_c: np.ndarray | None,
-    vpd_c: np.ndarray | None,
+    xy_c: tuple[float, float] | None,
+    vpd_c: tuple[float, float] | None,
     plx_c: float | None,
     N_clust_min: int,
     N_clust_max: int,
@@ -120,9 +93,9 @@ def get_5D_center(
     :param plx: Parallax.
     :type plx: np.ndarray
     :param xy_c: Center coordinates in (lon, lat).
-    :type xy_c: np.ndarray | None
+    :type xy_c: tuple[float, float] | None
     :param vpd_c: Center coordinates in proper motions (pmRA, pmDE).
-    :type vpd_c: np.ndarray | None
+    :type vpd_c: tuple[float, float] | None
     :param plx_c: Center coordinate in parallax.
     :type plx_c: float | None
     :param N_clust_min: Minimum number of stars in the cluster.
@@ -174,8 +147,35 @@ def get_5D_center(
     return x_c, y_c, pmra_c, pmde_c, plx_c
 
 
+def get_Nd_dists(
+    cents: np.ndarray, data: np.ndarray, dists_flag: bool = False
+) -> np.ndarray:
+    """Obtain indexes and distances of stars to the given center
+
+    :param cents: Center coordinates.
+    :type cents: np.ndarray
+    :param data: Array of data.
+    :type data: np.ndarray
+    :param dists_flag: If True, return distances instead of indexes. Defaults to False
+    :type dists_flag: bool
+
+    :return: Indexes or distances of stars to the given center.
+    :rtype: np.ndarray
+    """
+    # Distances to center
+    dist_Nd = spatial.distance.cdist(data, cents).T[0]
+    if dists_flag:
+        # Return the distances
+        return dist_Nd
+
+    # Indexes that sort the distances
+    d_idxs = dist_Nd.argsort()
+    # Return the indexes that sort the distances
+    return d_idxs
+
+
 def filter_pms_stars(
-    xy_c: np.ndarray | None,
+    xy_c: tuple[float, float] | None,
     plx_c: float | None,
     lon: np.ndarray,
     lat: np.ndarray,
@@ -188,7 +188,7 @@ def filter_pms_stars(
     closest to this 1D/2D/3D center, and return their proper motions.
 
     :param xy_c: Center coordinates in (lon, lat).
-    :type xy_c: np.ndarray | None
+    :type xy_c: tuple[float, float] | None
     :param plx_c: Center coordinate in parallax.
     :type plx_c: float | None
     :param lon: Galactic Longitude.
@@ -230,7 +230,7 @@ def filter_pms_stars(
 
 
 def get_pms_center(
-    vpd_c: np.ndarray | None,
+    vpd_c: tuple[float, float] | None,
     N_clust_min: int,
     pmRA: np.ndarray,
     pmDE: np.ndarray,
@@ -241,7 +241,7 @@ def get_pms_center(
     """Estimate the center in proper motion space.
 
     :param vpd_c: Center coordinates in proper motions (pmRA, pmDE).
-    :type vpd_c: np.ndarray | None
+    :type vpd_c: tuple[float, float] | None
     :param N_clust_min: Minimum number of stars in the cluster.
     :type N_clust_min: int
     :param pmRA: Proper motion in Right Ascension.
@@ -310,7 +310,7 @@ def get_stars_close_center(
     pmRA: np.ndarray,
     pmDE: np.ndarray,
     plx: np.ndarray,
-    xy_c: np.ndarray | None,
+    xy_c: tuple[float, float] | None,
     vpd_c_i: tuple[float, float],
     plx_c: float | None,
     N_cent: int,
@@ -330,7 +330,7 @@ def get_stars_close_center(
     :param plx: Parallax.
     :type plx: np.ndarray
     :param xy_c: Center coordinates in (lon, lat).
-    :type xy_c: np.ndarray | None
+    :type xy_c: tuple[float, float] | None
     :param vpd_c_i: Center coordinates in proper motions (pmRA, pmDE).
     :type vpd_c_i: tuple[float, float]
     :param plx_c: Center coordinate in parallax.
