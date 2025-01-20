@@ -129,15 +129,15 @@ class Membership:
         # Generate input data array
         X = [xc, yc]
         e_X = []
-        if hasattr(self.my_field, "mag_p"):
-            X.append(self.my_field.mag_p)
-            e_X.append(self.my_field.e_mag_p)
-        if hasattr(self.my_field, "colors_p"):
-            X.append(self.my_field.colors_p[0])
-            e_X.append(self.my_field.e_colors_p[0])
+        if hasattr(self.my_field, "mag_v"):
+            X.append(self.my_field.mag_v)
+            e_X.append(self.my_field.e_mag_v)
+        if hasattr(self.my_field, "colors_v"):
+            X.append(self.my_field.colors_v[0])
+            e_X.append(self.my_field.e_colors_v[0])
             try:
-                X.append(self.my_field.colors_p[1])
-                e_X.append(self.my_field.e_colors_p[1])
+                X.append(self.my_field.colors_v[1])
+                e_X.append(self.my_field.e_colors_v[1])
             except IndexError:
                 pass
         if hasattr(self.my_field, "plx_v"):

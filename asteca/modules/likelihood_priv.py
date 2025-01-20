@@ -5,7 +5,7 @@ from scipy.special import loggamma
 
 
 def lkl_data(
-    bin_method: str, mag_p: np.ndarray, colors_p: list[np.ndarray]
+    bin_method: str, mag_v: np.ndarray, colors_v: list[np.ndarray]
 ) -> tuple[list, list, np.ndarray, np.ndarray]:
     """Prepare data for likelihood calculation.
 
@@ -14,24 +14,24 @@ def lkl_data(
 
     :param bin_method: Method to use for binning the data.
     :type bin_method: str
-    :param mag_p: Array of magnitudes.
-    :type mag_p: np.ndarray
-    :param colors_p: List of arrays of colors.
-    :type colors_p: list[np.ndarray]
+    :param mag_v: Array of magnitudes.
+    :type mag_v: np.ndarray
+    :param colors_v: List of arrays of colors.
+    :type colors_v: list[np.ndarray]
 
     :return: Bin ranges, number of bins, indexes of bins with stars, and flattened histogram.
     :rtype: tuple[list, list, np.ndarray, np.ndarray]
     """
     # Obtain bin edges for each dimension, defining a grid.
-    ranges, Nbins = bin_edges_f(bin_method, mag_p, colors_p)
+    ranges, Nbins = bin_edges_f(bin_method, mag_v, colors_v)
 
     # Obtain histogram for observed cluster.
     hess_diag = []
-    for i, col in enumerate(colors_p):
+    for i, col in enumerate(colors_v):
         # Fast 2D histogram
         hess_diag.append(
             histogram2d(
-                mag_p,
+                mag_v,
                 col,
                 range=[
                     [ranges[0][0], ranges[0][1]],
@@ -323,15 +323,15 @@ def tremmel(
 
 
 def bins_distance(
-    mag_p: np.ndarray, colors_p: list[np.ndarray], synth_clust: np.ndarray
+    mag_v: np.ndarray, colors_v: list[np.ndarray], synth_clust: np.ndarray
 ) -> float:
     """Sum of distances to corresponding bins in the Hess diagram. Only applied
     on the first two dimensions (magnitude +  first color)
 
-    :param mag_p: Array of magnitudes.
-    :type mag_p: np.ndarray
-    :param colors_p: List of arrays of colors.
-    :type colors_p: list[np.ndarray]
+    :param mag_v: Array of magnitudes.
+    :type mag_v: np.ndarray
+    :param colors_v: List of arrays of colors.
+    :type colors_v: list[np.ndarray]
     :param synth_clust: Synthetic cluster data.
     :type synth_clust: np.ndarray
 
@@ -346,8 +346,8 @@ def bins_distance(
     cpercs = (0.5, 10, 20, 30, 40, 50, 60, 70, 75, 80, 85, 90, 95)
 
     # Evaluate the magnitude and color in the defined percentiles
-    perc_mag_o = np.nanpercentile(mag_p, mpercs)
-    perc_colors_o = np.nanpercentile(colors_p[0], cpercs)
+    perc_mag_o = np.nanpercentile(mag_v, mpercs)
+    perc_colors_o = np.nanpercentile(colors_v[0], cpercs)
 
     # Create a 2-dimensional array of shape: (2, len(mpercs) * len(cpercs))
     pts_o = []
@@ -374,7 +374,7 @@ def bins_distance(
 
     # import matplotlib.pyplot as plt
     # plt.title(f"lkl={lkl:.3f}")
-    # plt.scatter(colors_p[0], mag_p, alpha=0.25, c="r", label='obs')
+    # plt.scatter(colors_v[0], mag_v, alpha=0.25, c="r", label='obs')
     # plt.scatter(colors_s, mag_s, alpha=0.25, c="b", label='synth')
     # # This shows the positions where the observed Hess diagram is defined by the
     # # percentiles

@@ -20,7 +20,7 @@ def radec(cluster: Cluster, ax: Axes) -> Axes:
     """
     ra = cluster.ra_v
     dec = cluster.dec_v
-    mag = cluster.mag_p
+    mag = cluster.mag_v
 
     msk = ~np.isnan(mag)
     ra = ra[msk]
@@ -78,34 +78,34 @@ def cluster(
 
     if binar_probs is None:
         ax.scatter(
-            cluster.colors_p[color_idx],
-            cluster.mag_p,
+            cluster.colors_v[color_idx],
+            cluster.mag_v,
             c="green",
             alpha=0.5,
-            label=f"Observed, N={len(cluster.mag_p)}",
+            label=f"Observed, N={len(cluster.mag_v)}",
         )
     else:
         msk_binar = binar_probs > prob_binar_cut
         ax.scatter(
-            cluster.colors_p[color_idx][~msk_binar],
-            cluster.mag_p[~msk_binar],
+            cluster.colors_v[color_idx][~msk_binar],
+            cluster.mag_v[~msk_binar],
             c="grey",
             # c=binar_probs[~msk_binar],
             marker="o",
             alpha=0.5,
-            label=f"Observed (single), N={len(cluster.mag_p[~msk_binar])}",
+            label=f"Observed (single), N={len(cluster.mag_v[~msk_binar])}",
         )
         ax.scatter(
-            cluster.colors_p[color_idx][msk_binar],
-            cluster.mag_p[msk_binar],
+            cluster.colors_v[color_idx][msk_binar],
+            cluster.mag_v[msk_binar],
             # c="red",
             c=binar_probs[msk_binar],
             marker="s",
             alpha=0.5,
-            label=f"Observed (binary), N={len(cluster.mag_p[msk_binar])}",
+            label=f"Observed (binary), N={len(cluster.mag_v[msk_binar])}",
         )
 
-    ax.set_ylim(max(cluster.mag_p) + 0.5, min(cluster.mag_p) - 1)
+    ax.set_ylim(max(cluster.mag_v) + 0.5, min(cluster.mag_v) - 1)
 
     mag_col = cluster.magnitude
     col_col = cluster.color

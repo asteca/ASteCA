@@ -54,7 +54,7 @@ class Likelihood:
 
         # Obtain data used by the ``likelihood.get()`` method
         self.ranges, self.Nbins, self.cl_z_idx, self.cl_histo_f_z = lpriv.lkl_data(
-            bin_method, my_cluster.mag_p, my_cluster.colors_p
+            bin_method, my_cluster.mag_v, my_cluster.colors_v
         )
 
         self.max_lkl = 1
@@ -63,7 +63,7 @@ class Likelihood:
             # Since the initial max_lkl=1, subtracting 1 inverts it back to the
             # original likelihood value
             self.max_lkl = 1 - self.get(
-                np.array([self.my_cluster.mag_p, *self.my_cluster.colors_p])
+                np.array([self.my_cluster.mag_v, *self.my_cluster.colors_v])
             )
 
         print("\nLikelihood object generated")
@@ -97,7 +97,7 @@ class Likelihood:
         #     return lpriv.mean_dist(self, synth_clust)
         elif self.lkl_name == "bins_distance":
             return lpriv.bins_distance(
-                self.my_cluster.mag_p, self.my_cluster.colors_p, synth_clust
+                self.my_cluster.mag_v, self.my_cluster.colors_v, synth_clust
             )
         elif self.lkl_name == "chisq":
             return lpriv.chi_square(
