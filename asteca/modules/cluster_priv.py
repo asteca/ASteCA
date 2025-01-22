@@ -433,16 +433,18 @@ def get_2D_center(
     x_cent_pix, y_cent_pix = get_XY(values, gd=50)
 
     # Restrict the KDE to a smaller area to improve performance
-    rad_x = np.percentile(x, 60) - np.percentile(x, 40)
-    rad_y = np.percentile(y, 60) - np.percentile(y, 40)
-    # Generate zoom around approx center value to speed things up.
-    xmin, xmax = x_cent_pix - rad_x, x_cent_pix + rad_x
-    ymin, ymax_z = y_cent_pix - rad_y, y_cent_pix + rad_y
-    # Use reduced region around the center.
-    msk = (xmin < x) & (x < xmax) & (ymin < y) & (y < ymax_z)
+    if values.shape[1] > 500:
+        rad_x = np.percentile(x, 60) - np.percentile(x, 40)
+        rad_y = np.percentile(y, 60) - np.percentile(y, 40)
+        # Generate zoom around approx center value to speed things up.
+        xmin, xmax = x_cent_pix - rad_x, x_cent_pix + rad_x
+        ymin, ymax_z = y_cent_pix - rad_y, y_cent_pix + rad_y
+        # Use reduced region around the center.
+        msk = (xmin < x) & (x < xmax) & (ymin < y) & (y < ymax_z)
+        values = values[:, msk]
 
     # Final center values
-    x_c, y_c = get_XY(values[:, msk], gd=100)
+    x_c, y_c = get_XY(values, gd=100)
 
     return x_c, y_c
 
