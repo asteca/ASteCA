@@ -7,7 +7,7 @@ from . import cluster_priv as cp
 
 
 def density_nmembs(
-    x: np.ndarray, y: np.ndarray, center: np.ndarray, radius: float
+    x: np.ndarray, y: np.ndarray, center: tuple[float, float], radius: float
 ) -> int:
     """Estimate the number of cluster members based on a density calculation.
 
@@ -16,7 +16,7 @@ def density_nmembs(
     :param y: Array of y-coordinates.
     :type y: np.ndarray
     :param center: Center coordinates (x, y).
-    :type center: np.ndarray
+    :type center: tuple[float, float]
     :param radius: Radius of the cluster.
     :type radius: float
 
