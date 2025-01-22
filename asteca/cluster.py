@@ -64,9 +64,6 @@ class Cluster:
     :type N_clust_max: int
     :param verbose: Verbose level. A value of ``0`` hides all output, defaults to ``1``
     :type verbose: int
-
-    :raises ValueError: If there are missing required attributes to generate the
-        :py:class:`Cluster <asteca.cluster.Cluster>` object
     """
 
     def __init__(
@@ -109,17 +106,16 @@ class Cluster:
         self.N_clust_max = N_clust_max
         self.verbose = verbose
 
+        if self.obs_df.empty:
+            raise ValueError("DataFrame is empty")
         self.N_stars = len(self.obs_df)
         self._vp("\nInstantiating cluster...")
         self._vp(f"N_stars        : {self.N_stars}", 1)
         self._vp(f"N_clust_min    : {self.N_clust_min}", 1)
         self._vp(f"N_clust_max    : {self.N_clust_max}", 1)
 
-        dim_count = self._load_column_data()
-        if dim_count > 0:
-            self._vp("Cluster object generated")
-        else:
-            raise ValueError("No column names defined for cluster")
+        self._load_column_data()
+        self._vp("Cluster object generated")
 
     def _vp(self, mssg: str, level: int = 0) -> None:
         """Verbose print method"""
@@ -131,8 +127,12 @@ class Cluster:
 
         if self.ra is not None:
             self.ra_v = np.array(self.obs_df[self.ra], dtype=float)
+            self._vp(f"RA             : {self.ra}", 1)
+            dim_count += 1
+
+        if self.dec is not None:
             self.dec_v = np.array(self.obs_df[self.dec], dtype=float)
-            self._vp(f"(RA, DEC)      : ({self.ra}, {self.dec})", 1)
+            self._vp(f"DEC            : {self.dec}", 1)
             dim_count += 1
 
         if self.magnitude is not None:
@@ -177,14 +177,15 @@ class Cluster:
             dim_count += 1
 
         if self.pmde is not None:
-            if self.e_pmra is None:
+            if self.e_pmde is None:
                 raise ValueError("pmDE uncertainty is required")
             self.pmde_v = np.array(self.obs_df[self.pmde], dtype=float)
             self.e_pmde_v = np.array(self.obs_df[self.e_pmde], dtype=float)
             self._vp(f"pmDE           : {self.pmra} [{self.e_pmde}]", 1)
             dim_count += 1
 
-        return dim_count
+        if dim_count == 0:
+            raise ValueError("No column names defined for cluster")
 
     def get_center(
         self,
@@ -228,7 +229,7 @@ class Cluster:
                 [_ is None for _ in (self.ra, self.dec, self.pmra, self.pmde, self.plx)]
             ):
                 raise ValueError(
-                    "Algorithm 'knn_5d' requires (ra, dec, pmra, pmde, plx) data to be defined"
+                    "Algorithm 'knn_5d' requires (ra, dec, pmra, pmde, plx) data"
                 )
 
             # To galactic coordinates (not optional, always use instead of equatorial)
@@ -269,12 +270,12 @@ class Cluster:
         elif algo == "kde_2d":
             if data_2d == "radec":
                 if any([_ is None for _ in (self.ra, self.dec)]):
-                    raise ValueError("Data for  (ra, dec) data is required")
+                    raise ValueError("Data for (ra, dec) is required")
                 c_str = "radec_c"
                 x, y = self.ra_v, self.dec_v
             elif data_2d == "pms":
                 if any([_ is None for _ in (self.pmra, self.pmde)]):
-                    raise ValueError("Data for  (pmra, pmde) data is required")
+                    raise ValueError("Data for (pmra, pmde) is required")
                 c_str = "pms_c"
                 x, y = self.pmra_v, self.pmde_v
             else:
@@ -359,23 +360,32 @@ class Cluster:
             defaults to ``False``
         :type eq_to_gal: bool
 
-        :raises ValueError: If required attributes are  missing from the
+        :raises ValueError: If 'algo' argument is not recognized
+        :raises AttributeError: If required attributes are  missing from the
             :py:class:`Cluster <asteca.cluster.Cluster>` object
         """
         if algo not in ("ripley", "density"):
-            raise ValueError(f"'Argument algo={algo}' not recognized")
+            raise ValueError(f"Selected method '{algo}' not recognized")
 
+        # Both methods require these
+        if any([_ is None for _ in (self.ra, self.dec)]):
+            raise AttributeError(
+                "The arguments (ra, dec) must be present as a 'cluster' attribute"
+            )
+
+        # (x, y) coordinates
         xv, yv = self.ra_v, self.dec_v
-        xy_center = np.array(self.radec_c)
         # Convert (RA, DEC) to (lon, lat)
         if eq_to_gal is True:
             xv, yv = cp.radec2lonlat(xv, yv)
-            xy_center = cp.radec2lonlat(*xy_center)
 
         if algo == "ripley":
-            for k in ("ra", "dec", "pmra", "pmde", "plx", "radec_c", "pms_c", "plx_c"):
-                if hasattr(self, k) is False:
-                    raise ValueError(f"'{k}' must be present as a 'cluster' attribute")
+            if any([_ is None for _ in (self.pmra, self.pmde, self.plx)]) or any(
+                [hasattr(self, _) is False for _ in ("pms_c", "plx_c")]
+            ):
+                raise AttributeError(
+                    "The arguments (pmra, pmdec, plx, pms_c, plx_c) must be present as a 'cluster' attribute"
+                )
             N_cluster = nm.ripley_nmembs(
                 xv,
                 yv,
@@ -386,9 +396,17 @@ class Cluster:
                 self.plx_c,
             )
         elif algo == "density":
-            for k in ("ra", "dec", "radec_c", "radius"):
-                if hasattr(self, k) is False:
-                    raise ValueError(f"'{k}' must be present as a 'cluster' attribute")
+            if any([hasattr(self, _) is False for _ in ("radec_c", "radius")]):
+                raise AttributeError(
+                    "The arguments (radec_c, radius) must be present as a 'cluster' attribute"
+                )
+
+            ra_c, dec_c = self.radec_c
+            xy_center = (ra_c, dec_c)
+            if eq_to_gal is True:
+                lon, lat = cp.radec2lonlat(*xy_center)
+                xy_center = (lon, lat)
+
             N_cluster = nm.density_nmembs(xv, yv, xy_center, self.radius)
 
         if N_cluster < self.N_clust_min:
