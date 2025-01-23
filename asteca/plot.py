@@ -235,7 +235,16 @@ def get_isochrone(
     # Generate displaced isochrone
     fit_params_copy = dict(fit_params)
 
-    # Generate physical synthetic cluster to extract the mas mass
+    # Check isochrones ranges
+    for par in ("met", "loga"):
+        try:
+            pmin, pmax = min(synth.met_age_dict[par]), max(synth.met_age_dict[par])
+            if fit_params_copy[par] < pmin or fit_params_copy[par] > pmax:
+                raise ValueError(f"Parameter '{par}' out of range: [{pmin} - {pmax}]")
+        except KeyError:
+            pass
+
+    # Generate physical synthetic cluster to extract the max mass
     isochrone_full = synth.generate(fit_params_copy, full_arr_flag=True)
     # Extract max mass
     max_mass = isochrone_full[synth.m_ini_idx].max()
