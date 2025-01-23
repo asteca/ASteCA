@@ -379,6 +379,8 @@ class Synthetic:
         :type radec_c: tuple[float, float] | None
         :param N_models: Number of sampled models, defaults to ``200``
         :type N_models: int
+
+        :raises ValueError: If any of the (met, age) parameters are out of range
         """
         self._vp("\nGenerate synthetic models...", 1)
         self._vp(f"N_models       : {N_models}", 1)

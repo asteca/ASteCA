@@ -228,6 +228,8 @@ def get_isochrone(
         first color. If ``1`` plot the second color. Defaults to ``0``
     :type color_idx: int
 
+    :raises ValueError: If either parameter (met, age) is outside of allowed range
+
     :return: Array with the isochrone data to plot
     :rtype: np.ndarray
     """

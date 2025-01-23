@@ -64,6 +64,8 @@ class Cluster:
     :type N_clust_max: int
     :param verbose: Verbose level. A value of ``0`` hides all output, defaults to ``1``
     :type verbose: int
+
+    :raises ValueError: If the DataFrame is empty
     """
 
     def __init__(
