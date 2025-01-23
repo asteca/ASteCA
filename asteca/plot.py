@@ -196,14 +196,13 @@ def synthetic(
             raise ValueError("No second color available")
         c1, c2 = synth.isochs.color2
     plt.xlabel(f"{c1}-{c2}")
-    ax.set_ylim(max(y_synth) + 0.5, min(y_synth) - 1)
     ax.legend()
 
     if isoch_arr is not None:
-        c_idx = 1
-        if color_idx == 1:
-            c_idx = 2
-        ax.plot(isoch_arr[c_idx], isoch_arr[0], c="k")
+        ax.plot(isoch_arr[1], isoch_arr[0], c="k")
+
+    # ax.set_ylim(max(y_synth) + 0.5, min(y_synth) - 1)
+    ax.invert_yaxis()
 
     return ax
 
