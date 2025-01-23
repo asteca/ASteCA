@@ -140,7 +140,12 @@ class Isochrones:
         if self.z_to_FeH is not None:
             self._func_z_to_FeH(self.z_to_FeH)
             met_n = "FeH"
-        zmin, zmax, amin, amax = self._min_max()
+
+        # Extract metallicity and age ranges
+        self.zmin = self.met_age_dict["met"].min()
+        self.zmax = self.met_age_dict["met"].max()
+        self.amin = self.met_age_dict["loga"].min()
+        self.amax = self.met_age_dict["loga"].max()
 
         N_met, N_age, _, N_isoch = self.theor_tracks.shape
         self._vp(f"Model          : {self.model}", 1)
@@ -148,8 +153,8 @@ class Isochrones:
         self._vp(f"N_met          : {N_met}", 1)
         self._vp(f"N_age          : {N_age}", 1)
         self._vp(f"N_isoch        : {N_isoch}", 1)
-        self._vp(f"{met_n} range      : [{zmin}, {zmax}]", 1)
-        self._vp(f"loga range     : [{amin}, {amax}]", 1)
+        self._vp(f"{met_n} range      : [{self.zmin}, {self.zmax}]", 1)
+        self._vp(f"loga range     : [{self.amin}, {self.amax}]", 1)
         self._vp(f"Magnitude      : {self.magnitude}", 1)
         self._vp(f"Color          : {self.color[0]}-{self.color[1]}", 1)
         if self.color2 is not None:
@@ -175,17 +180,3 @@ class Isochrones:
             round_n += 1
         # Replace old values
         self.met_age_dict["met"] = feh_r
-
-    def _min_max(self) -> tuple[float, float, float, float]:
-        """Return the minimum and maximum values for the metallicity and age defined
-        in the theoretical isochrones.
-
-        :return: Tuple of (minimum_metallicity, maximum_metallicity, minimum_age,
-            maximum_age)
-        :rtype: tuple[float, float, float, float]
-        """
-        zmin = self.met_age_dict["met"].min()
-        zmax = self.met_age_dict["met"].max()
-        amin = self.met_age_dict["loga"].min()
-        amax = self.met_age_dict["loga"].max()
-        return zmin, zmax, amin, amax
