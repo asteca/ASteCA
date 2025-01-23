@@ -251,10 +251,12 @@ class Synthetic:
                         f"Parameter '{par}' is not fixed and its range is limited to "
                         + f"a single value: {self.met_age_dict[par]}"
                     )
-
-        # # Remove low masses if required
-        # if dm_min is not None:
-        #     self._rm_low_masses(dm_min)
+            else:
+                pmin, pmax = min(self.met_age_dict[par]), max(self.met_age_dict[par])
+                if self.fix_params[par] < pmin or self.fix_params[par] > pmax:
+                    raise ValueError(
+                        f"Parameter {par}={self.fix_params[par]} out of range: [{pmin} - {pmax}]"
+                    )
 
     def generate(
         self, fit_params: dict, plot_flag: bool = False, full_arr_flag: bool = False
@@ -358,7 +360,7 @@ class Synthetic:
         self,
         model: dict[str, float],
         model_std: dict[str, float],
-        radec_c: tuple[float, float],
+        radec_c: tuple[float, float] | None,
         N_models: int = 200,
     ) -> None:
         """Generate random sampled models from the selected solution. Use these models
@@ -374,10 +376,34 @@ class Synthetic:
         :type model_std: dict[str, float]
         :param radec_c: Right ascension and declination center coordinates for the
             cluster
-        :type radec_c: tuple[float, float]
+        :type radec_c: tuple[float, float] | None
         :param N_models: Number of sampled models, defaults to ``200``
         :type N_models: int
         """
+        self._vp("\nGenerate synthetic models...", 1)
+        self._vp(f"N_models       : {N_models}", 1)
+        self._vp(
+            "Model          :"
+            + ", ".join(f"{k}: {round(v, 3)}" for k, v in model.items()),
+            2,
+        )
+        self._vp(
+            "Model STDDEV   :"
+            + ", ".join(f"{k}: {round(v, 3)}" for k, v in model_std.items()),
+            2,
+        )
+
+        # Check isochrones ranges
+        for par in ("met", "loga"):
+            try:
+                pmin, pmax = min(self.met_age_dict[par]), max(self.met_age_dict[par])
+                if model[par] < pmin or model[par] > pmax:
+                    raise ValueError(
+                        f"Parameter '{par}' out of range: [{pmin} - {pmax}]"
+                    )
+            except KeyError:
+                pass
+
         # Observed photometry
         obs_phot = np.array([self.mag_v] + [_ for _ in self.colors_v])
         # Replace nans in mag and colors to avoid crashing KDTree()
@@ -410,26 +436,16 @@ class Synthetic:
         self.close_stars_idxs = close_stars_idxs
         self.obs_nan_msk = nan_msk
 
-        # Obtain galactic vertical distance and distance to center
-        Z, R_GC, R_xy = mb.galactic_coords(
-            self.sampled_models, self.fix_params, radec_c
-        )
-        self.Z = Z
-        self.R_GC = R_GC
-        self.R_xy = R_xy
+        self.Z, self.R_GC, self.R_xy = None, None, None
+        if radec_c is not None:
+            # Obtain galactic vertical distance and distance to center
+            Z, R_GC, R_xy = mb.galactic_coords(
+                self.sampled_models, self.fix_params, radec_c
+            )
+            self.Z = Z
+            self.R_GC = R_GC
+            self.R_xy = R_xy
 
-        self._vp("\nGenerate synthetic models...", 1)
-        self._vp(f"N_models       : {N_models}", 1)
-        self._vp(
-            "Model          :"
-            + ", ".join(f"{k}: {round(v, 3)}" for k, v in model.items()),
-            2,
-        )
-        self._vp(
-            "Model STDDEV   :"
-            + ", ".join(f"{k}: {round(v, 3)}" for k, v in model_std.items()),
-            2,
-        )
         self._vp("Attributes stored in Synthetic object", 1)
 
     def stellar_masses(
