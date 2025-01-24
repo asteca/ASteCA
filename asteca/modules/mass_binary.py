@@ -224,7 +224,7 @@ def ambient_density(
     Z: np.ndarray,
     R_GC: np.ndarray,
     R_xy: np.ndarray,
-) -> float:
+) -> np.ndarray:
     """Calculate the ambient density.
 
     Source: Angelo et al. (2023); 10.1093/mnras/stad1038
@@ -253,7 +253,7 @@ def ambient_density(
     :type R_xy: np.ndarray
 
     :return: Ambient density.
-    :rtype: float
+    :rtype: np.ndarray
     """
     Phi_B_Laplacian = 2 * M_B * r_B / (R_GC * (R_GC + r_B) ** 3)
     numerator = (
@@ -277,7 +277,7 @@ def ambient_density(
 
 def dissolution_param(
     C_env: float, epsilon: float, gamma: float, rho_amb: float
-) -> np.ndarray:
+) -> float:
     """Calculate the dissolution parameter.
 
     Lamers, Gieles & Zwart (2005), "Disruption time scales of star clusters in
@@ -327,7 +327,7 @@ def dissolution_param(
     :type rho_amb: float
 
     :return: Dissolution parameter.
-    :rtype: np.ndarray
+    :rtype: float
     """
     t0 = C_env * (1 - epsilon) * 10 ** (-4 * gamma) * rho_amb ** (-0.5)
 
@@ -335,7 +335,7 @@ def dissolution_param(
 
 
 def minit_LGB05(
-    loga: float, M_actual: float, gamma: float, t0: np.ndarray, mu_ev: float
+    loga: float, M_actual: float, gamma: float, t0: float, mu_ev: float
 ) -> float:
     """Estimate the initial mass from Lamers et al. 2005.
 
@@ -346,7 +346,7 @@ def minit_LGB05(
     :param gamma: Parameter related to the mass-loss rate.
     :type gamma: float
     :param t0: Dissolution parameter.
-    :type t0: np.ndarray
+    :type t0: float
     :param mu_ev: Fraction of mass lost by stellar evolution.
     :type mu_ev: float
 
