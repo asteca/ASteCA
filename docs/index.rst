@@ -15,7 +15,7 @@ extinction, distance, metallicity, age, binarity, mass, etc..
 
 
 .. important::
-   Version |ProjectVersion| released on the 9th of August, 2024. See :ref:`changelog`
+   Version |ProjectVersion| released on the 24th of January, 2025. See :ref:`changelog`
    for a detailed list of the changes implemented.
 
 
@@ -76,7 +76,7 @@ TOC
 
    contents/installation
    contents/changelog
-   contents/api
+   apidocs/index
 
 .. toctree::
    :maxdepth: 1

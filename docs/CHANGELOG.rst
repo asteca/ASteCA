@@ -1,12 +1,23 @@
 .. :changelog:
 
 
+`[v0.5.9] <https://github.com/asteca/asteca/releases/tag/v0.5.9>`__ - 2025-01-24
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+- Fix issue with BASTI isochrones that would store ages out of order
+- Upgrade versions, Google Colab will most likely not work due to running older
+  versions of Python and the required packages.
+- Remove new version checker https://github.com/asteca/ASteCA/issues/560
+- Many type hints added to the codebase
+
+
+
 `[v0.5.8] <https://github.com/asteca/asteca/releases/tag/v0.5.8>`__ - 2024-08-09
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 - Downgraded the versions of almost all the required packages to play nice with
   Google Colab
-- Fix `AttributeError: `ptp` was removed from the ndarray class in NumPy 2.0. Use
+- Fix `AttributeError: ptp was removed from the ndarray class in NumPy 2.0. Use
   np.ptp(arr, ...) instead.` for newer versions of `numpy`
 - Allow `isochrones` to load single files, not just paths to folders
 - Added an update notifier to `__init__.py` (added `requests` as requirement)

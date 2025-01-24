@@ -1,133 +1,198 @@
+import astropy.coordinates as coord
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-import astropy.coordinates as coord
 from scipy.spatial import KDTree
 
 
-def ranModels(fit_params: dict, model_std: dict, N_models: int, seed: int) -> list:
+def ranModels(
+    fit_params: dict,
+    model_std: dict,
+    N_models: int,
+    rng: np.random.Generator,
+) -> list[dict]:
+    """Generate the 'N_models' models via sampling a Gaussian centered on
+    'fit_params', with standard deviation given by 'model_std'.
+
+    :param fit_params: Dictionary of parameters to fit.
+    :type fit_params: dict
+    :param model_std: Dictionary of standard deviations for each parameter.
+    :type model_std: dict
+    :param N_models: Number of models to generate.
+    :type N_models: int
+    :param rng: Random number generator.
+    :type rng: np.random.Generator
+
+    :return: List of dictionaries, each containing a set of sampled parameters.
+    :rtype: list[dict]
     """
-    Generate the 'N_models' models via sampling a Gaussian centered on 'fit_params',
-    with standard deviation given by 'model_std'.
-    """
-    models_ran, int_seed = {}, np.random.default_rng(seed).integers(1)
+    models_ran = {}
     for k, f_val in fit_params.items():
         std = model_std[k]
-        # models_ran[k] = np.random.normal(f_val, std, N_models)
-        models_ran[k] = np.random.default_rng(seed + int_seed).normal(
-            f_val, std, N_models
-        )
-        int_seed += 1
-    # Transpose dict of arrays into list of dicts
+        models_ran[k] = rng.normal(f_val, std, N_models)
     ran_models = [dict(zip(models_ran, t)) for t in zip(*models_ran.values())]
 
     return ran_models
 
 
-def get_close_idxs(self, obs_phot, isoch):
-    """Indexes of the closest synthetic stars to observed stars"""
-    synth_photom = isoch[: self.m_ini_idx].T
+def get_close_idxs(
+    m_ini_idx: int, obs_phot: np.ndarray, isoch: np.ndarray
+) -> np.ndarray:
+    """Indexes of the closest synthetic stars to observed stars
+
+    :param m_ini_idx: Index of the initial mass column
+    :type m_ini_idx: int
+    :param obs_phot: Observed photometry.
+    :type obs_phot: np.ndarray
+    :param isoch: Isochrone data.
+    :type isoch: np.ndarray
+
+    :return: Indexes of the closest synthetic stars.
+    :rtype: np.ndarray
+    """
+    synth_photom = isoch[:m_ini_idx].T
     tree = KDTree(synth_photom)
     _, idxs = tree.query(obs_phot, k=1)
-    return idxs
+    return np.array(idxs)
 
 
-def get_m1m2(self, isoch: np.array, idxs: np.array):
-    """ """
-    # Masses
-    mass_1, mass_2 = isoch[self.m_ini_idx], isoch[-1]
+def get_m1m2(
+    m_ini_idx: int, isoch: np.ndarray, idxs: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
+    """Assign primary and secondary (synthetic) masses to each observed star.
 
-    # Assign primary and secondary (synthetic) masses to each observed star
+    :param m_ini_idx: Index of the initial mass column
+    :type m_ini_idx: int
+    :param isoch: Isochrone data.
+    :type isoch: np.ndarray
+    :param idxs: Indexes of the closest synthetic stars.
+    :type idxs: np.ndarray
+
+    :return: Primary and secondary masses for each observed star.
+    :rtype: tuple[np.ndarray, np.ndarray]
+    """
+    mass_1, mass_2 = isoch[m_ini_idx], isoch[-1]
     m1_obs, m2_obs = mass_1[idxs], mass_2[idxs]
 
     return m1_obs, m2_obs
 
 
-def get_bpr(self, isoch: np.array, idxs: np.array):
-    """ """
-    # Secondary masses
+def get_bpr(isoch: np.ndarray, idxs: np.ndarray) -> float:
+    """Calculate the binary fraction for the observed cluster.
+
+    :param isoch: Isochrone data.
+    :type isoch: np.ndarray
+    :param idxs: Indexes of the closest synthetic stars.
+    :type idxs: np.ndarray
+
+    :return: Binary fraction.
+    :rtype: float
+    """
     mass_2 = isoch[-1]
-
-    # Assign secondary (synthetic) masses to each observed star
     m2_obs = mass_2[idxs]
-
-    # Single systems are identified with m2=np.nan. This mask points to observed
-    # stars identified as binary systems
     m2_msk = ~np.isnan(m2_obs)
-
-    # Total binary fraction for the observed cluster
     b_fr = m2_msk.sum() / len(m2_obs)
 
     return b_fr
 
 
 def galactic_coords(
-    synthcl,
-    radec_c: float,
-) -> tuple[np.array, np.array]:
-    """Convert equatorial coordinates to cylindrical, and obtain the vertical distance
-    Z and the galactocentric distance R_GC
+    sampled_models: list[dict],
+    fix_params: dict,
+    radec_c: tuple[float, float],
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Convert equatorial coordinates to cylindrical, and obtain the vertical
+    distance Z and the galactocentric distance R_GC.
+
+    :param sampled_models: List of dictionaries, each containing a set of sampled
+     parameters associated to non empty isochrones.
+    :type sampled_models: list[dict]
+    :param fix_params: Dictionary of fixed fundamental parameters
+    :type fix_params: dict
+    :param radec_c: Right ascension and declination of the cluster center.
+    :type radec_c: tuple[float, float]
+
+    :return: Vertical distance Z, galactocentric distance R_GC, and projected
+        galactocentric distance R_xy.
+    :rtype: tuple[np.ndarray, np.ndarray, np.ndarray]
     """
-    c = SkyCoord(ra=radec_c[0] * u.degree, dec=radec_c[1] * u.degree)
-    lon, lat = c.galactic.l, c.galactic.b
+    c = SkyCoord(ra=radec_c[0] * u.degree, dec=radec_c[1] * u.degree)  # pyright: ignore
+    lon, lat = c.galactic.l, c.galactic.b  # pyright: ignore
     dist_pc = []
-    for model in synthcl.sampled_models:
-        # Extract dm
-        model_comb = synthcl.fix_params | model
+    for model in sampled_models:
+        model_comb = fix_params | model
         dist_pc.append(10 ** (0.2 * (model_comb["dm"] + 5)))
-    cgal = SkyCoord(l=lon, b=lat, distance=dist_pc * u.pc, frame="galactic")
+    cgal = SkyCoord(l=lon, b=lat, distance=dist_pc * u.pc, frame="galactic")  # pyright: ignore
     c_GC = cgal.transform_to(coord.Galactocentric())
 
-    X, Y, Z = c_GC.x.value, c_GC.y.value, c_GC.z.value
+    X, Y, Z = np.array(c_GC.x), np.array(c_GC.y), np.array(c_GC.z)
     R_GC = np.sqrt(X**2 + Y**2 + Z**2)
     R_xy = np.sqrt(X**2 + Y**2)
 
     return Z, R_GC, R_xy
 
 
-def get_M_actual(synthcl, sampled_synthcl, int_seed) -> tuple[float, float]:
+def get_M_actual(
+    rng: np.random.Generator,
+    m_ini_idx: int,
+    st_dist_mass: list[list],
+    st_dist_mass_ordered: list[list],
+    sampled_synthcl: np.ndarray,
+) -> tuple[float, float]:
     """Estimate the actual mass using the observed mass and the fraction of
     mass estimated to be beyond the maximum observed magnitude.
 
     The final actual mass is just:
 
     M_actual = M_obs + M_phot
-    """
 
-    mass_ini = sampled_synthcl[synthcl.m_ini_idx]
+    :param rng: Random number generator
+    :type rng: np.random.Generator
+    :param m_ini_idx: Index of the initial mass column
+    :type m_ini_idx: int
+    :param st_dist_mass: List of sampled masses
+    :type st_dist_mass: list[list]
+    :param st_dist_mass_ordered: List of ordered sampled masses
+    :type st_dist_mass_ordered: list[list]
+    :param sampled_synthcl: Sampled synthetic cluster data.
+    :type sampled_synthcl: np.ndarray
+
+    :return: Observed mass and photometric mass.
+    :rtype: tuple[float, float]
+    """
+    mass_ini = sampled_synthcl[m_ini_idx]
     mass_2nd = sampled_synthcl[-1]
-    # Add secondary masses
     M_obs = np.nansum([mass_ini, mass_2nd])
 
-    # Select a random IMF sampling array (faster than sampling the IMF in place)
-    Nmets, Nages = len(synthcl.st_dist_mass), len(synthcl.st_dist_mass[0])
-    i = np.random.default_rng(synthcl.seed + int_seed).integers(Nmets)
-    j = np.random.default_rng(synthcl.seed + int_seed).integers(Nages)
-    sorted_masses = synthcl.st_dist_mass_ordered[i][j]
+    Nmets, Nages = len(st_dist_mass), len(st_dist_mass[0])
+    i = rng.integers(Nmets)
+    j = rng.integers(Nages)
+    sorted_masses = st_dist_mass_ordered[i][j]
 
     idx_min = np.argmin(abs(sorted_masses - mass_ini.min()))
     idx_max = np.argmin(abs(sorted_masses - mass_ini.max()))
     M_phot_sample = sorted_masses[:idx_min].sum()
     M_obs_sample = sorted_masses[idx_min:idx_max].sum()
-
-    # This is the ratio of the sampled mass below the minimum mass value,
-    # over the sampled mass within the observed mass range
     factor = M_phot_sample / M_obs_sample
-
-    # This is the 'photometric mass', or the mass that is lost beyond the minimum
-    # observed mass
     M_phot = factor * M_obs
 
     return M_obs, M_phot
 
 
-def stellar_evol_mass_loss(z_met, loga) -> float:
-    """Fraction of the initial cluster mass (M_ini) lost by stellar evolution
+def stellar_evol_mass_loss(z_met: float, loga: float) -> float:
+    """Fraction of the initial cluster mass (M_ini) lost by stellar evolution.
 
     Source: Lamers, Baumgardt & Gieles (2010); Table B2
     (http://adsabs.harvard.edu/abs/2010MNRAS.409..305L)
-    """
 
+    :param z_met: Metallicity.
+    :type z_met: float
+    :param loga: Logarithm of the age.
+    :type loga: float
+
+    :return: Fraction of mass lost by stellar evolution.
+    :rtype: float
+    """
     mu_coeffs = {
         "Z": np.array([0.0004, 0.0010, 0.0040, 0.0080, 0.0200]),
         "a0": np.array([1.0541, 1.0469, 1.0247, 1.0078, 0.9770]),
@@ -148,26 +213,49 @@ def stellar_evol_mass_loss(z_met, loga) -> float:
     return mu_ev
 
 
-def ambient_density(M_B, r_B, M_D, a, b, r_s, M_s, Z, R_GC, R_xy):
-    """
+def ambient_density(
+    M_B: float,
+    r_B: float,
+    M_D: float,
+    a: float,
+    b: float,
+    r_s: float,
+    M_s: float,
+    Z: np.ndarray,
+    R_GC: np.ndarray,
+    R_xy: np.ndarray,
+) -> np.ndarray:
+    """Calculate the ambient density.
+
     Source: Angelo et al. (2023); 10.1093/mnras/stad1038
 
     The 4*pi constant is left for the final evaluation
+
+    :param M_B: Bulge mass.
+    :type M_B: float
+    :param r_B: Bulge radius.
+    :type r_B: float
+    :param M_D: Disk mass.
+    :type M_D: float
+    :param a: Disk parameter a.
+    :type a: float
+    :param b: Disk parameter b.
+    :type b: float
+    :param r_s: Dark matter halo radius.
+    :type r_s: float
+    :param M_s: Dark matter halo mass.
+    :type M_s: float
+    :param Z: Vertical distance.
+    :type Z: np.ndarray
+    :param R_GC: Galactocentric distance.
+    :type R_GC: np.ndarray
+    :param R_xy: Projected galactocentric distance.
+    :type R_xy: np.ndarray
+
+    :return: Ambient density.
+    :rtype: np.ndarray
     """
-
-    # Hernquist potential (bulge)
-    # https://galaxiesbook.org/chapters/I-01.-Potential-Theory-and-Spherical-Mass-Distributions.html; Eq 3.58
-    # Phi_B_Laplacian = rho_0 * r_B/(r*(1+r/r_B)**3)
-    # https://docs.galpy.org/en/latest/reference/potentialhernquist.html
-    # "note that amp is 2 x [total mass] for the chosen definition of the Two Power Spherical potential"
-    # Phi_B_Laplacian = 2*M_B/(4*pi*r_B**3) * 1/((r/r_B)*(1+r/r_B)**3)
-    # The two above are equivalent if rho_0 = 2*M_B/(4*pi*r_B**3)
     Phi_B_Laplacian = 2 * M_B * r_B / (R_GC * (R_GC + r_B) ** 3)
-
-    # Miyamoto & Nagai potential (disk)
-    # https://galaxiesbook.org/chapters/II-01.-Flattened-Mass-Distributions.html#Thickened-disk:-the-Miyamoto-Nagai-model
-    # https://articles.adsabs.harvard.edu/pdf/1975PASJ...27..533M
-    # https://www.astro.utu.fi/~cflynn/galdyn/lecture4.html
     numerator = (
         M_D
         * b**2
@@ -180,19 +268,18 @@ def ambient_density(M_B, r_B, M_D, a, b, r_s, M_s, Z, R_GC, R_xy):
         R_xy**2 + (a + np.sqrt(b**2 + Z**2)) ** 2
     ) ** (5 / 2)
     Phi_D_laplacian = numerator / denominator
-
-    # Sanderson, Hartke & Helmi (2017) potential (dark matter halo)
     A = -M_s / (np.log(2) - 0.5)
     Phi_H_Laplacian = -A / (R_GC * (R_GC + r_s) ** 2)
-
-    # Ambient density
     rho_amb = (1 / (4 * np.pi)) * (Phi_B_Laplacian + Phi_D_laplacian + Phi_H_Laplacian)
 
     return rho_amb
 
 
-def dissolution_param(C_env, epsilon, gamma, rho_amb):
-    """
+def dissolution_param(
+    C_env: float, epsilon: float, gamma: float, rho_amb: float
+) -> float:
+    """Calculate the dissolution parameter.
+
     Lamers, Gieles & Zwart (2005), "Disruption time scales of star clusters in
     different galaxies" introduces the "disruption time" 't_dis' in Eq 8.
 
@@ -209,7 +296,6 @@ def dissolution_param(C_env, epsilon, gamma, rho_amb):
     For our Galaxy the authors estimate (see Table 1):
     t_4 ~ 10^8.75 ; rho_amb ~ 10^-1
 
-
     Lamers, Gieles, Bastian, Baumgardt, Kharchen & Zwart (2005), "An analytical
     description of the disruption of star clusters in tidal fields with an application
     to Galactic open clusters"
@@ -223,7 +309,6 @@ def dissolution_param(C_env, epsilon, gamma, rho_amb):
     remained at age t, if stellar evolution would have been the only mass loss
     mechanism"
 
-
     Lamers, Baumgardt & Gieles (2010), "Mass-loss rates and the mass evolution of
     star clusters"
 
@@ -232,19 +317,43 @@ def dissolution_param(C_env, epsilon, gamma, rho_amb):
     "dissolution parameter (which is the hypothetical dissolution time-scale of a
     cluster of 1 M)"
 
+    :param C_env: Constant related to the disruption time.
+    :type C_env: float
+    :param epsilon: Parameter related to the tidal field.
+    :type epsilon: float
+    :param gamma: Parameter related to the mass-loss rate.
+    :type gamma: float
+    :param rho_amb: Ambient density.
+    :type rho_amb: float
 
+    :return: Dissolution parameter.
+    :rtype: float
     """
-    # Dissolution parameter
     t0 = C_env * (1 - epsilon) * 10 ** (-4 * gamma) * rho_amb ** (-0.5)
 
     return t0
 
 
-def minit_LGB05(loga, M_actual, gamma, t0, mu_ev):
-    """
-    Initial mass estimation from Lamers et al. 2005
+def minit_LGB05(
+    loga: float, M_actual: float, gamma: float, t0: float, mu_ev: float
+) -> float:
+    """Estimate the initial mass from Lamers et al. 2005.
+
+    :param loga: Logarithm of the age.
+    :type loga: float
+    :param M_actual: Actual mass.
+    :type M_actual: float
+    :param gamma: Parameter related to the mass-loss rate.
+    :type gamma: float
+    :param t0: Dissolution parameter.
+    :type t0: float
+    :param mu_ev: Fraction of mass lost by stellar evolution.
+    :type mu_ev: float
+
+    :return: Initial mass.
+    :rtype: float
     """
     t = 10**loga
-    M_init = (M_actual**gamma + gamma * (t / t0)) ** (1 / gamma) / mu_ev
+    M_init = ((M_actual**gamma + gamma * (t / t0)) ** (1 / gamma)) / mu_ev
 
     return M_init

@@ -391,11 +391,10 @@ in the :py:class:`synthetic <asteca.synthetic.Synthetic.synthetic>` object.
 
 The first step is to call the
 :py:meth:`get_models() <asteca.synthetic.Synthetic.get_models>` method. This method
-requires three arguments: ``model`` which is a dictionary of parameters to be fitted 
-(equivalent to the ``fit_params`` dictionary used to generate synthetic clusters), a
+requires two arguments: ``model`` which is a dictionary of parameters to be fitted 
+(equivalent to the ``fit_params`` dictionary used to generate synthetic clusters), and a
 ``model_std`` dictionary which contains the uncertainties (standard deviations)
-associated to each parameter in the ``model`` dictionary, and a list with center
-coordinates for the cluster in ``(RA, DEC)``. For example:
+associated to each parameter in the ``model`` dictionary. For example:
 
 .. code-block:: python
 
@@ -412,9 +411,7 @@ coordinates for the cluster in ``(RA, DEC)``. For example:
         "dm": 0.25,
         "Av": 0.03,
     }
-    # List that contains the (RA, DEC) center coordinates
-    radec_c = [119.49, -60.77]    
-    synthcl.get_models(model, model_std, radec_c)
+    synthcl.get_models(model, model_std)
 
 This will store in the :py:class:`synthetic <asteca.synthetic.Synthetic.synthetic>`
 object a sample of synthetic clusters (sampled from a normal distribution centered
@@ -429,12 +426,14 @@ Per star masses and binarity
 An estimation of the observed stars individual masses and their probability of belonging
 to a binary system can be achieved via the
 :py:meth:`stellar_masses() <asteca.synthetic.Synthetic.stellar_masses>`
-method:
+method, passing a list with center coordinates for the cluster in ``(RA, DEC)``:
 
 .. code-block:: python
 
+    # List that contains the (RA, DEC) center coordinates
+    radec_c = [119.49, -60.77]  
     # Assuming `synthcl.get_models(model, model_std)` was already performed
-    df_masses_bprob = synthcl.stellar_masses()
+    df_masses_bprob = synthcl.stellar_masses(radec_c)
 
 The returned variable ``df_masses_bprob`` is a ``pandas.Dataframe`` containing the
 columns ``m1, m1_std, m2, m2_std, binar_prob``:
@@ -510,6 +509,7 @@ Total cluster mass
 The total initial mass of a cluster can be split in several parts, as follows:
 
 .. math::
+    :label: eq_Mi1
 
     M_{i} = M_{a} + M_{ev} + M_{dyn}
 
@@ -530,17 +530,22 @@ written as the sum of all of its components as:
 
     M_{i} = M_{obs} + M_{phot} + M_{ev} + M_{dyn}
 
-The actual mass $M_{a}$ is estimated by **ASteCA** starting from the
-observed mass $M_{obs}$ (approximated by a sampled synthetic cluster with parameters
-matching those of the observed cluster) and using an IMF sample to infer the missing
-portion below the maximum magnitude cut, i.e. the photometric mass $M_{phot}$. As stated
-above, the sum of these two is equivalent to $M_{a}$.
+The actual mass $M_{a}$ is estimated by **ASteCA** combining the observed and
+photometric masses. The observed mass $M_{obs}$ is approximated as the sum of the
+individual stellar masses of many synthetic clusters, sampled with parameters
+matching those of the observed cluster. The photometric mass M_{phot} is inferred
+by summing the mass that exists below the mass value associated to the maximum observed
+magnitude in the cluster. This requires sampling an IMF with a very large mass, and
+obtaining the ratio of $M_{obs}$ to total mass; this ratio is the applied to the sum of
+masses below the mass cut in the IMF to estimate $M_{phot}$.
+As stated above, the sum of these two masses is equivalent to $M_{a}$.
 
 Following `Lamers et al. (2005)
 <https://www.aanda.org/articles/aa/abs/2005/37/aa2241-04/aa2241-04.html>`_ Eq. 7,
 the initial mass can be estimated via:
 
 .. math::
+    :label: eq_Mi2
 
     M_i \simeq \left\{ M_a^{\gamma} + \frac{\gamma t}{t_0} \right\}^{1/\gamma} \mu_{\text
     {ev}}(Z, t)^{-1}
@@ -587,14 +592,28 @@ default $\epsilon=0.08$ and estimates $\rho_{amb}$ as:
 
 where $\phi_B(r),\, \phi_D(\rho, z),\, \phi_H(r)$ are the bulge, disc and halo
 potentials, respectively (see Eqs 8, 9 and 10 of the Angelo et al. article to see how
-these are modeled).
+these are modeled). The user can also use a custom $\rho_{\text{amb}}$ value, bypassing
+this estimation.
 
-Finally, plugging these values into the equation for $M_{i}$, we can estimate all the
-masses and their uncertainties through a bootstrap process. **ASteCA** applies all these
+Plugging these values into Eq :eq:`eq_Mi2`, we can obtain an estimate of $M_{i}$.
+With this value we can then obtain $M_{ev}$ through the $\mu_{\text{ev}}(Z, t)$
+parameter as:
+
+.. math::
+
+    M_{ev} = M_{i}  \times [1 - \mu_{\text{ev}}(Z, t)]
+
+Finally, the last remaining mass is the dynamical mass which we estimate simply
+using Eq :eq:`eq_Mi1` as:
+
+.. math::
+
+    M_{dyn} = M_{i} - M_{a} - M_{ev}
+
+The uncertainties are obtained through a bootstrap process. **ASteCA** applies all these
 processes via the
 :py:meth:`cluster_masses() <asteca.synthetic.Synthetic.cluster_masses>`
 method as:
-
 
 .. code-block:: python
 

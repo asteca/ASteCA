@@ -1,4 +1,5 @@
 import numpy as np
+
 from .modules import isochrones_priv
 
 
@@ -64,6 +65,8 @@ class Isochrones:
         by the user if the isochrone service changes its format and the `isochrones`
         class fails to load the files, defaults to ``None``
     :type column_names: dict | None
+    :param verbose: Verbose level. A value of ``0`` hides all output, defaults to ``1``
+    :type verbose: int
 
     :raises ValueError: If any of the attributes is not recognized as a valid option,
         or there are missing required attributes
@@ -83,6 +86,7 @@ class Isochrones:
         N_interp: int = 2500,
         parsec_rm_stage_9: bool = True,
         column_names: dict | None = None,
+        verbose: int = 1,
     ) -> None:
         self.model = model
         self.isochs_path = isochs_path
@@ -96,6 +100,7 @@ class Isochrones:
         self.column_names = column_names
         self.N_interp = N_interp
         self.parsec_rm_stage_9 = parsec_rm_stage_9
+        self.verbose = verbose
 
         # Check that the number of colors match
         if self.color2 is not None and self.color2_effl is None:
@@ -115,10 +120,19 @@ class Isochrones:
                 f"Model '{self.model}' not recognized. Should be one of {models}"
             )
 
-        print("\nInstantiating isochrones...")
+        self._vp("\nInstantiating isochrones...")
         # Load isochrone files
         self.theor_tracks, self.color_filters, self.met_age_dict, N_isoch_files = (
-            isochrones_priv.load(self)
+            isochrones_priv.load(
+                self.model,
+                self.isochs_path,
+                self.magnitude,
+                self.color,
+                self.color2,
+                self.column_names,
+                self.N_interp,
+                self.parsec_rm_stage_9,
+            )
         )
 
         # Convert z to FeH if requested
@@ -126,21 +140,31 @@ class Isochrones:
         if self.z_to_FeH is not None:
             self._func_z_to_FeH(self.z_to_FeH)
             met_n = "FeH"
-        zmin, zmax, amin, amax = self._min_max()
+
+        # Extract metallicity and age ranges
+        self.zmin = self.met_age_dict["met"].min()
+        self.zmax = self.met_age_dict["met"].max()
+        self.amin = self.met_age_dict["loga"].min()
+        self.amax = self.met_age_dict["loga"].max()
 
         N_met, N_age, _, N_isoch = self.theor_tracks.shape
-        print(f"Model          : {self.model}")
-        print(f"N_files        : {N_isoch_files}")
-        print(f"N_met          : {N_met}")
-        print(f"N_age          : {N_age}")
-        print(f"N_isoch        : {N_isoch}")
-        print(f"{met_n} range      : [{zmin}, {zmax}]")
-        print(f"loga range     : [{amin}, {amax}]")
-        print(f"Magnitude      : {self.magnitude}")
-        print(f"Color          : {self.color[0]}-{self.color[1]}")
+        self._vp(f"Model          : {self.model}", 1)
+        self._vp(f"N_files        : {N_isoch_files}", 1)
+        self._vp(f"N_met          : {N_met}", 1)
+        self._vp(f"N_age          : {N_age}", 1)
+        self._vp(f"N_isoch        : {N_isoch}", 1)
+        self._vp(f"{met_n} range      : [{self.zmin}, {self.zmax}]", 1)
+        self._vp(f"loga range     : [{self.amin}, {self.amax}]", 1)
+        self._vp(f"Magnitude      : {self.magnitude}", 1)
+        self._vp(f"Color          : {self.color[0]}-{self.color[1]}", 1)
         if self.color2 is not None:
-            print(f"Color2         : {self.color2[0]}-{self.color2[1]}")
-        print("Isochrone object generated")
+            self._vp(f"Color2         : {self.color2[0]}-{self.color2[1]}", 1)
+        self._vp("Isochrone object generated")
+
+    def _vp(self, mssg: str, level: int = 0) -> None:
+        """Verbose print method"""
+        if self.verbose > level:
+            print(mssg)
 
     def _func_z_to_FeH(self, z_to_FeH):
         """Convert z to FeH"""
@@ -156,17 +180,3 @@ class Isochrones:
             round_n += 1
         # Replace old values
         self.met_age_dict["met"] = feh_r
-
-    def _min_max(self) -> tuple[float, float, float, float]:
-        """Return the minimum and maximum values for the metallicity and age defined
-        in the theoretical isochrones.
-
-        :return: Tuple of (minimum_metallicity, maximum_metallicity, minimum_age,
-            maximum_age)
-        :rtype: tuple[float, float, float, float]
-        """
-        zmin = self.met_age_dict["met"].min()
-        zmax = self.met_age_dict["met"].max()
-        amin = self.met_age_dict["loga"].min()
-        amax = self.met_age_dict["loga"].max()
-        return zmin, zmax, amin, amax

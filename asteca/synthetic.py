@@ -1,10 +1,12 @@
 import warnings
+
 import numpy as np
 import pandas as pd
+
 from .cluster import Cluster
 from .isochrones import Isochrones
-from .modules import synth_cluster_priv as scp
 from .modules import mass_binary as mb
+from .modules import synth_cluster_priv as scp
 
 
 class Synthetic:
@@ -46,6 +48,8 @@ class Synthetic:
     :param seed: Random seed. If ``None`` a random integer will be generated and used,
         defaults to ``None``
     :type seed: int | None
+    :param verbose: Verbose level. A value of ``0`` hides all output, defaults to ``1``
+    :type verbose: int
 
     :raises ValueError: If any of the attributes is not recognized as a valid option
     """
@@ -56,9 +60,10 @@ class Synthetic:
         ext_law: str = "CCMO",
         DR_distribution: str = "uniform",
         IMF_name: str = "chabrier_2014",
-        max_mass: int = 100_000,
+        max_mass: int = 20_000,
         gamma: float | str = "D&K",
         seed: int | None = None,
+        verbose: int = 1,
     ) -> None:
         self.isochs = isochs
         self.ext_law = ext_law
@@ -67,9 +72,10 @@ class Synthetic:
         self.max_mass = max_mass
         self.gamma = gamma
         self.seed = seed
+        self.verbose = verbose
 
-        if self.seed is None:
-            self.seed = np.random.randint(100000)
+        # Set seed
+        self.rng = np.random.default_rng(self.seed)
 
         # Check gamma distribution
         gammas = ("D&K", "fisher_stepped", "fisher_peaked", "raghavan")
@@ -101,47 +107,69 @@ class Synthetic:
                 f"Extinction law '{self.ext_law}' not recognized. Should be "
                 + f"one of {ext_laws}"
             )
-        # if self.ext_law == "CCMO":
-        #     if self.isochs.magnitude_effl is None or self.isochs.color_effl is None:
-        #         raise ValueError(
-        #             f"Extinction law '{self.ext_law}' requires effective lambda\n"
-        #             + "values for the magnitude and first color."
-        #         )
-        # if self.ext_law == "GAIADR3":
-        #     if self.isochs.magnitude_effl is not None or self.isochs.color_effl is not None:
-        #         warnings.warn(
-        #             f"\nExtinction law '{self.ext_law}' does not require effective lambda"
-        #             + " values for the\nmagnitude and first color (assumed to be 'G' "
-        #             + "and 'BP-RP', respectively)."
-        #         )
 
-        print("\nInstantiating synthetic...")
+        self._vp("\nInstantiating synthetic...")
 
         # Sample the selected IMF
         Nmets, Nages = self.isochs.theor_tracks.shape[:2]
         self.st_dist_mass, self.st_dist_mass_ordered = scp.sample_imf(
-            self, Nmets, Nages
+            self.rng, self.IMF_name, self.max_mass, Nmets, Nages
         )
 
         # Add binary systems
-        self.theor_tracks = scp.add_binarity(self)
+        self.theor_tracks = scp.add_binarity(
+            self.rng,
+            self.gamma,
+            self.isochs.color,
+            self.isochs.color2,
+            self.isochs.theor_tracks,
+            self.isochs.color_filters,
+        )
 
         # Get extinction coefficients for these filters
-        self.ext_coefs = scp.ccmo_ext_coeffs(self)
+        self.ext_coefs = []  # It is important to pass an empty list because the
+        # function `extinction()` checks its length later on
+        if self.ext_law == "CCMO":
+            if self.isochs.magnitude_effl is None or self.isochs.color_effl is None:
+                raise ValueError(
+                    f"Extinction law '{self.ext_law}' requires effective lambda\n"
+                    + "values for the magnitude and first color."
+                )
+
+            self.ext_coefs = scp.ccmo_ext_coeffs(
+                self.isochs.magnitude_effl,
+                self.isochs.color_effl,
+                self.isochs.color2_effl,
+            )
+        if self.ext_law == "GAIADR3":
+            if (
+                self.isochs.magnitude_effl is not None
+                or self.isochs.color_effl is not None
+            ):
+                warnings.warn(
+                    f"\nExtinction law '{self.ext_law}' does not require effective lambda"
+                    + " values for the\nmagnitude and first color (assumed to be 'G' "
+                    + "and 'BP-RP', respectively)."
+                )
 
         # Generate random floats used by `synth_clusters.synthcl_generate()`
-        self.rand_floats = scp.randVals(self)
+        self.rand_floats = scp.randVals(self.rng, self.theor_tracks, self.st_dist_mass)
 
         # Store for internal usage
         self.met_age_dict = self.isochs.met_age_dict
 
-        print(f"IMF            : {self.IMF_name}")
-        print(f"Max init mass  : {self.max_mass}")
-        print(f"Gamma dist     : {self.gamma}")
-        print(f"Extinction law : {self.ext_law}")
-        print(f"Diff reddening : {self.DR_distribution}")
-        print(f"Random seed    : {self.seed}")
-        print("Synthetic clusters object generated")
+        self._vp(f"IMF            : {self.IMF_name}", 1)
+        self._vp(f"Max init mass  : {self.max_mass}", 1)
+        self._vp(f"Gamma dist     : {self.gamma}", 1)
+        self._vp(f"Extinction law : {self.ext_law}", 1)
+        self._vp(f"Diff reddening : {self.DR_distribution}", 1)
+        self._vp(f"Random seed    : {self.seed}", 1)
+        self._vp("Synthetic clusters object generated")
+
+    def _vp(self, mssg: str, level: int = 0) -> None:
+        """Verbose print method"""
+        if self.verbose > level:
+            print(mssg)
 
     def calibrate(self, cluster: Cluster, fix_params: dict = {}):
         """Calibrate a :py:class:`Synthetic` object based on a
@@ -162,10 +190,11 @@ class Synthetic:
             defaults to ``{}``
         :type fix_params: dict
 
-        :raises ValueError: If the number of colors defined in the
+        :raises ValueError:
+            -If the number of colors defined in the
             :py:class:`Cluster <asteca.cluster.Cluster>` and
             :py:class:`Synthetic <asteca.synthetic.Synthetic>` objects do not match
-        :raises ValueError: If the metallicity or age parameters are not fixed to a
+            -If the metallicity or age parameters are not fixed to a
             single value but there ranges are.
         """
         # Check that the number of colors match
@@ -179,9 +208,9 @@ class Synthetic:
                 "Two colors were defined in 'cluster' but a single color\n"
                 + "was defined in 'synthetic'."
             )
-        if len(cluster.mag_p) > cluster.N_clust_max:
+        if len(cluster.mag_v) > cluster.N_clust_max:
             raise ValueError(
-                f"The number of stars in this `Cluster` object ({len(cluster.mag_p)})\n"
+                f"The number of stars in this `Cluster` object ({len(cluster.mag_v)})\n"
                 + f"is larger than the N_clust_max={cluster.N_clust_max} parameter.\n"
                 + "Either define a `Cluster` object with fewer members or increase "
                 + "the N_clust_max value."
@@ -192,19 +221,19 @@ class Synthetic:
         if self.isochs.color2_effl is not None:
             self.m_ini_idx = 3  # (0->mag, 1->color, 2->color2, 3->mass_ini)
 
-        self.max_mag_syn = max(cluster.mag_p)
-        self.N_obs_stars = len(cluster.mag_p)
+        self.max_mag_syn = max(cluster.mag_v)
+        self.N_obs_stars = len(cluster.mag_v)
         self.err_dist = scp.error_distribution(
-            cluster.mag_p,
-            cluster.e_mag_p,
-            cluster.e_colors_p,
+            cluster.mag_v,
+            cluster.e_mag_v,
+            cluster.e_colors_v,
             self.rand_floats["norm"][1],
         )
 
         # Used by the `get_models()` method and its result by the `stellar_masses()`
         # and `binary_fraction()` methods
-        self.mag_p = cluster.mag_p
-        self.colors_p = cluster.colors_p
+        self.mag_v = cluster.mag_v
+        self.colors_v = cluster.colors_v
 
         self.fix_params = fix_params
 
@@ -222,10 +251,12 @@ class Synthetic:
                         f"Parameter '{par}' is not fixed and its range is limited to "
                         + f"a single value: {self.met_age_dict[par]}"
                     )
-
-        # # Remove low masses if required
-        # if dm_min is not None:
-        #     self._rm_low_masses(dm_min)
+            else:
+                pmin, pmax = min(self.met_age_dict[par]), max(self.met_age_dict[par])
+                if self.fix_params[par] < pmin or self.fix_params[par] > pmax:
+                    raise ValueError(
+                        f"Parameter {par}={self.fix_params[par]} out of range: [{pmin} - {pmax}]"
+                    )
 
     def generate(
         self, fit_params: dict, plot_flag: bool = False, full_arr_flag: bool = False
@@ -245,7 +276,7 @@ class Synthetic:
             cut  is applied. Used mainly for plotting, defaults to ``False``
         :type plot_flag: bool
         :param full_arr_flag: If ``True`` returns the full array for the synthetic
-            cluster, inclusing the binary data (if any). Used mainly for plotting,
+            cluster, including the binary data (if any). Used mainly for plotting,
             defaults to ``False``
         :type full_arr_flag: bool
 
@@ -312,7 +343,7 @@ class Synthetic:
         isoch_binar = scp.binarity(
             alpha,
             beta,
-            self.gamma,
+            self.binar_flag,
             self.m_ini_idx,
             self.rand_floats["unif"][1],
             isoch_mass,
@@ -327,9 +358,8 @@ class Synthetic:
 
     def get_models(
         self,
-        model: dict,
-        model_std: dict,
-        radec_c: tuple[float, float],
+        model: dict[str, float],
+        model_std: dict[str, float],
         N_models: int = 200,
     ) -> None:
         """Generate random sampled models from the selected solution. Use these models
@@ -339,19 +369,41 @@ class Synthetic:
             were **not** included in the ``fix_params`` dictionary when the
             :py:class:`Synthetic` object was calibrated
             (:py:meth:`synthetic.Synthetic.calibrate` method)
-        :type model: dict
+        :type model: dict[str, float]
         :param model_std: Dictionary with the standard deviations for the fundamental
             parameters in the ``model`` argument
-        :type model_std: dict
-        :param radec_c: Right ascension and declination center coordinates for the
-            cluster
-        :type radec_c: tuple[float, float]
+        :type model_std: dict[str, float]
         :param N_models: Number of sampled models, defaults to ``200``
         :type N_models: int
 
+        :raises ValueError: If any of the (met, age) parameters are out of range
         """
+        self._vp("\nGenerate synthetic models...", 1)
+        self._vp(f"N_models       : {N_models}", 1)
+        self._vp(
+            "Model          :"
+            + ", ".join(f"{k}: {round(v, 3)}" for k, v in model.items()),
+            2,
+        )
+        self._vp(
+            "Model STDDEV   :"
+            + ", ".join(f"{k}: {round(v, 3)}" for k, v in model_std.items()),
+            2,
+        )
+
+        # Check isochrones ranges
+        for par in ("met", "loga"):
+            try:
+                pmin, pmax = min(self.met_age_dict[par]), max(self.met_age_dict[par])
+                if model[par] < pmin or model[par] > pmax:
+                    raise ValueError(
+                        f"Parameter '{par}' out of range: [{pmin} - {pmax}]"
+                    )
+            except KeyError:
+                pass
+
         # Observed photometry
-        obs_phot = np.array([self.mag_p] + [_ for _ in self.colors_p])
+        obs_phot = np.array([self.mag_v] + [_ for _ in self.colors_v])
         # Replace nans in mag and colors to avoid crashing KDTree()
         nan_msk = np.full(obs_phot.shape[1], False)
         for ophot in obs_phot:
@@ -359,7 +411,7 @@ class Synthetic:
         obs_phot[:, nan_msk] = -10.0
         obs_phot = obs_phot.T
 
-        sampled_models = mb.ranModels(model, model_std, N_models, self.seed)
+        sampled_models = mb.ranModels(model, model_std, N_models, self.rng)
 
         sampled_synthcls, close_stars_idxs = [], []
         remove_model_index = []
@@ -369,33 +421,20 @@ class Synthetic:
                 remove_model_index.append(i)
                 continue
             sampled_synthcls.append(isoch)
-            idxs = mb.get_close_idxs(self, obs_phot, isoch)
+            idxs = mb.get_close_idxs(self.m_ini_idx, obs_phot, isoch)
             close_stars_idxs.append(idxs)
 
+        # Remove models associated to empty isochrones
         if len(remove_model_index) > 0:
-            sampled_models = np.delete(sampled_models, remove_model_index).tolist()
+            sampled_models = list(
+                np.delete(np.array(sampled_models), np.array(remove_model_index))
+            )
         self.sampled_models = sampled_models
         self.sampled_synthcls = sampled_synthcls
         self.close_stars_idxs = close_stars_idxs
         self.obs_nan_msk = nan_msk
 
-        # Obtain galactic vertical distance and distance to center
-        Z, R_GC, R_xy = mb.galactic_coords(self, radec_c)
-        self.Z = Z
-        self.R_GC = R_GC
-        self.R_xy = R_xy
-
-        print("")
-        print(
-            "Model          :",
-            ", ".join(f"{k}: {round(v, 3)}" for k, v in model.items()),
-        )
-        print(
-            "Model STDDEV   :",
-            ", ".join(f"{k}: {round(v, 3)}" for k, v in model_std.items()),
-        )
-        print(f"N_models       : {N_models}")
-        print("Attributes stored in Synthetic object")
+        self._vp("Attributes stored in Synthetic object", 1)
 
     def stellar_masses(
         self,
@@ -410,7 +449,9 @@ class Synthetic:
         """
         m12_masses = []
         for i, isoch in enumerate(self.sampled_synthcls):
-            m1_obs, m2_obs = mb.get_m1m2(self, isoch, self.close_stars_idxs[i])
+            m1_obs, m2_obs = mb.get_m1m2(
+                self.m_ini_idx, isoch, self.close_stars_idxs[i]
+            )
             m12_masses.append([m1_obs, m2_obs])
         m12_masses = np.array(m12_masses)
 
@@ -449,25 +490,28 @@ class Synthetic:
                 + "binarity probability"
             )
 
+        self._vp("\nBinary fraction estimated", 1)
+
         return df
 
     def binary_fraction(
         self,
-    ) -> np.array:
+    ) -> np.ndarray:
         """Estimate the total binary fraction for the observed cluster.
 
         :return: Distribution of total binary fraction values for the cluster
-        :rtype: np.array
+        :rtype: np.ndarray
         """
         b_fr_all = []
         for i, isoch in enumerate(self.sampled_synthcls):
-            b_fr = mb.get_bpr(self, isoch, self.close_stars_idxs[i])
+            b_fr = mb.get_bpr(isoch, self.close_stars_idxs[i])
             b_fr_all.append(b_fr)
 
         return np.array(b_fr_all)
 
     def cluster_masses(
         self,
+        radec_c: tuple[float, float] | None = None,
         rho_amb: float | None = None,
         M_B: float = 2.5e10,
         r_B: float = 0.5e3,
@@ -498,6 +542,10 @@ class Synthetic:
         - ``M_actual = M_obs + M_phot``
         - ``M_init = M_actual + M_evol + M_dyn``
 
+        :param radec_c: Right ascension and declination center coordinates for the
+            cluster. If ``None`` then the ``rho_amb`` must be given; defaults to
+            ``None``.
+        :type radec_c: tuple[float, float] | None
         :param rho_amb: Ambient density. If ``None``, it is estimated using the
             cluster's position and a model for the Galaxy's potential; defaults to
             ``None``.
@@ -538,11 +586,54 @@ class Synthetic:
             `Angelo et al. (2023) <https://doi.org/10.1093/mnras/stad1038>`__)
         :type epsilon: float
 
+        :raises ValueError:
+            -if no synthetic models were generated.
+            - if both ``radec_c`` and ``rho_amb`` are ``None``.
+
         :return: Dictionary with the mass distributions for the initial, actual,
             observed, photometric, evolutionary, and dynamical masses:
             ``M_init, M_actual, M_obs, M_phot, M_evol, M_dyn``
         :rtype: dict
         """
+        if len(self.sampled_models) == 0:
+            raise ValueError(
+                "No models were generated. Run the `get_models()` method before "
+                + "estimating the cluster masses."
+            )
+
+        # Number of observed stars
+        N_obs = len(self.mag_v)
+        # The number of stars in a synthetic isochrones is not constant so we estimate
+        # its median
+        N_stars_isoch = int(np.median([np.shape(_)[-1] for _ in self.sampled_synthcls]))
+        # Compare the number of observed vs generated synthetic stars
+        if N_stars_isoch < N_obs:
+            warnings.warn(
+                f"\nNumber of synthetic stars ({N_stars_isoch}) is smaller than "
+                + f"observed stars ({N_obs}). Increase the 'max_mass' argument for "
+                + "a more accurate mass estimation"
+            )
+
+        if rho_amb is not None:
+            # Input float to array
+            rho_amb_arr = np.ones(len(self.sampled_models)) * rho_amb
+            if radec_c is not None:
+                warnings.warn(
+                    "Both 'radec_c' and 'rho_amb' were given. Using 'rho_amb' only."
+                )
+        else:
+            if radec_c is not None:
+                # Obtain galactic vertical distance and distance to center
+                Z, R_GC, R_xy = mb.galactic_coords(
+                    self.sampled_models, self.fix_params, radec_c
+                )
+                rho_amb_arr = mb.ambient_density(
+                    M_B, r_B, M_D, a, b, r_s, M_s, Z, R_GC, R_xy
+                )
+            else:
+                raise ValueError(
+                    "Either the 'radec_c' or 'rho_amb' arguments must be given."
+                )
 
         masses_all = []
         for i, model in enumerate(self.sampled_models):
@@ -555,17 +646,18 @@ class Synthetic:
             # Estimate the actual mass, ie: the sum of the observed and photometric
             # masses
             sampled_synthcl = self.sampled_synthcls[i]
-            M_obs, M_phot = mb.get_M_actual(self, sampled_synthcl, i)
+            # TODO: don't pass the entire object, just the necessary values
+            M_obs, M_phot = mb.get_M_actual(
+                self.rng,
+                self.m_ini_idx,
+                self.st_dist_mass,
+                self.st_dist_mass_ordered,
+                sampled_synthcl,
+            )
             M_a = M_obs + M_phot
 
-            # Ambient density
-            if rho_amb is None:
-                rho_amb = mb.ambient_density(
-                    M_B, r_B, M_D, a, b, r_s, M_s, self.Z[i], self.R_GC[i], self.R_xy[i]
-                )
-
             # Dissolution parameter
-            t0 = mb.dissolution_param(C_env, epsilon, gamma, rho_amb)
+            t0 = mb.dissolution_param(C_env, epsilon, gamma, rho_amb_arr[i])
 
             # Fraction of the initial mass that is lost by stellar evolution
             mu_ev = mb.stellar_evol_mass_loss(z_met, loga)
@@ -581,16 +673,10 @@ class Synthetic:
 
         masses_all = np.array(masses_all).T
 
-        # Check the number of generated synthetic stars
-        N_obs = len(self.mag_p)
-        if N_obs > sampled_synthcl.shape[1]:
-            warnings.warn(
-                "Number of synthetic stars is smaller than observed stars. Increase "
-                + "the 'max_mass' argument for a more accurate mass estimation"
-            )
-
         M_actual = masses_all[0] + masses_all[1]
         M_init = M_actual + masses_all[2] + masses_all[3]
+
+        self._vp("\nMass values estimated", 1)
 
         return {
             "M_init": M_init,

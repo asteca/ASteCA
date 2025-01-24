@@ -1,67 +1,110 @@
 import warnings
-import numpy as np
-from scipy import spatial
-from scipy import stats
+
 import astropy.units as u
+import numpy as np
 from astropy.coordinates import SkyCoord
+from scipy import spatial, stats
 
 
-def radec2lonlat(ra, dec):
-    gc = SkyCoord(ra=ra * u.degree, dec=dec * u.degree)
+def radec2lonlat(ra: float | np.ndarray, dec: float | np.ndarray) -> np.ndarray:
+    """Convert from right ascension and declination to galactic longitude and latitude.
+
+    :param ra: Right ascension.
+    :type ra: float | np.ndarray
+    :param dec: Declination.
+    :type dec: float | np.ndarray
+
+    :return: Galactic longitude and latitude.
+    :rtype: np.ndarray
+    """
+    gc = SkyCoord(ra=ra * u.degree, dec=dec * u.degree)  # pyright: ignore
     lb = gc.transform_to("galactic")
-    lon, lat = lb.l.value, lb.b.value
-    return [lon, lat]
+    return np.array([lb.l.value, lb.b.value])  # pyright: ignore
 
 
-def lonlat2radec(lon, lat):
-    gc = SkyCoord(l=lon * u.degree, b=lat * u.degree, frame="galactic")
-    ra, dec = gc.fk5.ra.value, gc.fk5.dec.value
-    return [ra, dec]
+def lonlat2radec(lon: float | np.ndarray, lat: float | np.ndarray) -> np.ndarray:
+    """Convert from galactic longitude and latitude to right ascension and declination.
+
+    :param lon: Galactic longitude.
+    :type lon: float | np.ndarray
+    :param lat: Galactic latitude.
+    :type lat: float | np.ndarray
+
+    :return: Right ascension and declination.
+    :rtype: np.ndarray
+    """
+    gc = SkyCoord(l=lon * u.degree, b=lat * u.degree, frame="galactic")  # pyright: ignore
+    ra, dec = gc.fk5.ra.value, gc.fk5.dec.value  # pyright: ignore
+    return np.array([ra, dec])
 
 
-def reject_nans(data):
-    """Remove nans in 'data'"""
+def reject_nans(arr_data: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Remove nans in arr_data
+
+    :param arr_data: Array of data.
+    :type arr_data: np.ndarray
+
+    :return: Indexes of non-nan data and the non-nan arr_data.
+    :rtype: tuple[np.ndarray, np.ndarray]
+    """
     msk_all = []
     # Process each dimension separately
-    for arr in data:
-        # Identify non-nan data
+    for arr in arr_data:
+        # Identify non-nan arr_data
         msk = ~np.isnan(arr)
-        # Keep this non-nan data
+        # Keep this non-nan arr_data
         msk_all.append(msk.data)
     # Combine into a single mask
     msk_accpt = np.logical_and.reduce(msk_all)
 
     # Indexes that survived
-    idx_clean = np.arange(data.shape[1])[msk_accpt]
+    idx_clean = np.arange(arr_data.shape[1])[msk_accpt]
 
-    return idx_clean, data.T[msk_accpt].T
-
-
-def get_Nd_dists(cents, data, dists_flag=False):
-    """Obtain indexes and distances of stars to the given center"""
-    # Distances to center
-    dist_Nd = spatial.distance.cdist(data, cents).T[0]
-    if dists_flag:
-        # Return the distances
-        return dist_Nd
-
-    # Indexes that sort the distances
-    d_idxs = dist_Nd.argsort()
-    # Return the indexes that sort the distances
-    return d_idxs
+    return idx_clean, arr_data.T[msk_accpt].T
 
 
-def get_5D_center(
-    lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c, N_clust_min, N_clust_max
-):
-    """
-    Estimate the 5-dimensional center of a cluster:
+def get_knn_5D_center(
+    lon: np.ndarray,
+    lat: np.ndarray,
+    pmRA: np.ndarray,
+    pmDE: np.ndarray,
+    plx: np.ndarray,
+    xy_c: tuple[float, float] | None,
+    vpd_c: tuple[float, float] | None,
+    plx_c: float | None,
+    N_clust_min: int,
+    N_clust_max: int,
+) -> tuple[float, float, float, float, float]:
+    """Estimate the 5-dimensional center of a cluster.
 
     1. Keep only 'N_cent' stars if xy_c or plx_c are given
     2. (Re)Estimate the center in PMs (the value can be given as input)
     3. Obtain the 'N_cent' stars closest to the available center values
     4. Estimate the 5-dimensional final center using kNN
 
+    :param lon: Galactic Longitude.
+    :type lon: np.ndarray
+    :param lat: Galactic Latitude.
+    :type lat: np.ndarray
+    :param pmRA: Proper motion in Right Ascension.
+    :type pmRA: np.ndarray
+    :param pmDE: Proper motion in Declination.
+    :type pmDE: np.ndarray
+    :param plx: Parallax.
+    :type plx: np.ndarray
+    :param xy_c: Center coordinates in (lon, lat).
+    :type xy_c: tuple[float, float] | None
+    :param vpd_c: Center coordinates in proper motions (pmRA, pmDE).
+    :type vpd_c: tuple[float, float] | None
+    :param plx_c: Center coordinate in parallax.
+    :type plx_c: float | None
+    :param N_clust_min: Minimum number of stars in the cluster.
+    :type N_clust_min: int
+    :param N_clust_max: Maximum number of stars in the cluster.
+    :type N_clust_max: int
+
+    :return: Center coordinates in (lon, lat, pmRA, pmDE, plx).
+    :rtype: tuple[float, float, float, float, float]
     """
     N_tot = len(lon)
     # N_clust_min < N_cent < 250
@@ -89,11 +132,11 @@ def get_5D_center(
         )
 
     # (Re)estimate VPD center
-    vpd_c = get_pms_center(vpd_c, N_clust_min, pmRA_i, pmDE_i)
+    vpd_c_i = get_pms_center(vpd_c, N_clust_min, pmRA_i, pmDE_i)
 
     # Get N_cent stars closest to vpd_c and given xy and/or plx centers
     lon_i, lat_i, pmRA_i, pmDE_i, plx_i = get_stars_close_center(
-        lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c, N_cent
+        lon, lat, pmRA, pmDE, plx, xy_c, vpd_c_i, plx_c, N_cent
     )
 
     # kNN center
@@ -104,9 +147,67 @@ def get_5D_center(
     return x_c, y_c, pmra_c, pmde_c, plx_c
 
 
-def filter_pms_stars(xy_c, plx_c, lon, lat, pmRA, pmDE, plx, N_cent):
+def get_Nd_dists(
+    cents: np.ndarray, data: np.ndarray, dists_flag: bool = False
+) -> np.ndarray:
+    """Obtain indexes and distances of stars to the given center
+
+    :param cents: Center coordinates.
+    :type cents: np.ndarray
+    :param data: Array of data.
+    :type data: np.ndarray
+    :param dists_flag: If True, return distances instead of indexes. Defaults to False
+    :type dists_flag: bool
+
+    :return: Indexes or distances of stars to the given center.
+    :rtype: np.ndarray
+    """
+    # Distances to center
+    dist_Nd = spatial.distance.cdist(data, cents).T[0]
+    if dists_flag:
+        # Return the distances
+        return dist_Nd
+
+    # Indexes that sort the distances
+    d_idxs = dist_Nd.argsort()
+    # Return the indexes that sort the distances
+    return d_idxs
+
+
+def filter_pms_stars(
+    xy_c: tuple[float, float] | None,
+    plx_c: float | None,
+    lon: np.ndarray,
+    lat: np.ndarray,
+    pmRA: np.ndarray,
+    pmDE: np.ndarray,
+    plx: np.ndarray,
+    N_cent: int,
+) -> tuple[np.ndarray, np.ndarray]:
     """If either xy_c or plx_c values are given, select the 'N_cent' stars
     closest to this 1D/2D/3D center, and return their proper motions.
+
+    :param xy_c: Center coordinates in (lon, lat).
+    :type xy_c: tuple[float, float] | None
+    :param plx_c: Center coordinate in parallax.
+    :type plx_c: float | None
+    :param lon: Galactic Longitude.
+    :type lon: np.ndarray
+    :param lat: Galactic Latitude.
+    :type lat: np.ndarray
+    :param pmRA: Proper motion in Right Ascension.
+    :type pmRA: np.ndarray
+    :param pmDE: Proper motion in Declination.
+    :type pmDE: np.ndarray
+    :param plx: Parallax.
+    :type plx: np.ndarray
+    :param N_cent: Number of stars to select.
+    :type N_cent: int
+
+    :raises ValueError: If xy_c and plx_c are both None.
+
+    :return: Proper motions of the selected stars.
+    :rtype: tuple[np.ndarray, np.ndarray]
     """
     # Create arrays with required shape
     if xy_c is None and plx_c is not None:
@@ -115,10 +216,11 @@ def filter_pms_stars(xy_c, plx_c, lon, lat, pmRA, pmDE, plx, N_cent):
     elif xy_c is not None and plx_c is None:
         cent = np.array([xy_c])
         data = np.array([lon, lat]).T
-    else:
-        # xy_c is not None and plx_c is not None
+    elif xy_c is not None and plx_c is not None:
         cent = np.array([list(xy_c) + [plx_c]])
         data = np.array([lon, lat, plx]).T
+    else:
+        raise ValueError("Either xy_c or plx_c must be given")
 
     # Closest stars to the selected center
     idx = get_Nd_dists(cent, data)[:N_cent]
@@ -127,8 +229,37 @@ def filter_pms_stars(xy_c, plx_c, lon, lat, pmRA, pmDE, plx, N_cent):
     return pmRA_i, pmDE_i
 
 
-def get_pms_center(vpd_c, N_clust_min, pmRA, pmDE, N_bins=50, zoom_f=4, N_zoom=10):
-    """ """
+def get_pms_center(
+    vpd_c: tuple[float, float] | None,
+    N_clust_min: int,
+    pmRA: np.ndarray,
+    pmDE: np.ndarray,
+    N_bins: int = 50,
+    zoom_f: int = 4,
+    N_zoom: int = 10,
+) -> tuple[float, float]:
+    """Estimate the center in proper motion space.
+
+    :param vpd_c: Center coordinates in proper motions (pmRA, pmDE).
+    :type vpd_c: tuple[float, float] | None
+    :param N_clust_min: Minimum number of stars in the cluster.
+    :type N_clust_min: int
+    :param pmRA: Proper motion in Right Ascension.
+    :type pmRA: np.ndarray
+    :param pmDE: Proper motion in Declination.
+    :type pmDE: np.ndarray
+    :param N_bins: Number of bins for the 2D histogram, defaults to 50
+    :type N_bins: int
+    :param zoom_f: Zoom factor for the iterative center estimation, defaults to 4
+    :type zoom_f: int
+    :param N_zoom: Number of zoom iterations, defaults to 10
+    :type N_zoom: int
+
+    :raises ValueError: If the PMs center could not be estimated
+
+    :return: Center coordinates in proper motions (pmRA, pmDE).
+    :rtype: tuple[float, float]
+    """
     vpd = np.array([pmRA, pmDE]).T
 
     # Center in PMs space
@@ -162,35 +293,70 @@ def get_pms_center(vpd_c, N_clust_min, pmRA, pmDE, N_bins=50, zoom_f=4, N_zoom=1
         )
         vpd = vpd[msk]
 
-    if vpd_c is None and cxym is None:
-        raise Exception("Could not estimate the PMs center value")
-
     if cxym is not None:
         cx, cy = cxym
     else:
+        if vpd_c is None:
+            raise ValueError("Could not estimate the PMs center value")
         cx, cy = vpd_c
         warnings.warn("Could not estimate a better PMs center value")
 
-    return [cx, cy]
+    return cx, cy
 
 
-def get_stars_close_center(lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c, N_cent):
-    """
-    Distances to centers using the vpd_c and other available data
+def get_stars_close_center(
+    lon: np.ndarray,
+    lat: np.ndarray,
+    pmRA: np.ndarray,
+    pmDE: np.ndarray,
+    plx: np.ndarray,
+    xy_c: tuple[float, float] | None,
+    vpd_c_i: tuple[float, float],
+    plx_c: float | None,
+    N_cent: int,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Select the 'N_cent' stars closest to the given center.
+
+    Distances to centers using the vpd_c_i and other available data
+
+    :param lon: Galactic Longitude.
+    :type lon: np.ndarray
+    :param lat: Galactic Latitude.
+    :type lat: np.ndarray
+    :param pmRA: Proper motion in Right Ascension.
+    :type pmRA: np.ndarray
+    :param pmDE: Proper motion in Declination.
+    :type pmDE: np.ndarray
+    :param plx: Parallax.
+    :type plx: np.ndarray
+    :param xy_c: Center coordinates in (lon, lat).
+    :type xy_c: tuple[float, float] | None
+    :param vpd_c_i: Center coordinates in proper motions (pmRA, pmDE).
+    :type vpd_c_i: tuple[float, float]
+    :param plx_c: Center coordinate in parallax.
+    :type plx_c: float | None
+    :param N_cent: Number of stars to select.
+    :type N_cent: int
+
+    :raises ValueError: If xy_c and plx_c are both None.
+
+    :return: Coordinates and proper motions of the selected stars.
+    :rtype: tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]
     """
     if xy_c is None and plx_c is None:
-        cent = np.array([vpd_c])
+        cent = np.array([vpd_c_i])
         data = np.array([pmRA, pmDE]).T
     elif xy_c is None and plx_c is not None:
-        cent = np.array([vpd_c + [plx_c]])
+        cent = np.array([list(vpd_c_i) + [plx_c]])
         data = np.array([pmRA, pmDE, plx]).T
     elif xy_c is not None and plx_c is None:
-        cent = np.array([list(xy_c) + vpd_c])
+        cent = np.array([list(xy_c) + list(vpd_c_i)])
         data = np.array([lon, lat, pmRA, pmDE]).T
-    else:
-        # xy_c is not None and plx_c is not None
-        cent = np.array([list(xy_c) + vpd_c + [plx_c]])
+    elif xy_c is not None and plx_c is not None:
+        cent = np.array([list(xy_c) + list(vpd_c_i) + [plx_c]])
         data = np.array([lon, lat, pmRA, pmDE, plx]).T
+    else:
+        raise ValueError("Either xy_c or plx_c must be given")
 
     # Closest stars to the selected center
     idx = get_Nd_dists(cent, data)[:N_cent]
@@ -198,15 +364,25 @@ def get_stars_close_center(lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c, N_cent
     return lon[idx], lat[idx], pmRA[idx], pmDE[idx], plx[idx]
 
 
-def get_kNN_center(N_clust_min, data):
-    """Estimate 5D center with kNN."""
+def get_kNN_center(
+    N_clust_min: int, data: np.ndarray
+) -> tuple[float, float, float, float, float]:
+    """Estimate 5D center with kNN.
 
+    :param N_clust_min: Minimum number of stars in the cluster.
+    :type N_clust_min: int
+    :param data: Array of data.
+    :type data: np.ndarray
+
+    :return: Center coordinates in (lon, lat, pmRA, pmDE, plx).
+    :rtype: tuple[float, float, float, float, float]
+    """
     # Better results are obtained not using the parallax data?
     data_noplx = data[:, :4]  # <-- HARDCODED
 
-    tree = spatial.cKDTree(data_noplx)
+    tree = spatial.KDTree(data_noplx)
     inx = tree.query(data_noplx, k=N_clust_min + 1)
-    NN_dist = inx[0].max(1)
+    NN_dist = np.max(inx[0], axis=1)
     # Convert to densities
     dens = 1.0 / NN_dist
     # Sort by largest density
@@ -216,15 +392,28 @@ def get_kNN_center(N_clust_min, data):
     # cent = np.array([data[idxs[0]]])[0]
 
     # Use median of 'N_clust_min' stars with largest densities
-    cent = np.median(data[idxs[:N_clust_min]], 0)
+    x_c, y_c, pmra_c, pmde_c, plx_c = np.median(data[idxs[:N_clust_min]], 0)
 
-    return cent
+    return x_c, y_c, pmra_c, pmde_c, plx_c
 
 
-def get_2D_center(x, y, N_max=10000):
+def get_2D_center(
+    x: np.ndarray, y: np.ndarray, N_max: int = 10_000
+) -> tuple[float, float]:
     """Estimate the 2-dimensional center of a cluster, using only its coordinates.
 
     Find the KDE maximum value pointing to the center coordinates.
+
+    :param x: X coordinates.
+    :type x: np.ndarray
+    :param y: Y coordinates.
+    :type y: np.ndarray
+    :param N_max: Maximum number of stars to use for performance reasons, defaults
+     to 10_000
+    :type N_max: int
+
+    :return: Center coordinates in (x, y).
+    :rtype: tuple[float, float]
     """
     values = np.vstack([x, y])
     # Use maximum number for performance
@@ -244,22 +433,33 @@ def get_2D_center(x, y, N_max=10000):
     x_cent_pix, y_cent_pix = get_XY(values, gd=50)
 
     # Restrict the KDE to a smaller area to improve performance
-    rad_x = np.percentile(x, 60) - np.percentile(x, 40)
-    rad_y = np.percentile(y, 60) - np.percentile(y, 40)
-    # Generate zoom around approx center value to speed things up.
-    xmin, xmax = x_cent_pix - rad_x, x_cent_pix + rad_x
-    ymin, ymax_z = y_cent_pix - rad_y, y_cent_pix + rad_y
-    # Use reduced region around the center.
-    msk = (xmin < x) & (x < xmax) & (ymin < y) & (y < ymax_z)
+    if values.shape[1] > 500:
+        rad_x = np.percentile(x, 60) - np.percentile(x, 40)
+        rad_y = np.percentile(y, 60) - np.percentile(y, 40)
+        # Generate zoom around approx center value to speed things up.
+        xmin, xmax = x_cent_pix - rad_x, x_cent_pix + rad_x
+        ymin, ymax_z = y_cent_pix - rad_y, y_cent_pix + rad_y
+        # Use reduced region around the center.
+        msk = (xmin < x) & (x < xmax) & (ymin < y) & (y < ymax_z)
+        values = values[:, msk]
 
     # Final center values
-    x_c, y_c = get_XY(values[:, msk], gd=100)
+    x_c, y_c = get_XY(values, gd=100)
 
     return x_c, y_c
 
 
-def get_XY(values, gd):
-    """ """
+def get_XY(values: np.ndarray, gd: int) -> tuple[float, float]:
+    """Estimate the center coordinates using a Gaussian Kernel Density Estimation.
+
+    :param values: Array of x and y coordinates.
+    :type values: np.ndarray
+    :param gd: Grid density (number of points).
+    :type gd: int
+
+    :return: Center coordinates in (x, y).
+    :rtype: tuple[float, float]
+    """
     xmin, ymin = values.min(1)
     xmax, ymax = values.max(1)
 

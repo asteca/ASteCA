@@ -1,26 +1,19 @@
-[tool.poetry]
+[project]
 name = "asteca"
-version = "0.5.8"
+version = "0.5.9"
 description = "Stellar cluster analysis package"
-authors = ["Gabriel I Perren <gabrielperren@gmail.com>"]
+authors = [
+    {name = "Gabriel I Perren", email = "gabrielperren@gmail.com"}
+]
 readme = "README.md"
 license = "MIT"
 keywords = ["cluster", "astrophysics"]
 homepage = "https://asteca.github.io/"
 repository = "https://github.com/asteca/ASteCA"
 documentation = "https://asteca.readthedocs.io/"
-
-[tool.poetry.dependencies]
-python = "^3.10"
-numpy = "1.26.4"
-matplotlib = "3.7.1"
-scipy = "1.13.1"
-astropy = "6.1.2"
-pandas = "2.1.4"
-fast-histogram = "0.14"
-requests = "2.32.3"
-
+requires-python = ">=3.12"
+dependencies = ["numpy (>=2.2.1,<3.0.0)", "matplotlib (>=3.10.0,<4.0.0)", "scipy (>=1.15.0,<2.0.0)", "astropy (>=7.0.0,<8.0.0)", "pandas (>=2.2.3,<3.0.0)", "fast-histogram (>=0.14,<0.15)"]
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"

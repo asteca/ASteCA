@@ -1,8 +1,9 @@
 import numpy as np
+
 from .cluster import Cluster
 from .modules import cluster_priv as cp
-from .modules.fastmp import fastMP
 from .modules.bayesian_da import bayesian_mp
+from .modules.fastmp import fastMP
 
 
 class Membership:
@@ -31,6 +32,8 @@ class Membership:
     :param seed: Random seed. If ``None`` a random integer will be generated and used,
         defaults to ``None``
     :type seed: int | None
+    :param verbose: Verbose level. A value of ``0`` hides all output, defaults to ``1``
+    :type verbose: int
 
     :raises ValueError: If there are missing required attributes in the
         :py:class:`Cluster <asteca.cluster.Cluster>` object
@@ -40,9 +43,11 @@ class Membership:
         self,
         my_field: Cluster,
         seed: int | None = None,
+        verbose: int = 1,
     ) -> None:
         self.my_field = my_field
         self.seed = seed
+        self.verbose = verbose
 
         noradeg_flag = False
         try:
@@ -65,11 +70,16 @@ class Membership:
             )
 
         # Set seed
-        self.rng = np.random.default_rng(seed)
+        self.rng = np.random.default_rng(self.seed)
 
-        print(f"\nN_cluster      : {self.my_field.N_cluster}")
-        print(f"Random seed    : {self.seed}")
-        print("Membership object generated")
+        self._vp("\nMembership object generated")
+        self._vp(f"N_cluster      : {self.my_field.N_cluster}", 1)
+        self._vp(f"Random seed    : {self.seed}", 1)
+
+    def _vp(self, mssg: str, level: int = 0) -> None:
+        """Verbose print method"""
+        if self.verbose > level:
+            print(mssg)
 
     def bayesian(self, N_runs: int = 1000, eq_to_gal: bool = False) -> np.ndarray:
         """Assign membership probabilities.
@@ -110,24 +120,24 @@ class Membership:
             center = cp.radec2lonlat(*center)
             cent_str = "lonlat_c"
 
-        print("\nRunning Bayesian DA...")
-        print("{}       : ({:.4f}, {:.4f})".format(cent_str, *center))
-        print(f"radius         : {self.my_field.radius} [deg]")
-        print(f"N_cluster      : {self.my_field.N_cluster}")
-        print(f"N_runs         : {N_runs}")
+        self._vp("\nRunning Bayesian DA...")
+        self._vp("{}       : ({:.4f}, {:.4f})".format(cent_str, *center), 1)
+        self._vp(f"radius         : {self.my_field.radius:.4f} [deg]", 1)
+        self._vp(f"N_cluster      : {self.my_field.N_cluster}", 1)
+        self._vp(f"N_runs         : {N_runs}", 1)
 
         # Generate input data array
         X = [xc, yc]
         e_X = []
-        if hasattr(self.my_field, "mag_p"):
-            X.append(self.my_field.mag_p)
-            e_X.append(self.my_field.e_mag_p)
-        if hasattr(self.my_field, "colors_p"):
-            X.append(self.my_field.colors_p[0])
-            e_X.append(self.my_field.e_colors_p[0])
+        if hasattr(self.my_field, "mag_v"):
+            X.append(self.my_field.mag_v)
+            e_X.append(self.my_field.e_mag_v)
+        if hasattr(self.my_field, "colors_v"):
+            X.append(self.my_field.colors_v[0])
+            e_X.append(self.my_field.e_colors_v[0])
             try:
-                X.append(self.my_field.colors_p[1])
-                e_X.append(self.my_field.e_colors_p[1])
+                X.append(self.my_field.colors_v[1])
+                e_X.append(self.my_field.e_colors_v[1])
             except IndexError:
                 pass
         if hasattr(self.my_field, "plx_v"):
@@ -142,9 +152,17 @@ class Membership:
         X = np.array(X)
         e_X = np.array(e_X)
 
-        probs = bayesian_mp(
-            X, e_X, center, self.my_field.radius, self.my_field.N_cluster, N_runs
+        out_mssg, probs = bayesian_mp(
+            N_runs,
+            X,
+            e_X,
+            np.array(center),
+            self.my_field.radius,
+            self.my_field.N_cluster,
+            self.rng,
         )
+        self._vp(out_mssg, 1)
+
         return probs
 
     def fastmp(
@@ -171,9 +189,10 @@ class Membership:
             defaults to ``True``
         :type eq_to_gal: bool
 
-        :raises ValueError: If the :py:class:`Cluster <asteca.cluster.Cluster>` object
-            is missing a required attribute:
+        :raises AttributeError: If the :py:class:`Cluster <asteca.cluster.Cluster>`
+            object is missing a required attribute:
             ``(ra, dec, pmra, pmde, plx, e_pmra, e_pmde, e_plx, radec_c, pms_c, plx_c)``
+        :raises ValueError: If the ``N_runs`` parameter is less than 10
 
         :return: Membership probabilities for all stars in the frame
         :rtype: np.ndarray
@@ -192,9 +211,9 @@ class Membership:
             "plx_c",
         ):
             if hasattr(self.my_field, k) is False:
-                raise ValueError(f"'{k}' must be present as a 'cluster' attribute")
+                raise AttributeError(f"'{k}' must be present as a 'cluster' attribute")
         if N_runs < 10:
-            raise AttributeError("Parameter 'N_runs' should be > 10")
+            raise ValueError("Parameter 'N_runs' should be > 10")
 
         xv, yv = self.my_field.ra_v, self.my_field.dec_v
         xy_center = self.my_field.radec_c
@@ -202,20 +221,21 @@ class Membership:
         # Convert (RA, DEC) to (lon, lat)
         if eq_to_gal is True:
             xv, yv = cp.radec2lonlat(xv, yv)
-            xy_center = cp.radec2lonlat(*xy_center)
+            xc, yc = cp.radec2lonlat(*xy_center)
+            xy_center = (float(xc), float(yc))
             cent_str = "lonlat_c"
 
-        print("\nRunning fastMP...")
-        print("{}       : ({:.4f}, {:.4f})".format(cent_str, *xy_center))
-        print("pms_c          : ({:.3f}, {:.3f})".format(*self.my_field.pms_c))
-        print(f"plx_c          : {self.my_field.plx_c}")
-        print(f"fixed_centers  : {fixed_centers}")
-        print(f"N_cluster      : {self.my_field.N_cluster}")
+        self._vp("\nRunning fastMP...")
+        self._vp("{}       : ({:.4f}, {:.4f})".format(cent_str, *xy_center), 1)
+        self._vp("pms_c          : ({:.3f}, {:.3f})".format(*self.my_field.pms_c), 1)
+        self._vp(f"plx_c          : {self.my_field.plx_c:.3f}", 1)
+        self._vp(f"fixed_centers  : {fixed_centers}", 1)
+        self._vp(f"N_cluster      : {self.my_field.N_cluster}", 1)
         # centers_ex_flag = False
         # if centers_ex is not None:
         #     centers_ex_flag = True
-        # print(f"centers_ex     : {centers_ex_flag}")
-        print(f"N_resample     : {N_runs}")
+        # self._vp(f"centers_ex     : {centers_ex_flag}", 1)
+        self._vp(f"N_resample     : {N_runs}", 1)
 
         # Generate input data array for fastMP
         X = np.array(
@@ -230,17 +250,19 @@ class Membership:
                 self.my_field.e_plx_v,
             ]
         )
-        probs = fastMP(
-            X,
-            list(xy_center),
-            list(self.my_field.pms_c),
+        out_mssg, probs = fastMP(
+            self.rng,
+            xy_center,
+            self.my_field.pms_c,
             self.my_field.plx_c,
-            fixed_centers,
             self.my_field.N_cluster,
             self.my_field.N_clust_min,
             self.my_field.N_clust_max,
-            self.rng,
+            fixed_centers,
+            X,
             N_runs,
         )
+
+        self._vp(out_mssg, 1)
 
         return probs

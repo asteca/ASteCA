@@ -16,6 +16,7 @@
 
 # and ignore these folders
 /docs/build/*
+/docs/_build/*
 /docs/autoapi/*
 /docs/apidocs/*
 # Jupyter Notebook

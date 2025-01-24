@@ -2,7 +2,6 @@
 #
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
-import os
 
 # -- Path setup --------------------------------------------------------------
 
@@ -59,6 +58,8 @@ autodoc2_packages = [
         ],
     }
 ]
+# autodoc2_output_dir = []
+autodoc2_sort_names = True
 autodoc2_hidden_objects = ["dunder", "private", "inherited"]
 
 
@@ -89,35 +90,35 @@ autodoc2_hidden_objects = ["dunder", "private", "inherited"]
 #     app.connect("source-read", source_read_handler)
 ################################################################
 
+# DEPRECATED 25/01/13 --> Simpler without
+# ################################################################
+# # This block changes the 'Initialization' title for a 'Methods' title
+# # WARNING: could break at any moment if pydoclint changes its behavior!
+# def source_read_handler(app, docname, source):
+#     """'docname, source' not used but required"""
+#     path = "./apidocs/asteca/"
+#     for file in os.listdir(path):
+#         with open(path + file) as f:
+#             lines = f.readlines()
+#             idxs = []
+#             for i, line in enumerate(lines):
+#                 if ".. rubric:: Initialization" in line:
+#                     idxs += list(range(i, i + 3))
+#                     break
+#         if idxs:
+#             if len(lines) > idxs[-1] + 2:
+#                 lines[idxs[0]] = "   .. rubric:: Methods\n"
+#             else:
+#                 lines[idxs[0]] = ""
+#             lines[idxs[1]] = ""
+#             lines[idxs[2]] = ""
+#             with open(path + file, "w") as f:
+#                 for line in lines:
+#                     f.write(line)
 
-################################################################
-# This block changes the 'Initialization' title for a 'Methods' title
-# WARNING: could break at any moment if pydoclint changes its behavior!
-def source_read_handler(app, docname, source):
-    """'docname, source' not used but required"""
-    path = "./apidocs/asteca/"
-    for file in os.listdir(path):
-        with open(path + file) as f:
-            lines = f.readlines()
-            idxs = []
-            for i, line in enumerate(lines):
-                if ".. rubric:: Initialization" in line:
-                    idxs += list(range(i, i + 3))
-                    break
-        if idxs:
-            if len(lines) > idxs[-1] + 2:
-                lines[idxs[0]] = "   .. rubric:: Methods\n"
-            else:
-                lines[idxs[0]] = ""
-            lines[idxs[1]] = ""
-            lines[idxs[2]] = ""
-            with open(path + file, "w") as f:
-                for line in lines:
-                    f.write(line)
 
-
-def setup(app):
-    app.connect("source-read", source_read_handler)
+# def setup(app):
+#     app.connect("source-read", source_read_handler)
 
 
 ################################################################
