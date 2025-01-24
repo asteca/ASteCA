@@ -586,8 +586,9 @@ class Synthetic:
             `Angelo et al. (2023) <https://doi.org/10.1093/mnras/stad1038>`__)
         :type epsilon: float
 
-        :raises ValueError: if no synthetic models were generated.
-        :raises ValueError: if both ``radec_c`` and ``rho_amb`` are ``None``.
+        :raises ValueError:
+            -if no synthetic models were generated.
+            - if both ``radec_c`` and ``rho_amb`` are ``None``.
 
         :return: Dictionary with the mass distributions for the initial, actual,
             observed, photometric, evolutionary, and dynamical masses:
