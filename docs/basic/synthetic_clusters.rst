@@ -391,11 +391,10 @@ in the :py:class:`synthetic <asteca.synthetic.Synthetic.synthetic>` object.
 
 The first step is to call the
 :py:meth:`get_models() <asteca.synthetic.Synthetic.get_models>` method. This method
-requires three arguments: ``model`` which is a dictionary of parameters to be fitted 
-(equivalent to the ``fit_params`` dictionary used to generate synthetic clusters), a
+requires two arguments: ``model`` which is a dictionary of parameters to be fitted 
+(equivalent to the ``fit_params`` dictionary used to generate synthetic clusters), and a
 ``model_std`` dictionary which contains the uncertainties (standard deviations)
-associated to each parameter in the ``model`` dictionary, and a list with center
-coordinates for the cluster in ``(RA, DEC)``. For example:
+associated to each parameter in the ``model`` dictionary. For example:
 
 .. code-block:: python
 
@@ -412,9 +411,7 @@ coordinates for the cluster in ``(RA, DEC)``. For example:
         "dm": 0.25,
         "Av": 0.03,
     }
-    # List that contains the (RA, DEC) center coordinates
-    radec_c = [119.49, -60.77]    
-    synthcl.get_models(model, model_std, radec_c)
+    synthcl.get_models(model, model_std)
 
 This will store in the :py:class:`synthetic <asteca.synthetic.Synthetic.synthetic>`
 object a sample of synthetic clusters (sampled from a normal distribution centered
@@ -429,12 +426,14 @@ Per star masses and binarity
 An estimation of the observed stars individual masses and their probability of belonging
 to a binary system can be achieved via the
 :py:meth:`stellar_masses() <asteca.synthetic.Synthetic.stellar_masses>`
-method:
+method, passing a list with center coordinates for the cluster in ``(RA, DEC)``:
 
 .. code-block:: python
 
+    # List that contains the (RA, DEC) center coordinates
+    radec_c = [119.49, -60.77]  
     # Assuming `synthcl.get_models(model, model_std)` was already performed
-    df_masses_bprob = synthcl.stellar_masses()
+    df_masses_bprob = synthcl.stellar_masses(radec_c)
 
 The returned variable ``df_masses_bprob`` is a ``pandas.Dataframe`` containing the
 columns ``m1, m1_std, m2, m2_std, binar_prob``:
