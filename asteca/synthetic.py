@@ -360,7 +360,6 @@ class Synthetic:
         self,
         model: dict[str, float],
         model_std: dict[str, float],
-        radec_c: tuple[float, float] | None,
         N_models: int = 200,
     ) -> None:
         """Generate random sampled models from the selected solution. Use these models
@@ -374,9 +373,6 @@ class Synthetic:
         :param model_std: Dictionary with the standard deviations for the fundamental
             parameters in the ``model`` argument
         :type model_std: dict[str, float]
-        :param radec_c: Right ascension and declination center coordinates for the
-            cluster
-        :type radec_c: tuple[float, float] | None
         :param N_models: Number of sampled models, defaults to ``200``
         :type N_models: int
 
@@ -437,16 +433,6 @@ class Synthetic:
         self.sampled_synthcls = sampled_synthcls
         self.close_stars_idxs = close_stars_idxs
         self.obs_nan_msk = nan_msk
-
-        self.Z, self.R_GC, self.R_xy = None, None, None
-        if radec_c is not None:
-            # Obtain galactic vertical distance and distance to center
-            Z, R_GC, R_xy = mb.galactic_coords(
-                self.sampled_models, self.fix_params, radec_c
-            )
-            self.Z = Z
-            self.R_GC = R_GC
-            self.R_xy = R_xy
 
         self._vp("Attributes stored in Synthetic object", 1)
 
@@ -525,6 +511,7 @@ class Synthetic:
 
     def cluster_masses(
         self,
+        radec_c: tuple[float, float] | None = None,
         rho_amb: float | None = None,
         M_B: float = 2.5e10,
         r_B: float = 0.5e3,
@@ -555,6 +542,10 @@ class Synthetic:
         - ``M_actual = M_obs + M_phot``
         - ``M_init = M_actual + M_evol + M_dyn``
 
+        :param radec_c: Right ascension and declination center coordinates for the
+            cluster. If ``None`` then the ``rho_amb`` must be given; defaults to
+            ``None``.
+        :type radec_c: tuple[float, float] | None
         :param rho_amb: Ambient density. If ``None``, it is estimated using the
             cluster's position and a model for the Galaxy's potential; defaults to
             ``None``.
@@ -595,12 +586,13 @@ class Synthetic:
             `Angelo et al. (2023) <https://doi.org/10.1093/mnras/stad1038>`__)
         :type epsilon: float
 
+        :raises ValueError: if no synthetic models were generated.
+        :raises ValueError: if both ``radec_c`` and ``rho_amb`` are ``None``.
+
         :return: Dictionary with the mass distributions for the initial, actual,
             observed, photometric, evolutionary, and dynamical masses:
             ``M_init, M_actual, M_obs, M_phot, M_evol, M_dyn``
         :rtype: dict
-
-        :raises ValueError: if no synthetic models were generated.
         """
         if len(self.sampled_models) == 0:
             raise ValueError(
@@ -620,6 +612,27 @@ class Synthetic:
                 + f"observed stars ({N_obs}). Increase the 'max_mass' argument for "
                 + "a more accurate mass estimation"
             )
+
+        if rho_amb is not None:
+            # Input float to array
+            rho_amb_arr = np.ones(len(self.sampled_models)) * rho_amb
+            if radec_c is not None:
+                warnings.warn(
+                    "Both 'radec_c' and 'rho_amb' were given. Using 'rho_amb' only."
+                )
+        else:
+            if radec_c is not None:
+                # Obtain galactic vertical distance and distance to center
+                Z, R_GC, R_xy = mb.galactic_coords(
+                    self.sampled_models, self.fix_params, radec_c
+                )
+                rho_amb_arr = mb.ambient_density(
+                    M_B, r_B, M_D, a, b, r_s, M_s, Z, R_GC, R_xy
+                )
+            else:
+                raise ValueError(
+                    "Either the 'radec_c' or 'rho_amb' arguments must be given."
+                )
 
         masses_all = []
         for i, model in enumerate(self.sampled_models):
@@ -642,14 +655,8 @@ class Synthetic:
             )
             M_a = M_obs + M_phot
 
-            # Ambient density
-            if rho_amb is None:
-                rho_amb = mb.ambient_density(
-                    M_B, r_B, M_D, a, b, r_s, M_s, self.Z[i], self.R_GC[i], self.R_xy[i]
-                )
-
             # Dissolution parameter
-            t0 = mb.dissolution_param(C_env, epsilon, gamma, rho_amb)
+            t0 = mb.dissolution_param(C_env, epsilon, gamma, rho_amb_arr[i])
 
             # Fraction of the initial mass that is lost by stellar evolution
             mu_ev = mb.stellar_evol_mass_loss(z_met, loga)
