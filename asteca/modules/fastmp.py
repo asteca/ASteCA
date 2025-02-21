@@ -149,7 +149,8 @@ def get_dims_norm(
     """Normalize spatial, proper motion, and parallax data using the interquartile
     range of the selected probable members.
 
-    :param N_cluster: Number of stars to select for cluster identification.
+    :param N_cluster: Number of stars to select for cluster identification. Only used
+     when st_idx is None the first time the for block is run
     :type N_cluster: int
     :param lon: Longitude values.
     :type lon: np.ndarray
@@ -190,7 +191,7 @@ def get_dims_norm(
     # the frame to galactic coordinates visibly rotates it)
     # dims_norm = 2 * np.nanmedian(abs(data_mvd[st_idx]), 0)
 
-    # Use the IQR
+    # Use the IQR to estimate the normalization constant
     dims_norm = np.ptp(np.nanpercentile(data_mvd[st_idx, :], [25, 75], axis=0), axis=0)
 
     data_norm = data_mvd / dims_norm
