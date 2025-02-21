@@ -147,30 +147,23 @@ def get_knn_5D_center(
     return x_c, y_c, pmra_c, pmde_c, plx_c
 
 
-def get_Nd_dists(
-    cents: np.ndarray, data: np.ndarray, dists_flag: bool = False
-) -> np.ndarray:
+def get_Nd_dists(cents: np.ndarray, data: np.ndarray) -> np.ndarray:
     """Obtain indexes and distances of stars to the given center
 
     :param cents: Center coordinates.
     :type cents: np.ndarray
     :param data: Array of data.
     :type data: np.ndarray
-    :param dists_flag: If True, return distances instead of indexes. Defaults to False
-    :type dists_flag: bool
 
     :return: Indexes or distances of stars to the given center.
     :rtype: np.ndarray
     """
     # Distances to center
     dist_Nd = spatial.distance.cdist(data, cents).T[0]
-    if dists_flag:
-        # Return the distances
-        return dist_Nd
 
     # Indexes that sort the distances
     d_idxs = dist_Nd.argsort()
-    # Return the indexes that sort the distances
+
     return d_idxs
 
 
