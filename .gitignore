@@ -3,7 +3,7 @@
 # except for these files
 !README.md
 !LICENSE.txt
-!poetry.lock
+!uv.lock
 !pyproject.toml
 !.readthedocs.yaml
 
