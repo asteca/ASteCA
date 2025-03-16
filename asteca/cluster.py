@@ -3,9 +3,6 @@ import warnings
 import numpy as np
 import pandas as pd
 
-from .modules import cluster_priv as cp
-from .modules import nmembers as nm
-
 
 class Cluster:
     """Define a :py:class:`Cluster` object.
@@ -225,6 +222,7 @@ class Cluster:
         :raises ValueError: If required data is missing from the
             :py:class:`Cluster <asteca.cluster.Cluster>` object
         """
+        from .modules import cluster_priv as cp
 
         if algo == "knn_5d":
             if any(
@@ -366,6 +364,9 @@ class Cluster:
         :raises AttributeError: If required attributes are  missing from the
             :py:class:`Cluster <asteca.cluster.Cluster>` object
         """
+        from .modules import cluster_priv as cp
+        from .modules import nmembers as nm
+
         if algo not in ("ripley", "density"):
             raise ValueError(f"Selected method '{algo}' not recognized")
 

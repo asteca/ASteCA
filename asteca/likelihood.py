@@ -1,8 +1,5 @@
 import numpy as np
 
-from .cluster import Cluster
-from .modules import likelihood_priv as lpriv
-
 
 class Likelihood:
     """Define a :py:class:`Likelihood` object.
@@ -32,6 +29,8 @@ class Likelihood:
     :raises ValueError: If any of the attributes is not recognized as a valid option
     """
 
+    from .cluster import Cluster
+
     def __init__(
         self, my_cluster: Cluster, lkl_name: str = "plr", bin_method: str = "knuth"
     ) -> None:
@@ -51,6 +50,8 @@ class Likelihood:
                 f"Binning '{self.bin_method}' not recognized. "
                 + f"Should be one of {bin_methods}"
             )
+
+        from .modules import likelihood_priv as lpriv
 
         # Obtain data used by the ``likelihood.get()`` method
         self.ranges, self.Nbins, self.cl_z_idx, self.cl_histo_f_z = lpriv.lkl_data(
@@ -82,6 +83,8 @@ class Likelihood:
         :return: Likelihood value
         :rtype: float
         """
+        from .modules import likelihood_priv as lpriv
+
         if self.lkl_name == "plr":
             return lpriv.tremmel(
                 self.ranges,

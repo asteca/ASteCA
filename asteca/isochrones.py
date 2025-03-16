@@ -1,7 +1,5 @@
 import numpy as np
 
-from .modules import isochrones_priv
-
 
 class Isochrones:
     """Define an :py:class:`Isochrones` object.
@@ -101,6 +99,8 @@ class Isochrones:
         self.N_interp = N_interp
         self.parsec_rm_stage_9 = parsec_rm_stage_9
         self.verbose = verbose
+
+        from .modules import isochrones_priv
 
         # Check that the number of colors match
         if self.color2 is not None and self.color2_effl is None:

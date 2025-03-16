@@ -5,8 +5,6 @@ import pandas as pd
 
 from .cluster import Cluster
 from .isochrones import Isochrones
-from .modules import mass_binary as mb
-from .modules import synth_cluster_priv as scp
 
 
 class Synthetic:
@@ -110,6 +108,8 @@ class Synthetic:
 
         self._vp("\nInstantiating synthetic...")
 
+        from .modules import synth_cluster_priv as scp
+
         # Sample the selected IMF
         Nmets, Nages = self.isochs.theor_tracks.shape[:2]
         self.st_dist_mass, self.st_dist_mass_ordered = scp.sample_imf(
@@ -197,6 +197,8 @@ class Synthetic:
             -If the metallicity or age parameters are not fixed to a
             single value but there ranges are.
         """
+        from .modules import synth_cluster_priv as scp
+
         # Check that the number of colors match
         if self.isochs.color2_effl is not None and cluster.color2 is None:
             raise ValueError(
@@ -286,6 +288,7 @@ class Synthetic:
             dimension(s). This changes depending on the flags above.
         :rtype: np.ndarray
         """
+        from .modules import synth_cluster_priv as scp
 
         # Return proper values for fixed parameters and parameters required
         # for the (z, log(age)) isochrone averaging.
@@ -378,6 +381,8 @@ class Synthetic:
 
         :raises ValueError: If any of the (met, age) parameters are out of range
         """
+        from .modules import mass_binary as mb
+
         self._vp("\nGenerate synthetic models...", 1)
         self._vp(f"N_models       : {N_models}", 1)
         self._vp(
@@ -447,6 +452,8 @@ class Synthetic:
         :rtype: pd.DataFrame
 
         """
+        from .modules import mass_binary as mb
+
         m12_masses = []
         for i, isoch in enumerate(self.sampled_synthcls):
             m1_obs, m2_obs = mb.get_m1m2(
@@ -502,6 +509,8 @@ class Synthetic:
         :return: Distribution of total binary fraction values for the cluster
         :rtype: np.ndarray
         """
+        from .modules import mass_binary as mb
+
         b_fr_all = []
         for i, isoch in enumerate(self.sampled_synthcls):
             b_fr = mb.get_bpr(isoch, self.close_stars_idxs[i])
@@ -595,6 +604,8 @@ class Synthetic:
             ``M_init, M_actual, M_obs, M_phot, M_evol, M_dyn``
         :rtype: dict
         """
+        from .modules import mass_binary as mb
+
         if len(self.sampled_models) == 0:
             raise ValueError(
                 "No models were generated. Run the `get_models()` method before "

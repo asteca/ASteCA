@@ -1,9 +1,6 @@
 import numpy as np
 
 from .cluster import Cluster
-from .modules import cluster_priv as cp
-from .modules.bayesian_da import bayesian_mp
-from .modules.fastmp import fastMP
 
 
 class Membership:
@@ -102,6 +99,9 @@ class Membership:
         :return: Membership probabilities for all stars in the frame
         :rtype: np.ndarray
         """
+        from .modules import cluster_priv as cp
+        from .modules.bayesian_da import bayesian_mp
+
         for attrib in ("radec_c", "radius"):
             if hasattr(self.my_field, attrib) is False:
                 raise AttributeError(
@@ -197,6 +197,9 @@ class Membership:
         :return: Membership probabilities for all stars in the frame
         :rtype: np.ndarray
         """
+        from .modules import cluster_priv as cp
+        from .modules.fastmp import fastMP
+
         for k in (
             "ra",
             "dec",

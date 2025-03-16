@@ -2,14 +2,19 @@ import importlib.metadata
 from contextlib import suppress
 from pathlib import Path
 
-from . import plot as plot
 from .cluster import Cluster as cluster
 from .isochrones import Isochrones as isochrones
 from .likelihood import Likelihood as likelihood
 from .membership import Membership as membership
 from .synthetic import Synthetic as synthetic
 
-__all__ = ["cluster", "membership", "isochrones", "synthetic", "likelihood", "plot"]
+__all__ = [
+    "cluster",
+    "membership",
+    "isochrones",
+    "synthetic",
+    "likelihood",
+]
 
 
 def extract_version() -> str:
