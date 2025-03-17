@@ -1,7 +1,6 @@
 import warnings
 
 import numpy as np
-import pandas as pd
 
 
 class Cluster:
@@ -10,51 +9,39 @@ class Cluster:
     This object contains the basic data required to load a group of observed stars
     that could represent a cluster or an entire field.
 
-    :param obs_df: `pandas DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`__
-        with the observed loaded data.
-    :type obs_df: pd.DataFrame
-    :param ra: Name of the DataFrame column that contains the right ascension (RA),
-        defaults to ``None``
-    :type ra: str | None
-    :param dec: Name of the DataFrame column that contains the declination (DEC),
-        defaults to ``None``
-    :type dec: str | None
-    :param magnitude: Name of the DataFrame column that contains the magnitude,
-        defaults to ``None``
-    :type magnitude: str | None
-    :param e_mag: Name of the DataFrame column that contains the magnitude's
-        uncertainty, defaults to ``None``
-    :type e_mag: str | None
-    :param color: Name of the DataFrame column that contains the color, defaults to
-        ``None``
-    :type color: str | None
-    :param e_color: Name of the DataFrame column that contains the color's uncertainty,
-        defaults to ``None``
-    :type e_color: str | None
-    :param color2: Name of the DataFrame column that contains the second color,
-        defaults to ``None``
-    :type color2: str | None
-    :param e_color2: Name of the DataFrame column that contains the second color's
-        uncertainty, defaults to ``None``
-    :type e_color2: str | None
-    :param plx: Name of the DataFrame column that contains the parallax,
-        defaults to ``None``
-    :type plx: str | None
-    :param e_plx: Name of the DataFrame column that contains the parallax uncertainty,
-        defaults to ``None``
-    :type e_plx: str | None
-    :param pmra: Name of the DataFrame column that contains the RA proper motion,
-        defaults to ``None``
-    :type pmra: str | None
-    :param e_pmra: Name of the DataFrame column that contains the RA proper motion's
-        uncertainty, defaults to ``None``
-    :type e_pmra: str | None
-    :param pmde: Name of the DataFrame column that contains the DEC proper motion,
-        defaults to ``None``
-    :type pmde: str | None
-    :param e_pmde: Name of the DataFrame column that contains the DEC proper motion's
-        uncertainty, defaults to ``None``
-    :type e_pmde: str | None
+    :param ra: Array/list that contains the right ascension (RA), defaults to ``None``
+    :type ra: np.ndarray | list | None
+    :param dec: Array/list that contains the declination (DEC), defaults to ``None``
+    :type dec: np.ndarray | list | None
+    :param magnitude: Array/list that contains the magnitude, defaults to ``None``
+    :type magnitude: np.ndarray | list | None
+    :param e_mag: Array/list that contains the magnitude's uncertainty,
+     defaults to ``None``
+    :type e_mag: np.ndarray | list | None
+    :param color: Array/list that contains the color, defaults to ``None``
+    :type color: np.ndarray | list | None
+    :param e_color: Array/list that contains the color's uncertainty,
+     defaults to ``None``
+    :type e_color: np.ndarray | list | None
+    :param color2: Array/list that contains the second color, defaults to ``None``
+    :type color2: np.ndarray | list | None
+    :param e_color2: Array/list that contains the second color's uncertainty,
+     defaults to ``None``
+    :type e_color2: np.ndarray | list | None
+    :param plx: Array/list that contains the parallax, defaults to ``None``
+    :type plx: np.ndarray | list | None
+    :param e_plx: Array/list that contains the parallax uncertainty, defaults to ``None``
+    :type e_plx: np.ndarray | list | None
+    :param pmra: Array/list that contains the RA proper motion, defaults to ``None``
+    :type pmra: np.ndarray | list | None
+    :param e_pmra: Array/list that contains the RA proper motion's uncertainty,
+     defaults to ``None``
+    :type e_pmra: np.ndarray | list | None
+    :param pmde: Array/list that contains the DEC proper motion, defaults to ``None``
+    :type pmde: np.ndarray | list | None
+    :param e_pmde: Array/list that contains the DEC proper motion's uncertainty,
+     defaults to ``None``
+    :type e_pmde: np.ndarray | list | None
     :param N_clust_min: Minimum number of cluster members, defaults to ``25``
     :type N_clust_min: int
     :param N_clust_max: Maximum number of cluster members, defaults to ``5000``
@@ -62,31 +49,28 @@ class Cluster:
     :param verbose: Verbose level. A value of ``0`` hides all output, defaults to ``1``
     :type verbose: int
 
-    :raises ValueError: If the DataFrame is empty
     """
 
     def __init__(
         self,
-        obs_df: pd.DataFrame,
-        ra: str | None = None,
-        dec: str | None = None,
-        magnitude: str | None = None,
-        e_mag: str | None = None,
-        color: str | None = None,
-        e_color: str | None = None,
-        color2: str | None = None,
-        e_color2: str | None = None,
-        plx: str | None = None,
-        e_plx: str | None = None,
-        pmra: str | None = None,
-        e_pmra: str | None = None,
-        pmde: str | None = None,
-        e_pmde: str | None = None,
+        ra: np.ndarray | list | None = None,
+        dec: np.ndarray | list | None = None,
+        magnitude: np.ndarray | list | None = None,
+        e_mag: np.ndarray | list | None = None,
+        color: np.ndarray | list | None = None,
+        e_color: np.ndarray | list | None = None,
+        color2: np.ndarray | list | None = None,
+        e_color2: np.ndarray | list | None = None,
+        plx: np.ndarray | list | None = None,
+        e_plx: np.ndarray | list | None = None,
+        pmra: np.ndarray | list | None = None,
+        e_pmra: np.ndarray | list | None = None,
+        pmde: np.ndarray | list | None = None,
+        e_pmde: np.ndarray | list | None = None,
         N_clust_min: int = 25,
         N_clust_max: int = 5000,
         verbose: int = 1,
     ) -> None:
-        self.obs_df = obs_df
         self.ra = ra
         self.dec = dec
         self.magnitude = magnitude
@@ -105,15 +89,11 @@ class Cluster:
         self.N_clust_max = N_clust_max
         self.verbose = verbose
 
-        if self.obs_df.empty:
-            raise ValueError("DataFrame is empty")
-        self.N_stars = len(self.obs_df)
         self._vp("\nInstantiating cluster...")
+        self._load_column_data()
         self._vp(f"N_stars        : {self.N_stars}", 1)
         self._vp(f"N_clust_min    : {self.N_clust_min}", 1)
         self._vp(f"N_clust_max    : {self.N_clust_max}", 1)
-
-        self._load_column_data()
         self._vp("Cluster object generated")
 
     def _vp(self, mssg: str, level: int = 0) -> None:
@@ -122,69 +102,86 @@ class Cluster:
             print(mssg)
 
     def _load_column_data(self):
-        dim_count = 0
+        cols_read = []
+        N_stars_lst = []
 
         if self.ra is not None:
-            self.ra_v = np.array(self.obs_df[self.ra], dtype=float)
-            self._vp(f"RA             : {self.ra}", 1)
-            dim_count += 1
+            self.ra_v = np.array(self.ra, dtype=float)
+            cols_read.append('RA')
+            N_stars_lst.append(len(self.ra_v))
 
         if self.dec is not None:
-            self.dec_v = np.array(self.obs_df[self.dec], dtype=float)
-            self._vp(f"DEC            : {self.dec}", 1)
-            dim_count += 1
+            self.dec_v = np.array(self.dec, dtype=float)
+            cols_read.append('DEC')
+            N_stars_lst.append(len(self.dec_v))
 
         if self.magnitude is not None:
             if self.e_mag is None:
                 raise ValueError("Magnitude uncertainty is required")
-            self.mag_v = np.array(self.obs_df[self.magnitude], dtype=float)
-            self.e_mag_v = np.array(self.obs_df[self.e_mag], dtype=float)
-            self._vp(f"Magnitude      : {self.magnitude} [{self.e_mag}]", 1)
-            dim_count += 1
+            self.mag_v = np.array(self.magnitude, dtype=float)
+            self.e_mag_v = np.array(self.e_mag, dtype=float)
+            cols_read.append('Magnitude')
+            cols_read.append('e_mag')
+            N_stars_lst.append(len(self.mag_v))
+            N_stars_lst.append(len(self.e_mag_v))
 
         if self.color is not None:
             if self.e_color is None:
                 raise ValueError("Color uncertainty is required")
-            self.colors_v = [np.array(self.obs_df[self.color], dtype=float)]
-            self.e_colors_v = [np.array(self.obs_df[self.e_color], dtype=float)]
-            self._vp(f"Color          : {self.color} [{self.e_color}]", 1)
-            dim_count += 1
+            self.colors_v = [np.array(self.color, dtype=float)]
+            self.e_colors_v = [np.array(self.e_color, dtype=float)]
+            cols_read.append('Color')
+            cols_read.append('e_color')
+            N_stars_lst.append(len(self.colors_v[0]))
+            N_stars_lst.append(len(self.e_colors_v[0]))
+
             if self.color2 is not None:
                 if self.e_color2 is None:
                     raise ValueError("Color2 uncertainty is required")
-                self.colors_v.append(np.array(self.obs_df[self.color2], dtype=float))
+                self.colors_v.append(np.array(self.color2, dtype=float))
                 self.e_colors_v.append(
-                    np.array(self.obs_df[self.e_color2], dtype=float)
+                    np.array(self.e_color2, dtype=float)
                 )
-                self._vp(f"Color2         : {self.color2} [{self.e_color2}]", 1)
-                dim_count += 1
+                cols_read.append('Color2')
+                cols_read.append('e_color2')
+                N_stars_lst.append(len(self.colors_v[1]))
+                N_stars_lst.append(len(self.e_colors_v[1]))
 
         if self.plx is not None:
             if self.e_plx is None:
                 raise ValueError("Parallax uncertainty is required")
-            self.plx_v = np.array(self.obs_df[self.plx], dtype=float)
-            self.e_plx_v = np.array(self.obs_df[self.e_plx], dtype=float)
-            self._vp(f"plx            : {self.plx} [{self.e_plx}]", 1)
-            dim_count += 1
+            self.plx_v = np.array(self.plx, dtype=float)
+            self.e_plx_v = np.array(self.e_plx, dtype=float)
+            cols_read.append('Plx')
+            N_stars_lst.append(len(self.plx_v))
+            N_stars_lst.append(len(self.e_plx_v))
 
         if self.pmra is not None:
             if self.e_pmra is None:
                 raise ValueError("pmRA uncertainty is required")
-            self.pmra_v = np.array(self.obs_df[self.pmra], dtype=float)
-            self.e_pmra_v = np.array(self.obs_df[self.e_pmra], dtype=float)
-            self._vp(f"pmRA           : {self.pmra} [{self.e_pmra}]", 1)
-            dim_count += 1
+            self.pmra_v = np.array(self.pmra, dtype=float)
+            self.e_pmra_v = np.array(self.e_pmra, dtype=float)
+            cols_read.append('pmRA')
+            N_stars_lst.append(len(self.pmra_v))
+            N_stars_lst.append(len(self.e_pmra_v))
 
         if self.pmde is not None:
             if self.e_pmde is None:
                 raise ValueError("pmDE uncertainty is required")
-            self.pmde_v = np.array(self.obs_df[self.pmde], dtype=float)
-            self.e_pmde_v = np.array(self.obs_df[self.e_pmde], dtype=float)
-            self._vp(f"pmDE           : {self.pmra} [{self.e_pmde}]", 1)
-            dim_count += 1
+            self.pmde_v = np.array(self.pmde, dtype=float)
+            self.e_pmde_v = np.array(self.e_pmde, dtype=float)
+            cols_read.append('pmDE')
+            N_stars_lst.append(len(self.pmde_v))
+            N_stars_lst.append(len(self.e_pmde_v))
 
-        if dim_count == 0:
+        if len(cols_read) == 0:
             raise ValueError("No column names defined for cluster")
+        self._vp(f"Columns read   : {', '.join(cols_read)}", 1)
+        if not np.all(N_stars_lst):
+            raise ValueError("Data arrays have different lengths")
+        self.N_stars = N_stars_lst[0]
+        if self.N_stars == 0:
+            raise ValueError("Arrays are empty")
 
     def get_center(
         self,

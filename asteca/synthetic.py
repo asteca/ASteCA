@@ -1,7 +1,6 @@
 import warnings
 
 import numpy as np
-import pandas as pd
 
 from .cluster import Cluster
 from .isochrones import Isochrones
@@ -441,15 +440,13 @@ class Synthetic:
 
         self._vp("Attributes stored in Synthetic object", 1)
 
-    def stellar_masses(
-        self,
-    ) -> pd.DataFrame:
+    def stellar_masses(self) -> dict:
         """Estimate individual masses for the observed stars, along with their binary
         probabilities (if binarity was estimated).
 
         :return: Data frame containing per-star primary and secondary masses along with
             their uncertainties, and their probability of being a binary system
-        :rtype: pd.DataFrame
+        :rtype: dict
 
         """
         from .modules import mass_binary as mb
@@ -476,20 +473,20 @@ class Synthetic:
         # Binary probability per star
         binar_prob = (~np.isnan(m12_masses[:, 1, :])).sum(0) / m12_masses.shape[0]
 
-        # Store as pandas.DataFrame
-        df = pd.DataFrame(
-            {
-                "m1": m1_med,
-                "m1_std": m1_std,
-                "m2": m2_med,
-                "m2_std": m2_std,
-                "binar_prob": binar_prob,
-            }
-        )
+        # Store as dictionary
+        data = {
+            "m1": m1_med,
+            "m1_std": m1_std,
+            "m2": m2_med,
+            "m2_std": m2_std,
+            "binar_prob": binar_prob,
+        }
 
         # Assign all nans to stars with a photometric nan in any dimension
         nan_msk = self.obs_nan_msk
-        df[nan_msk] = np.nan
+        for value in data.values():
+            value[nan_msk] = np.nan
+
         if nan_msk.sum() > 0:
             warnings.warn(
                 f"\nN={nan_msk.sum()} stars found with no valid photometric data. "
@@ -499,7 +496,7 @@ class Synthetic:
 
         self._vp("\nBinary fraction estimated", 1)
 
-        return df
+        return data
 
     def binary_fraction(
         self,
