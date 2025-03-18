@@ -15,7 +15,6 @@ requires-python = ">=3.11.11"
 dependencies = [
     "astropy>=7.0.1",
     "fast-histogram>=0.14",
-    "matplotlib>=3.10.1",
     "numpy>=2.2.3",
     "scipy>=1.15.2",
 ]
