@@ -9,39 +9,34 @@ class Cluster:
     This object contains the basic data required to load a group of observed stars
     that could represent a cluster or an entire field.
 
-    :param ra: Array/list that contains the right ascension (RA), defaults to ``None``
-    :type ra: np.ndarray | list | None
-    :param dec: Array/list that contains the declination (DEC), defaults to ``None``
-    :type dec: np.ndarray | list | None
-    :param magnitude: Array/list that contains the magnitude, defaults to ``None``
-    :type magnitude: np.ndarray | list | None
-    :param e_mag: Array/list that contains the magnitude's uncertainty,
-     defaults to ``None``
-    :type e_mag: np.ndarray | list | None
-    :param color: Array/list that contains the color, defaults to ``None``
-    :type color: np.ndarray | list | None
-    :param e_color: Array/list that contains the color's uncertainty,
-     defaults to ``None``
-    :type e_color: np.ndarray | list | None
-    :param color2: Array/list that contains the second color, defaults to ``None``
-    :type color2: np.ndarray | list | None
-    :param e_color2: Array/list that contains the second color's uncertainty,
-     defaults to ``None``
-    :type e_color2: np.ndarray | list | None
-    :param plx: Array/list that contains the parallax, defaults to ``None``
-    :type plx: np.ndarray | list | None
-    :param e_plx: Array/list that contains the parallax uncertainty, defaults to ``None``
-    :type e_plx: np.ndarray | list | None
-    :param pmra: Array/list that contains the RA proper motion, defaults to ``None``
-    :type pmra: np.ndarray | list | None
-    :param e_pmra: Array/list that contains the RA proper motion's uncertainty,
-     defaults to ``None``
-    :type e_pmra: np.ndarray | list | None
-    :param pmde: Array/list that contains the DEC proper motion, defaults to ``None``
-    :type pmde: np.ndarray | list | None
-    :param e_pmde: Array/list that contains the DEC proper motion's uncertainty,
-     defaults to ``None``
-    :type e_pmde: np.ndarray | list | None
+    :param ra: Array that contains the right ascension (RA), defaults to ``None``
+    :type ra: np.ndarray | None
+    :param dec: Array that contains the declination (DEC), defaults to ``None``
+    :type dec: np.ndarray | None
+    :param magnitude: Array that contains the magnitude, defaults to ``None``
+    :type magnitude: np.ndarray | None
+    :param e_mag: Array that contains the magnitude's uncertainty, defaults to ``None``
+    :type e_mag: np.ndarray | None
+    :param color: Array that contains the color, defaults to ``None``
+    :type color: np.ndarray | None
+    :param e_color: Array that contains the color's uncertainty, defaults to ``None``
+    :type e_color: np.ndarray | None
+    :param color2: Array that contains the second color, defaults to ``None``
+    :type color2: np.ndarray | None
+    :param e_color2: Array that contains the second color's uncertainty, defaults to ``None``
+    :type e_color2: np.ndarray | None
+    :param plx: Array that contains the parallax, defaults to ``None``
+    :type plx: np.ndarray | None
+    :param e_plx: Array that contains the parallax uncertainty, defaults to ``None``
+    :type e_plx: np.ndarray | None
+    :param pmra: Array that contains the RA proper motion, defaults to ``None``
+    :type pmra: np.ndarray | None
+    :param e_pmra: Array that contains the RA proper motion's uncertainty, defaults to ``None``
+    :type e_pmra: np.ndarray | None
+    :param pmde: Array that contains the DEC proper motion, defaults to ``None``
+    :type pmde: np.ndarray | None
+    :param e_pmde: Array that contains the DEC proper motion's uncertainty, defaults to ``None``
+    :type e_pmde: np.ndarray | None
     :param N_clust_min: Minimum number of cluster members, defaults to ``25``
     :type N_clust_min: int
     :param N_clust_max: Maximum number of cluster members, defaults to ``5000``
@@ -53,20 +48,20 @@ class Cluster:
 
     def __init__(
         self,
-        ra: np.ndarray | list | None = None,
-        dec: np.ndarray | list | None = None,
-        magnitude: np.ndarray | list | None = None,
-        e_mag: np.ndarray | list | None = None,
-        color: np.ndarray | list | None = None,
-        e_color: np.ndarray | list | None = None,
-        color2: np.ndarray | list | None = None,
-        e_color2: np.ndarray | list | None = None,
-        plx: np.ndarray | list | None = None,
-        e_plx: np.ndarray | list | None = None,
-        pmra: np.ndarray | list | None = None,
-        e_pmra: np.ndarray | list | None = None,
-        pmde: np.ndarray | list | None = None,
-        e_pmde: np.ndarray | list | None = None,
+        ra: np.ndarray | None = None,
+        dec: np.ndarray | None = None,
+        magnitude: np.ndarray | None = None,
+        e_mag: np.ndarray | None = None,
+        color: np.ndarray | None = None,
+        e_color: np.ndarray | None = None,
+        color2: np.ndarray | None = None,
+        e_color2: np.ndarray | None = None,
+        plx: np.ndarray | None = None,
+        e_plx: np.ndarray | None = None,
+        pmra: np.ndarray | None = None,
+        e_pmra: np.ndarray | None = None,
+        pmde: np.ndarray | None = None,
+        e_pmde: np.ndarray | None = None,
         N_clust_min: int = 25,
         N_clust_max: int = 5000,
         verbose: int = 1,
@@ -106,73 +101,71 @@ class Cluster:
         N_stars_lst = []
 
         if self.ra is not None:
-            self.ra_v = np.array(self.ra, dtype=float)
-            cols_read.append('RA')
-            N_stars_lst.append(len(self.ra_v))
+            self.ra = np.array(self.ra, dtype=float)
+            cols_read.append("RA")
+            N_stars_lst.append(len(self.ra))
 
         if self.dec is not None:
-            self.dec_v = np.array(self.dec, dtype=float)
-            cols_read.append('DEC')
-            N_stars_lst.append(len(self.dec_v))
+            self.dec = np.array(self.dec, dtype=float)
+            cols_read.append("DEC")
+            N_stars_lst.append(len(self.dec))
 
         if self.magnitude is not None:
             if self.e_mag is None:
                 raise ValueError("Magnitude uncertainty is required")
-            self.mag_v = np.array(self.magnitude, dtype=float)
-            self.e_mag_v = np.array(self.e_mag, dtype=float)
-            cols_read.append('Magnitude')
-            cols_read.append('e_mag')
-            N_stars_lst.append(len(self.mag_v))
-            N_stars_lst.append(len(self.e_mag_v))
+            self.mag = np.array(self.magnitude, dtype=float)
+            self.e_mag = np.array(self.e_mag, dtype=float)
+            cols_read.append("Magnitude")
+            cols_read.append("e_mag")
+            N_stars_lst.append(len(self.mag))
+            N_stars_lst.append(len(self.e_mag))
 
         if self.color is not None:
             if self.e_color is None:
                 raise ValueError("Color uncertainty is required")
-            self.colors_v = [np.array(self.color, dtype=float)]
-            self.e_colors_v = [np.array(self.e_color, dtype=float)]
-            cols_read.append('Color')
-            cols_read.append('e_color')
-            N_stars_lst.append(len(self.colors_v[0]))
-            N_stars_lst.append(len(self.e_colors_v[0]))
+            self.colors = [np.array(self.color, dtype=float)]
+            self.e_colors = [np.array(self.e_color, dtype=float)]
+            cols_read.append("Color")
+            cols_read.append("e_color")
+            N_stars_lst.append(len(self.colors[0]))
+            N_stars_lst.append(len(self.e_colors[0]))
 
             if self.color2 is not None:
                 if self.e_color2 is None:
                     raise ValueError("Color2 uncertainty is required")
-                self.colors_v.append(np.array(self.color2, dtype=float))
-                self.e_colors_v.append(
-                    np.array(self.e_color2, dtype=float)
-                )
-                cols_read.append('Color2')
-                cols_read.append('e_color2')
-                N_stars_lst.append(len(self.colors_v[1]))
-                N_stars_lst.append(len(self.e_colors_v[1]))
+                self.colors.append(np.array(self.color2, dtype=float))
+                self.e_colors.append(np.array(self.e_color2, dtype=float))
+                cols_read.append("Color2")
+                cols_read.append("e_color2")
+                N_stars_lst.append(len(self.colors[1]))
+                N_stars_lst.append(len(self.e_colors[1]))
 
         if self.plx is not None:
             if self.e_plx is None:
                 raise ValueError("Parallax uncertainty is required")
-            self.plx_v = np.array(self.plx, dtype=float)
-            self.e_plx_v = np.array(self.e_plx, dtype=float)
-            cols_read.append('Plx')
-            N_stars_lst.append(len(self.plx_v))
-            N_stars_lst.append(len(self.e_plx_v))
+            self.plx = np.array(self.plx, dtype=float)
+            self.e_plx = np.array(self.e_plx, dtype=float)
+            cols_read.append("Plx")
+            N_stars_lst.append(len(self.plx))
+            N_stars_lst.append(len(self.e_plx))
 
         if self.pmra is not None:
             if self.e_pmra is None:
                 raise ValueError("pmRA uncertainty is required")
-            self.pmra_v = np.array(self.pmra, dtype=float)
-            self.e_pmra_v = np.array(self.e_pmra, dtype=float)
-            cols_read.append('pmRA')
-            N_stars_lst.append(len(self.pmra_v))
-            N_stars_lst.append(len(self.e_pmra_v))
+            self.pmra = np.array(self.pmra, dtype=float)
+            self.e_pmra = np.array(self.e_pmra, dtype=float)
+            cols_read.append("pmRA")
+            N_stars_lst.append(len(self.pmra))
+            N_stars_lst.append(len(self.e_pmra))
 
         if self.pmde is not None:
             if self.e_pmde is None:
                 raise ValueError("pmDE uncertainty is required")
-            self.pmde_v = np.array(self.pmde, dtype=float)
-            self.e_pmde_v = np.array(self.e_pmde, dtype=float)
-            cols_read.append('pmDE')
-            N_stars_lst.append(len(self.pmde_v))
-            N_stars_lst.append(len(self.e_pmde_v))
+            self.pmde = np.array(self.pmde, dtype=float)
+            self.e_pmde = np.array(self.e_pmde, dtype=float)
+            cols_read.append("pmDE")
+            N_stars_lst.append(len(self.pmde))
+            N_stars_lst.append(len(self.e_pmde))
 
         if len(cols_read) == 0:
             raise ValueError("No column names defined for cluster")
@@ -222,22 +215,26 @@ class Cluster:
         from .modules import cluster_priv as cp
 
         if algo == "knn_5d":
-            if any(
-                [_ is None for _ in (self.ra, self.dec, self.pmra, self.pmde, self.plx)]
+            if (
+                self.ra is None
+                or self.dec is None
+                or self.pmra is None
+                or self.pmde is None
+                or self.plx is None
             ):
                 raise ValueError(
                     "Algorithm 'knn_5d' requires (ra, dec, pmra, pmde, plx) data"
                 )
 
             # To galactic coordinates (not optional, always use instead of equatorial)
-            glon, glat = cp.radec2lonlat(self.ra_v, self.dec_v)
+            glon, glat = cp.radec2lonlat(self.ra, self.dec)
             lonlat_c = None
             if radec_c is not None:
                 lon, lat = cp.radec2lonlat(radec_c[0], radec_c[1])
                 lonlat_c = (lon, lat)
 
             # Remove nans
-            X = np.array([glon, glat, self.pmra_v, self.pmde_v, self.plx_v])
+            X = np.array([glon, glat, self.pmra, self.pmde, self.plx])
             # Reject nan values and extract clean data
             _, X_no_nan = cp.reject_nans(X)
             lon, lat, pmRA, pmDE, plx = X_no_nan
@@ -269,12 +266,12 @@ class Cluster:
                 if any([_ is None for _ in (self.ra, self.dec)]):
                     raise ValueError("Data for (ra, dec) is required")
                 c_str = "radec_c"
-                x, y = self.ra_v, self.dec_v
+                x, y = self.ra, self.dec
             elif data_2d == "pms":
                 if any([_ is None for _ in (self.pmra, self.pmde)]):
                     raise ValueError("Data for (pmra, pmde) is required")
                 c_str = "pms_c"
-                x, y = self.pmra_v, self.pmde_v
+                x, y = self.pmra, self.pmde
             else:
                 raise ValueError(f"Algorithm '{data_2d}' argument not recognized")
 
@@ -368,20 +365,24 @@ class Cluster:
             raise ValueError(f"Selected method '{algo}' not recognized")
 
         # Both methods require these
-        if any([_ is None for _ in (self.ra, self.dec)]):
+        if self.ra is None or self.dec is None:
             raise AttributeError(
                 "The arguments (ra, dec) must be present as a 'cluster' attribute"
             )
 
         # (x, y) coordinates
-        xv, yv = self.ra_v, self.dec_v
+        xv, yv = self.ra, self.dec
         # Convert (RA, DEC) to (lon, lat)
         if eq_to_gal is True:
             xv, yv = cp.radec2lonlat(xv, yv)
 
         if algo == "ripley":
-            if any([_ is None for _ in (self.pmra, self.pmde, self.plx)]) or any(
-                [hasattr(self, _) is False for _ in ("pms_c", "plx_c")]
+            if (
+                self.pmra is None
+                or self.pmde is None
+                or self.plx is None
+                or hasattr(self, "pms_c") is False
+                or hasattr(self, "plx_c") is False
             ):
                 raise AttributeError(
                     "The arguments (pmra, pmdec, plx, pms_c, plx_c) must be present as a 'cluster' attribute"
@@ -389,14 +390,14 @@ class Cluster:
             N_cluster = nm.ripley_nmembs(
                 xv,
                 yv,
-                self.pmra_v,
-                self.pmde_v,
-                self.plx_v,
+                self.pmra,
+                self.pmde,
+                self.plx,
                 self.pms_c,
                 self.plx_c,
             )
         elif algo == "density":
-            if any([hasattr(self, _) is False for _ in ("radec_c", "radius")]):
+            if hasattr(self, "radec_c") is False or hasattr(self, "radius") is False:
                 raise AttributeError(
                     "The arguments (radec_c, radius) must be present as a 'cluster' attribute"
                 )
