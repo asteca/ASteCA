@@ -198,6 +198,8 @@ class Synthetic:
         """
         from .modules import synth_cluster_priv as scp
 
+        if cluster.e_mag is None:
+            raise ValueError("Magnitude uncertainty data 'e_mag' is required.")
         # Check that the number of colors match
         if self.isochs.color2_effl is not None and cluster.color2 is None:
             raise ValueError(
@@ -209,9 +211,9 @@ class Synthetic:
                 "Two colors were defined in 'cluster' but a single color\n"
                 + "was defined in 'synthetic'."
             )
-        if len(cluster.mag_v) > cluster.N_clust_max:
+        if len(cluster.mag) > cluster.N_clust_max:
             raise ValueError(
-                f"The number of stars in this `Cluster` object ({len(cluster.mag_v)})\n"
+                f"The number of stars in this `Cluster` object ({len(cluster.mag)})\n"
                 + f"is larger than the N_clust_max={cluster.N_clust_max} parameter.\n"
                 + "Either define a `Cluster` object with fewer members or increase "
                 + "the N_clust_max value."
@@ -222,19 +224,19 @@ class Synthetic:
         if self.isochs.color2_effl is not None:
             self.m_ini_idx = 3  # (0->mag, 1->color, 2->color2, 3->mass_ini)
 
-        self.max_mag_syn = max(cluster.mag_v)
-        self.N_obs_stars = len(cluster.mag_v)
+        self.max_mag_syn = max(cluster.mag)
+        self.N_obs_stars = len(cluster.mag)
         self.err_dist = scp.error_distribution(
-            cluster.mag_v,
-            cluster.e_mag_v,
-            cluster.e_colors_v,
+            cluster.mag,
+            cluster.e_mag,
+            cluster.e_colors,
             self.rand_floats["norm"][1],
         )
 
         # Used by the `get_models()` method and its result by the `stellar_masses()`
         # and `binary_fraction()` methods
-        self.mag_v = cluster.mag_v
-        self.colors_v = cluster.colors_v
+        self.mag = cluster.mag
+        self.colors = cluster.colors
 
         self.fix_params = fix_params
 
@@ -407,7 +409,7 @@ class Synthetic:
                 pass
 
         # Observed photometry
-        obs_phot = np.array([self.mag_v] + [_ for _ in self.colors_v])
+        obs_phot = np.array([self.mag] + [_ for _ in self.colors])
         # Replace nans in mag and colors to avoid crashing KDTree()
         nan_msk = np.full(obs_phot.shape[1], False)
         for ophot in obs_phot:
@@ -610,7 +612,7 @@ class Synthetic:
             )
 
         # Number of observed stars
-        N_obs = len(self.mag_v)
+        N_obs = len(self.mag)
         # The number of stars in a synthetic isochrones is not constant so we estimate
         # its median
         N_stars_isoch = int(np.median([np.shape(_)[-1] for _ in self.sampled_synthcls]))

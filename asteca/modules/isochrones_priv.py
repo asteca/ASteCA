@@ -80,8 +80,6 @@ def load(
         PARSEC models, defaults to True
     :type parsec_rm_stage_9: bool
 
-    :raises ValueError: If there is a shape mismatch in the loaded isochrones
-
     :return: Array of isochrones, individual filters for each color defined,
         dictionary with metallicities and ages, and number of files read.
     :rtype: tuple[np.ndarray, list, dict, int]
@@ -411,8 +409,8 @@ def interp_df(
     :type N_interp: int
     :param met_age_vals: List of metallicity and ages
     :type met_age_vals: list
-    :param isoch_dataframes: List of isochrones as pd.DataFrame
-    :type isoch_dataframes: list[pd.DataFrame]
+    :param isoch_dataframes: List of isochrones as numpy array
+    :type isoch_dataframes: list[np.ndarray]
 
     :return: Dictionary of isochrones.
     :rtype: dict
@@ -486,7 +484,8 @@ def merge_ps_massini_check(mass_col: str, isochrones: dict) -> tuple[list, list]
     :param isochrones: Dictionary of isochrones.
     :type isochrones: dict
 
-    :raises ValueError: If initial mass values differ across photometric systems.
+    :raises ValueError: If initial mass values differ across photometric systems or
+        if there is a shape mismatch in the loaded isochrones
 
     :return: Ordered isochrones and metallicity-age array.
     :rtype: tuple[list, list]
