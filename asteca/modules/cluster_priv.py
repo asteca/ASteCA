@@ -371,7 +371,7 @@ def get_kNN_center(
     :rtype: tuple[float, float, float, float, float]
     """
     # Better results are obtained not using the parallax data?
-    data_noplx = data[:, :4]  # <-- HARDCODED
+    data_noplx = data[:, :4]  # <-- HARDCODED, TODO
 
     tree = spatial.KDTree(data_noplx)
     inx = tree.query(data_noplx, k=N_clust_min + 1)
