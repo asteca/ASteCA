@@ -101,20 +101,20 @@ class Cluster:
         N_stars_lst = []
 
         if self.ra is not None:
-            self.ra = np.array(self.ra, dtype=float)
+            self.ra = np.asarray(self.ra, dtype=float)
             cols_read.append("RA")
             N_stars_lst.append(len(self.ra))
 
         if self.dec is not None:
-            self.dec = np.array(self.dec, dtype=float)
+            self.dec = np.asarray(self.dec, dtype=float)
             cols_read.append("DEC")
             N_stars_lst.append(len(self.dec))
 
         if self.magnitude is not None:
             if self.e_mag is None:
                 raise ValueError("Magnitude uncertainty is required")
-            self.mag = np.array(self.magnitude, dtype=float)
-            self.e_mag = np.array(self.e_mag, dtype=float)
+            self.mag = np.asarray(self.magnitude, dtype=float)
+            self.e_mag = np.asarray(self.e_mag, dtype=float)
             cols_read.append("Magnitude")
             cols_read.append("e_mag")
             N_stars_lst.append(len(self.mag))
@@ -123,8 +123,8 @@ class Cluster:
         if self.color is not None:
             if self.e_color is None:
                 raise ValueError("Color uncertainty is required")
-            self.colors = [np.array(self.color, dtype=float)]
-            self.e_colors = [np.array(self.e_color, dtype=float)]
+            self.colors = [np.asarray(self.color, dtype=float)]
+            self.e_colors = [np.asarray(self.e_color, dtype=float)]
             cols_read.append("Color")
             cols_read.append("e_color")
             N_stars_lst.append(len(self.colors[0]))
@@ -133,8 +133,8 @@ class Cluster:
             if self.color2 is not None:
                 if self.e_color2 is None:
                     raise ValueError("Color2 uncertainty is required")
-                self.colors.append(np.array(self.color2, dtype=float))
-                self.e_colors.append(np.array(self.e_color2, dtype=float))
+                self.colors.append(np.asarray(self.color2, dtype=float))
+                self.e_colors.append(np.asarray(self.e_color2, dtype=float))
                 cols_read.append("Color2")
                 cols_read.append("e_color2")
                 N_stars_lst.append(len(self.colors[1]))
@@ -143,8 +143,8 @@ class Cluster:
         if self.plx is not None:
             if self.e_plx is None:
                 raise ValueError("Parallax uncertainty is required")
-            self.plx = np.array(self.plx, dtype=float)
-            self.e_plx = np.array(self.e_plx, dtype=float)
+            self.plx = np.asarray(self.plx, dtype=float)
+            self.e_plx = np.asarray(self.e_plx, dtype=float)
             cols_read.append("Plx")
             N_stars_lst.append(len(self.plx))
             N_stars_lst.append(len(self.e_plx))
@@ -152,8 +152,8 @@ class Cluster:
         if self.pmra is not None:
             if self.e_pmra is None:
                 raise ValueError("pmRA uncertainty is required")
-            self.pmra = np.array(self.pmra, dtype=float)
-            self.e_pmra = np.array(self.e_pmra, dtype=float)
+            self.pmra = np.asarray(self.pmra, dtype=float)
+            self.e_pmra = np.asarray(self.e_pmra, dtype=float)
             cols_read.append("pmRA")
             N_stars_lst.append(len(self.pmra))
             N_stars_lst.append(len(self.e_pmra))
@@ -161,8 +161,8 @@ class Cluster:
         if self.pmde is not None:
             if self.e_pmde is None:
                 raise ValueError("pmDE uncertainty is required")
-            self.pmde = np.array(self.pmde, dtype=float)
-            self.e_pmde = np.array(self.e_pmde, dtype=float)
+            self.pmde = np.asarray(self.pmde, dtype=float)
+            self.e_pmde = np.asarray(self.e_pmde, dtype=float)
             cols_read.append("pmDE")
             N_stars_lst.append(len(self.pmde))
             N_stars_lst.append(len(self.e_pmde))
