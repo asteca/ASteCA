@@ -189,12 +189,14 @@ class Cluster:
         Use the available data (ra, dec, pmra, pmde, plx) to estimate a cluster's
         center coordinates as the point of maximum density. Methods:
 
-        ``knn_5d``: Estimates the center value as the median position of the k
-        (k=N_clust_min) nearest stars to an estimate of the center in proper motions
-        and (ra, dec, plx), if given.
+        ``knn_5d``: Estimates the 5-dimensional center values (in
+            ``ra, dec, pmra, pmde, plx``) as the median position of the k
+            (``k=N_clust_min``) stars with the largest nearest-neighbor density to a
+            5D center value that can be either given (fully or partially) or estimated.
 
-        ``kde_2d``: Estimates the center value using a Kernel Density Estimator (KDE)
-        given a two dimensional array determined by the ``data_2d`` argument.
+        ``kde_2d``: Estimates the 2-dimensional center values (either in ``(ra, dec)``
+            or in ``(pmra, pmde)``; determined by the ``data_2d`` argument) using a
+            Kernel Density Estimator (KDE).
 
         :param algo: Algorithm used to estimate center values, one of
             (``knn_5d``, ``kde_2d``), defaults to ``knn_5d``
@@ -343,18 +345,18 @@ class Cluster:
           Requires ``(ra, dec, pmra, pmde, plx)`` and their center estimates.
         - ``density``: Simple algorithm that counts the number of stars within the
           cluster region (center+radius) and subtracts the expected number of field
-          stars within that region. Requires the `(RA, DEC)` center and the radius of
+          stars within that region. Requires the ``(ra, dec)`` center and the radius of
           the cluster to be defined.
 
         :param algo: Algorithm used to estimate center values, one of
             (``ripley, density``); defaults to ``ripley``
         :type algo: str
-        :param eq_to_gal: Convert ``(RA, DEC)`` to ``(lon, lat)``. Useful for clusters
-            with large ``DEC`` values to reduce the frame's distortion,
+        :param eq_to_gal: Convert ``(ra, dec)`` to ``(lon, lat)``. Useful for clusters
+            with large ``dec`` values to reduce the frame's distortion,
             defaults to ``False``
         :type eq_to_gal: bool
 
-        :raises ValueError: If 'algo' argument is not recognized
+        :raises ValueError: If ``algo`` argument is not recognized
         :raises AttributeError: If required attributes are  missing from the
             :py:class:`Cluster <asteca.cluster.Cluster>` object
         """
