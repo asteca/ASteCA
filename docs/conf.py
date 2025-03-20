@@ -94,6 +94,7 @@ autodoc2_hidden_objects = ["dunder", "private", "inherited"]
 # ################################################################
 # # This block changes the 'Initialization' title for a 'Methods' title
 # # WARNING: could break at any moment if pydoclint changes its behavior!
+# import os
 # def source_read_handler(app, docname, source):
 #     """'docname, source' not used but required"""
 #     path = "./apidocs/asteca/"
@@ -119,8 +120,6 @@ autodoc2_hidden_objects = ["dunder", "private", "inherited"]
 
 # def setup(app):
 #     app.connect("source-read", source_read_handler)
-
-
 ################################################################
 
 
