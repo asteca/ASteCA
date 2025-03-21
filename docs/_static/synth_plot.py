@@ -31,19 +31,22 @@ def main():
         verbose=2,
     )
 
-    fix_params = {"alpha": 0.0, "beta": 1.0, "Rv": 3.1, "met": 0.0152, "DR": 0.0}
-    synthcl.calibrate(my_cluster, fix_params)
+    synthcl.calibrate(my_cluster)
 
-    fit_params = {"loga": 8.0, "Av": 0.1, "dm": 8}
+    fit_params = {
+        "loga": 8.0,
+        "Av": 0.1,
+        "dm": 8,
+        "alpha": 0.0,
+        "beta": 1.0,
+        "Rv": 3.1,
+        "met": 0.0152,
+        "DR": 0.0,
+    }
 
     # Generate synthetic cluster.
-    synth_clust = synthcl.generate(fit_params, full_arr_flag=True)
-    breakpoint()
-    if synthcl.binar_flag is True:
-        binar_idx = ~np.isnan(synth_clust[-1])
-    else:
-        # No binary systems
-        binar_idx = np.full(synth_clust.shape[1], False)
+    synth_clust = synthcl.generate(fit_params)
+    binar_idx = ~np.isnan(synth_clust[-1])
 
     y_synth = synth_clust[0]
     x_synth = synth_clust[1]
