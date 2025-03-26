@@ -53,6 +53,11 @@ class Likelihood:
 
         from .modules import likelihood_priv as lpriv
 
+        # Data used by the `get()` method
+        self.m_ini_idx = 2  # (0->mag, 1->color, 2->mass_ini)
+        if self.my_cluster.color2 is not None:
+            self.m_ini_idx = 3  # (0->mag, 1->color, 2->color2, 3->mass_ini)
+
         # Obtain data used by the ``likelihood.get()`` method
         self.ranges, self.Nbins, self.cl_z_idx, self.cl_histo_f_z = lpriv.lkl_data(
             bin_method, my_cluster.mag, my_cluster.colors
@@ -72,10 +77,11 @@ class Likelihood:
     def get(self, synth_clust: np.ndarray) -> float:
         """Evaluate the selected likelihood function.
 
-        :param synth_clust:  Numpy array containing the synthetic cluster. The shape of
-            this array must be: ``[magnitude, color1, (color2)]``, where ``magnitude``
-            and ``color`` are arrays with the magnitude and color photometric data
-            (``color2`` is the optional second color defined)
+        :param synth_clust: Array containing the synthetic cluster data. The
+            shape of this array is assumed to be be: ``[magnitude, color1, (color2)]``,
+            where ``magnitude`` and ``color`` are arrays with the synthetic magnitude
+            and color photometric data (``color2`` is the optional second color defined)
+            If the array contains any extra columns beyond these they will be ignored.
         :type synth_clust: np.ndarray
 
         :raise ValueError: If the likelihood function is not recognized
@@ -84,6 +90,9 @@ class Likelihood:
         :rtype: float
         """
         from .modules import likelihood_priv as lpriv
+
+        # Ignore any extra columns beyond the main photometry
+        synth_clust = synth_clust[: self.m_ini_idx]
 
         if self.lkl_name == "plr":
             return lpriv.tremmel(

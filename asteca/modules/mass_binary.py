@@ -98,7 +98,6 @@ def get_bpr(isoch: np.ndarray, idxs: np.ndarray) -> float:
 
 def galactic_coords(
     sampled_models: list[dict],
-    fix_params: dict,
     radec_c: tuple[float, float],
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Convert equatorial coordinates to cylindrical, and obtain the vertical
@@ -107,8 +106,6 @@ def galactic_coords(
     :param sampled_models: List of dictionaries, each containing a set of sampled
      parameters associated to non empty isochrones.
     :type sampled_models: list[dict]
-    :param fix_params: Dictionary of fixed fundamental parameters
-    :type fix_params: dict
     :param radec_c: Right ascension and declination of the cluster center.
     :type radec_c: tuple[float, float]
 
@@ -120,8 +117,7 @@ def galactic_coords(
     lon, lat = c.galactic.l, c.galactic.b  # pyright: ignore
     dist_pc = []
     for model in sampled_models:
-        model_comb = fix_params | model
-        dist_pc.append(10 ** (0.2 * (model_comb["dm"] + 5)))
+        dist_pc.append(10 ** (0.2 * (model["dm"] + 5)))
     cgal = SkyCoord(l=lon, b=lat, distance=dist_pc * u.pc, frame="galactic")  # pyright: ignore
     c_GC = cgal.transform_to(coord.Galactocentric())
 

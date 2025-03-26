@@ -125,6 +125,11 @@ class Synthetic:
             self.isochs.color_filters,
         )
 
+        # Data used by the `generate()` method
+        self.m_ini_idx = 2  # (0->mag, 1->color, 2->mass_ini)
+        if self.isochs.color2_effl is not None:
+            self.m_ini_idx = 3  # (0->mag, 1->color, 2->color2, 3->mass_ini)
+
         # Get extinction coefficients for these filters
         self.ext_coefs = []  # It is important to pass an empty list because the
         # function `extinction()` checks its length later on
@@ -170,31 +175,24 @@ class Synthetic:
         if self.verbose > level:
             print(mssg)
 
-    def calibrate(self, cluster: Cluster, fix_params: dict = {}):
+    def calibrate(self, cluster: Cluster):
         """Calibrate a :py:class:`Synthetic` object based on a
-        :py:class:`Cluster <asteca.cluster.Cluster>` object and a dictionary of fixed
-        fundamental parameters (``fix_params``).
+        :py:class:`Cluster <asteca.cluster.Cluster>` object .
 
         Use the data obtained from your observed cluster stored in the
         :py:class:`Cluster <asteca.cluster.Cluster>` object, to calibrate a
-        :py:class:`Synthetic` object. Additionally, a dictionary of fixed fundamental
-        parameters (metallicity, age, distance, extinction, etc.) can be passed.
+        :py:class:`Synthetic` object.
 
         See the :ref:`synth_clusters` section for more details.
 
         :param cluster: :py:class:`Cluster <asteca.cluster.Cluster>` object with the
             processed data from your observed cluster
         :type cluster: Cluster
-        :param fix_params: Dictionary with the values for the fixed parameters (if any),
-            defaults to ``{}``
-        :type fix_params: dict
 
         :raises ValueError:
             -If the number of colors defined in the
             :py:class:`Cluster <asteca.cluster.Cluster>` and
             :py:class:`Synthetic <asteca.synthetic.Synthetic>` objects do not match
-            -If the metallicity or age parameters are not fixed to a
-            single value but there ranges are.
         """
         from .modules import synth_cluster_priv as scp
 
@@ -219,14 +217,10 @@ class Synthetic:
                 + "the N_clust_max value."
             )
 
-        # Data used by the `generate()` method
-        self.m_ini_idx = 2  # (0->mag, 1->color, 2->mass_ini)
-        if self.isochs.color2_effl is not None:
-            self.m_ini_idx = 3  # (0->mag, 1->color, 2->color2, 3->mass_ini)
-
-        self.max_mag_syn = max(cluster.mag)
-        self.N_obs_stars = len(cluster.mag)
-        self.err_dist = scp.error_distribution(
+        # Calibrate parameters using the observed cluster
+        self.max_mag_syn_obs = max(cluster.mag)
+        self.N_stars_obs = len(cluster.mag)
+        self.err_dist_obs = scp.error_distribution(
             cluster.mag,
             cluster.e_mag,
             cluster.e_colors,
@@ -238,63 +232,60 @@ class Synthetic:
         self.mag = cluster.mag
         self.colors = cluster.colors
 
-        self.fix_params = fix_params
+        # # Check that the ranges are respected
+        # for par in ("met", "loga"):
+        #     if par not in self.fix_params.keys():
+        #         N_par = len(self.met_age_dict[par])
+        #         if N_par == 1:
+        #             raise ValueError(
+        #                 f"Parameter '{par}' is not fixed and its range is limited to "
+        #                 + f"a single value: {self.met_age_dict[par]}"
+        #             )
+        #     else:
+        #         pmin, pmax = min(self.met_age_dict[par]), max(self.met_age_dict[par])
+        #         if self.fix_params[par] < pmin or self.fix_params[par] > pmax:
+        #             raise ValueError(
+        #                 f"Parameter {par}={self.fix_params[par]} out of range: [{pmin} - {pmax}]"
+        #             )
 
-        self.binar_flag = True
-        if "alpha" in list(fix_params.keys()) and "beta" in list(fix_params.keys()):
-            if fix_params["alpha"] == 0.0 and fix_params["beta"] == 0.0:
-                self.binar_flag = False
-
-        # Check that the ranges are respected
-        for par in ("met", "loga"):
-            if par not in self.fix_params.keys():
-                N_par = len(self.met_age_dict[par])
-                if N_par == 1:
-                    raise ValueError(
-                        f"Parameter '{par}' is not fixed and its range is limited to "
-                        + f"a single value: {self.met_age_dict[par]}"
-                    )
-            else:
-                pmin, pmax = min(self.met_age_dict[par]), max(self.met_age_dict[par])
-                if self.fix_params[par] < pmin or self.fix_params[par] > pmax:
-                    raise ValueError(
-                        f"Parameter {par}={self.fix_params[par]} out of range: [{pmin} - {pmax}]"
-                    )
-
-    def generate(
-        self, fit_params: dict, plot_flag: bool = False, full_arr_flag: bool = False
-    ) -> np.ndarray:
+    def generate(self, params: dict, N_stars: int = 100) -> np.ndarray:
         """Generate a synthetic cluster.
 
         The synthetic cluster is generated according to the parameters given in
-        the ``fit_params`` dictionary and the already calibrated
+        the ``params`` dictionary and the already calibrated
         :py:class:`Synthetic` object.
 
-        :param fit_params: Dictionary with the values for the fundamental parameters
-            that were **not** included in the ``fix_params`` dictionary when the
-            :py:class:`Synthetic` object was calibrated
-            (:py:meth:`calibrate` method).
-        :type fit_params: dict
-        :param plot_flag: If ``True`` returns the isochrone after the maximum magnitude
-            cut  is applied. Used mainly for plotting, defaults to ``False``
-        :type plot_flag: bool
-        :param full_arr_flag: If ``True`` returns the full array for the synthetic
-            cluster, including the binary data (if any). Used mainly for plotting,
-            defaults to ``False``
-        :type full_arr_flag: bool
+        :param params: Dictionary containing the values for the fundamental parameters.
+            The dictionary must include values for all the parameters, e.g.:
+            ``params = {met: 0.0152, loga: 8.1, alpha: 0.1, beta: 1, Av: 0.2, DR: 0., Rv: 3.1, dm: 9.7}``
+        :type params: dict
+        :param N_stars: Number of synthetic stars to generate; defaults to ``100``
+        :type N_stars: int
 
-        :return: By default it returns a ``np.array`` containing a synthetic cluster
-            with the shape ``[mag, c1, (c2)]``, where ``mag`` is the magnitude
-            dimension, and``c1`` and ``c2`` (last one is optional) are the color
-            dimension(s). This changes depending on the flags above.
+        :return: Returns a ``np.array`` containing a synthetic cluster
+            with the data ``[mag, c1, (c2), mass, mass_b]``, where ``mag`` is
+            the magnitude, ``c1`` is the color, ``c2`` is the optional second color,
+            and ``mass, mass_b`` are the masses of the single and secondary components
+            of the binary systems, respectively (if generated). If the system is a
+            single star, then ``mass_b==np.nan``.
         :rtype: np.ndarray
         """
         from .modules import synth_cluster_priv as scp
 
+        try:
+            # Extract from calibrated observed cluster
+            max_mag_syn = self.max_mag_syn_obs
+            N_synth_stars = self.N_stars_obs
+            err_dist_synth = self.err_dist_obs
+        except AttributeError:
+            max_mag_syn = np.inf
+            N_synth_stars = int(N_stars)
+            err_dist_synth = []
+
         # Return proper values for fixed parameters and parameters required
         # for the (z, log(age)) isochrone averaging.
         met, loga, alpha, beta, av, dr, rv, dm, ml, mh, al, ah = scp.properModel(
-            self.met_age_dict, self.fix_params, fit_params
+            self.met_age_dict, params
         )
 
         # Generate a weighted average isochrone from the (z, log(age)) values in
@@ -314,6 +305,10 @@ class Synthetic:
         # Move theoretical isochrone using the distance modulus
         isoch_moved = scp.move_isochrone(isochrone, self.m_ini_idx, dm)
 
+        binar_flag = True
+        if params["alpha"] == 0.0 and params["beta"] == 0.0:
+            binar_flag = False
+
         # Apply extinction correction
         isoch_extin = scp.extinction(
             self.ext_law,
@@ -322,7 +317,7 @@ class Synthetic:
             self.rand_floats["unif"][0],
             self.DR_distribution,
             self.m_ini_idx,
-            self.binar_flag,
+            binar_flag,
             av,
             dr,
             rv,
@@ -330,15 +325,17 @@ class Synthetic:
         )
 
         # Remove isochrone stars beyond the maximum magnitude
-        isoch_cut = scp.cut_max_mag(isoch_extin, self.max_mag_syn)
+        isoch_cut = scp.cut_max_mag(isoch_extin, max_mag_syn)
         if not isoch_cut.any():
             return np.array([])
-        if plot_flag:
+        # This is an internal trick to return the array at this point. It is used
+        # to generate an isochrone to plot
+        if N_stars == -1:
             return isoch_cut
 
         # Interpolate IMF's sampled masses into the isochrone.
         isoch_mass = scp.mass_interp(
-            isoch_cut, self.m_ini_idx, self.st_dist_mass[ml][al], self.N_obs_stars
+            isoch_cut, self.m_ini_idx, self.st_dist_mass[ml][al], N_synth_stars
         )
         if not isoch_mass.any():
             return np.array([])
@@ -347,18 +344,16 @@ class Synthetic:
         isoch_binar = scp.binarity(
             alpha,
             beta,
-            self.binar_flag,
+            binar_flag,
             self.m_ini_idx,
             self.rand_floats["unif"][1],
             isoch_mass,
         )
 
         # Assign errors according to errors distribution.
-        synth_clust = scp.add_errors(isoch_binar, self.err_dist)
+        synth_clust = scp.add_errors(isoch_binar, err_dist_synth)
 
-        if full_arr_flag:
-            return synth_clust
-        return synth_clust[: self.m_ini_idx]
+        return synth_clust
 
     def get_models(
         self,
@@ -369,10 +364,7 @@ class Synthetic:
         """Generate random sampled models from the selected solution. Use these models
         to generate full synthetic clusters.
 
-        :param model: Dictionary with the values for the fundamental parameters that
-            were **not** included in the ``fix_params`` dictionary when the
-            :py:class:`Synthetic` object was calibrated
-            (:py:meth:`synthetic.Synthetic.calibrate` method)
+        :param model: Dictionary with the values for the fundamental parameters
         :type model: dict[str, float]
         :param model_std: Dictionary with the standard deviations for the fundamental
             parameters in the ``model`` argument
@@ -381,11 +373,17 @@ class Synthetic:
         :type N_models: int
 
         :raises ValueError: If any of the (met, age) parameters are out of range
+        :raises ValueError: If all the synthetic arrays generated are empty
         """
+        if hasattr(self, "mag") is False or hasattr(self, "colors") is False:
+            raise ValueError(
+                "This method requires the previous application of the calibrate()\n"
+                + "method with an observed 'cluster' object"
+            )
+
         from .modules import mass_binary as mb
 
         self._vp("\nGenerate synthetic models...", 1)
-        self._vp(f"N_models       : {N_models}", 1)
         self._vp(
             "Model          :"
             + ", ".join(f"{k}: {round(v, 3)}" for k, v in model.items()),
@@ -408,6 +406,31 @@ class Synthetic:
             except KeyError:
                 pass
 
+        sampled_models = mb.ranModels(model, model_std, N_models, self.rng)
+
+        sampled_models_no_empty, sampled_synthcls = [], []
+        for i, smodel in enumerate(sampled_models):
+            isoch = self.generate(smodel)
+            # Do not store models that result in empty arrays
+            if not isoch.any():
+                continue
+            sampled_models_no_empty.append(smodel)
+            sampled_synthcls.append(isoch)
+
+        N_models_non_empty = len(sampled_models_no_empty)
+        if N_models_non_empty == 0:
+            raise ValueError("All sampled models produced empty synthetic clusters.")
+        if len(sampled_models_no_empty) < N_models:
+            warnings.warn(
+                f"Empty synthetic arrays generated: {N_models - N_models_non_empty}"
+            )
+
+        # cluster_masses
+        self.sampled_models = sampled_models_no_empty
+        # stellar_masses, cluster_masses, binary_fraction
+        self.sampled_synthcls = sampled_synthcls
+        self._vp(f"N_models       : {len(sampled_models_no_empty)}", 1)
+
         # Observed photometry
         obs_phot = np.array([self.mag] + [_ for _ in self.colors])
         # Replace nans in mag and colors to avoid crashing KDTree()
@@ -417,27 +440,13 @@ class Synthetic:
         obs_phot[:, nan_msk] = -10.0
         obs_phot = obs_phot.T
 
-        sampled_models = mb.ranModels(model, model_std, N_models, self.rng)
+        close_stars_idxs = []
+        for isoch in sampled_synthcls:
+            close_stars_idxs.append(mb.get_close_idxs(self.m_ini_idx, obs_phot, isoch))
 
-        sampled_synthcls, close_stars_idxs = [], []
-        remove_model_index = []
-        for i, smodel in enumerate(sampled_models):
-            isoch = self.generate(smodel, full_arr_flag=True)
-            if not isoch.any():
-                remove_model_index.append(i)
-                continue
-            sampled_synthcls.append(isoch)
-            idxs = mb.get_close_idxs(self.m_ini_idx, obs_phot, isoch)
-            close_stars_idxs.append(idxs)
-
-        # Remove models associated to empty isochrones
-        if len(remove_model_index) > 0:
-            sampled_models = list(
-                np.delete(np.array(sampled_models), np.array(remove_model_index))
-            )
-        self.sampled_models = sampled_models
-        self.sampled_synthcls = sampled_synthcls
+        # stellar_masses, binary_fraction
         self.close_stars_idxs = close_stars_idxs
+        # stellar_masses
         self.obs_nan_msk = nan_msk
 
         self._vp("Attributes stored in Synthetic object", 1)
@@ -451,6 +460,11 @@ class Synthetic:
         :rtype: dict
 
         """
+        if hasattr(self, "sampled_synthcls") is False:
+            raise ValueError(
+                "This method requires running the get_models() method first"
+            )
+
         from .modules import mass_binary as mb
 
         m12_masses = []
@@ -466,7 +480,7 @@ class Synthetic:
         m1_std = np.std(m12_masses[:, 0, :], 0)
         # Secondary masses  (median + stddev). Hide 'All-nan slice' warnings
         with warnings.catch_warnings():
-            warnings.simplefilter("ignore")  # TODO: this was changed in Python>3.10
+            warnings.simplefilter("ignore")
             m2_med = np.nanmedian(m12_masses[:, 1, :], 0)
             # m2 can not be larger than m1
             m2_med = np.min([m1_med, m2_med], 0)
@@ -496,7 +510,7 @@ class Synthetic:
                 + "binarity probability"
             )
 
-        self._vp("\nBinary fraction estimated", 1)
+        self._vp("\nStellar masses and binary probabilities estimated", 1)
 
         return data
 
@@ -508,12 +522,19 @@ class Synthetic:
         :return: Distribution of total binary fraction values for the cluster
         :rtype: np.ndarray
         """
+        if hasattr(self, "sampled_synthcls") is False:
+            raise ValueError(
+                "This method requires running the get_models() method first"
+            )
+
         from .modules import mass_binary as mb
 
         b_fr_all = []
         for i, isoch in enumerate(self.sampled_synthcls):
             b_fr = mb.get_bpr(isoch, self.close_stars_idxs[i])
             b_fr_all.append(b_fr)
+
+        self._vp("\nDistribution of binary fractions estimated", 1)
 
         return np.array(b_fr_all)
 
@@ -603,6 +624,11 @@ class Synthetic:
             ``M_init, M_actual, M_obs, M_phot, M_evol, M_dyn``
         :rtype: dict
         """
+        if hasattr(self, "sampled_synthcls") is False:
+            raise ValueError(
+                "This method requires running the get_models() method first"
+            )
+
         from .modules import mass_binary as mb
 
         if len(self.sampled_models) == 0:
@@ -634,9 +660,7 @@ class Synthetic:
         else:
             if radec_c is not None:
                 # Obtain galactic vertical distance and distance to center
-                Z, R_GC, R_xy = mb.galactic_coords(
-                    self.sampled_models, self.fix_params, radec_c
-                )
+                Z, R_GC, R_xy = mb.galactic_coords(self.sampled_models, radec_c)
                 rho_amb_arr = mb.ambient_density(
                     M_B, r_B, M_D, a, b, r_s, M_s, Z, R_GC, R_xy
                 )
@@ -648,15 +672,13 @@ class Synthetic:
         masses_all = []
         for i, model in enumerate(self.sampled_models):
             # Extract met and loga
-            model_comb = self.fix_params | model
-            z_met, loga = model_comb["met"], model_comb["loga"]
+            z_met, loga = model["met"], model["loga"]
             if self.isochs.z_to_FeH is not None:
                 z_met = self.isochs.z_to_FeH * 10**z_met
 
             # Estimate the actual mass, ie: the sum of the observed and photometric
             # masses
             sampled_synthcl = self.sampled_synthcls[i]
-            # TODO: don't pass the entire object, just the necessary values
             M_obs, M_phot = mb.get_M_actual(
                 self.rng,
                 self.m_ini_idx,
@@ -696,3 +718,58 @@ class Synthetic:
             "M_evol": masses_all[2],
             "M_dyn": masses_all[3],
         }
+
+    def get_isochrone(
+        self,
+        fit_params: dict,
+        color_idx: int = 0,
+    ) -> np.ndarray:
+        """Generate an isochrone for plotting.
+
+        The isochrone is generated using the fundamental parameter values
+        given in the ``fit_params`` dictionary.
+
+        :param synth: :py:class:`Synthetic <asteca.synthetic.Synthetic>` object with the
+            data required to generate synthetic clusters
+        :type synth: Synthetic
+        :param fit_params: Dictionary with the values for the fundamental parameters
+            that were **not** included in the ``fix_params`` dictionary when the
+            :py:class:`Synthetic` object was calibrated (:py:meth:`calibrate` method).
+        :type fit_params: dict
+        :param color_idx: Index of the color to plot. If ``0`` (default), plot the
+            first color. If ``1`` plot the second color. Defaults to ``0``
+        :type color_idx: int
+
+        :raises ValueError: If either parameter (met, age) is outside of allowed range
+
+        :return: Array with the isochrone data to plot
+        :rtype: np.ndarray
+        """
+        # Generate displaced isochrone
+        fit_params_copy = dict(fit_params)
+
+        # Check isochrones ranges
+        for par in ("met", "loga"):
+            try:
+                pmin, pmax = min(self.met_age_dict[par]), max(self.met_age_dict[par])
+                if fit_params_copy[par] < pmin or fit_params_copy[par] > pmax:
+                    raise ValueError(
+                        f"Parameter '{par}' out of range: [{pmin} - {pmax}]"
+                    )
+            except KeyError:
+                pass
+
+        # Generate physical synthetic cluster to extract the max mass
+        max_mass = self.generate(fit_params_copy)[self.m_ini_idx].max()
+
+        # Generate displaced isochrone
+        fit_params_copy["DR"] = 0.0
+        isochrone = self.generate(fit_params_copy, N_stars=-1)
+
+        # Apply max mass filter to isochrone
+        msk = isochrone[self.m_ini_idx] < max_mass
+
+        # Generate proper array for plotting
+        isochrone = np.array([isochrone[0], isochrone[color_idx + 1]])[:, msk]
+
+        return isochrone

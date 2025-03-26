@@ -107,8 +107,8 @@ def add_binarity(
     theor_tracks.shape = (Nz, Na, N_cols, N_interp)
 
     If binarity is processed:
-        N_cols: magnitude + color(s) + initial masses + unresolved mag +
-            unresolved color(s) + secondary masses
+        N_cols: magnitude + color(s) + initial masses + secondary masses +
+                unresolved mag + unresolved color(s)
     else:
         N_cols: magnitude + colors + initial mass
 
@@ -155,7 +155,7 @@ def add_binarity(
             # Calculate unresolved binary magnitude
             mag = isoch[mag_idx]
             mag_m2 = np.interp(m2, mass_ini, mag)
-            theor_tracks[mx][ax][m_ini_idx + 1] = mag_combine(mag, mag_m2)
+            theor_tracks[mx][ax][m_ini_idx + 2] = mag_combine(mag, mag_m2)
 
             # Calculate unresolved color for each color defined.
             for ic, color in enumerate(all_colors):
@@ -165,10 +165,10 @@ def add_binarity(
                 f1 = mag_combine(mc1, f_m1)
                 f_m2 = np.interp(m2, mass_ini, mc2)
                 f2 = mag_combine(mc2, f_m2)
-                theor_tracks[mx][ax][m_ini_idx + 1 + 1 + ic] = f1 - f2
+                theor_tracks[mx][ax][m_ini_idx + 2 + 1 + ic] = f1 - f2
 
             # Secondary masses
-            theor_tracks[mx][ax][-1] = m2
+            theor_tracks[mx][ax][m_ini_idx + 1] = m2
 
     return theor_tracks
 
@@ -511,7 +511,7 @@ def mag_combine(m1: np.ndarray, m2: np.ndarray) -> np.ndarray:
 
 
 def properModel(
-    met_age_dict: dict, fix_params: dict, fit_params: dict
+    met_age_dict: dict, fit_params: dict
 ) -> tuple[float, float, float, float, float, float, float, float, int, int, int, int]:
     """Define the 'proper' model with values for (z, a) taken from its grid,
     and filled values for those parameters that are fixed.
@@ -529,13 +529,14 @@ def properModel(
     :rtype: tuple[float, float, float, float, float, float, float, float, int, int, int, int]
 
     """
-    # If any parameter is repeated in both dictionaries, this order gives priority
-    # to the 'fix_params' dict, in the sense that its values will be the ones
-    # written to 'model_comb'
-    model_comb = fit_params | fix_params
+    # # If any parameter is repeated in both dictionaries, this order gives priority
+    # # to the 'fix_params' dict, in the sense that its values will be the ones
+    # # written to 'model_comb'
+    # model_comb = fit_params | fix_params
+
     model_full = np.array(
         [
-            model_comb[k]
+            fit_params[k]
             for k in ["met", "loga", "alpha", "beta", "Av", "DR", "Rv", "dm"]
         ]
     )
@@ -730,7 +731,7 @@ def move_isochrone(isochrone: np.ndarray, m_ini_idx: int, dm: float) -> np.ndarr
     isochrone[0] += dm
     # Move binary magnitude if it exists
     if isochrone.shape[0] > m_ini_idx + 1:
-        isochrone[m_ini_idx + 1] += dm
+        isochrone[m_ini_idx + 2] += dm
 
     return isochrone
 
@@ -849,8 +850,8 @@ def extinction(
 
     # Move binary data.
     if binar_flag:
-        isochrone[m_ini_idx + 1] += Ax  # Magnitude
-        isochrone[m_ini_idx + 2] += Ex1  # First color
+        isochrone[m_ini_idx + 2] += Ax  # Magnitude
+        isochrone[m_ini_idx + 3] += Ex1  # First color
 
     # Second color
     if len(ext_coefs) > 2:
@@ -861,7 +862,7 @@ def extinction(
         isochrone[2] += Ex2
         # Move color with binary data.
         if binar_flag:
-            isochrone[m_ini_idx + 3] += Ex2
+            isochrone[m_ini_idx + 4] += Ex2
 
     return isochrone
 
@@ -1098,8 +1099,8 @@ def binarity(
     if binar_flag is False:
         # Update the binary systems' masses so that the secondary masses for
         # SINGLE systems are identified with a 'nan' value.
-        isoch_mass[-1] = np.nan
-        return isoch_mass
+        isoch_mass[m_ini_idx+1] = np.nan
+        return isoch_mass[:m_ini_idx + 2]
 
     Ns = isoch_mass.shape[-1]
     mass = isoch_mass[m_ini_idx]
@@ -1122,13 +1123,14 @@ def binarity(
     # color(s).
     if bin_indxs.any():
         for i in range(m_ini_idx):
-            isoch_mass[i][bin_indxs] = isoch_mass[m_ini_idx + 1 + i][bin_indxs]
+            isoch_mass[i][bin_indxs] = isoch_mass[m_ini_idx + 2 + i][bin_indxs]
 
     # Update the binary systems' masses so that the secondary masses for
     # SINGLE systems are identified with a 'nan' value.
-    isoch_mass[-1][~bin_indxs] = np.nan
+    isoch_mass[m_ini_idx+1][~bin_indxs] = np.nan
 
-    return isoch_mass
+    # Return [mag, c1, (c2), mass, mass_b]
+    return isoch_mass[:m_ini_idx + 2]
 
 
 def add_errors(isoch_binar: np.ndarray, err_dist: list[np.ndarray]) -> np.ndarray:
