@@ -81,6 +81,7 @@ TOC
    :caption: Tutorials
 
    tutorials/membership
+   tutorials/synth_generate
    tutorials/paramfit
 
 
