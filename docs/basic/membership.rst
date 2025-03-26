@@ -10,10 +10,10 @@ this class: :py:meth:`asteca.membership.Membership.bayesian` and
 
 The :py:meth:`bayesian` method was described in detail in the
 `article <https://doi.org/10.1051/0004-6361/201424946>`__ where **ASteCA** was
-originally introduced. The method requires ``(RA, DEC)``  data and will use any extra
+originally introduced. The method requires ``(ra, dec)``  data and will use any extra
 data dimensions stored in the :py:class:`Cluster <asteca.cluster.Cluster>` object, i.e.:
 photometry, proper motions, and parallax. A minimum of two data dimensions are required,
-in addition to ``(RA, DEC)``. This method can produce membership probabilities on
+in addition to ``(ra, dec)``. This method can produce membership probabilities on
 photometric data alone.
 
 The :py:meth:`fastmp` method was described in detail in the
@@ -45,15 +45,14 @@ center and radius (a radius value is only required by the :py:meth:`bayesian` me
     field_df = pd.read_csv(path_to_field_file)
 
     my_field = asteca.cluster(
-        obs_df=field_df,
-        ra='RA_ICRS',
-        dec='DE_ICRS',
-        pmra="pmRA",
-        pmde="pmDE",
-        plx="Plx",
-        e_pmra="e_pmRA",
-        e_pmde="e_pmDE",
-        e_plx="e_Plx",
+        ra=df['RA_ICRS'],
+        dec=df['DE_ICRS'],
+        pmra=df["pmRA"],
+        pmde=df["pmDE"],
+        plx=df["Plx"],
+        e_pmra=df["e_pmRA"],
+        e_pmde=df["e_pmDE"],
+        e_plx=df["e_Plx"],
     )
 
     # Estimate the cluster's center coordinates
