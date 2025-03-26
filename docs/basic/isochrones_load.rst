@@ -19,11 +19,6 @@ produced with these services will contain:
 * BASTI  : single metallicity and single age
 
 
-.. _isoch_loading:
-
-Loading the files
-*****************
-
 All isochrones files should be stored in a single folder. **ASteCA** assumes that
 all files within that folder are isochrone files that should be loaded. The user can
 combine files for different photometric systems as long as they belong to the same
@@ -45,7 +40,20 @@ To load the isochrones and generate an ``isochrones`` object, we proceed as foll
         color=("G_BPmag", "G_RPmag"),
         magnitude_effl=6390.7,
         color_effl=(5182.58, 7825.08),
+        verbose=3
     )
+
+    Instantiating isochrones...
+    Model          : PARSEC
+    N_files        : 1
+    N_met          : 3
+    N_age          : 11
+    N_isoch        : 2500
+    z   range      : [0.01, 0.02]
+    loga range     : [7.0, 9.5]
+    Magnitude      : Gmag
+    Color          : G_BPmag-G_RPmag
+    Isochrone object generated
 
 Where:
 
