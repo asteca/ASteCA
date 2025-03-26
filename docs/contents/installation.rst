@@ -4,19 +4,26 @@ Installation
 ############
 
 **ASteCA** can be installed locally or in a
-`Google Colaboratory <https://colab.google/>`_ notebook. 
+`Google Colaboratory <https://colab.google/>`_ notebook. To install **ASteCA** locally
+run the following `pip`_ command:
 
-To install **ASteCA** locally you can just use
+.. tab:: Unix/macOS
 
-.. code-block:: bash
+   .. code-block:: shell
 
-  pip install asteca
+      python -m pip install asteca
+
+.. tab:: Windows
+
+   .. code-block:: shell
+
+      py -m pip install asteca
 
 in a terminal session, or even better set up a local environment. There are several
 tools that handle this, like `conda`_, `uv`_, or Python's own `venv`_,
 
 
-To install in Google Colaboratory, add a `!` to the install command and run it in a
+To install in Google Colaboratory, add a ``!`` to the install command and run it in a
 Colab notebook's code cell:
 
 .. code-block:: bash
@@ -24,10 +31,9 @@ Colab notebook's code cell:
   !pip install asteca
 
 You might need to restart the Colab session for the installation to work
-(Runtime / Restart session)
+(*Runtime / Restart session*)
 
-
-To check that the installation was successful, import **ASteCA** and print the
+To verify that the installation was successful, import **ASteCA** and print the
 installed version number with:
 
 .. code-block:: bash
@@ -36,7 +42,7 @@ installed version number with:
   print(asteca.__version__)
 
 
-
+.. _pip: https://pip.pypa.io/en/stable/
 .. _conda: https://conda.io/docs/index.html
 .. _uv: https://docs.astral.sh/uv/
 .. _venv: https://docs.python.org/3/library/venv.html
