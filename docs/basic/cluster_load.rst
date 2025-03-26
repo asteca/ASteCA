@@ -3,14 +3,15 @@
 Loading your cluster
 ####################
 
-Your cluster's data needs to be stored in a file format compatible with the
-`pandas <https://pandas.pydata.org/>`_ package. The
-`csv <https://en.wikipedia.org/wiki/Comma-separated_values>`_ format is probably the
-most used but any compatible format is acceptable.
+I assume that you already have a clean cluster file, i.e.: a file containing only the cluster's members as shown in the image below:
 
-The first step is to load the file as a `pandas DataFrame
-<https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_:
+.. figure:: ../_static/ra_dec.png
+   :align: center
 
+The first step is to load the cluster file using the library of your choice. For example,
+the `pandas <https://pandas.pydata.org/>`_ library allows you to easily read a
+`CSV <https://en.wikipedia.org/wiki/Comma-separated_values>`_ file
+as a `pandas DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_:
 
 .. code-block:: python
 
@@ -19,10 +20,10 @@ The first step is to load the file as a `pandas DataFrame
     # Read the cluster's data file with pandas
     df = pd.read_csv("path_to_cluster_file")
 
-
-After this, you can define a :py:class:`asteca.cluster.Cluster` object
-simply by passing the dataframe and the the column names in your data file for the IDs,
-right ascension, declination, magnitude, color, and their respective uncertainties.
+You can load it with **ASteCA** defining a :py:class:`asteca.cluster.Cluster` object
+simply by passing the columns in your data file for the right ascension, declination,
+magnitude, color, and their respective uncertainties, etc (more details about the data
+you can load in :py:class:`asteca.cluster.Cluster`):
 
 .. code-block:: python
 
@@ -30,49 +31,34 @@ right ascension, declination, magnitude, color, and their respective uncertainti
 
     # Generate a `cluster` object
     my_cluster = asteca.cluster(
-        obs_df=df,
-        ra='RA_ICRS',
-        dec='DE_ICRS',
-        magnitude="Gmag",
-        e_mag="e_Gmag",
-        color="BP-RP",
-        e_color='e_BP-RP'
+        ra=df['RA_ICRS'],
+        dec=df['DE_ICRS'],
+        magnitude=df["Gmag"],
+        e_mag=df["e_Gmag"],
+        color=df["BP-RP"],
+        e_color=df['e_BP-RP'],
+        pmra=df["pmRA"],
+        e_pmra=df["e_pmRA"],
+        pmde=df["pmDE"],
+        e_pmde=df["e_pmDE"],
+        plx=df["Plx"],
+        e_plx=df["e_Plx"],
+        verbose=2            # Print info to screen
     )
 
-That's it! You can now for example generate a quick coordinates plot with the
-:py:func:`asteca.plot.radec` function:
+    Instantiating cluster...
+    Columns read   : RA, DEC, Magnitude, e_mag, Color, e_color, Plx, pmRA, pmDE
+    N_stars        : 8683
+    N_clust_min    : 25
+    N_clust_max    : 5000
+    Cluster object generated
 
-.. code-block:: python
+That's it! Your cluster is ready to be analyzed as shown in the following sections.
 
-    import matplotlib.pyplot as plt
-
-    ax = plt.subplot()
-    asteca.plot.radec(my_cluster, ax)
-    plt.show()
-
-showing something like:
-
-.. figure:: ../_static/ra_dec.png
-   :align: center
-
-or a color-magnitude plot with the :py:func:`asteca.plot.cluster` function:
-
-.. code-block:: python
-
-    ax = plt.subplot()
-    asteca.plot.cluster(my_cluster, ax)
-    plt.show()
-
-which should results in something like this:
-
-.. figure:: ../_static/cmd_plot.png
-   :align: center
-
-The above example assumes that your data already contained the cluster *members* 
-(however the user selected them), but a complete stellar field can also be loaded in
-this object and processed to extract cluster's properties such as its center coordinates
-and radius (see :ref:`structure`) as well as their membership probabilities
-(see :ref:`membership`).
+The above example assumes that your data file contained exclusively the cluster
+*members*, but a complete stellar field can also be loaded and processed to extract cluster's properties such as its center coordinates and radius (see :ref:`structure`)
+as well as their membership probabilities (see :ref:`membership`). The following
+sections explain this in more detail.
 
 
 .. _structure:
@@ -92,17 +78,19 @@ cluster's center estimation. **ASteCA** provides the
 :py:meth:`get_center() <asteca.cluster.Cluster.get_center>` method to perform this
 estimation.
 
-.. important::
-    A single algorithm is available for now called ``knn_5d`` and it requires that your
-    :py:class:`my_cluster` object contains ``(RA, DEC, pmra, pmde, plx)`` data. A
-    algorithm hat only requires ``(RA, DEC)``  will be added in future versions
+There are currently two algorithms available for center estimation. The default method
+is called ``knn_5d`` and it requires that your :py:class:`my_cluster` object contains
+``(ra, dec, pmra, pmde, plx)`` data. The other algorithm is called ``kde_2d`` and it
+requires either ``(ra, dec)`` or ``(pmra, pmde)``, depending on the center values you
+want to estimate.
 
-Assuming you have a field that looks like this
+Assuming that you have a field that looks like this (i.e., not an already clean cluster
+file):
 
 .. figure:: ../_static/field.webp
    :align: center
 
-you can estimate the center simply via:
+you can estimate the center (using the default ``knn_5d``  method) simply via:
 
 .. code-block:: python
 
@@ -114,24 +102,38 @@ you can estimate the center simply via:
     >> plx_c          : 0.288
 
 The ``radec_c, pms_c, plx_c`` values containing the center coordinates will be stored in
-your :py:class:`my_cluster` object as attributes and can be accessed to use later on,
+your :py:class:`my_cluster` object as attributes and can be accessed to use later
+on:
+
+.. code-block:: python
+
+    # Access estimated center values
+    ra_c, dec_c = my_cluster.radec_c
+    pmra_c, pmde_c = my_cluster.pms_c
+    plx_c = my_cluster.plx_c
+
 for example to plot the center values found:
 
 .. code-block:: python
 
+    # (ra, dec) plot
     ax = plt.subplot(221)
-    asteca.plot.radec(my_cluster, ax)
-    plt.scatter(my_cluster.radec_c[0], my_cluster.radec_c[1], marker='x', s=25, c='r')
+    plt.scatter(my_cluster.ra, my_cluster.dec, c='k', alpha=.15, s=5)
+    plt.scatter(ra_c, dec_c, marker='x', s=25, c='r')
+    plt.xlabel("dec")
+    plt.ylabel("ra")
 
+    # (pmra, pmde) plot
     ax = plt.subplot(222)
-    plt.scatter(my_cluster.pmra_v, my_cluster.pmde_v, c='k', alpha=.15, s=5)
-    plt.scatter(my_cluster.pms_c[0], my_cluster.pms_c[1], marker='x', s=25, c='r')
+    plt.scatter(my_cluster.pmra, my_cluster.pmde, c='k', alpha=.15, s=5)
+    plt.scatter(pmra_c, pmde_c, marker='x', s=25, c='r')
     plt.xlabel("pmra")
     plt.ylabel("pmde")
 
+    # plx plot
     ax = plt.subplot(223)
-    plt.hist(my_cluster.plx_v, 30)
-    plt.axvline(my_cluster.plx_c, c='r', ls=':')
+    plt.hist(my_cluster.plx, 30)
+    plt.axvline(plx_c, c='r', ls=':')
     plt.xlabel("plx")
 
     plt.show()
