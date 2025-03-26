@@ -44,9 +44,8 @@ extensions = [
     "sphinx.ext.githubpages",
     "myst_nb",
     "IPython.sphinxext.ipython_console_highlighting",
-    "sphinx_math_dollar",
     "sphinx.ext.mathjax",
-    # "sphinx.ext.doctest"
+    "sphinx_inline_tabs",
 ]
 
 autodoc2_packages = [
@@ -59,7 +58,7 @@ autodoc2_packages = [
     }
 ]
 # autodoc2_output_dir = []
-autodoc2_sort_names = True
+autodoc2_sort_names = False
 autodoc2_hidden_objects = ["dunder", "private", "inherited"]
 
 
@@ -123,23 +122,24 @@ autodoc2_hidden_objects = ["dunder", "private", "inherited"]
 ################################################################
 
 
-# https://www.sympy.org/sphinx-math-dollar/
-mathjax3_config = {
-    "tex": {
-        "inlineMath": [["\\(", "\\)"]],
-        "displayMath": [["\\[", "\\]"]],
-    }
-}
+# # https://www.sympy.org/sphinx-math-dollar/
+# mathjax3_config = {
+#     "tex": {
+#         "inlineMath": [["\\(", "\\)"]],
+#         "displayMath": [["\\[", "\\]"]],
+#     }
+# }
 
 # https://myst-nb.readthedocs.io/en/v0.12.2/use/execute.html
 # nb_execution_mode = "auto"
 nb_execution_mode = "off"
 # nb_execution_timeout = -1
 
-myst_enable_extensions = [
-    "amsmath",
-    "dollarmath",
-]
+# Commented out 26/03/25
+# myst_enable_extensions = [
+#     "amsmath",
+#     "dollarmath",
+# ]
 
 # templates_path = ['_templates']
 # exclude_patterns = []
