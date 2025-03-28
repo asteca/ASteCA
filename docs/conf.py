@@ -3,17 +3,6 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-# -- Path setup --------------------------------------------------------------
-
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath("../../"))
-# import asteca
-# __version__ = asteca.__version__
-
 
 # -- Project information -----------------------------------------------------
 project = "ASteCA"
@@ -57,78 +46,28 @@ autodoc2_packages = [
         ],
     }
 ]
-# autodoc2_output_dir = []
-autodoc2_sort_names = False
 autodoc2_hidden_objects = ["dunder", "private", "inherited"]
+autodoc2_index_template = None
 
 
-# DEPRECATED 24/06/24
 ################################################################
-# This block removes the attributes from the apidocs .rst files.
-# I could not find a simpler way to do this 26/05/24
-# https://www.sphinx-doc.org/en/master/extdev/appapi.html#sphinx-core-events
-# def source_read_handler(app, docname, source):
-#     """'docname, source' not used but required"""
-#     path = "./apidocs/asteca/"
-#     for file in os.listdir(path):
-#         with open(path + file) as f:
-#             lines = f.readlines()
-#             idxs = []
-#             for i, line in enumerate(lines):
-#                 if ".. py:attribute:" in line:
-#                     idxs += list(range(i, i + 6))
-#         for i in range(len(lines), 0, -1):
-#             if i in idxs:
-#                 del lines[i]
-#         with open(path + file, "w") as f:
-#             for line in lines:
-#                 f.write(line)
+# Overwrite apidocs/asteca/asteca.rst file so that I don't get
+# warnings
 
 
-# def setup(app):
-#     app.connect("source-read", source_read_handler)
+def source_read_handler(app, docname, source):
+    """'docname, source' not used but required"""
+    file_path = "./apidocs/asteca/asteca.rst"
+    with open(file_path, "w") as f:
+        f.write(":orphan:")
+
+
+def setup(app):
+    app.connect("source-read", source_read_handler)
+
+
 ################################################################
 
-# DEPRECATED 25/01/13 --> Simpler without
-# ################################################################
-# # This block changes the 'Initialization' title for a 'Methods' title
-# # WARNING: could break at any moment if pydoclint changes its behavior!
-# import os
-# def source_read_handler(app, docname, source):
-#     """'docname, source' not used but required"""
-#     path = "./apidocs/asteca/"
-#     for file in os.listdir(path):
-#         with open(path + file) as f:
-#             lines = f.readlines()
-#             idxs = []
-#             for i, line in enumerate(lines):
-#                 if ".. rubric:: Initialization" in line:
-#                     idxs += list(range(i, i + 3))
-#                     break
-#         if idxs:
-#             if len(lines) > idxs[-1] + 2:
-#                 lines[idxs[0]] = "   .. rubric:: Methods\n"
-#             else:
-#                 lines[idxs[0]] = ""
-#             lines[idxs[1]] = ""
-#             lines[idxs[2]] = ""
-#             with open(path + file, "w") as f:
-#                 for line in lines:
-#                     f.write(line)
-
-
-# def setup(app):
-#     app.connect("source-read", source_read_handler)
-################################################################
-
-
-# # https://www.sympy.org/sphinx-math-dollar/
-# mathjax3_config = {
-#     "tex": {
-#         "inlineMath": [["\\(", "\\)"]],
-#         "displayMath": [["\\[", "\\]"]],
-#     }
-# }
 
 # https://myst-nb.readthedocs.io/en/v0.12.2/use/execute.html
 # nb_execution_mode = "auto"
@@ -142,7 +81,7 @@ nb_execution_mode = "off"
 # ]
 
 # templates_path = ['_templates']
-# exclude_patterns = []
+# exclude_patterns = ["asteca.rst"]
 
 
 # -- Options for HTML output -------------------------------------------------
