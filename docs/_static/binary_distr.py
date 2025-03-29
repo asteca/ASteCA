@@ -1,5 +1,5 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def main():
@@ -75,7 +75,7 @@ def main():
     plt.xlabel(r"$m_1\,[M_{\odot}]$")
     plt.ylabel(r"$P_b\,(m_1)$")
     plt.legend()
-    plt.savefig("binar_distr.png", dpi=300, bbox_inches="tight")
+    plt.savefig("binar_distr.webp", dpi=300, bbox_inches="tight")
     breakpoint()
 
     # x = np.log(mass_OF)

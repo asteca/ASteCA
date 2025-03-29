@@ -52,7 +52,7 @@ performance of the code. The ``IMF_name`` argument must be one of those availabl
 :py:class:`asteca.synthetic.Synthetic`. Currently these are associated to the
 following IMFs:
 
-.. figure:: ../_static/IMFs.png
+.. figure:: ../_static/IMFs.webp
     :scale: 35%
     :align: center
 
@@ -92,7 +92,7 @@ and peaked, see their Table 3) and
 left). In practice they all look somewhat similar, as shown in the figure below for a
 random IMF mass sampling.
 
-.. figure:: ../_static/qdist_mass.png
+.. figure:: ../_static/qdist_mass.webp
     :scale: 35%
     :align: center
 
@@ -105,7 +105,7 @@ exponent in the power-law function :math:`f(q) \approx q^{\gamma}`. The figure b
 shows this distribution for three ``gamma`` (:math:`\gamma`) values, where ``gamma=0``
 means a uniform distribution.
 
-.. figure:: ../_static/qdist_unif.png
+.. figure:: ../_static/qdist_unif.webp
     :scale: 35%
     :align: center
 
@@ -256,7 +256,7 @@ in this work are primary mass dependent, meaning that larger masses have much la
 probabilities of being part of a binary (or higher order) system than low mass stars.
 The values ``alpha=0.09, beta=0.94`` produce a very reasonable fit to this multiplicity fraction distribution:
 
-.. figure:: ../_static/binar_distr.png
+.. figure:: ../_static/binar_distr.webp
     :scale: 35%
     :align: center
 

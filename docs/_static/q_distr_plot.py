@@ -121,7 +121,7 @@ def qmass_plot(N_m=50000):
     plt.xlabel(r"$q=m_2/m_1$")
     plt.ylabel(r"$Frequency;\;f(q)$")
     plt.legend()
-    plt.savefig("qdist_mass.png", dpi=300, bbox_inches="tight")
+    plt.savefig("qdist_mass.webp", dpi=300, bbox_inches="tight")
     plt.close()
 
 
@@ -206,7 +206,7 @@ def qunif_plot(N_m=50000):
     plt.xlabel(r"$q=m_2/m_1$")
     plt.ylabel(r"$Frequency;\;f(q)$")
     plt.legend()
-    plt.savefig("qdist_unif.png", dpi=300, bbox_inches="tight")
+    plt.savefig("qdist_unif.webp", dpi=300, bbox_inches="tight")
     plt.close()
 
     # plt.subplot(222)
