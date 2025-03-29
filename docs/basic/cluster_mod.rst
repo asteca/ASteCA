@@ -1,36 +1,18 @@
-.. _cluster_load:
+.. _cluster_module:
 
-Loading your cluster
-####################
+Cluster
+#######
 
-I assume that you already have a clean cluster file, i.e.: a file containing only the cluster's members as shown in the image below:
-
-.. figure:: ../_static/ra_dec.png
-   :align: center
-
-The first step is to load the cluster file using the library of your choice. For example,
-the `pandas <https://pandas.pydata.org/>`_ library allows you to easily read a
-`CSV <https://en.wikipedia.org/wiki/Comma-separated_values>`_ file
-as a `pandas DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_:
-
-.. code-block:: python
-
-    import pandas as pd
-
-    # Read the cluster's data file with pandas
-    df = pd.read_csv("path_to_cluster_file")
-
-You can load it with **ASteCA** defining a :py:class:`asteca.cluster.Cluster` object
-simply by passing the columns in your data file for the right ascension, declination,
-magnitude, color, and their respective uncertainties, etc (more details about the data
-you can load in :py:class:`asteca.cluster.Cluster`):
+The :py:class:`asteca.cluster.Cluster` class in **ASteCA** allows generating
+an object with data for either a cluster or an observed field (i.e.: a data file
+that contains not only the cluster members but also surrounding field stars)
 
 .. code-block:: python
 
     import asteca
 
     # Generate a `cluster` object
-    my_cluster = asteca.cluster(
+    my_field = asteca.cluster(
         ra=df['RA_ICRS'],
         dec=df['DE_ICRS'],
         magnitude=df["Gmag"],
@@ -53,12 +35,12 @@ you can load in :py:class:`asteca.cluster.Cluster`):
     N_clust_max    : 5000
     Cluster object generated
 
-That's it! Your cluster is ready to be analyzed as shown in the following sections.
+This object, called `my_field` here, can be processed to extract a given cluster's
+properties such as: its center coordinates and radius (:ref:`structure`),
+estimated number of members (:ref:`nmembers`), as well as their membership
+probabilities (:ref:`membership_module`).
 
-The above example assumes that your data file contained exclusively the cluster
-*members*, but a complete stellar field can also be loaded and processed to extract cluster's properties such as its center coordinates and radius (see :ref:`structure`)
-as well as their membership probabilities (see :ref:`membership`). The following
-sections explain this in more detail.
+The following sections explain these processes in more detail.
 
 
 .. _structure:
@@ -155,6 +137,8 @@ In the meantime you can manually add the attribute with:
 
 where the value is always in units of degrees.
 
+
+.. _nmembers:
 
 Number of members
 =================

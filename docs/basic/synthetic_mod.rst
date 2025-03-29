@@ -1,7 +1,7 @@
-.. _synth_clusters:
+.. _synthetic_module:
 
-Synthetic clusters
-##################
+Synthetic
+#########
 
 The :py:class:`asteca.synthetic` class allows generating synthetic clusters from:
 
@@ -20,7 +20,7 @@ Defining the object
 *******************
 
 To instantiate a :class:`synthetic` object you need to pass the :class:`isochrones`
-object previously generated, as explained in the section :ref:`isochronesload`.
+object previously generated, as explained in the section :ref:`isochrones_module`.
 
 .. code-block:: python
 
@@ -160,7 +160,7 @@ Calibrating
 The calibration process is applied after instantiating a :class:`synthetic` object as
 described in the previous section. This process is optional and it is aimed at collecting
 data from an observed cluster loaded in a :py:class:`asteca.cluster.Cluster` object
-(defined as ``my_cluster`` in :ref:`cluster_load`).
+(defined as ``my_cluster`` in :ref:`cluster_module`).
 
 The calibration is performed via the :py:meth:`asteca.synthetic.Synthetic.calibrate`
 method:
@@ -226,7 +226,7 @@ is shown below:
     # Generate the synthetic cluster
     synth_clust = synthcl.generate(fit_params)
 
-The notebook :ref:`synth_generate` contains more information and examples on how to
+The notebook :ref:`synth_ntbk` contains more information and examples on how to
 generate synthetic clusters with **ASteCA**.
 
 
@@ -239,8 +239,8 @@ The valid ranges for the metallicity and logarithmic age are inherited from the
 theoretical isochrone(s) loaded in the :py:class:`asteca.isochrones.Isochrones` object.
 
 The metallicity, ``met``, can be modeled either as ``z`` or ``FeH`` as
-explained in section :ref:`isochronesload`. The age parameter, ``loga``, is modeled as the
-logarithmic age.
+explained in section :ref:`isochrones_module`. The age parameter, ``loga``, is modeled
+as the logarithmic age.
 
 The ``alpha, beta`` parameters determine the fraction of binary systems
 in a synthetic cluster through the equation:

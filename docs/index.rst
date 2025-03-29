@@ -13,7 +13,7 @@ ASteCA
 
 
 .. important::
-   Version |ProjectVersion| released on the 24th of January, 2025. See :ref:`changelog`
+   Version |ProjectVersion| released on the XXth of March, 2025. See :ref:`changelog`
    for a detailed list of the changes implemented.
 
 Feel free to `contact me`_ if you have questions about using this code in your
@@ -64,25 +64,29 @@ TOC
 
    contents/installation
    contents/changelog
-   contents/api_index
 
 
 .. toctree::
    :maxdepth: 1
-   :caption: Basic configuration
+   :caption: Modules
 
-   basic/cluster_load
-   basic/membership
-   basic/isochrones_load
-   basic/synthetic_clusters
+   basic/cluster_mod
+   basic/membership_mod
+   basic/isochrones_mod
+   basic/synthetic_mod
+   basic/likelihood_mod
 
 .. toctree::
    :maxdepth: 1
    :caption: Tutorials
 
+   tutorials/cluster
    tutorials/membership
    tutorials/synth_generate
    tutorials/paramfit
 
+.. toctree::
+   :maxdepth: 1
+   :caption: API
 
-
+   contents/api_index

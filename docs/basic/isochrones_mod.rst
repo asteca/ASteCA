@@ -1,11 +1,12 @@
-.. _isochronesload:
+.. _isochrones_module:
 
-Loading the isochrones
-######################
+Isochrones
+##########
 
 
-**ASteCA** requires a set of theoretical isochrones to estimate the fundamental
-parameters for the clusters. The supported services are:
+**ASteCA** requires a set of theoretical isochrones which serve as the foundation
+to generate synthetic clusters, in turn used to estimate the fundamental
+parameters of an observed cluster. The supported services are:
 `PARSEC <http://stev.oapd.inaf.it/cgi-bin/cmd_3.7>`_,
 `MIST <https://waps.cfa.harvard.edu/MIST/>`_, and
 `BASTI <http://basti-iac.oa-abruzzo.inaf.it/isocs.html>`_.

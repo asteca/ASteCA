@@ -1,7 +1,7 @@
-.. _membership:
+.. _membership_module:
 
-Membership estimation
-#####################
+Membership
+##########
 
 The :py:class:`asteca.membership` class allows estimating the membership probabilities
 for all the stars in a given observed field. There are currently two methods included in
@@ -85,3 +85,5 @@ The results will naturally not be equivalent as both algorithms are rather diffe
 
 The :py:meth:`bayesian` algorithm for example tends to assign lower probabilities than
 the :py:meth:`fastmp` algorithm.
+
+A step-by-step example is shown in the :ref:`membership_ntbk` tutorial.
