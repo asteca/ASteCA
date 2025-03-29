@@ -130,12 +130,12 @@ class Membership:
         self._vp(f"N_runs         : {N_runs}", 1)
 
         # Generate input data array
-        X = [xc, yc]
+        X = [self.my_field.ra, self.my_field.dec]
         e_X = []
-        if hasattr(self.my_field, "mag"):
+        if self.my_field.mag is not None:
             X.append(self.my_field.mag)
             e_X.append(self.my_field.e_mag)
-        if hasattr(self.my_field, "colors"):
+        if self.my_field.colors is not None:
             X.append(self.my_field.colors[0])
             e_X.append(self.my_field.e_colors[0])
             try:
@@ -143,25 +143,25 @@ class Membership:
                 e_X.append(self.my_field.e_colors[1])
             except IndexError:
                 pass
-        if hasattr(self.my_field, "plx"):
+        if self.my_field.plx is not None:
             X.append(self.my_field.plx)
             e_X.append(self.my_field.e_plx)
-        if hasattr(self.my_field, "pmra"):
+        if self.my_field.pmra is not None:
             X.append(self.my_field.pmra)
             e_X.append(self.my_field.e_pmra)
-        if hasattr(self.my_field, "pmde"):
+        if self.my_field.pmde is not None:
             X.append(self.my_field.pmde)
             e_X.append(self.my_field.e_pmde)
         X = np.array(X)
         e_X = np.array(e_X)
 
         out_mssg, probs = bayesian_mp(
-            N_runs,
+            self.my_field.N_cluster,
             X,
             e_X,
             np.array(center),
             self.my_field.radius,
-            self.my_field.N_cluster,
+            N_runs,
             self.rng,
         )
         self._vp(out_mssg, 1)
