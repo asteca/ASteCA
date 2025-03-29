@@ -16,7 +16,7 @@ class Synthetic:
     object and a set of input fundamental parameters (metallicity, age, distance,
     extinction, etc.).
 
-    See the :ref:`synth_clusters` section for more details.
+    See the :ref:`synthetic_module` section for more details.
 
     :param isochs: :py:class:`Isochrones <asteca.isochrones.Isochrones>` object with
         the loaded files for the theoretical isochrones
@@ -183,7 +183,7 @@ class Synthetic:
         :py:class:`Cluster <asteca.cluster.Cluster>` object, to calibrate a
         :py:class:`Synthetic` object.
 
-        See the :ref:`synth_clusters` section for more details.
+        See the :ref:`synthetic_module` section for more details.
 
         :param cluster: :py:class:`Cluster <asteca.cluster.Cluster>` object with the
             processed data from your observed cluster

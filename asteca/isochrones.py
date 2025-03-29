@@ -6,7 +6,7 @@ class Isochrones:
 
     This object contains the loaded theoretical isochrones used by the
     :py:class:`Synthetic <asteca.synthetic.Synthetic>` class to generate synthetic
-    clusters. See :ref:`isochronesload` for more details.
+    clusters. See :ref:`isochrones_module` for more details.
 
     :param model: The model must be one of the supported isochrone services:
         `PARSEC <http://stev.oapd.inaf.it/cgi-bin/cmd_3.7>`__,
