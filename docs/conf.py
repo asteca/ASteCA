@@ -7,7 +7,7 @@
 # -- Project information -----------------------------------------------------
 project = "ASteCA"
 copyright = "2024, Gabriel I Perren"
-# author = 'Gabriel I Perren'
+author = "Gabriel I Perren"
 
 # Read version from pyproject.toml
 with open("../pyproject.toml", encoding="utf-8") as pyproject_toml:
@@ -25,48 +25,54 @@ rst_epilog = """.. |ProjectVersion| replace:: {versionnum}""".format(
     versionnum=version,
 )
 
+
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 extensions = [
-    "autodoc2",
-    "sphinx.ext.napoleon",
+    # "sphinx.ext.napoleon",
     "sphinx.ext.githubpages",
     "myst_nb",
     "IPython.sphinxext.ipython_console_highlighting",
     "sphinx.ext.mathjax",
     "sphinx_inline_tabs",
+    "sphinx_automodapi.automodapi",
 ]
 
-autodoc2_packages = [
-    {
-        "path": "../asteca",
-        "exclude_dirs": [
-            "__pycache__",
-            "modules",
-        ],
-    }
-]
-autodoc2_hidden_objects = ["dunder", "private", "inherited"]
-autodoc2_index_template = None
+
+#  automodapi
+numpydoc_show_class_members = False
+automodapi_toctreedirnm = "build/api"
+
+# autodoc2_packages = [
+#     {
+#         "path": "../asteca",
+#         "exclude_dirs": [
+#             "__pycache__",
+#             "modules",
+#         ],
+#     }
+# ]
+# autodoc2_hidden_objects = ["dunder", "private", "inherited"]
+# autodoc2_index_template = None
 
 
-################################################################
-# Overwrite apidocs/asteca/asteca.rst file so that I don't get
-# warnings
+# ################################################################
+# # Overwrite apidocs/asteca/asteca.rst file so that I don't get
+# # warnings
 
 
-def source_read_handler(app, docname, source):
-    """'docname, source' not used but required"""
-    file_path = "./apidocs/asteca/asteca.rst"
-    with open(file_path, "w") as f:
-        f.write(":orphan:")
+# def source_read_handler(app, docname, source):
+#     """'docname, source' not used but required"""
+#     file_path = "./apidocs/asteca/asteca.rst"
+#     with open(file_path, "w") as f:
+#         f.write(":orphan:")
 
 
-def setup(app):
-    app.connect("source-read", source_read_handler)
+# def setup(app):
+#     app.connect("source-read", source_read_handler)
 
 
-################################################################
+# ################################################################
 
 
 # https://myst-nb.readthedocs.io/en/v0.12.2/use/execute.html
@@ -81,7 +87,7 @@ nb_execution_mode = "off"
 # ]
 
 # templates_path = ['_templates']
-# exclude_patterns = ["asteca.rst"]
+# exclude_patterns = ["tutorials"]
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -116,3 +122,4 @@ toc_object_entries_show_parents = "hide"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
+html_css_files = ["custom.css"]
