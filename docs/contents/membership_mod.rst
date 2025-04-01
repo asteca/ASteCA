@@ -31,8 +31,7 @@ method requires proper motions, and parallax data dimensions stored in the
 
 To use these methods the first step is to load an observed field, for example:
 
-.. figure:: ../_static/field.webp
-   :align: center
+
 
 into a :py:obj:`Cluster` object and estimate the cluster's
 center and radius (a radius value is only required by the :py:meth:`bayesian` method):
@@ -80,10 +79,13 @@ all or them following:
 
 The results will naturally not be equivalent as both algorithms are rather different.
 
-.. figure:: ../_static/membership.png
-   :align: center
+
 
 The :py:meth:`bayesian` algorithm for example tends to assign lower probabilities than
 the :py:meth:`fastmp` algorithm.
 
 A step-by-step example is shown in the :ref:`membership_ntbk` tutorial.
+
+
+.. include:: membership.ipynb
+   :parser: myst_nb.docutils_

@@ -5,7 +5,7 @@ Cluster
 
 The :py:class:`asteca.cluster.Cluster` class in **ASteCA** allows generating
 an object with data for either a cluster or an observed field (i.e.: a data file
-that contains not only the cluster members but also surrounding field stars)
+that contains not only the cluster members but also the surrounding field stars)
 
 .. code-block:: python
 
@@ -35,9 +35,9 @@ that contains not only the cluster members but also surrounding field stars)
     N_clust_max    : 5000
     Cluster object generated
 
-This object, called `my_field` here, can be processed to extract a given cluster's
+This object, called ``my_field`` here, can be processed to extract a given cluster's
 properties such as: its center coordinates and radius (:ref:`structure`),
-estimated number of members (:ref:`nmembers`), as well as their membership
+the estimated number of members (:ref:`nmembers`), as well as their membership
 probabilities (:ref:`membership_module`).
 
 The following sections explain these processes in more detail.
@@ -61,18 +61,14 @@ cluster's center estimation. **ASteCA** provides the
 estimation.
 
 There are currently two algorithms available for center estimation. The default method
-is called ``knn_5d`` and it requires that your :py:class:`my_cluster` object contains
-``(ra, dec, pmra, pmde, plx)`` data. The other algorithm is called ``kde_2d`` and it
-requires either ``(ra, dec)`` or ``(pmra, pmde)``, depending on the center values you
-want to estimate.
+is called ``knn_5d`` and it requires that your :py:class:`cluster` object contains
+the five dimensions of data: ``(ra, dec, pmra, pmde, plx)`` . The other algorithm is
+called ``kde_2d`` and it requires either ``(ra, dec)`` or ``(pmra, pmde)`` 2D data,
+depending on the center values you want to estimate.
 
-Assuming that you have a field that looks like this (i.e., not an already clean cluster
-file):
 
-.. figure:: ../_static/field.webp
-   :align: center
 
-you can estimate the center (using the default ``knn_5d``  method) simply via:
+
 
 .. code-block:: python
 
@@ -87,41 +83,6 @@ The ``radec_c, pms_c, plx_c`` values containing the center coordinates will be s
 your :py:class:`my_cluster` object as attributes and can be accessed to use later
 on:
 
-.. code-block:: python
-
-    # Access estimated center values
-    ra_c, dec_c = my_cluster.radec_c
-    pmra_c, pmde_c = my_cluster.pms_c
-    plx_c = my_cluster.plx_c
-
-for example to plot the center values found:
-
-.. code-block:: python
-
-    # (ra, dec) plot
-    ax = plt.subplot(221)
-    plt.scatter(my_cluster.ra, my_cluster.dec, c='k', alpha=.15, s=5)
-    plt.scatter(ra_c, dec_c, marker='x', s=25, c='r')
-    plt.xlabel("dec")
-    plt.ylabel("ra")
-
-    # (pmra, pmde) plot
-    ax = plt.subplot(222)
-    plt.scatter(my_cluster.pmra, my_cluster.pmde, c='k', alpha=.15, s=5)
-    plt.scatter(pmra_c, pmde_c, marker='x', s=25, c='r')
-    plt.xlabel("pmra")
-    plt.ylabel("pmde")
-
-    # plx plot
-    ax = plt.subplot(223)
-    plt.hist(my_cluster.plx, 30)
-    plt.axvline(plx_c, c='r', ls=':')
-    plt.xlabel("plx")
-
-    plt.show()
-
-.. figure:: ../_static/field2.webp
-   :align: center
 
 
 
@@ -154,3 +115,9 @@ for this cluster, the user can easily input this value manually with:
 .. code-block:: python
 
     my_cluster.N_cluster = 300
+
+
+
+.. include:: cluster.ipynb
+   :parser: myst_nb.docutils_
+

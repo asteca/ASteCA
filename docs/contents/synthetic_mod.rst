@@ -573,3 +573,8 @@ mass. Their median and STDDEV values can be extracted for example with:
     >> M_phot  : 454+/-148
     >> M_evol  : 827+/-225
     >> M_dyn   : 298+/-205
+
+
+
+.. include:: synthetic.ipynb
+   :parser: myst_nb.docutils_
