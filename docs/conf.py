@@ -1,9 +1,3 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# For the full list of built-in configuration values, see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
-
-
 # -- Project information -----------------------------------------------------
 project = "ASteCA"
 copyright = "2024, Gabriel I Perren"
@@ -21,7 +15,7 @@ with open("../pyproject.toml", encoding="utf-8") as pyproject_toml:
 version = __version__
 release = __version__
 
-rst_epilog = """.. |ProjectVersion| replace:: {versionnum}""".format(
+rst_epilog = """.. |ProjectVersion| replace:: **{versionnum}**""".format(
     versionnum=version,
 )
 
@@ -29,7 +23,6 @@ rst_epilog = """.. |ProjectVersion| replace:: {versionnum}""".format(
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 extensions = [
-    # "sphinx.ext.napoleon",
     "sphinx.ext.githubpages",
     "myst_nb",
     "IPython.sphinxext.ipython_console_highlighting",
@@ -38,56 +31,14 @@ extensions = [
     "sphinx_automodapi.automodapi",
 ]
 
-
 #  automodapi
 numpydoc_show_class_members = False
 automodapi_toctreedirnm = "build/api"
-
-# autodoc2_packages = [
-#     {
-#         "path": "../asteca",
-#         "exclude_dirs": [
-#             "__pycache__",
-#             "modules",
-#         ],
-#     }
-# ]
-# autodoc2_hidden_objects = ["dunder", "private", "inherited"]
-# autodoc2_index_template = None
-
-
-# ################################################################
-# # Overwrite apidocs/asteca/asteca.rst file so that I don't get
-# # warnings
-
-
-# def source_read_handler(app, docname, source):
-#     """'docname, source' not used but required"""
-#     file_path = "./apidocs/asteca/asteca.rst"
-#     with open(file_path, "w") as f:
-#         f.write(":orphan:")
-
-
-# def setup(app):
-#     app.connect("source-read", source_read_handler)
-
-
-# ################################################################
-
 
 # https://myst-nb.readthedocs.io/en/v0.12.2/use/execute.html
 # nb_execution_mode = "auto"
 nb_execution_mode = "off"
 # nb_execution_timeout = -1
-
-# Commented out 26/03/25
-# myst_enable_extensions = [
-#     "amsmath",
-#     "dollarmath",
-# ]
-
-# templates_path = ['_templates']
-# exclude_patterns = ["tutorials"]
 
 
 # -- Options for HTML output -------------------------------------------------
