@@ -16,12 +16,12 @@ extinction, distance, metallicity, age, binarity, and mass.
 
 
 .. important::
-   The latest version is **|ProjectVersion|**. See the :ref:`changelog` for a detailed
+   The latest version is |ProjectVersion|. See the :ref:`changelog` for a detailed
    list of the changes implemented.
 
-Feel free to `contact me`_ if you have questions about using this code in your
-research, and please `open a new issue`_ in the code's repository if you find
-something either wrong, confusing or missing.
+If you have any questions about this package and how to use it in your research
+`contact me`_.  If you find something wrong, confusing or missing, please
+`open a new issue`_ in the code's repository.
 
 
 .. _contact me: mailto:gabrielperren@gmail.com
