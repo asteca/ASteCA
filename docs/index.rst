@@ -9,12 +9,15 @@
 ASteCA
 ======
 
-**ASteCA** is an open-source tool developed in Python for the analysis of stellar clusters. It is designed to determine their structural parameters, membership probabilities, and both intrinsic and extrinsic fundamental properties, including extinction, distance, metallicity, age, binarity, and mass.
+**ASteCA** is an open-source tool developed in Python for the analysis of stellar
+clusters. It is designed to determine their structural parameters, membership
+probabilities, and both intrinsic and extrinsic fundamental properties, including
+extinction, distance, metallicity, age, binarity, and mass.
 
 
 .. important::
-   Version |ProjectVersion| released on the XXth of March, 2025. See :ref:`changelog`
-   for a detailed list of the changes implemented.
+   The latest version is **|ProjectVersion|**. See the :ref:`changelog` for a detailed
+   list of the changes implemented.
 
 Feel free to `contact me`_ if you have questions about using this code in your
 research, and please `open a new issue`_ in the code's repository if you find
@@ -28,7 +31,7 @@ something either wrong, confusing or missing.
 License & Attribution
 =====================
 
-Copyright 2015-2024 Gabriel I Perren.
+Copyright 2015-2025 Gabriel I Perren.
 
 **ASteCA** is free software made available under the MIT License. For details
 see the `LICENSE`_.
@@ -59,34 +62,9 @@ TOC
 ===
 
 .. toctree::
-   :maxdepth: 1
-   :caption: User guide
+   :maxdepth: 2
 
    contents/installation
-   contents/changelog
-
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Modules
-
-   basic/cluster_mod
-   basic/membership_mod
-   basic/isochrones_mod
-   basic/synthetic_mod
-   basic/likelihood_mod
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Tutorials
-
-   tutorials/cluster
-   tutorials/membership
-   tutorials/synth_generate
-   tutorials/paramfit
-
-.. toctree::
-   :maxdepth: 1
-   :caption: API
-
-   contents/api_index
+   contents/getting_started
+   contents/user_guide
+   contents/api
