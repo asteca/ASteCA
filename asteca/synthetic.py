@@ -21,6 +21,8 @@ class Synthetic:
     :param isochs: :py:class:`Isochrones <asteca.isochrones.Isochrones>` object with
         the loaded files for the theoretical isochrones
     :type isochs: Isochrones
+    :param def_params: Default values for all the required fundamental parameters
+    :type def_params: dict
     :param ext_law: Extinction law, one of ``CCMO, GAIADR3``.
         If ``GAIADR3`` is selected, the magnitude and first
         color defined in the :py:class:`Isochrones <asteca.isochrones.Isochrones>` and
@@ -54,15 +56,26 @@ class Synthetic:
     def __init__(
         self,
         isochs: Isochrones,
+        def_params: dict = {
+            "met": 0.0152,
+            "loga": 8.0,
+            "alpha": 0.09,
+            "beta": 0.94,
+            "Rv": 3.1,
+            "DR": 0.0,
+            "Av": 0.2,
+            "dm": 9.0,
+        },
         ext_law: str = "CCMO",
         DR_distribution: str = "uniform",
         IMF_name: str = "chabrier_2014",
-        max_mass: int = 20_000,
+        max_mass: int = 10_000,
         gamma: float | str = "D&K",
         seed: int | None = None,
         verbose: int = 1,
     ) -> None:
         self.isochs = isochs
+        self.def_params = def_params
         self.ext_law = ext_law
         self.DR_distribution = DR_distribution
         self.IMF_name = IMF_name
@@ -162,11 +175,20 @@ class Synthetic:
         # Store for internal usage
         self.met_age_dict = self.isochs.met_age_dict
 
+        # Check that the ranges are respected
+        for par in ("met", "loga"):
+            pmin, pmax = min(self.met_age_dict[par]), max(self.met_age_dict[par])
+            if self.def_params[par] < pmin or self.def_params[par] > pmax:
+                warnings.warn(
+                    f"Parameter {par}={self.def_params[par]} is out of range: [{pmin} - {pmax}]"
+                )
+
+        self._vp(f"Default params : {self.def_params}", 1)
+        self._vp(f"Extinction law : {self.ext_law}", 1)
+        self._vp(f"Diff reddening : {self.DR_distribution}", 1)
         self._vp(f"IMF            : {self.IMF_name}", 1)
         self._vp(f"Max init mass  : {self.max_mass}", 1)
         self._vp(f"Gamma dist     : {self.gamma}", 1)
-        self._vp(f"Extinction law : {self.ext_law}", 1)
-        self._vp(f"Diff reddening : {self.DR_distribution}", 1)
         self._vp(f"Random seed    : {self.seed}", 1)
         self._vp("Synthetic clusters object generated")
 
@@ -232,22 +254,6 @@ class Synthetic:
         self.mag = cluster.mag
         self.colors = cluster.colors
 
-        # # Check that the ranges are respected
-        # for par in ("met", "loga"):
-        #     if par not in self.fix_params.keys():
-        #         N_par = len(self.met_age_dict[par])
-        #         if N_par == 1:
-        #             raise ValueError(
-        #                 f"Parameter '{par}' is not fixed and its range is limited to "
-        #                 + f"a single value: {self.met_age_dict[par]}"
-        #             )
-        #     else:
-        #         pmin, pmax = min(self.met_age_dict[par]), max(self.met_age_dict[par])
-        #         if self.fix_params[par] < pmin or self.fix_params[par] > pmax:
-        #             raise ValueError(
-        #                 f"Parameter {par}={self.fix_params[par]} out of range: [{pmin} - {pmax}]"
-        #             )
-
     def generate(self, params: dict, N_stars: int = 100) -> np.ndarray:
         """Generate a synthetic cluster.
 
@@ -282,10 +288,14 @@ class Synthetic:
             N_synth_stars = int(N_stars)
             err_dist_synth = []
 
+        # Combine `params` with default parameter values in `def_params`, updating
+        # duplicated values with those in `params`
+        fit_params = self.def_params | params
+
         # Return proper values for fixed parameters and parameters required
         # for the (z, log(age)) isochrone averaging.
         met, loga, alpha, beta, av, dr, rv, dm, ml, mh, al, ah = scp.properModel(
-            self.met_age_dict, params
+            self.met_age_dict, fit_params
         )
 
         # Generate a weighted average isochrone from the (z, log(age)) values in
@@ -306,7 +316,7 @@ class Synthetic:
         isoch_moved = scp.move_isochrone(isochrone, self.m_ini_idx, dm)
 
         binar_flag = True
-        if params["alpha"] == 0.0 and params["beta"] == 0.0:
+        if fit_params["alpha"] == 0.0 and fit_params["beta"] == 0.0:
             binar_flag = False
 
         # Apply extinction correction
@@ -372,8 +382,8 @@ class Synthetic:
         :param N_models: Number of sampled models, defaults to ``200``
         :type N_models: int
 
-        :raises ValueError: If any of the (met, age) parameters are out of range
-        :raises ValueError: If all the synthetic arrays generated are empty
+        :raises ValueError: If any of the (met, age) parameters are out of range or
+            if all the synthetic arrays generated are empty
         """
         if hasattr(self, "mag") is False or hasattr(self, "colors") is False:
             raise ValueError(
@@ -383,15 +393,22 @@ class Synthetic:
 
         from .modules import mass_binary as mb
 
+        # Update dictionaries with default values, if required
+        model = self.def_params | model
+        for k in self.def_params.keys():
+            if k not in model_std.keys():
+                model_std[k] = 0
+
+        pars_k = ("met", "loga", "alpha", "beta", "Rv", "DR", "Av", "dm")
         self._vp("\nGenerate synthetic models...", 1)
         self._vp(
             "Model          :"
-            + ", ".join(f"{k}: {round(v, 3)}" for k, v in model.items()),
+            + ", ".join(f"{k}: {round(model[k], 4)}" for k in pars_k),
             2,
         )
         self._vp(
             "Model STDDEV   :"
-            + ", ".join(f"{k}: {round(v, 3)}" for k, v in model_std.items()),
+            + ", ".join(f"{k}: {round(model_std[k], 4)}" for k in pars_k),
             2,
         )
 
@@ -459,6 +476,7 @@ class Synthetic:
             their uncertainties, and their probability of being a binary system
         :rtype: dict
 
+        :raises ValueError: If the `get_models()` method was not previously called
         """
         if hasattr(self, "sampled_synthcls") is False:
             raise ValueError(
@@ -521,6 +539,8 @@ class Synthetic:
 
         :return: Distribution of total binary fraction values for the cluster
         :rtype: np.ndarray
+
+        :raises ValueError: If the `get_models()` method was not previously called
         """
         if hasattr(self, "sampled_synthcls") is False:
             raise ValueError(
@@ -729,9 +749,6 @@ class Synthetic:
         The isochrone is generated using the fundamental parameter values
         given in the ``fit_params`` dictionary.
 
-        :param synth: :py:class:`Synthetic <asteca.synthetic.Synthetic>` object with the
-            data required to generate synthetic clusters
-        :type synth: Synthetic
         :param fit_params: Dictionary with the values for the fundamental parameters
             that were **not** included in the ``fix_params`` dictionary when the
             :py:class:`Synthetic` object was calibrated (:py:meth:`calibrate` method).
