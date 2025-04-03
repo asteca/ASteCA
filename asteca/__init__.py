@@ -2,18 +2,18 @@ import importlib.metadata
 from contextlib import suppress
 from pathlib import Path
 
-from .cluster import Cluster as cluster
-from .isochrones import Isochrones as isochrones
-from .likelihood import Likelihood as likelihood
-from .membership import Membership as membership
-from .synthetic import Synthetic as synthetic
+from .cluster import Cluster
+from .isochrones import Isochrones
+from .likelihood import Likelihood
+from .membership import Membership
+from .synthetic import Synthetic
 
 __all__ = [
-    "cluster",
-    "membership",
-    "isochrones",
-    "synthetic",
-    "likelihood",
+    "Cluster",
+    "Membership",
+    "Isochrones",
+    "Synthetic",
+    "Likelihood",
 ]
 
 
