@@ -518,8 +518,6 @@ def properModel(
 
     :param met_age_dict: Dictionary of metallicity and age values.
     :type met_age_dict: dict
-    :param fix_params: Dictionary of fixed parameters.
-    :type fix_params: dict
     :param fit_params: Dictionary of fitted parameters.
     :type fit_params: dict
 
@@ -1099,8 +1097,8 @@ def binarity(
     if binar_flag is False:
         # Update the binary systems' masses so that the secondary masses for
         # SINGLE systems are identified with a 'nan' value.
-        isoch_mass[m_ini_idx+1] = np.nan
-        return isoch_mass[:m_ini_idx + 2]
+        isoch_mass[m_ini_idx + 1] = np.nan
+        return isoch_mass[: m_ini_idx + 2]
 
     Ns = isoch_mass.shape[-1]
     mass = isoch_mass[m_ini_idx]
@@ -1127,10 +1125,10 @@ def binarity(
 
     # Update the binary systems' masses so that the secondary masses for
     # SINGLE systems are identified with a 'nan' value.
-    isoch_mass[m_ini_idx+1][~bin_indxs] = np.nan
+    isoch_mass[m_ini_idx + 1][~bin_indxs] = np.nan
 
     # Return [mag, c1, (c2), mass, mass_b]
-    return isoch_mass[:m_ini_idx + 2]
+    return isoch_mass[: m_ini_idx + 2]
 
 
 def add_errors(isoch_binar: np.ndarray, err_dist: list[np.ndarray]) -> np.ndarray:
