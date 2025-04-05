@@ -77,25 +77,6 @@ def get_m1m2(
     return m1_obs, m2_obs
 
 
-def get_bpr(isoch: np.ndarray, idxs: np.ndarray) -> float:
-    """Calculate the binary fraction for the observed cluster.
-
-    :param isoch: Isochrone data.
-    :type isoch: np.ndarray
-    :param idxs: Indexes of the closest synthetic stars.
-    :type idxs: np.ndarray
-
-    :return: Binary fraction.
-    :rtype: float
-    """
-    mass_2 = isoch[-1]
-    m2_obs = mass_2[idxs]
-    m2_msk = ~np.isnan(m2_obs)
-    b_fr = m2_msk.sum() / len(m2_obs)
-
-    return b_fr
-
-
 def galactic_coords(
     sampled_models: list[dict],
     radec_c: tuple[float, float],
