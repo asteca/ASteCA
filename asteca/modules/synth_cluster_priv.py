@@ -572,14 +572,14 @@ def zaWAverage(
 
     theor_tracks = [m1, m2, .., mN]
     mX = [age1, age2, ..., ageM]
-    ageX = [f1,.., c1, c2,.., M_ini, f1b,.., c1b, c2b,.., M_b]
+    ageX = [f1,.., c1, (c2), M_ini, M_b, f1b,.., c1b, (c2b)]
     where:
     fX:  individual filters (mags)
     cX:  colors
     M_ini: initial mass
+    M_b:  binary masses
     fXb: filters with binary data
     cXb: colors with the binary data
-    M_b:  binary masses
 
     It is important that the returned isochrone is a *copy* of the
     theor_tracks[mx][ax] array if no averaging is done. Otherwise the
@@ -661,40 +661,26 @@ def zaWAverage(
     idx = np.argmin(dist)
     isochrone[m_ini_idx] = isochs[idx][m_ini_idx]
     # Now for the secondary masses
-    isochrone[-1] = isochs[idx][-1]
+    isochrone[m_ini_idx + 1] = isochs[idx][m_ini_idx + 1]
 
-    # met_idx = np.array([ml, mh, ml, mh])[idx]
-    # age_idx = np.array([al, ah, al, ah])[idx]
-
-    # isochrone = theor_tracks[ml][al] * weights[0] +\
-    #     theor_tracks[ml][ah] * weights[1] +\
-    #     theor_tracks[mh][al] * weights[2] +\
-    #     theor_tracks[mh][ah] * weights[3]
-
-    # #
-    # isochrone = np.average(isochs, weights=weights, axis=0)
-
-    # idxs = (weights * mass_idx).astype(int)
-    # # Order: (z1, a1), (z1, a2), (z2, a1), (z2, a2)
-    # isochrone = np.concatenate([
-    #     theor_tracks[ml][al][:, :idxs[0]],
-    #     theor_tracks[ml][ah][:, idxs[0]:idxs[0] + idxs[1]],
-    #     theor_tracks[mh][al][:, idxs[0] + idxs[1]:idxs[0] + idxs[1] + idxs[2]],
-    #     theor_tracks[mh][ah][:, idxs[0] + idxs[1] + idxs[2]:mass_idx]],
-    #     axis=1)
-
+    #
+    #
+    #
     # import matplotlib.pyplot as plt
+
     # print(z_model, a_model, ml, mh, al, ah)
     # plt.subplot(121)
-    # plt.scatter(*pts.T, c='r')
-    # plt.scatter(z_model, a_model, marker='x', c='g')
+    # plt.scatter(*pts.T, c="r")
+    # plt.scatter(z_model, a_model, marker="x", c="g")
     # # First color
     # plt.subplot(122)
-    # plt.scatter(theor_tracks[ml][al][1], theor_tracks[ml][al][0], c='b', alpha=.25)
-    # plt.scatter(theor_tracks[ml][ah][1], theor_tracks[ml][ah][0], c='r', alpha=.25)
-    # plt.scatter(theor_tracks[mh][al][1], theor_tracks[mh][al][0], c='cyan', alpha=.25)
-    # plt.scatter(theor_tracks[mh][ah][1], theor_tracks[mh][ah][0], c='orange', alpha=.25)
-    # plt.scatter(isochrone[1], isochrone[0], c='k', marker='x', alpha=.5, label='avrg')
+    # plt.scatter(theor_tracks[ml][al][1], theor_tracks[ml][al][0], c="b", alpha=0.2)
+    # plt.scatter(theor_tracks[ml][ah][1], theor_tracks[ml][ah][0], c="r", alpha=0.2)
+    # plt.scatter(theor_tracks[mh][al][1], theor_tracks[mh][al][0], c="cyan", alpha=0.2)
+    # plt.scatter(
+    #     theor_tracks[mh][ah][1], theor_tracks[mh][ah][0], c="orange", alpha=0.2
+    # )
+    # plt.scatter(isochrone[1], isochrone[0], c="k", marker="x", alpha=0.5, label="avrg")
     # plt.gca().invert_yaxis()
     # plt.legend()
     # # Second color
@@ -753,7 +739,7 @@ def extinction(
 
     The distance modulus was applied before this function.
 
-    isochrone = [mag, c1, (c2), .., Mini, mag_b, c1b, .., Mini_b]
+    isochrone = [mag, c1, (c2), Mini, Mini_b, mag_b, c1b, (c2b)]
 
     For the CCMO model:
 
@@ -842,14 +828,14 @@ def extinction(
         raise ValueError(f"Unknown extinction law: {ext_law}")
 
     Ax = ec_mag * Av_dr
-    isochrone[0] += Ax
+    isochrone[0] += Ax  # Magnitude
     Ex1 = ec_col1 * Av_dr
-    isochrone[1] += Ex1
+    isochrone[1] += Ex1  # First color
 
     # Move binary data.
     if binar_flag:
-        isochrone[m_ini_idx + 2] += Ax  # Magnitude
-        isochrone[m_ini_idx + 3] += Ex1  # First color
+        isochrone[m_ini_idx + 2] += Ax  # Magnitude (binary system)
+        isochrone[m_ini_idx + 3] += Ex1  # First color (binary system)
 
     # Second color
     if len(ext_coefs) > 2:
@@ -860,7 +846,7 @@ def extinction(
         isochrone[2] += Ex2
         # Move color with binary data.
         if binar_flag:
-            isochrone[m_ini_idx + 4] += Ex2
+            isochrone[m_ini_idx + 4] += Ex2  # Second color (binary system)
 
     return isochrone
 
