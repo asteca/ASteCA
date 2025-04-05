@@ -385,12 +385,6 @@ class Synthetic:
         :raises ValueError: If any of the (met, age) parameters are out of range or
             if all the synthetic arrays generated are empty
         """
-        if hasattr(self, "mag") is False or hasattr(self, "colors") is False:
-            raise ValueError(
-                "This method requires the previous application of the calibrate()\n"
-                + "method with an observed 'cluster' object"
-            )
-
         from .modules import mass_binary as mb
 
         # Update dictionaries with default values, if required
@@ -423,8 +417,10 @@ class Synthetic:
             except KeyError:
                 pass
 
+        # Generate random model parameter values
         sampled_models = mb.ranModels(model, model_std, N_models, self.rng)
 
+        # Generate the synthetic arrays using the above models
         sampled_models_no_empty, sampled_synthcls = [], []
         for i, smodel in enumerate(sampled_models):
             isoch = self.generate(smodel)
@@ -444,28 +440,10 @@ class Synthetic:
 
         # cluster_masses
         self.sampled_models = sampled_models_no_empty
-        # stellar_masses, cluster_masses, binary_fraction
+        # stellar_masses, cluster_masses
         self.sampled_synthcls = sampled_synthcls
+
         self._vp(f"N_models       : {len(sampled_models_no_empty)}", 1)
-
-        # Observed photometry
-        obs_phot = np.array([self.mag] + [_ for _ in self.colors])
-        # Replace nans in mag and colors to avoid crashing KDTree()
-        nan_msk = np.full(obs_phot.shape[1], False)
-        for ophot in obs_phot:
-            nan_msk = nan_msk | np.isnan(ophot)
-        obs_phot[:, nan_msk] = -10.0
-        obs_phot = obs_phot.T
-
-        close_stars_idxs = []
-        for isoch in sampled_synthcls:
-            close_stars_idxs.append(mb.get_close_idxs(self.m_ini_idx, obs_phot, isoch))
-
-        # stellar_masses, binary_fraction
-        self.close_stars_idxs = close_stars_idxs
-        # stellar_masses
-        self.obs_nan_msk = nan_msk
-
         self._vp("Attributes stored in Synthetic object", 1)
 
     def stellar_masses(self) -> dict:
@@ -478,6 +456,12 @@ class Synthetic:
 
         :raises ValueError: If the `get_models()` method was not previously called
         """
+        if hasattr(self, "mag") is False or hasattr(self, "colors") is False:
+            raise ValueError(
+                "This method requires running the calibrate() method first\n"
+                + "with an observed 'cluster' object"
+            )
+
         if hasattr(self, "sampled_synthcls") is False:
             raise ValueError(
                 "This method requires running the get_models() method first"
@@ -485,11 +469,24 @@ class Synthetic:
 
         from .modules import mass_binary as mb
 
+        # Observed photometry
+        obs_phot = np.array([self.mag] + [_ for _ in self.colors])
+        # Replace nans in mag and colors to avoid crashing KDTree()
+        nan_msk = np.full(obs_phot.shape[1], False)
+        for ophot in obs_phot:
+            nan_msk = nan_msk | np.isnan(ophot)
+        obs_phot[:, nan_msk] = -10.0
+        obs_phot = obs_phot.T
+
+        #
+        close_stars_idxs = []
+        for isoch in self.sampled_synthcls:
+            close_stars_idxs.append(mb.get_close_idxs(self.m_ini_idx, obs_phot, isoch))
+
+        #
         m12_masses = []
         for i, isoch in enumerate(self.sampled_synthcls):
-            m1_obs, m2_obs = mb.get_m1m2(
-                self.m_ini_idx, isoch, self.close_stars_idxs[i]
-            )
+            m1_obs, m2_obs = mb.get_m1m2(self.m_ini_idx, isoch, close_stars_idxs[i])
             m12_masses.append([m1_obs, m2_obs])
         m12_masses = np.array(m12_masses)
 
@@ -504,7 +501,10 @@ class Synthetic:
             m2_med = np.min([m1_med, m2_med], 0)
             m2_std = np.nanstd(m12_masses[:, 1, :], 0)
 
-        # Binary probability per star
+        # Binary probability per observed star. Check how many times the secondary mass
+        # of an observed star was assigned a value 'not np.nan', i.e.: was identified
+        # as a binary system. Dividing this value by the number of synthetic models
+        # used, results in the per observed star probability of being a binary system.
         binar_prob = (~np.isnan(m12_masses[:, 1, :])).sum(0) / m12_masses.shape[0]
 
         # Store as dictionary
@@ -517,7 +517,6 @@ class Synthetic:
         }
 
         # Assign all nans to stars with a photometric nan in any dimension
-        nan_msk = self.obs_nan_msk
         for value in data.values():
             value[nan_msk] = np.nan
 
@@ -534,29 +533,37 @@ class Synthetic:
 
     def binary_fraction(
         self,
-    ) -> np.ndarray:
-        """Estimate the total binary fraction for the observed cluster.
+        binar_prob: np.ndarray,
+        Nsamples: int = 10_000,
+    ) -> tuple[float, float]:
+        """Estimate the total binary fraction for the observed cluster, given
+        the per-star probability of being a binary system.
 
-        :return: Distribution of total binary fraction values for the cluster
-        :rtype: np.ndarray
+        :param binar_prob: Per-star binary system probabilities
+        :type binar_prob: np.ndarray
+        :param Nsamples: Number of samples generated to produce the final values;
+            defaults to ``10_000``.
+        :type Nsamples: int
+
+        :return: Median and STDDEV values for the total binary fraction
+        :rtype: tuple[float, float]
 
         :raises ValueError: If the `get_models()` method was not previously called
         """
-        if hasattr(self, "sampled_synthcls") is False:
-            raise ValueError(
-                "This method requires running the get_models() method first"
-            )
+        if binar_prob.min() < 0.0 or binar_prob.max() > 1.0:
+            raise ValueError("The values in 'binar_prob' must be in the range [0, 1]")
 
-        from .modules import mass_binary as mb
+        # Calculates the fraction of stars that are binaries for Nsamples random samples
+        N_stars = len(binar_prob)
+        # Observe systems (Nsamples) and store how many are single/binaries
+        b_fr_vals = self.rng.random((Nsamples, N_stars)) < binar_prob
+        # Average the binary fraction for each observation
+        b_fr_sum = np.sum(b_fr_vals, axis=1) / N_stars
+        # Return the median and STDDEV values
+        bfr_med, bfr_std = np.median(b_fr_sum), np.std(b_fr_sum)
+        self._vp(f"Binary fraction: {bfr_med:.3f} +/- {bfr_std:.3f}", 1)
 
-        b_fr_all = []
-        for i, isoch in enumerate(self.sampled_synthcls):
-            b_fr = mb.get_bpr(isoch, self.close_stars_idxs[i])
-            b_fr_all.append(b_fr)
-
-        self._vp("\nDistribution of binary fractions estimated", 1)
-
-        return np.array(b_fr_all)
+        return float(bfr_med), float(bfr_std)
 
     def cluster_masses(
         self,
@@ -650,12 +657,6 @@ class Synthetic:
             )
 
         from .modules import mass_binary as mb
-
-        if len(self.sampled_models) == 0:
-            raise ValueError(
-                "No models were generated. Run the `get_models()` method before "
-                + "estimating the cluster masses."
-            )
 
         # Number of observed stars
         N_obs = len(self.mag)
