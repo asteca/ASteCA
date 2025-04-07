@@ -608,6 +608,10 @@ def zaWAverage(
     :returns: Weighted isochrone.
     :rtype: np.ndarray
     """
+    # Distances between the (z, a) points in the 'model', and the four
+    # points in the (z, a) grid that contain the model point.
+    # Fast euclidean distance: https://stackoverflow.com/a/47775357/1391441
+
     # The four points in the (z, age) grid that define the box that contains
     # the model value (z_model, a_model)
     z1 = met_age_dict["met"][ml]
@@ -615,47 +619,37 @@ def zaWAverage(
     a1 = met_age_dict["loga"][al]
     a2 = met_age_dict["loga"][ah]
     pts = np.array([(z1, a1), (z1, a2), (z2, a1), (z2, a2)])
-
-    # Order: (z1, a1), (z1, a2), (z2, a1), (z2, a2)
-    isochs = np.array(
-        [
-            theor_tracks[ml][al],
-            theor_tracks[ml][ah],
-            theor_tracks[mh][al],
-            theor_tracks[mh][ah],
-        ]
-    )
-
-    # Distances between the (z, a) points in the 'model', and the four
-    # points in the (z, a) grid that contain the model point.
-    # Fast euclidean distance: https://stackoverflow.com/a/47775357/1391441
     a_min_b = np.array([(z_model, a_model)]) - pts
+
     # Don't take the square root, it's not necessary
     dist = np.einsum("ij,ij->i", a_min_b, a_min_b)
 
     # Index to the minimum dist value
     idx_dist_min = np.argmin(dist)
+    ma = ((ml, al), (ml, ah), (mh, al), (mh, ah))
+    # Index to the corresponding (z, a) indexes
+    m0, a0 = ma[idx_dist_min]
 
     # If the model has a 0. distance to the closest isochrone, return that isochrone
     if dist[idx_dist_min] == 0.0:
-        return isochs[idx_dist_min]
+        return np.array(theor_tracks[m0][a0])
 
     # Weighted average by the (inverse) distance to the four (z, a) grid
     # points. This way is faster than using 'np.average()'.
     inv_d = 1.0 / dist  # Inverse of the distance.
     weights = inv_d / sum(inv_d)  # Weights
     isochrone = (
-        isochs[0] * weights[0]
-        + isochs[1] * weights[1]
-        + isochs[2] * weights[2]
-        + isochs[3] * weights[3]
+        theor_tracks[ml][al] * weights[0]
+        + theor_tracks[ml][ah] * weights[1]
+        + theor_tracks[mh][al] * weights[2]
+        + theor_tracks[mh][ah] * weights[3]
     )
 
     # DO NOT average the masses or their distribution will be lost. We use the
     # mass values from the closest isochrone.
-    isochrone[m_ini_idx] = isochs[idx_dist_min][m_ini_idx]
+    isochrone[m_ini_idx] = theor_tracks[m0][a0][m_ini_idx]
     # Now for the secondary masses
-    isochrone[m_ini_idx + 1] = isochs[idx_dist_min][m_ini_idx + 1]
+    isochrone[m_ini_idx + 1] = theor_tracks[m0][a0][m_ini_idx + 1]
 
     return isochrone
 
