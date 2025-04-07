@@ -298,19 +298,24 @@ class Synthetic:
             self.met_age_dict, fit_params
         )
 
-        # Generate a weighted average isochrone from the (z, log(age)) values in
-        # the 'model'.
-        isochrone = scp.zaWAverage(
-            self.theor_tracks,
-            self.met_age_dict,
-            self.m_ini_idx,
-            met,
-            loga,
-            ml,
-            mh,
-            al,
-            ah,
-        )
+        # If (z, a) are both fixed, use the single processed isochrone
+        if ml == al == mh == ah == 0:
+            # The np.array() is important to avoid overwriting 'theor_tracks'
+            isochrone = np.array(self.theor_tracks[0][0])
+        else:
+            # Generate a weighted average isochrone from the (z, log(age)) values in
+            # the 'model'.
+            isochrone = scp.zaWAverage(
+                self.theor_tracks,
+                self.met_age_dict,
+                self.m_ini_idx,
+                met,
+                loga,
+                ml,
+                mh,
+                al,
+                ah,
+            )
 
         # Move theoretical isochrone using the distance modulus
         isoch_moved = scp.move_isochrone(isochrone, self.m_ini_idx, dm)
@@ -338,6 +343,7 @@ class Synthetic:
         isoch_cut = scp.cut_max_mag(isoch_extin, max_mag_syn)
         if not isoch_cut.any():
             return np.array([])
+
         # This is an internal trick to return the array at this point. It is used
         # to generate an isochrone to plot
         if N_stars == -1:
