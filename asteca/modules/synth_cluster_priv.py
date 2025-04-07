@@ -511,13 +511,15 @@ def mag_combine(m1: np.ndarray, m2: np.ndarray) -> np.ndarray:
 
 
 def properModel(
-    met_age_dict: dict, fit_params: dict
+    met_age_dict: dict, def_params: dict, fit_params: dict
 ) -> tuple[float, float, float, float, float, float, float, float, int, int, int, int]:
     """Define the 'proper' model with values for (z, a) taken from its grid,
     and filled values for those parameters that are fixed.
 
     :param met_age_dict: Dictionary of metallicity and age values.
     :type met_age_dict: dict
+    :param def_params: Dictionary of default parameters.
+    :type def_params: dict
     :param fit_params: Dictionary of fitted parameters.
     :type fit_params: dict
 
@@ -527,6 +529,10 @@ def properModel(
     :rtype: tuple[float, float, float, float, float, float, float, float, int, int, int, int]
 
     """
+    # Combine `fit_params` with default parameter values in `def_params`, updating
+    # duplicated values with those in `fit_params`
+    fit_params = def_params | fit_params
+
     model_full = np.array(
         [
             fit_params[k]

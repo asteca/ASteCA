@@ -288,14 +288,10 @@ class Synthetic:
             N_synth_stars = int(N_stars)
             err_dist_synth = []
 
-        # Combine `params` with default parameter values in `def_params`, updating
-        # duplicated values with those in `params`
-        fit_params = self.def_params | params
-
         # Return proper values for fixed parameters and parameters required
         # for the (z, log(age)) isochrone averaging.
         met, loga, alpha, beta, av, dr, rv, dm, ml, mh, al, ah = scp.properModel(
-            self.met_age_dict, fit_params
+            self.met_age_dict, self.def_params, params
         )
 
         # If (z, a) are both fixed, use the single processed isochrone
@@ -321,7 +317,7 @@ class Synthetic:
         isoch_moved = scp.move_isochrone(isochrone, self.m_ini_idx, dm)
 
         binar_flag = True
-        if fit_params["alpha"] == 0.0 and fit_params["beta"] == 0.0:
+        if alpha == 0.0 and beta == 0.0:
             binar_flag = False
 
         # Apply extinction correction
