@@ -527,11 +527,6 @@ def properModel(
     :rtype: tuple[float, float, float, float, float, float, float, float, int, int, int, int]
 
     """
-    # # If any parameter is repeated in both dictionaries, this order gives priority
-    # # to the 'fix_params' dict, in the sense that its values will be the ones
-    # # written to 'model_comb'
-    # model_comb = fit_params | fix_params
-
     model_full = np.array(
         [
             fit_params[k]
@@ -607,16 +602,12 @@ def zaWAverage(
     :returns: Weighted isochrone.
     :rtype: np.ndarray
     """
-
-    # If (z, a) are both fixed, just return the single processed isochrone
-    if ml == al == mh == ah == 0:
-        # The np.array() is important to avoid overwriting 'theor_tracks'
-        return np.array(theor_tracks[ml][al])
-
     # The four points in the (z, age) grid that define the box that contains
     # the model value (z_model, a_model)
-    z1, z2 = met_age_dict["met"][ml], met_age_dict["met"][mh]
-    a1, a2 = met_age_dict["loga"][al], met_age_dict["loga"][ah]
+    z1 = met_age_dict["met"][ml]
+    z2 = met_age_dict["met"][mh]
+    a1 = met_age_dict["loga"][al]
+    a2 = met_age_dict["loga"][ah]
     pts = np.array([(z1, a1), (z1, a2), (z2, a1), (z2, a2)])
 
     # Order: (z1, a1), (z1, a2), (z2, a1), (z2, a2)
@@ -636,19 +627,17 @@ def zaWAverage(
     # Don't take the square root, it's not necessary
     dist = np.einsum("ij,ij->i", a_min_b, a_min_b)
 
-    # If the model has a 0. distance in (z, a) to the closest isochrone,
-    # then just return that isochrone.
-    try:
-        idx = np.where(dist == 0.0)[0][0]
-        return isochs[idx]
-    except IndexError:
-        pass
+    # Index to the minimum dist value
+    idx_dist_min = np.argmin(dist)
+
+    # If the model has a 0. distance to the closest isochrone, return that isochrone
+    if dist[idx_dist_min] == 0.0:
+        return isochs[idx_dist_min]
 
     # Weighted average by the (inverse) distance to the four (z, a) grid
     # points. This way is faster than using 'np.average()'.
-    # Inverse of the distance.
-    inv_d = 1.0 / dist
-    weights = inv_d / sum(inv_d)
+    inv_d = 1.0 / dist  # Inverse of the distance.
+    weights = inv_d / sum(inv_d)  # Weights
     isochrone = (
         isochs[0] * weights[0]
         + isochs[1] * weights[1]
@@ -657,11 +646,12 @@ def zaWAverage(
     )
 
     # DO NOT average the masses or their distribution will be lost. We use the
-    # values of the closest isochrone.
-    idx = np.argmin(dist)
-    isochrone[m_ini_idx] = isochs[idx][m_ini_idx]
+    # mass values from the closest isochrone.
+    isochrone[m_ini_idx] = isochs[idx_dist_min][m_ini_idx]
     # Now for the secondary masses
-    isochrone[m_ini_idx + 1] = isochs[idx][m_ini_idx + 1]
+    isochrone[m_ini_idx + 1] = isochs[idx_dist_min][m_ini_idx + 1]
+
+    return isochrone
 
     #
     #
@@ -693,8 +683,6 @@ def zaWAverage(
     # # plt.gca().invert_yaxis()
     # plt.show()
     # # breakpoint()
-
-    return isochrone
 
 
 def move_isochrone(isochrone: np.ndarray, m_ini_idx: int, dm: float) -> np.ndarray:
