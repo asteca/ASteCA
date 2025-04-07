@@ -187,16 +187,15 @@ class Cluster:
         """Estimate center coordinates for the cluster
 
         Use the available data (ra, dec, pmra, pmde, plx) to estimate a cluster's
-        center coordinates as the point of maximum density. Methods:
+        center coordinates as the point(s) of maximum density. Algorithms:
 
-        ``knn_5d``: Estimates the 5-dimensional center values (in
-            ``ra, dec, pmra, pmde, plx``) as the median position of the k
-            (``k=N_clust_min``) stars with the largest nearest-neighbor density to a
-            5D center value that can be either given (fully or partially) or estimated.
-
-        ``kde_2d``: Estimates the 2-dimensional center values (either in ``(ra, dec)``
-            or in ``(pmra, pmde)``; determined by the ``data_2d`` argument) using a
-            Kernel Density Estimator (KDE).
+        - ``knn_5d``: Estimates the 5-dimensional center values (in
+          ``ra, dec, pmra, pmde, plx``) as the median position of the k
+          (``k=N_clust_min``) stars with the largest nearest-neighbor density to a
+          5D center value that can be either given (fully or partially) or estimated.
+        - ``kde_2d``: Estimates the 2-dimensional center values (either in ``(ra, dec)``
+          or in ``(pmra, pmde)``; determined by the ``data_2d`` argument) using a
+          Kernel Density Estimator (KDE).
 
         :param algo: Algorithm used to estimate center values, one of
             (``knn_5d``, ``kde_2d``), defaults to ``knn_5d``
@@ -337,7 +336,7 @@ class Cluster:
     #     self.radius = radius
 
     def get_nmembers(self, algo: str = "ripley", eq_to_gal: bool = True) -> None:
-        """Estimate the number of members for the cluster
+        """Estimate the number of members for the cluster. Algorithms:
 
         - ``ripley``: Originally introduced with the ``fastMP`` membership method
           in `Perren et al.
