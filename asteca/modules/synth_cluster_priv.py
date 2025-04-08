@@ -651,19 +651,17 @@ def zaWAverage(
     # Now for the secondary masses
     isochrone[m_ini_idx + 1] = theor_tracks[m0][a0][m_ini_idx + 1]
 
-    return isochrone
-
-    #
-    #
-    #
+    # #
+    # #
+    # #
     # import matplotlib.pyplot as plt
 
-    # print(z_model, a_model, ml, mh, al, ah)
-    # plt.subplot(121)
-    # plt.scatter(*pts.T, c="r")
-    # plt.scatter(z_model, a_model, marker="x", c="g")
-    # # First color
-    # plt.subplot(122)
+    # # print(z_model, a_model, ml, mh, al, ah)
+    # # plt.subplot(121)
+    # # plt.scatter(*pts.T, c="r")
+    # # plt.scatter(z_model, a_model, marker="x", c="g")
+    # # # First color
+    # # plt.subplot(122)
     # plt.scatter(theor_tracks[ml][al][1], theor_tracks[ml][al][0], c="b", alpha=0.2)
     # plt.scatter(theor_tracks[ml][ah][1], theor_tracks[ml][ah][0], c="r", alpha=0.2)
     # plt.scatter(theor_tracks[mh][al][1], theor_tracks[mh][al][0], c="cyan", alpha=0.2)
@@ -683,6 +681,8 @@ def zaWAverage(
     # # plt.gca().invert_yaxis()
     # plt.show()
     # # breakpoint()
+
+    return isochrone
 
 
 def move_isochrone(isochrone: np.ndarray, m_ini_idx: int, dm: float) -> np.ndarray:
