@@ -427,7 +427,6 @@ def interp_df(
     # Sort data frames
     dfs_sorted = [isoch_dataframes[i] for i in sorted_indexes]
 
-    # Interpolate (if required)
     isochrones = {}
     for i, (met, age) in enumerate(met_age_sorted):
         # Generate entry in dictionary
