@@ -49,7 +49,7 @@ class Isochrones:
         defaults to ``None``
     :type z_to_FeH: float | None
     :param N_interp: Number of interpolation points used to ensure that all isochrones
-        are the same shape, defaults to ``2500``
+        are the same shape, defaults to ``2000``
     :type N_interp: int
     :param parsec_rm_stage_9: If the isochrones are PARSEC, this argument set to
         ``True`` will remove the *post_AGB* stage (label=9) which are still
@@ -81,7 +81,7 @@ class Isochrones:
         color_effl: tuple | None = None,
         color2_effl: tuple | None = None,
         z_to_FeH: float | None = None,
-        N_interp: int = 2500,
+        N_interp: int = 2000,
         parsec_rm_stage_9: bool = True,
         column_names: dict | None = None,
         verbose: int = 1,

@@ -101,6 +101,14 @@ def load(
         cols_keep,
     )
 
+    # N_interp = 10_000 gives excellent photometric results
+    # N_interp = 5000 gives good photometric results
+    # N_interp = 2500 gives reasonable photometric results
+    # N_interp = 2000 gives borderline photometric results (binary artifacts in low mass region)
+    # N_interp = 1000 gives sub-par photometric results
+    # N_interp = 500 gives poor photometric results
+    # Time performance:
+    # 10_000: 1, 5000: 0.74, 2500: 0.63, 2000: 0.59, 1000: 0.53, 500: 0.51
     isochrones = interp_df(N_interp, met_age_vals, isoch_arrays)
 
     isochrones, met_age_arr = merge_ps_massini_check(mass_col, isochrones)
@@ -425,7 +433,26 @@ def interp_df(
     # Sort metallicity and age values
     met_age_sorted = [met_age_vals[i] for i in sorted_indexes]
     # Sort data frames
-    dfs_sorted = [isoch_dataframes[i] for i in sorted_indexes]
+    isochs_sorted = [isoch_arrays[i] for i in sorted_indexes]
+
+    # Interpolate
+    # Uniform distribution
+    # xx = np.linspace(0.0, 1.0, N_interp)
+
+    # More resolution for smaller masses. Helps with the photometric artifacts that
+    # appear with binary systems in the low mass region, when N_interp<5000 is used
+    N1, N2, N3, N4 = (
+        int(0.6 * N_interp),
+        int(0.2 * N_interp),
+        int(0.1 * N_interp),
+        int(0.1 * N_interp),
+    )
+    xx = np.array(
+        list(np.linspace(0.0, 0.25, N1, endpoint=False))
+        + list(np.linspace(0.25, 0.5, N2, endpoint=False))
+        + list(np.linspace(0.5, 0.75, N3, endpoint=False))
+        + list(np.linspace(0.75, 1, N4, endpoint=True))
+    )
 
     isochrones = {}
     for i, (met, age) in enumerate(met_age_sorted):
