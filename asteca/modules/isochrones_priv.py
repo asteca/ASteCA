@@ -440,29 +440,11 @@ def interp_df(
         except KeyError:
             isochrones[met][age] = []
 
-        df = dfs_sorted[i]
-        # Only interpolate if there are extra points to add
-        if len(df) >= N_interp:
-            isoch_interp = df
-        else:
-            # Interpolate
-            xx = np.linspace(0.0, 1.0, N_interp)
-
-            # # Works but the binary sequence is really affected...
-            # N_interp = 1000
-            # N1, N2, N3, N4 = int(.1 * N_interp), int(.2 * N_interp), int(.3 * N_interp), int(.4 * N_interp)
-            # xx = np.array(list(
-            #     np.linspace(.0, .25, N1))
-            #     + list(np.linspace(.25, .5, N2))
-            #     + list(np.linspace(.5, .75, N3))
-            #     + list(np.linspace(.75, 1, N4))
-            # )
-
-            xp = np.linspace(0.0, 1.0, len(df))
-            df_new = {}
-            for col in df.dtype.names:
-                df_new[col] = np.interp(xx, xp, df[col])
-            isoch_interp = df_new
+        isoch = isochs_sorted[i]
+        xp = np.linspace(0.0, 1.0, len(isoch))
+        isoch_interp = {}
+        for col in isoch.dtype.names:
+            isoch_interp[col] = np.interp(xx, xp, isoch[col])
 
         isochrones[met][age].append(isoch_interp)
 
