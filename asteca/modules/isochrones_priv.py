@@ -92,7 +92,7 @@ def load(
 
     # isochrones.shape = (N_photsyst, N_z, N_a, N_interp, N_cols)
     # met_age_arr.shape = (N_photsyst, N_z*N_a, 2)
-    met_age_vals, isoch_dataframes = read(
+    met_age_vals, isoch_arrays = read(
         model,
         parsec_rm_stage_9,
         f_paths,
@@ -101,7 +101,7 @@ def load(
         cols_keep,
     )
 
-    isochrones = interp_df(N_interp, met_age_vals, isoch_dataframes)
+    isochrones = interp_df(N_interp, met_age_vals, isoch_arrays)
 
     isochrones, met_age_arr = merge_ps_massini_check(mass_col, isochrones)
 
@@ -401,7 +401,7 @@ def get_BASTI_z_a_val(full_header: list, met_col: str, age_col: str) -> tuple[st
 def interp_df(
     N_interp: int,
     met_age_vals: list,
-    isoch_dataframes: list[np.ndarray],
+    isoch_arrays: list[np.ndarray],
 ) -> dict:
     """Interpolate the isochrone data.
 
@@ -409,8 +409,8 @@ def interp_df(
     :type N_interp: int
     :param met_age_vals: List of metallicity and ages
     :type met_age_vals: list
-    :param isoch_dataframes: List of isochrones as numpy array
-    :type isoch_dataframes: list[np.ndarray]
+    :param isoch_arrays: List of isochrones as numpy array
+    :type isoch_arrays: list[np.ndarray]
 
     :return: Dictionary of isochrones.
     :rtype: dict
