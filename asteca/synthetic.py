@@ -597,7 +597,6 @@ class Synthetic:
 
     def cluster_masses(
         self,
-        radec_c: tuple[float, float] | None = None,
         rho_amb: float | None = None,
         M_B: float = 2.5e10,
         r_B: float = 0.5e3,
@@ -628,10 +627,6 @@ class Synthetic:
         - ``M_actual = M_obs + M_phot``
         - ``M_init = M_actual + M_evol + M_dyn``
 
-        :param radec_c: Right ascension and declination center coordinates for the
-            cluster. If ``None`` then the ``rho_amb`` must be given; defaults to
-            ``None``.
-        :type radec_c: tuple[float, float] | None
         :param rho_amb: Ambient density. If ``None``, it is estimated using the
             cluster's position and a model for the Galaxy's potential; defaults to
             ``None``.
@@ -673,8 +668,7 @@ class Synthetic:
         :type epsilon: float
 
         :raises ValueError:
-            -if no synthetic models were generated.
-            - if both ``radec_c`` and ``rho_amb`` are ``None``.
+            If no synthetic models were generated via the get_models() method.
 
         :return: Dictionary with the mass distributions for the initial, actual,
             observed, photometric, evolutionary, and dynamical masses:
@@ -688,37 +682,29 @@ class Synthetic:
 
         from .modules import mass_binary as mb
 
-        # Number of observed stars
-        N_obs = len(self.mag)
-        # The number of stars in a synthetic isochrones is not constant so we estimate
+        # The number of stars in the synthetic clusters is not constant so we estimate
         # its median
         N_stars_isoch = int(np.median([np.shape(_)[-1] for _ in self.sampled_synthcls]))
         # Compare the number of observed vs generated synthetic stars
-        if N_stars_isoch < N_obs:
+        if N_stars_isoch < self.N_stars_obs:
             warnings.warn(
                 f"\nNumber of synthetic stars ({N_stars_isoch}) is smaller than "
-                + f"observed stars ({N_obs}). Increase the 'max_mass' argument for "
-                + "a more accurate mass estimation"
+                + f"observed stars ({self.N_stars_obs}). Increase the 'max_mass' "
+                + "argument for a more accurate mass estimation"
             )
+
+        # Estimate the center coordinates from the cluster's median values
+        radec_c = (np.median(self.cluster_ra), np.median(self.cluster_dec))  # pyright: ignore
 
         if rho_amb is not None:
             # Input float to array
             rho_amb_arr = np.ones(len(self.sampled_models)) * rho_amb
-            if radec_c is not None:
-                warnings.warn(
-                    "Both 'radec_c' and 'rho_amb' were given. Using 'rho_amb' only."
-                )
         else:
-            if radec_c is not None:
-                # Obtain galactic vertical distance and distance to center
-                Z, R_GC, R_xy = mb.galactic_coords(self.sampled_models, radec_c)
-                rho_amb_arr = mb.ambient_density(
-                    M_B, r_B, M_D, a, b, r_s, M_s, Z, R_GC, R_xy
-                )
-            else:
-                raise ValueError(
-                    "Either the 'radec_c' or 'rho_amb' arguments must be given."
-                )
+            # Obtain galactic vertical distance and distance to center
+            Z, R_GC, R_xy = mb.galactic_coords(self.sampled_models, radec_c)
+            rho_amb_arr = mb.ambient_density(
+                M_B, r_B, M_D, a, b, r_s, M_s, Z, R_GC, R_xy
+            )
 
         masses_all = []
         for i, model in enumerate(self.sampled_models):
