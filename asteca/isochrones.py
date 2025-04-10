@@ -53,7 +53,7 @@ class Isochrones:
     :type N_interp: int
     :param parsec_rm_stage_9: If the isochrones are PARSEC, this argument set to
         ``True`` will remove the *post_AGB* stage (label=9) which are still
-        "`in preparation <http://stev.oapd.inaf.it/cmd_3.7/faq.html>`__", defaults
+        "`in preparation <http://stev.oapd.inaf.it/cmd/faq.html>`__", defaults
         to ``True``
     :type parsec_rm_stage_9: bool
     :param column_names: Column names for the initial mass, metallicity, and age for

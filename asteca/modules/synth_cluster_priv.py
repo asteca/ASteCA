@@ -1012,6 +1012,10 @@ def interp_mass_isoch(
     NOTE: I already tried to speed this block up using numba (@jit(nopython=True))
     but it does not help. The code runs even slower.
 
+    NOTE: this is a stripped down version of scipy.inter1d (kind='linear') which
+    is now legacy code (https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.interp1d.html)
+    Scipy now recommends using np.interp for simple linear interpolation
+
     :param isoch_cut: Isochrone array.
     :type isoch_cut: np.ndarray
     :param mass_ini: Array of initial masses.
