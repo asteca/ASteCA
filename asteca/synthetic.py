@@ -169,7 +169,7 @@ class Synthetic:
                     + "and 'BP-RP', respectively)."
                 )
 
-        # Generate random floats used by `synth_clusters.synthcl_generate()`
+        # Generate random floats used by `generate()`
         self.rand_floats = scp.randVals(self.rng, self.theor_tracks, self.st_dist_mass)
 
         # Store for internal usage
@@ -366,6 +366,14 @@ class Synthetic:
         )
         if not isoch_mass.any():
             return np.array([])
+
+        # import matplotlib.pyplot as plt
+        # # plt.title('2000, steps 1')
+        # plt.title('2000, steps 2')
+        # plt.scatter(isoch_mass[1], isoch_mass[0], alpha=.25)
+        # plt.scatter(isoch_mass[5], isoch_mass[4], alpha=.25)
+        # plt.gca().invert_yaxis()
+        # plt.show()
 
         # Assignment of binarity.
         isoch_binar = scp.binarity(
