@@ -46,7 +46,8 @@ def sample_imf(
 def error_distribution(
     mag: np.ndarray,
     e_mag: np.ndarray,
-    e_colors: list[np.ndarray],
+    e_color: np.ndarray,
+    e_color2: np.ndarray | None,
     rand_norm_vals: np.ndarray,
 ) -> list[np.ndarray]:
     """Extract the magnitude and color(s) uncertainties to use as error model for the
@@ -56,8 +57,10 @@ def error_distribution(
     :type mag: np.ndarray
     :param e_mag: Array of magnitude uncertainties.
     :type e_mag: np.ndarray
-    :param e_colors: List of arrays of color uncertainties.
-    :type e_colors: list[np.ndarray]
+    :param e_color: Array of color uncertainties.
+    :type e_color: np.ndarray
+    :param e_color2: Array of color uncertainties.
+    :type e_color2: np.ndarray | None
     :param rand_norm_vals: Array of random normal values.
     :type rand_norm_vals: np.ndarray
 
@@ -73,7 +76,9 @@ def error_distribution(
     # Replace nan values with interpolated values
     mag = filnans(mag)
     e_mag = filnans(e_mag)
-    e_colors = [filnans(_) for _ in e_colors]
+    e_colors = [filnans(e_color)]
+    if e_color2 is not None:
+        e_colors += [filnans(e_color2)]
 
     # The minus generates reversed sorting in magnitude. This is important so that
     # synthetic clusters with a smaller magnitude range are assigned uncertainties

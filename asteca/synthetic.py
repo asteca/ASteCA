@@ -199,31 +199,42 @@ class Synthetic:
 
     def calibrate(self, cluster: Cluster):
         """Calibrate a :py:class:`Synthetic` object based on a
-        :py:class:`Cluster <asteca.cluster.Cluster>` object .
+        :py:class:`Cluster` object .
 
-        Use the data obtained from your observed cluster stored in the
-        :py:class:`Cluster <asteca.cluster.Cluster>` object, to calibrate a
-        :py:class:`Synthetic` object.
+        Use the data obtained from your observed cluster, stored in the
+        :py:class:`Cluster` object, to calibrate a :py:class:`Synthetic` object.
 
         See the :ref:`synthetic_module` section for more details.
 
-        :param cluster: :py:class:`Cluster <asteca.cluster.Cluster>` object with the
+        :param cluster: :py:class:`Cluster` object with the
             processed data from your observed cluster
         :type cluster: Cluster
 
         :raises ValueError:
-            -If the number of colors defined in the
-            :py:class:`Cluster <asteca.cluster.Cluster>` and
-            :py:class:`Synthetic <asteca.synthetic.Synthetic>` objects do not match
+            - If required are 'Cluster' attributes missing.
+            - If the number of colors defined in the :py:class:`Cluster` and
+              :py:class:`Synthetic` objects do not match
         """
         from .modules import synth_cluster_priv as scp
 
+        for attr in ("mag", "color", "ra", "dec"):
+            if getattr(cluster, attr) is None:
+                raise ValueError(
+                    f"Attribute '{attr}' is required to calibrate 'Cluster' object."
+                )
         if cluster.e_mag is None:
-            raise ValueError("Magnitude uncertainty data 'e_mag' is required.")
+            raise ValueError(
+                "Attribute 'e_mag' is required to calibrate 'Cluster' object."
+            )
+        if cluster.e_color is None:
+            raise ValueError(
+                "Attribute 'e_color' is required to calibrate 'Cluster' object."
+            )
+
         # Check that the number of colors match
         if self.isochs.color2_effl is not None and cluster.color2 is None:
             raise ValueError(
-                "Two colors were defined in 'synthetic' but a single color\n"
+                "Two colors were defined in 'Synthetic' but a single color\n"
                 + "was defined in 'cluster'."
             )
         if self.isochs.color2_effl is None and cluster.color2 is not None:
@@ -234,9 +245,9 @@ class Synthetic:
         if len(cluster.mag) > cluster.N_clust_max:
             raise ValueError(
                 f"The number of stars in this `Cluster` object ({len(cluster.mag)})\n"
-                + f"is larger than the N_clust_max={cluster.N_clust_max} parameter.\n"
+                + f"is larger than the 'N_clust_max={cluster.N_clust_max}' parameter.\n"
                 + "Either define a `Cluster` object with fewer members or increase "
-                + "the N_clust_max value."
+                + "the 'N_clust_max' value."
             )
 
         # Calibrate parameters using the observed cluster
@@ -245,14 +256,18 @@ class Synthetic:
         self.err_dist_obs = scp.error_distribution(
             cluster.mag,
             cluster.e_mag,
-            cluster.e_colors,
+            cluster.e_color,
+            cluster.e_color2,
             self.rand_floats["norm"][1],
         )
 
-        # Used by the `get_models()` method and its result by the `stellar_masses()`
-        # and `binary_fraction()` methods
-        self.mag = cluster.mag
-        self.colors = cluster.colors
+        # Used by the `stellar_masses()` method
+        self.cluster_mag = cluster.mag
+        self.cluster_colors = [cluster.color, cluster.color2]
+
+        # Used by the `cluster_masses()` method
+        self.cluster_ra = cluster.ra
+        self.cluster_dec = cluster.dec
 
     def generate(self, params: dict, N_stars: int = 100) -> np.ndarray:
         """Generate a synthetic cluster.
@@ -458,21 +473,26 @@ class Synthetic:
 
         :raises ValueError: If the `get_models()` method was not previously called
         """
-        if hasattr(self, "mag") is False or hasattr(self, "colors") is False:
+        if (
+            hasattr(self, "cluster_mag") is False
+            or hasattr(self, "cluster_colors") is False
+        ):
             raise ValueError(
-                "This method requires running the calibrate() method first\n"
-                + "with an observed 'cluster' object"
+                "This method requires running the 'calibrate()' method first\n"
+                + "with an observed 'Cluster' object"
             )
 
         if hasattr(self, "sampled_synthcls") is False:
             raise ValueError(
-                "This method requires running the get_models() method first"
+                "This method requires running the 'get_models()' method first"
             )
 
         from .modules import mass_binary as mb
 
         # Observed photometry
-        obs_phot = np.array([self.mag] + [_ for _ in self.colors])
+        if self.cluster_colors[1] is None:
+            self.cluster_colors = [self.cluster_colors[0]]
+        obs_phot = np.array([self.cluster_mag] + [_ for _ in self.cluster_colors])
         # Replace nans in mag and colors to avoid crashing KDTree()
         nan_msk = np.full(obs_phot.shape[1], False)
         for ophot in obs_phot:

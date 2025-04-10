@@ -135,14 +135,12 @@ class Membership:
         if self.my_field.mag is not None:
             X.append(self.my_field.mag)
             e_X.append(self.my_field.e_mag)
-        if self.my_field.colors is not None:
-            X.append(self.my_field.colors[0])
-            e_X.append(self.my_field.e_colors[0])
-            try:
-                X.append(self.my_field.colors[1])
-                e_X.append(self.my_field.e_colors[1])
-            except IndexError:
-                pass
+        if self.my_field.color is not None:
+            X.append(self.my_field.color)
+            e_X.append(self.my_field.e_color)
+        if self.my_field.color2 is not None:
+            X.append(self.my_field.color2)
+            e_X.append(self.my_field.e_color2)
         if self.my_field.plx is not None:
             X.append(self.my_field.plx)
             e_X.append(self.my_field.e_plx)

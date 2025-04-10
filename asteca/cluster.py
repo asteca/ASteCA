@@ -123,22 +123,25 @@ class Cluster:
         if self.color is not None:
             if self.e_color is None:
                 raise ValueError("Color uncertainty is required")
-            self.colors = [np.asarray(self.color, dtype=float)]
-            self.e_colors = [np.asarray(self.e_color, dtype=float)]
+            self.color = np.asarray(self.color, dtype=float)
+            self.e_color = np.asarray(self.e_color, dtype=float)
             cols_read.append("Color")
             cols_read.append("e_color")
-            N_stars_lst.append(len(self.colors[0]))
-            N_stars_lst.append(len(self.e_colors[0]))
+            N_stars_lst.append(len(self.color))
+            N_stars_lst.append(len(self.e_color))
 
-            if self.color2 is not None:
-                if self.e_color2 is None:
-                    raise ValueError("Color2 uncertainty is required")
-                self.colors.append(np.asarray(self.color2, dtype=float))
-                self.e_colors.append(np.asarray(self.e_color2, dtype=float))
-                cols_read.append("Color2")
-                cols_read.append("e_color2")
-                N_stars_lst.append(len(self.colors[1]))
-                N_stars_lst.append(len(self.e_colors[1]))
+        if self.color is None and self.color2 is not None:
+            raise ValueError("Argument 'color' must be defined if 'color2' is defined")
+
+        if self.color2 is not None:
+            if self.e_color2 is None:
+                raise ValueError("Color2 uncertainty is required")
+            self.color2 = np.asarray(self.color2, dtype=float)
+            self.e_color2 = np.asarray(self.e_color2, dtype=float)
+            cols_read.append("Color2")
+            cols_read.append("e_color2")
+            N_stars_lst.append(len(self.color2))
+            N_stars_lst.append(len(self.e_color2))
 
         if self.plx is not None:
             if self.e_plx is None:
