@@ -502,9 +502,10 @@ class Synthetic:
         from .modules import mass_binary as mb
 
         # Observed photometry
-        if self.cluster_colors[1] is None:
-            self.cluster_colors = [self.cluster_colors[0]]
-        obs_phot = np.array([self.cluster_mag] + [_ for _ in self.cluster_colors])
+        cluster_colors = [self.cluster_colors[0]]
+        if self.cluster_colors[1] is not None:
+            cluster_colors.append(self.cluster_colors[1])
+        obs_phot = np.array([self.cluster_mag] + [_ for _ in cluster_colors])
         # Replace nans in mag and colors to avoid crashing KDTree()
         nan_msk = np.full(obs_phot.shape[1], False)
         for ophot in obs_phot:
