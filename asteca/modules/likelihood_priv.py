@@ -191,13 +191,13 @@ def tremmel(
     # Remove all bins where n_i = 0 (no observed stars).
     syn_histo_f_z = syn_histo_f[cl_z_idx]
 
-    SumLogGamma = np.sum(
+    tremmel_lkl = np.sum(
         loggamma(cl_histo_f_z + syn_histo_f_z + 0.5) - loggamma(syn_histo_f_z + 0.5)
     )
 
-    # M = syn_histo_f_z.sum()
-    # ln(2) ~ 0.693
-    tremmel_lkl = SumLogGamma - 0.693 * syn_histo_f_z.sum()
+    # M = syn_histo_f_z.sum() <-- This is wrong and even more, this term should not
+    # have been present at all
+    # tremmel_lkl = SumLogGamma #- 0.693 * syn_histo_f_z.sum()  # ln(2) ~ 0.693
 
     return 1 - tremmel_lkl / max_lkl
 
