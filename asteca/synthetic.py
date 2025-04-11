@@ -261,6 +261,10 @@ class Synthetic:
             self.rand_floats["norm"][1],
         )
 
+        self._vp(f"N_stars_obs    : {self.N_stars_obs}", 1)
+        self._vp(f"Max magnitude  : {self.max_mag_syn_obs:.2f}", 1)
+        self._vp("Error distribution loaded", 1)
+
         # Used by the `stellar_masses()` method
         self.cluster_mag = cluster.mag
         self.cluster_colors = [cluster.color, cluster.color2]
