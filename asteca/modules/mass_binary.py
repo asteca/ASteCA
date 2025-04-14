@@ -115,7 +115,7 @@ def get_M_actual(
     st_dist_mass: list[list],
     st_dist_mass_ordered: list[list],
     sampled_synthcl: np.ndarray,
-) -> tuple[float, float]:
+) -> tuple[float, float, float]:
     """Estimate the actual mass using the observed mass and the fraction of
     mass estimated to be beyond the maximum observed magnitude.
 
@@ -134,8 +134,8 @@ def get_M_actual(
     :param sampled_synthcl: Sampled synthetic cluster data.
     :type sampled_synthcl: np.ndarray
 
-    :return: Observed mass and photometric mass.
-    :rtype: tuple[float, float]
+    :return: Observed, photometric, and actual mass.
+    :rtype: tuple[float, float, float]
     """
     mass_ini = sampled_synthcl[m_ini_idx]
     mass_2nd = sampled_synthcl[-1]
@@ -148,12 +148,14 @@ def get_M_actual(
 
     idx_min = np.argmin(abs(sorted_masses - mass_ini.min()))
     idx_max = np.argmin(abs(sorted_masses - mass_ini.max()))
-    M_phot_sample = sorted_masses[:idx_min].sum()
-    M_obs_sample = sorted_masses[idx_min:idx_max].sum()
+    M_phot_sample = max(1, sorted_masses[:idx_min].sum())
+    M_obs_sample = max(1, sorted_masses[idx_min:idx_max].sum())
     factor = M_phot_sample / M_obs_sample
     M_phot = factor * M_obs
 
-    return M_obs, M_phot
+    M_a = M_obs + M_phot
+
+    return M_obs, M_phot, M_a
 
 
 def stellar_evol_mass_loss(z_met: float, loga: float) -> float:

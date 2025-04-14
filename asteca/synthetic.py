@@ -721,14 +721,13 @@ class Synthetic:
             # Estimate the actual mass, ie: the sum of the observed and photometric
             # masses
             sampled_synthcl = self.sampled_synthcls[i]
-            M_obs, M_phot = mb.get_M_actual(
+            M_obs, M_phot, M_a = mb.get_M_actual(
                 self.rng,
                 self.m_ini_idx,
                 self.st_dist_mass,
                 self.st_dist_mass_ordered,
                 sampled_synthcl,
             )
-            M_a = M_obs + M_phot
 
             # Dissolution parameter
             t0 = mb.dissolution_param(C_env, epsilon, gamma, rho_amb_arr[i])
