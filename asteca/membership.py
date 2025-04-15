@@ -1,9 +1,6 @@
 import numpy as np
 
 from .cluster import Cluster
-from .modules import cluster_priv as cp
-from .modules.bayesian_da import bayesian_mp
-from .modules.fastmp import fastMP
 
 
 class Membership:
@@ -98,24 +95,30 @@ class Membership:
 
         :raises AttributeError: If either the ``radec_c`` or ``radius`` attributes
             are missing from the :py:class:`Cluster <asteca.cluster.Cluster>` object
+        :raises ValueError: If ``eq_to_gal`` is True and (RA, DEC) or center data are
+            missing from the :py:class:`Cluster <asteca.cluster.Cluster>` object
 
         :return: Membership probabilities for all stars in the frame
         :rtype: np.ndarray
         """
-        for attrib in ("radec_c", "radius"):
-            if hasattr(self.my_field, attrib) is False:
-                raise AttributeError(
-                    f"Attribute '{attrib}' is required to be present "
-                    + "in the 'cluster' object"
-                )
+        from .modules import cluster_priv as cp
+        from .modules.bayesian_da import bayesian_mp
+
+        txt = "Attribute '{}' is required to be present in the 'cluster' object"
+        if hasattr(self.my_field, "radec_c") is False:
+            raise AttributeError(txt.format("radec_c"))
+        if hasattr(self.my_field, "radius") is False:
+            raise AttributeError(txt.format("radius"))
         if N_runs < 10:
             raise AttributeError("Parameter 'N_runs' should be > 10")
 
-        xc, yc = self.my_field.ra_v, self.my_field.dec_v
+        xc, yc = self.my_field.ra, self.my_field.dec
         center = self.my_field.radec_c
         cent_str = "radec_c "
         # Convert (RA, DEC) to (lon, lat)
         if eq_to_gal is True:
+            if xc is None or yc is None or center is None:
+                raise ValueError("(RA, DEC) data and center values are required")
             xc, yc = cp.radec2lonlat(xc, yc)
             center = cp.radec2lonlat(*center)
             cent_str = "lonlat_c"
@@ -127,38 +130,36 @@ class Membership:
         self._vp(f"N_runs         : {N_runs}", 1)
 
         # Generate input data array
-        X = [xc, yc]
+        X = [self.my_field.ra, self.my_field.dec]
         e_X = []
-        if hasattr(self.my_field, "mag_v"):
-            X.append(self.my_field.mag_v)
-            e_X.append(self.my_field.e_mag_v)
-        if hasattr(self.my_field, "colors_v"):
-            X.append(self.my_field.colors_v[0])
-            e_X.append(self.my_field.e_colors_v[0])
-            try:
-                X.append(self.my_field.colors_v[1])
-                e_X.append(self.my_field.e_colors_v[1])
-            except IndexError:
-                pass
-        if hasattr(self.my_field, "plx_v"):
-            X.append(self.my_field.plx_v)
-            e_X.append(self.my_field.e_plx_v)
-        if hasattr(self.my_field, "pmra_v"):
-            X.append(self.my_field.pmra_v)
-            e_X.append(self.my_field.e_pmra_v)
-        if hasattr(self.my_field, "pmde_v"):
-            X.append(self.my_field.pmde_v)
-            e_X.append(self.my_field.e_pmde_v)
+        if self.my_field.mag is not None:
+            X.append(self.my_field.mag)
+            e_X.append(self.my_field.e_mag)
+        if self.my_field.color is not None:
+            X.append(self.my_field.color)
+            e_X.append(self.my_field.e_color)
+        if self.my_field.color2 is not None:
+            X.append(self.my_field.color2)
+            e_X.append(self.my_field.e_color2)
+        if self.my_field.plx is not None:
+            X.append(self.my_field.plx)
+            e_X.append(self.my_field.e_plx)
+        if self.my_field.pmra is not None:
+            X.append(self.my_field.pmra)
+            e_X.append(self.my_field.e_pmra)
+        if self.my_field.pmde is not None:
+            X.append(self.my_field.pmde)
+            e_X.append(self.my_field.e_pmde)
         X = np.array(X)
         e_X = np.array(e_X)
 
         out_mssg, probs = bayesian_mp(
-            N_runs,
+            self.my_field.N_cluster,
             X,
             e_X,
             np.array(center),
             self.my_field.radius,
-            self.my_field.N_cluster,
+            N_runs,
             self.rng,
         )
         self._vp(out_mssg, 1)
@@ -197,6 +198,9 @@ class Membership:
         :return: Membership probabilities for all stars in the frame
         :rtype: np.ndarray
         """
+        from .modules import cluster_priv as cp
+        from .modules.fastmp import fastMP
+
         for k in (
             "ra",
             "dec",
@@ -215,11 +219,13 @@ class Membership:
         if N_runs < 10:
             raise ValueError("Parameter 'N_runs' should be > 10")
 
-        xv, yv = self.my_field.ra_v, self.my_field.dec_v
+        xv, yv = self.my_field.ra, self.my_field.dec
         xy_center = self.my_field.radec_c
         cent_str = "radec_c "
         # Convert (RA, DEC) to (lon, lat)
         if eq_to_gal is True:
+            if xv is None or yv is None or xy_center is None:
+                raise ValueError("(RA, DEC) data and center values are required")
             xv, yv = cp.radec2lonlat(xv, yv)
             xc, yc = cp.radec2lonlat(*xy_center)
             xy_center = (float(xc), float(yc))
@@ -242,12 +248,12 @@ class Membership:
             [
                 xv,
                 yv,
-                self.my_field.pmra_v,
-                self.my_field.pmde_v,
-                self.my_field.plx_v,
-                self.my_field.e_pmra_v,
-                self.my_field.e_pmde_v,
-                self.my_field.e_plx_v,
+                self.my_field.pmra,
+                self.my_field.pmde,
+                self.my_field.plx,
+                self.my_field.e_pmra,
+                self.my_field.e_pmde,
+                self.my_field.e_plx,
             ]
         )
         out_mssg, probs = fastMP(

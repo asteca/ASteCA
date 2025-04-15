@@ -1,14 +1,12 @@
 import numpy as np
 
-from .modules import isochrones_priv
-
 
 class Isochrones:
     """Define an :py:class:`Isochrones` object.
 
     This object contains the loaded theoretical isochrones used by the
     :py:class:`Synthetic <asteca.synthetic.Synthetic>` class to generate synthetic
-    clusters. See :ref:`isochronesload` for more details.
+    clusters. See :ref:`isochrones_module` for more details.
 
     :param model: The model must be one of the supported isochrone services:
         `PARSEC <http://stev.oapd.inaf.it/cgi-bin/cmd_3.7>`__,
@@ -51,11 +49,11 @@ class Isochrones:
         defaults to ``None``
     :type z_to_FeH: float | None
     :param N_interp: Number of interpolation points used to ensure that all isochrones
-        are the same shape, defaults to ``2500``
+        are the same shape, defaults to ``2000``
     :type N_interp: int
     :param parsec_rm_stage_9: If the isochrones are PARSEC, this argument set to
         ``True`` will remove the *post_AGB* stage (label=9) which are still
-        "`in preparation <http://stev.oapd.inaf.it/cmd_3.7/faq.html>`__", defaults
+        "`in preparation <http://stev.oapd.inaf.it/cmd/faq.html>`__", defaults
         to ``True``
     :type parsec_rm_stage_9: bool
     :param column_names: Column names for the initial mass, metallicity, and age for
@@ -83,7 +81,7 @@ class Isochrones:
         color_effl: tuple | None = None,
         color2_effl: tuple | None = None,
         z_to_FeH: float | None = None,
-        N_interp: int = 2500,
+        N_interp: int = 2000,
         parsec_rm_stage_9: bool = True,
         column_names: dict | None = None,
         verbose: int = 1,
@@ -101,6 +99,8 @@ class Isochrones:
         self.N_interp = N_interp
         self.parsec_rm_stage_9 = parsec_rm_stage_9
         self.verbose = verbose
+
+        from .modules import isochrones_priv
 
         # Check that the number of colors match
         if self.color2 is not None and self.color2_effl is None:
@@ -150,10 +150,10 @@ class Isochrones:
         N_met, N_age, _, N_isoch = self.theor_tracks.shape
         self._vp(f"Model          : {self.model}", 1)
         self._vp(f"N_files        : {N_isoch_files}", 1)
-        self._vp(f"N_met          : {N_met}", 1)
-        self._vp(f"N_age          : {N_age}", 1)
-        self._vp(f"N_isoch        : {N_isoch}", 1)
-        self._vp(f"{met_n} range      : [{self.zmin}, {self.zmax}]", 1)
+        self._vp(f"N_mets         : {N_met}", 1)
+        self._vp(f"N_ages         : {N_age}", 1)
+        self._vp(f"N_isochs       : {N_isoch}", 1)
+        self._vp(f"{met_n}  range     : [{self.zmin}, {self.zmax}]", 1)
         self._vp(f"loga range     : [{self.amin}, {self.amax}]", 1)
         self._vp(f"Magnitude      : {self.magnitude}", 1)
         self._vp(f"Color          : {self.color[0]}-{self.color[1]}", 1)

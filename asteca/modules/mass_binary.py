@@ -77,28 +77,8 @@ def get_m1m2(
     return m1_obs, m2_obs
 
 
-def get_bpr(isoch: np.ndarray, idxs: np.ndarray) -> float:
-    """Calculate the binary fraction for the observed cluster.
-
-    :param isoch: Isochrone data.
-    :type isoch: np.ndarray
-    :param idxs: Indexes of the closest synthetic stars.
-    :type idxs: np.ndarray
-
-    :return: Binary fraction.
-    :rtype: float
-    """
-    mass_2 = isoch[-1]
-    m2_obs = mass_2[idxs]
-    m2_msk = ~np.isnan(m2_obs)
-    b_fr = m2_msk.sum() / len(m2_obs)
-
-    return b_fr
-
-
 def galactic_coords(
     sampled_models: list[dict],
-    fix_params: dict,
     radec_c: tuple[float, float],
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Convert equatorial coordinates to cylindrical, and obtain the vertical
@@ -107,8 +87,6 @@ def galactic_coords(
     :param sampled_models: List of dictionaries, each containing a set of sampled
      parameters associated to non empty isochrones.
     :type sampled_models: list[dict]
-    :param fix_params: Dictionary of fixed fundamental parameters
-    :type fix_params: dict
     :param radec_c: Right ascension and declination of the cluster center.
     :type radec_c: tuple[float, float]
 
@@ -120,8 +98,7 @@ def galactic_coords(
     lon, lat = c.galactic.l, c.galactic.b  # pyright: ignore
     dist_pc = []
     for model in sampled_models:
-        model_comb = fix_params | model
-        dist_pc.append(10 ** (0.2 * (model_comb["dm"] + 5)))
+        dist_pc.append(10 ** (0.2 * (model["dm"] + 5)))
     cgal = SkyCoord(l=lon, b=lat, distance=dist_pc * u.pc, frame="galactic")  # pyright: ignore
     c_GC = cgal.transform_to(coord.Galactocentric())
 
@@ -138,7 +115,7 @@ def get_M_actual(
     st_dist_mass: list[list],
     st_dist_mass_ordered: list[list],
     sampled_synthcl: np.ndarray,
-) -> tuple[float, float]:
+) -> tuple[float, float, float]:
     """Estimate the actual mass using the observed mass and the fraction of
     mass estimated to be beyond the maximum observed magnitude.
 
@@ -157,8 +134,8 @@ def get_M_actual(
     :param sampled_synthcl: Sampled synthetic cluster data.
     :type sampled_synthcl: np.ndarray
 
-    :return: Observed mass and photometric mass.
-    :rtype: tuple[float, float]
+    :return: Observed, photometric, and actual mass.
+    :rtype: tuple[float, float, float]
     """
     mass_ini = sampled_synthcl[m_ini_idx]
     mass_2nd = sampled_synthcl[-1]
@@ -171,12 +148,14 @@ def get_M_actual(
 
     idx_min = np.argmin(abs(sorted_masses - mass_ini.min()))
     idx_max = np.argmin(abs(sorted_masses - mass_ini.max()))
-    M_phot_sample = sorted_masses[:idx_min].sum()
-    M_obs_sample = sorted_masses[idx_min:idx_max].sum()
+    M_phot_sample = max(1, sorted_masses[:idx_min].sum())
+    M_obs_sample = max(1, sorted_masses[idx_min:idx_max].sum())
     factor = M_phot_sample / M_obs_sample
     M_phot = factor * M_obs
 
-    return M_obs, M_phot
+    M_a = M_obs + M_phot
+
+    return M_obs, M_phot, M_a
 
 
 def stellar_evol_mass_loss(z_met: float, loga: float) -> float:

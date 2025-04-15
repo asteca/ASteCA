@@ -46,7 +46,8 @@ def sample_imf(
 def error_distribution(
     mag: np.ndarray,
     e_mag: np.ndarray,
-    e_colors: list[np.ndarray],
+    e_color: np.ndarray,
+    e_color2: np.ndarray | None,
     rand_norm_vals: np.ndarray,
 ) -> list[np.ndarray]:
     """Extract the magnitude and color(s) uncertainties to use as error model for the
@@ -56,8 +57,10 @@ def error_distribution(
     :type mag: np.ndarray
     :param e_mag: Array of magnitude uncertainties.
     :type e_mag: np.ndarray
-    :param e_colors: List of arrays of color uncertainties.
-    :type e_colors: list[np.ndarray]
+    :param e_color: Array of color uncertainties.
+    :type e_color: np.ndarray
+    :param e_color2: Array of color uncertainties.
+    :type e_color2: np.ndarray | None
     :param rand_norm_vals: Array of random normal values.
     :type rand_norm_vals: np.ndarray
 
@@ -73,7 +76,9 @@ def error_distribution(
     # Replace nan values with interpolated values
     mag = filnans(mag)
     e_mag = filnans(e_mag)
-    e_colors = [filnans(_) for _ in e_colors]
+    e_colors = [filnans(e_color)]
+    if e_color2 is not None:
+        e_colors += [filnans(e_color2)]
 
     # The minus generates reversed sorting in magnitude. This is important so that
     # synthetic clusters with a smaller magnitude range are assigned uncertainties
@@ -107,8 +112,8 @@ def add_binarity(
     theor_tracks.shape = (Nz, Na, N_cols, N_interp)
 
     If binarity is processed:
-        N_cols: magnitude + color(s) + initial masses + unresolved mag +
-            unresolved color(s) + secondary masses
+        N_cols: magnitude + color(s) + initial masses + secondary masses +
+                unresolved mag + unresolved color(s)
     else:
         N_cols: magnitude + colors + initial mass
 
@@ -155,7 +160,7 @@ def add_binarity(
             # Calculate unresolved binary magnitude
             mag = isoch[mag_idx]
             mag_m2 = np.interp(m2, mass_ini, mag)
-            theor_tracks[mx][ax][m_ini_idx + 1] = mag_combine(mag, mag_m2)
+            theor_tracks[mx][ax][m_ini_idx + 2] = mag_combine(mag, mag_m2)
 
             # Calculate unresolved color for each color defined.
             for ic, color in enumerate(all_colors):
@@ -165,10 +170,10 @@ def add_binarity(
                 f1 = mag_combine(mc1, f_m1)
                 f_m2 = np.interp(m2, mass_ini, mc2)
                 f2 = mag_combine(mc2, f_m2)
-                theor_tracks[mx][ax][m_ini_idx + 1 + 1 + ic] = f1 - f2
+                theor_tracks[mx][ax][m_ini_idx + 2 + 1 + ic] = f1 - f2
 
             # Secondary masses
-            theor_tracks[mx][ax][-1] = m2
+            theor_tracks[mx][ax][m_ini_idx + 1] = m2
 
     return theor_tracks
 
@@ -511,15 +516,15 @@ def mag_combine(m1: np.ndarray, m2: np.ndarray) -> np.ndarray:
 
 
 def properModel(
-    met_age_dict: dict, fix_params: dict, fit_params: dict
+    met_age_dict: dict, def_params: dict, fit_params: dict
 ) -> tuple[float, float, float, float, float, float, float, float, int, int, int, int]:
     """Define the 'proper' model with values for (z, a) taken from its grid,
     and filled values for those parameters that are fixed.
 
     :param met_age_dict: Dictionary of metallicity and age values.
     :type met_age_dict: dict
-    :param fix_params: Dictionary of fixed parameters.
-    :type fix_params: dict
+    :param def_params: Dictionary of default parameters.
+    :type def_params: dict
     :param fit_params: Dictionary of fitted parameters.
     :type fit_params: dict
 
@@ -529,13 +534,13 @@ def properModel(
     :rtype: tuple[float, float, float, float, float, float, float, float, int, int, int, int]
 
     """
-    # If any parameter is repeated in both dictionaries, this order gives priority
-    # to the 'fix_params' dict, in the sense that its values will be the ones
-    # written to 'model_comb'
-    model_comb = fit_params | fix_params
+    # Combine `fit_params` with default parameter values in `def_params`, updating
+    # duplicated values with those in `fit_params`
+    fit_params = def_params | fit_params
+
     model_full = np.array(
         [
-            model_comb[k]
+            fit_params[k]
             for k in ["met", "loga", "alpha", "beta", "Av", "DR", "Rv", "dm"]
         ]
     )
@@ -573,14 +578,14 @@ def zaWAverage(
 
     theor_tracks = [m1, m2, .., mN]
     mX = [age1, age2, ..., ageM]
-    ageX = [f1,.., c1, c2,.., M_ini, f1b,.., c1b, c2b,.., M_b]
+    ageX = [f1,.., c1, (c2), M_ini, M_b, f1b,.., c1b, (c2b)]
     where:
     fX:  individual filters (mags)
     cX:  colors
     M_ini: initial mass
+    M_b:  binary masses
     fXb: filters with binary data
     cXb: colors with the binary data
-    M_b:  binary masses
 
     It is important that the returned isochrone is a *copy* of the
     theor_tracks[mx][ax] array if no averaging is done. Otherwise the
@@ -608,94 +613,67 @@ def zaWAverage(
     :returns: Weighted isochrone.
     :rtype: np.ndarray
     """
-
-    # If (z, a) are both fixed, just return the single processed isochrone
-    if ml == al == mh == ah == 0:
-        # The np.array() is important to avoid overwriting 'theor_tracks'
-        return np.array(theor_tracks[ml][al])
-
-    # The four points in the (z, age) grid that define the box that contains
-    # the model value (z_model, a_model)
-    z1, z2 = met_age_dict["met"][ml], met_age_dict["met"][mh]
-    a1, a2 = met_age_dict["loga"][al], met_age_dict["loga"][ah]
-    pts = np.array([(z1, a1), (z1, a2), (z2, a1), (z2, a2)])
-
-    # Order: (z1, a1), (z1, a2), (z2, a1), (z2, a2)
-    isochs = np.array(
-        [
-            theor_tracks[ml][al],
-            theor_tracks[ml][ah],
-            theor_tracks[mh][al],
-            theor_tracks[mh][ah],
-        ]
-    )
-
     # Distances between the (z, a) points in the 'model', and the four
     # points in the (z, a) grid that contain the model point.
     # Fast euclidean distance: https://stackoverflow.com/a/47775357/1391441
+
+    # The four points in the (z, age) grid that define the box that contains
+    # the model value (z_model, a_model)
+    z1 = met_age_dict["met"][ml]
+    z2 = met_age_dict["met"][mh]
+    a1 = met_age_dict["loga"][al]
+    a2 = met_age_dict["loga"][ah]
+    pts = np.array([(z1, a1), (z1, a2), (z2, a1), (z2, a2)])
     a_min_b = np.array([(z_model, a_model)]) - pts
+
     # Don't take the square root, it's not necessary
     dist = np.einsum("ij,ij->i", a_min_b, a_min_b)
 
-    # If the model has a 0. distance in (z, a) to the closest isochrone,
-    # then just return that isochrone.
-    try:
-        idx = np.where(dist == 0.0)[0][0]
-        return isochs[idx]
-    except IndexError:
-        pass
+    # Index to the minimum dist value
+    idx_dist_min = np.argmin(dist)
+    ma = ((ml, al), (ml, ah), (mh, al), (mh, ah))
+    # Index to the corresponding (z, a) indexes
+    m0, a0 = ma[idx_dist_min]
+
+    # If the model has a 0. distance to the closest isochrone, return that isochrone
+    if dist[idx_dist_min] == 0.0:
+        return np.array(theor_tracks[m0][a0])
 
     # Weighted average by the (inverse) distance to the four (z, a) grid
     # points. This way is faster than using 'np.average()'.
-    # Inverse of the distance.
-    inv_d = 1.0 / dist
-    weights = inv_d / sum(inv_d)
+    inv_d = 1.0 / dist  # Inverse of the distance.
+    weights = inv_d / sum(inv_d)  # Weights
     isochrone = (
-        isochs[0] * weights[0]
-        + isochs[1] * weights[1]
-        + isochs[2] * weights[2]
-        + isochs[3] * weights[3]
+        theor_tracks[ml][al] * weights[0]
+        + theor_tracks[ml][ah] * weights[1]
+        + theor_tracks[mh][al] * weights[2]
+        + theor_tracks[mh][ah] * weights[3]
     )
 
     # DO NOT average the masses or their distribution will be lost. We use the
-    # values of the closest isochrone.
-    idx = np.argmin(dist)
-    isochrone[m_ini_idx] = isochs[idx][m_ini_idx]
+    # mass values from the closest isochrone.
+    isochrone[m_ini_idx] = theor_tracks[m0][a0][m_ini_idx]
     # Now for the secondary masses
-    isochrone[-1] = isochs[idx][-1]
-
-    # met_idx = np.array([ml, mh, ml, mh])[idx]
-    # age_idx = np.array([al, ah, al, ah])[idx]
-
-    # isochrone = theor_tracks[ml][al] * weights[0] +\
-    #     theor_tracks[ml][ah] * weights[1] +\
-    #     theor_tracks[mh][al] * weights[2] +\
-    #     theor_tracks[mh][ah] * weights[3]
+    isochrone[m_ini_idx + 1] = theor_tracks[m0][a0][m_ini_idx + 1]
 
     # #
-    # isochrone = np.average(isochs, weights=weights, axis=0)
-
-    # idxs = (weights * mass_idx).astype(int)
-    # # Order: (z1, a1), (z1, a2), (z2, a1), (z2, a2)
-    # isochrone = np.concatenate([
-    #     theor_tracks[ml][al][:, :idxs[0]],
-    #     theor_tracks[ml][ah][:, idxs[0]:idxs[0] + idxs[1]],
-    #     theor_tracks[mh][al][:, idxs[0] + idxs[1]:idxs[0] + idxs[1] + idxs[2]],
-    #     theor_tracks[mh][ah][:, idxs[0] + idxs[1] + idxs[2]:mass_idx]],
-    #     axis=1)
-
+    # #
+    # #
     # import matplotlib.pyplot as plt
-    # print(z_model, a_model, ml, mh, al, ah)
-    # plt.subplot(121)
-    # plt.scatter(*pts.T, c='r')
-    # plt.scatter(z_model, a_model, marker='x', c='g')
-    # # First color
-    # plt.subplot(122)
-    # plt.scatter(theor_tracks[ml][al][1], theor_tracks[ml][al][0], c='b', alpha=.25)
-    # plt.scatter(theor_tracks[ml][ah][1], theor_tracks[ml][ah][0], c='r', alpha=.25)
-    # plt.scatter(theor_tracks[mh][al][1], theor_tracks[mh][al][0], c='cyan', alpha=.25)
-    # plt.scatter(theor_tracks[mh][ah][1], theor_tracks[mh][ah][0], c='orange', alpha=.25)
-    # plt.scatter(isochrone[1], isochrone[0], c='k', marker='x', alpha=.5, label='avrg')
+
+    # # print(z_model, a_model, ml, mh, al, ah)
+    # # plt.subplot(121)
+    # # plt.scatter(*pts.T, c="r")
+    # # plt.scatter(z_model, a_model, marker="x", c="g")
+    # # # First color
+    # # plt.subplot(122)
+    # plt.scatter(theor_tracks[ml][al][1], theor_tracks[ml][al][0], c="b", alpha=0.2)
+    # plt.scatter(theor_tracks[ml][ah][1], theor_tracks[ml][ah][0], c="r", alpha=0.2)
+    # plt.scatter(theor_tracks[mh][al][1], theor_tracks[mh][al][0], c="cyan", alpha=0.2)
+    # plt.scatter(
+    #     theor_tracks[mh][ah][1], theor_tracks[mh][ah][0], c="orange", alpha=0.2
+    # )
+    # plt.scatter(isochrone[1], isochrone[0], c="k", marker="x", alpha=0.5, label="avrg")
     # plt.gca().invert_yaxis()
     # plt.legend()
     # # Second color
@@ -730,7 +708,7 @@ def move_isochrone(isochrone: np.ndarray, m_ini_idx: int, dm: float) -> np.ndarr
     isochrone[0] += dm
     # Move binary magnitude if it exists
     if isochrone.shape[0] > m_ini_idx + 1:
-        isochrone[m_ini_idx + 1] += dm
+        isochrone[m_ini_idx + 2] += dm
 
     return isochrone
 
@@ -754,7 +732,7 @@ def extinction(
 
     The distance modulus was applied before this function.
 
-    isochrone = [mag, c1, (c2), .., Mini, mag_b, c1b, .., Mini_b]
+    isochrone = [mag, c1, (c2), Mini, Mini_b, mag_b, c1b, (c2b)]
 
     For the CCMO model:
 
@@ -843,14 +821,14 @@ def extinction(
         raise ValueError(f"Unknown extinction law: {ext_law}")
 
     Ax = ec_mag * Av_dr
-    isochrone[0] += Ax
+    isochrone[0] += Ax  # Magnitude
     Ex1 = ec_col1 * Av_dr
-    isochrone[1] += Ex1
+    isochrone[1] += Ex1  # First color
 
     # Move binary data.
     if binar_flag:
-        isochrone[m_ini_idx + 1] += Ax  # Magnitude
-        isochrone[m_ini_idx + 2] += Ex1  # First color
+        isochrone[m_ini_idx + 2] += Ax  # Magnitude (binary system)
+        isochrone[m_ini_idx + 3] += Ex1  # First color (binary system)
 
     # Second color
     if len(ext_coefs) > 2:
@@ -861,7 +839,7 @@ def extinction(
         isochrone[2] += Ex2
         # Move color with binary data.
         if binar_flag:
-            isochrone[m_ini_idx + 3] += Ex2
+            isochrone[m_ini_idx + 4] += Ex2  # Second color (binary system)
 
     return isochrone
 
@@ -1039,6 +1017,10 @@ def interp_mass_isoch(
     NOTE: I already tried to speed this block up using numba (@jit(nopython=True))
     but it does not help. The code runs even slower.
 
+    NOTE: this is a stripped down version of scipy.inter1d (kind='linear') which
+    is now legacy code (https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.interp1d.html)
+    Scipy now recommends using np.interp for simple linear interpolation
+
     :param isoch_cut: Isochrone array.
     :type isoch_cut: np.ndarray
     :param mass_ini: Array of initial masses.
@@ -1098,8 +1080,8 @@ def binarity(
     if binar_flag is False:
         # Update the binary systems' masses so that the secondary masses for
         # SINGLE systems are identified with a 'nan' value.
-        isoch_mass[-1] = np.nan
-        return isoch_mass
+        isoch_mass[m_ini_idx + 1] = np.nan
+        return isoch_mass[: m_ini_idx + 2]
 
     Ns = isoch_mass.shape[-1]
     mass = isoch_mass[m_ini_idx]
@@ -1122,13 +1104,14 @@ def binarity(
     # color(s).
     if bin_indxs.any():
         for i in range(m_ini_idx):
-            isoch_mass[i][bin_indxs] = isoch_mass[m_ini_idx + 1 + i][bin_indxs]
+            isoch_mass[i][bin_indxs] = isoch_mass[m_ini_idx + 2 + i][bin_indxs]
 
     # Update the binary systems' masses so that the secondary masses for
     # SINGLE systems are identified with a 'nan' value.
-    isoch_mass[-1][~bin_indxs] = np.nan
+    isoch_mass[m_ini_idx + 1][~bin_indxs] = np.nan
 
-    return isoch_mass
+    # Return [mag, c1, (c2), mass, mass_b]
+    return isoch_mass[: m_ini_idx + 2]
 
 
 def add_errors(isoch_binar: np.ndarray, err_dist: list[np.ndarray]) -> np.ndarray:

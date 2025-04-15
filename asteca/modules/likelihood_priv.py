@@ -191,13 +191,13 @@ def tremmel(
     # Remove all bins where n_i = 0 (no observed stars).
     syn_histo_f_z = syn_histo_f[cl_z_idx]
 
-    SumLogGamma = np.sum(
+    tremmel_lkl = np.sum(
         loggamma(cl_histo_f_z + syn_histo_f_z + 0.5) - loggamma(syn_histo_f_z + 0.5)
     )
 
-    # M = syn_histo_f_z.sum()
-    # ln(2) ~ 0.693
-    tremmel_lkl = SumLogGamma - 0.693 * syn_histo_f_z.sum()
+    # M = syn_histo_f_z.sum() <-- This is wrong and even more, this term should not
+    # have been present at all
+    # tremmel_lkl = SumLogGamma #- 0.693 * syn_histo_f_z.sum()  # ln(2) ~ 0.693
 
     return 1 - tremmel_lkl / max_lkl
 
@@ -323,15 +323,15 @@ def tremmel(
 
 
 def bins_distance(
-    mag_v: np.ndarray, colors_v: list[np.ndarray], synth_clust: np.ndarray
+    mag_v: np.ndarray, color_v: np.ndarray, synth_clust: np.ndarray
 ) -> float:
     """Sum of distances to corresponding bins in the Hess diagram. Only applied
     on the first two dimensions (magnitude +  first color)
 
     :param mag_v: Array of magnitudes.
     :type mag_v: np.ndarray
-    :param colors_v: List of arrays of colors.
-    :type colors_v: list[np.ndarray]
+    :param color_v: Arrays of color.
+    :type color_v: np.ndarray
     :param synth_clust: Synthetic cluster data.
     :type synth_clust: np.ndarray
 
@@ -347,7 +347,7 @@ def bins_distance(
 
     # Evaluate the magnitude and color in the defined percentiles
     perc_mag_o = np.nanpercentile(mag_v, mpercs)
-    perc_colors_o = np.nanpercentile(colors_v[0], cpercs)
+    perc_colors_o = np.nanpercentile(color_v, cpercs)
 
     # Create a 2-dimensional array of shape: (2, len(mpercs) * len(cpercs))
     pts_o = []

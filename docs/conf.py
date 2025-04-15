@@ -1,24 +1,7 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# For the full list of built-in configuration values, see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
-
-# -- Path setup --------------------------------------------------------------
-
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath("../../"))
-# import asteca
-# __version__ = asteca.__version__
-
-
 # -- Project information -----------------------------------------------------
 project = "ASteCA"
 copyright = "2024, Gabriel I Perren"
-# author = 'Gabriel I Perren'
+author = "Gabriel I Perren"
 
 # Read version from pyproject.toml
 with open("../pyproject.toml", encoding="utf-8") as pyproject_toml:
@@ -32,118 +15,31 @@ with open("../pyproject.toml", encoding="utf-8") as pyproject_toml:
 version = __version__
 release = __version__
 
-rst_epilog = """.. |ProjectVersion| replace:: {versionnum}""".format(
+rst_epilog = """.. |ProjectVersion| replace:: **{versionnum}**""".format(
     versionnum=version,
 )
+
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 extensions = [
-    "autodoc2",
-    "sphinx.ext.napoleon",
     "sphinx.ext.githubpages",
     "myst_nb",
     "IPython.sphinxext.ipython_console_highlighting",
-    "sphinx_math_dollar",
     "sphinx.ext.mathjax",
-    # "sphinx.ext.doctest"
+    "sphinx_inline_tabs",
+    "sphinx_automodapi.automodapi",
 ]
 
-autodoc2_packages = [
-    {
-        "path": "../asteca",
-        "exclude_dirs": [
-            "__pycache__",
-            "modules",
-        ],
-    }
-]
-# autodoc2_output_dir = []
-autodoc2_sort_names = True
-autodoc2_hidden_objects = ["dunder", "private", "inherited"]
-
-
-# DEPRECATED 24/06/24
-################################################################
-# This block removes the attributes from the apidocs .rst files.
-# I could not find a simpler way to do this 26/05/24
-# https://www.sphinx-doc.org/en/master/extdev/appapi.html#sphinx-core-events
-# def source_read_handler(app, docname, source):
-#     """'docname, source' not used but required"""
-#     path = "./apidocs/asteca/"
-#     for file in os.listdir(path):
-#         with open(path + file) as f:
-#             lines = f.readlines()
-#             idxs = []
-#             for i, line in enumerate(lines):
-#                 if ".. py:attribute:" in line:
-#                     idxs += list(range(i, i + 6))
-#         for i in range(len(lines), 0, -1):
-#             if i in idxs:
-#                 del lines[i]
-#         with open(path + file, "w") as f:
-#             for line in lines:
-#                 f.write(line)
-
-
-# def setup(app):
-#     app.connect("source-read", source_read_handler)
-################################################################
-
-# DEPRECATED 25/01/13 --> Simpler without
-# ################################################################
-# # This block changes the 'Initialization' title for a 'Methods' title
-# # WARNING: could break at any moment if pydoclint changes its behavior!
-# def source_read_handler(app, docname, source):
-#     """'docname, source' not used but required"""
-#     path = "./apidocs/asteca/"
-#     for file in os.listdir(path):
-#         with open(path + file) as f:
-#             lines = f.readlines()
-#             idxs = []
-#             for i, line in enumerate(lines):
-#                 if ".. rubric:: Initialization" in line:
-#                     idxs += list(range(i, i + 3))
-#                     break
-#         if idxs:
-#             if len(lines) > idxs[-1] + 2:
-#                 lines[idxs[0]] = "   .. rubric:: Methods\n"
-#             else:
-#                 lines[idxs[0]] = ""
-#             lines[idxs[1]] = ""
-#             lines[idxs[2]] = ""
-#             with open(path + file, "w") as f:
-#                 for line in lines:
-#                     f.write(line)
-
-
-# def setup(app):
-#     app.connect("source-read", source_read_handler)
-
-
-################################################################
-
-
-# https://www.sympy.org/sphinx-math-dollar/
-mathjax3_config = {
-    "tex": {
-        "inlineMath": [["\\(", "\\)"]],
-        "displayMath": [["\\[", "\\]"]],
-    }
-}
+#  automodapi
+numpydoc_show_class_members = False
+automodapi_toctreedirnm = "build/api"
 
 # https://myst-nb.readthedocs.io/en/v0.12.2/use/execute.html
 # nb_execution_mode = "auto"
 nb_execution_mode = "off"
+# nb_execution_excludepatterns = ["*membership"]
 # nb_execution_timeout = -1
-
-myst_enable_extensions = [
-    "amsmath",
-    "dollarmath",
-]
-
-# templates_path = ['_templates']
-# exclude_patterns = []
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -178,3 +74,4 @@ toc_object_entries_show_parents = "hide"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
+html_css_files = ["custom.css"]

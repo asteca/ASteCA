@@ -1,4 +1,4 @@
 sphinx_book_theme
 myst-nb
-sphinx-math-dollar
-sphinx-autodoc2
+sphinx-automodapi
+sphinx_inline_tabs

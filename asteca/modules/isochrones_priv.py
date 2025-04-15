@@ -1,21 +1,25 @@
 import os
 
 import numpy as np
-import pandas as pd
 
 # IMPORTANT: this dictionary contains fixed data required to read isochrones from
 # each of the models. If this ever changes, this function will no longer work
 #
 # col_names: default column names for the initial mass, metallicity, and age
 # comment_char: character used to indicate comments in the isochrone files
-# sep_cols: regular expression to separate columns in the isochrone files
 # idx_col_line: index of the line that contains the column names
 # myr_to_log10: flag to indicate whether to convert Myr to log10
+
+# DEPRECATED 17/03/25. When I replaced pandas with np.genfromtxt this parameter
+# became obsolete because np.genfromtxt does not accept regex. By default it splits
+# columns using empty spaces, which works for now at least.
+# sep_cols: regular expression to separate columns in the isochrone files
+
 phot_systs_data = {
     "PARSEC": {
         "col_names": {"mass_col": "Mini", "met_col": "Zini", "age_col": "logAge"},
         "comment_char": "#",
-        "sep_cols": r"\s+",
+        # "sep_cols": r"\s+",
         "idx_col_line": -1,
         "parsec_stage_9_col": "label",  # column name for the post-AGB stage
         "parsec_stage_9_id": "9",  # ID for the post-AGB stage
@@ -27,7 +31,7 @@ phot_systs_data = {
             "age_col": "log10_isochrone_age_yr",
         },
         "comment_char": "#",
-        "sep_cols": r"\s+",
+        # "sep_cols": r"\s+",
         "idx_col_line": -1,
     },
     "BASTI": {
@@ -37,7 +41,7 @@ phot_systs_data = {
             "age_col": "Age (Myr) =",
         },
         "comment_char": "#",
-        "sep_cols": r"\s+",
+        # "sep_cols": r"\s+",
         "idx_col_line": -2,
         "myr_to_log10": True,
     },
@@ -76,8 +80,6 @@ def load(
         PARSEC models, defaults to True
     :type parsec_rm_stage_9: bool
 
-    :raises ValueError: If there is a shape mismatch in the loaded isochrones
-
     :return: Array of isochrones, individual filters for each color defined,
         dictionary with metallicities and ages, and number of files read.
     :rtype: tuple[np.ndarray, list, dict, int]
@@ -90,7 +92,7 @@ def load(
 
     # isochrones.shape = (N_photsyst, N_z, N_a, N_interp, N_cols)
     # met_age_arr.shape = (N_photsyst, N_z*N_a, 2)
-    met_age_vals, isoch_dataframes = read(
+    met_age_vals, isoch_arrays = read(
         model,
         parsec_rm_stage_9,
         f_paths,
@@ -99,17 +101,17 @@ def load(
         cols_keep,
     )
 
-    isochrones = interp_df(N_interp, met_age_vals, isoch_dataframes)
+    # N_interp = 10_000 gives excellent photometric results
+    # N_interp = 5000 gives good photometric results
+    # N_interp = 2500 gives reasonable photometric results
+    # N_interp = 2000 gives borderline photometric results (binary artifacts in low mass region)
+    # N_interp = 1000 gives sub-par photometric results
+    # N_interp = 500 gives poor photometric results
+    # Time performance:
+    # 10_000: 1, 5000: 0.74, 2500: 0.63, 2000: 0.59, 1000: 0.53, 500: 0.51
+    isochrones = interp_df(N_interp, met_age_vals, isoch_arrays)
 
     isochrones, met_age_arr = merge_ps_massini_check(mass_col, isochrones)
-    try:
-        np.shape(isochrones)
-    except ValueError:
-        raise ValueError(
-            "Shape mismatch in loaded isochrones. This usually means that an\n"
-            + "incorrect number of ages and/or metallicities are stored in the\n"
-            + "isochrone files."
-        )
 
     # Create dictionary of mets and ages
     all_m, all_a = np.array(met_age_arr).T
@@ -211,10 +213,9 @@ def read(
     met_col: str,
     age_col: str,
     cols_keep: list,
-) -> tuple[list[str], list[pd.DataFrame]]:
-    """Read isochrone files and store them as pandas DataFrame along with its associated
+) -> tuple[list[str], list[np.ndarray]]:
+    """Read isochrone files and store them as numpy arrays along with its associated
     metallicity and age values.
-
     :param model: Isochrone model name.
     :type model: str
     :param parsec_rm_stage_9: Remove post-AGB stage for PARSEC models.
@@ -227,71 +228,82 @@ def read(
     :type age_col: str
     :param cols_keep: List of columns to keep.
     :type cols_keep: list
-
     :return: First list contains the met and age values (as strings), second list
-     contains the associated isochrones as pandas DataFrames
-    :rtype: tuple[list[str], list[pd.DataFrame]]
+     contains the associated isochrones as numpy arrays
+    :rtype: tuple[list[str], list[np.ndarray]]
     """
-
-    met_age_vals, isoch_dataframes = [], []
+    met_age_vals, isoch_arrays = [], []
     for file_path in f_paths:
         # Extract columns names and full header
         col_names, full_header = get_header(model, file_path)
-
         # Columns to keep for this photometric system
         cols_keep_ps = list(set(col_names) & set(cols_keep))
 
         # Load file
-        df_file_path = pd.read_csv(
+        data = np.genfromtxt(
             file_path,
-            comment=phot_systs_data[model]["comment_char"],
-            header=None,
+            comments=phot_systs_data[model]["comment_char"],
             names=col_names,
-            sep=phot_systs_data[model]["sep_cols"],
+            # delimiter=phot_systs_data[model]["sep_cols"],
+            encoding="utf-8",
+            deletechars="",
+            autostrip=True,
         )
 
         if model == "PARSEC":
-            # Group by metallicity
-            df_blocks = df_file_path.groupby(met_col, sort=False)
-            # Process metallicity blocks
-            for _, met_df in df_blocks:
-                # Group by age
-                age_blocks = met_df.groupby(age_col, sort=False)
-                for _, df in age_blocks:
+            # Get unique metallicity values
+            unique_mets = np.unique(data[met_col])
+            for met_val in unique_mets:
+                # Filter by metallicity
+                met_mask = data[met_col] == met_val
+                met_data = data[met_mask]
+
+                # Get unique age values within this metallicity
+                unique_ages = np.unique(met_data[age_col])
+                for age_val in unique_ages:
+                    # Filter by age
+                    age_mask = met_data[age_col] == age_val
+                    df = met_data[age_mask]
+
                     # Remove post-AGB stage
                     if parsec_rm_stage_9 is True:
-                        phot_systs_data[model]["parsec_stage_9_col"]
-                        msk = (
-                            df[phot_systs_data[model]["parsec_stage_9_col"]]
-                            != phot_systs_data[model]["parsec_stage_9_id"]
-                        )
+                        stage_col = phot_systs_data[model]["parsec_stage_9_col"]
+                        stage_id = phot_systs_data[model]["parsec_stage_9_id"]
+                        msk = df[stage_col] != stage_id
                         df = df[msk]
-                    # Extract met, age values (use first element, all are equal in
-                    # column)
-                    met = str(np.array(df[met_col])[0])
-                    age = str(np.array(df[age_col])[0])
+
+                    # Extract met, age values
+                    met = str(df[met_col][0])
+                    age = str(df[age_col][0])
+
                     # Store data
                     met_age_vals.append([met, age])
-                    isoch_dataframes.append(df[cols_keep_ps].astype(float))
+                    isoch_arrays.append(df[cols_keep_ps])
 
         elif model == "MIST":
             met = get_MIST_z_val(met_col, full_header)
-            # Group by age
-            df_blocks = df_file_path.groupby(age_col, sort=False)
-            # Process age blocks
-            for _, df in df_blocks:
-                age = str(df[age_col].values[0])
+
+            # Get unique age values
+            unique_ages = np.unique(data[age_col])
+            for age_val in unique_ages:
+                # Filter by age
+                age_mask = data[age_col] == age_val
+                df = data[age_mask]
+
+                age = str(df[age_col][0])
+
                 # Store data
                 met_age_vals.append([met, age])
-                isoch_dataframes.append(df[cols_keep_ps].astype(float))
+                isoch_arrays.append(df[cols_keep_ps])
 
         elif model == "BASTI":
             met, age = get_BASTI_z_a_val(full_header, met_col, age_col)
+
             # Store data
             met_age_vals.append([met, age])
-            isoch_dataframes.append(df_file_path[cols_keep_ps].astype(float))
+            isoch_arrays.append(data[cols_keep_ps])
 
-    return met_age_vals, isoch_dataframes
+    return met_age_vals, isoch_arrays
 
 
 def get_header(model: str, file_path: str) -> tuple[list, list]:
@@ -397,7 +409,7 @@ def get_BASTI_z_a_val(full_header: list, met_col: str, age_col: str) -> tuple[st
 def interp_df(
     N_interp: int,
     met_age_vals: list,
-    isoch_dataframes: list[pd.DataFrame],
+    isoch_arrays: list[np.ndarray],
 ) -> dict:
     """Interpolate the isochrone data.
 
@@ -405,8 +417,8 @@ def interp_df(
     :type N_interp: int
     :param met_age_vals: List of metallicity and ages
     :type met_age_vals: list
-    :param isoch_dataframes: List of isochrones as pd.DataFrame
-    :type isoch_dataframes: list[pd.DataFrame]
+    :param isoch_arrays: List of isochrones as numpy array
+    :type isoch_arrays: list[np.ndarray]
 
     :return: Dictionary of isochrones.
     :rtype: dict
@@ -421,9 +433,27 @@ def interp_df(
     # Sort metallicity and age values
     met_age_sorted = [met_age_vals[i] for i in sorted_indexes]
     # Sort data frames
-    dfs_sorted = [isoch_dataframes[i] for i in sorted_indexes]
+    isochs_sorted = [isoch_arrays[i] for i in sorted_indexes]
 
-    # Interpolate (if required)
+    # Interpolate
+    # Uniform distribution
+    # xx = np.linspace(0.0, 1.0, N_interp)
+
+    # More resolution for smaller masses. Helps with the photometric artifacts that
+    # appear with binary systems in the low mass region, when N_interp<5000 is used
+    N1, N2, N3, N4 = (
+        int(0.6 * N_interp),
+        int(0.2 * N_interp),
+        int(0.1 * N_interp),
+        int(0.1 * N_interp),
+    )
+    xx = np.array(
+        list(np.linspace(0.0, 0.25, N1, endpoint=False))
+        + list(np.linspace(0.25, 0.5, N2, endpoint=False))
+        + list(np.linspace(0.5, 0.75, N3, endpoint=False))
+        + list(np.linspace(0.75, 1, N4, endpoint=True))
+    )
+
     isochrones = {}
     for i, (met, age) in enumerate(met_age_sorted):
         # Generate entry in dictionary
@@ -436,29 +466,11 @@ def interp_df(
         except KeyError:
             isochrones[met][age] = []
 
-        df = dfs_sorted[i]
-        # Only interpolate if there are extra points to add
-        if len(df) >= N_interp:
-            isoch_interp = df
-        else:
-            # Interpolate
-            xx = np.linspace(0.0, 1.0, N_interp)
-
-            # # Works but the binary sequence is really affected...
-            # N_interp = 1000
-            # N1, N2, N3, N4 = int(.1 * N_interp), int(.2 * N_interp), int(.3 * N_interp), int(.4 * N_interp)
-            # xx = np.array(list(
-            #     np.linspace(.0, .25, N1))
-            #     + list(np.linspace(.25, .5, N2))
-            #     + list(np.linspace(.5, .75, N3))
-            #     + list(np.linspace(.75, 1, N4))
-            # )
-
-            xp = np.linspace(0.0, 1.0, len(df))
-            df_new = {}
-            for col in df.keys():
-                df_new[col] = np.interp(xx, xp, df[col])
-            isoch_interp = pd.DataFrame(df_new)
+        isoch = isochs_sorted[i]
+        xp = np.linspace(0.0, 1.0, len(isoch))
+        isoch_interp = {}
+        for col in isoch.dtype.names:
+            isoch_interp[col] = np.interp(xx, xp, isoch[col])
 
         isochrones[met][age].append(isoch_interp)
 
@@ -480,7 +492,8 @@ def merge_ps_massini_check(mass_col: str, isochrones: dict) -> tuple[list, list]
     :param isochrones: Dictionary of isochrones.
     :type isochrones: dict
 
-    :raises ValueError: If initial mass values differ across photometric systems.
+    :raises ValueError: If initial mass values differ across photometric systems or
+        if there is a shape mismatch in the loaded isochrones
 
     :return: Ordered isochrones and metallicity-age array.
     :rtype: tuple[list, list]
@@ -495,20 +508,31 @@ def merge_ps_massini_check(mass_col: str, isochrones: dict) -> tuple[list, list]
             # Check masses if more than one photometric system was used
             if len(age_list) > 1:
                 for df_age_X in age_list[1:]:
-                    mass_diff = abs(
-                        df_age_0[mass_col].values - df_age_X[mass_col].values
-                    ).sum()
+                    mass_diff = abs(df_age_0[mass_col] - df_age_X[mass_col]).sum()
                     if mass_diff > 0.001:
                         raise ValueError(
                             "Initial mass values differ across photometric systems"
                         )
                     # Drop 'mass_col' column from this photometric system
-                    df_age_X = df_age_X.drop([mass_col], axis=1)
+                    del df_age_X[mass_col]
                     # Merge data frames and replace original one
-                    df_age_0 = pd.concat([df_age_0, df_age_X], axis=1)
+                    df_age_0.update(df_age_X)
 
             met_vals.append(df_age_0)
         isochrones_ordered.append(met_vals)
+
+    # Check array sizes
+    Nvals = []
+    for met in isochrones_ordered:
+        for age in met:
+            for arr in age.values():
+                Nvals.append(arr.shape[0])
+    if not np.all(Nvals):
+        raise ValueError(
+            "Shape mismatch in loaded isochrones. This usually means that an\n"
+            + "incorrect number of ages and/or metallicities are stored in the\n"
+            + "isochrone files."
+        )
 
     return isochrones_ordered, met_age_arr
 
@@ -517,7 +541,7 @@ def shape_isochrones(
     magnitude: str,
     color: tuple,
     color2: tuple | None,
-    initial_mass: str,
+    mass_col: str,
     isochrones: list,
 ) -> tuple[np.ndarray, list]:
     """Reshape the isochrones array.
@@ -559,8 +583,8 @@ def shape_isochrones(
     :param color2: Tuple with the two filters to generate the second color,
         defaults to None
     :type color2: tuple | None
-    :param initial_mass: Name of the initial mass column.
-    :type initial_mass: str
+    :param mass_col: Name of the initial mass column.
+    :type mass_col: str
     :param isochrones: List of isochrones.
     :type isochrones: list
 
@@ -570,7 +594,9 @@ def shape_isochrones(
 
     # Notice that Ni and Nd are inverted here compared to the shape of the final
     # 'theor_tracks' array
-    Nz, Na, Ni, Nd = np.array(isochrones).shape
+    Nz = len(isochrones)
+    Na = len(isochrones[0])
+    Ni = isochrones[0][0][magnitude].shape[0]
 
     all_colors = [color]
     if color2 is not None:
@@ -606,7 +632,7 @@ def shape_isochrones(
             met_lst.append(cols_dict)
 
             # Add initial mass column to the end of the array
-            theor_tracks[i][j][2 + N_colors - 1] = df_age[initial_mass]
+            theor_tracks[i][j][2 + N_colors - 1] = df_age[mass_col]
         color_filters.append(met_lst)
 
     return theor_tracks, color_filters
