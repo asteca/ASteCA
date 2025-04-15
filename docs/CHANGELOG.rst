@@ -1,4 +1,26 @@
-.. :changelog:
+:orphan:
+
+.. _changelog:
+
+Changelog
+#########
+
+
+`[v0.6.0] <https://github.com/asteca/asteca/releases/tag/v0.6.0>`__ - 2025-04-15
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+- Downgraded the versions of almost all the required packages to play nice with
+  Google Colab (again)
+- Faster import of `asteca`, using lazy imports in classes
+  (https://github.com/asteca/ASteCA/issues/564); removed the `plot` class,
+  removed `pandas` and `matplotlib` as dependencies
+- Allow generating synthetic clusters without calibrating an observed cluster
+  (https://github.com/asteca/ASteCA/issues/565>)
+- Remove `fix_params` parameter from `synthetic.calibrate()`
+- Major changes to the documentation
+- Small performance improvements in the generation of synthetic cluster
+  (zaWAverage function)
+
 
 
 `[v0.5.9] <https://github.com/asteca/asteca/releases/tag/v0.5.9>`__ - 2025-01-24
@@ -79,9 +101,9 @@
 `[v0.5.2] <https://github.com/asteca/asteca/releases/tag/v0.5.2>`__ - 2024-05-07
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-- Re-wrote isochrones reading module. See :ref:`isochronesload`.
+- Re-wrote isochrones reading module. See :ref:`isochrones_module`.
 - Added `Gaia (E)DR3 extinction law <https://www.cosmos.esa.int/web/gaia/edr3-extinction-law>`_.
-  See :ref:`synth_clusters`.
+  See :ref:`synthetic_module`.
 - Downgrade requirements to ``python=3.10`` to allow running in default Google Colab
 - Fixed wrong masses and binary probabilities being assigned to stars with missing
   photometric data
@@ -96,7 +118,7 @@
 `[v0.5.1] <https://github.com/asteca/asteca/releases/tag/v0.5.1>`__ - 2024-04-19
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-- Skip hidden files when reading isochrones (`551 <https://github.com/asteca/ASteCA/issues/551>`_)
+- Skip hidden files when reading isochrones (https://github.com/asteca/ASteCA/issues/551)
 
 
 
