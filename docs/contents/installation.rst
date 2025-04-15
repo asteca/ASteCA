@@ -5,7 +5,7 @@ Installation
 
 **ASteCA** can be installed locally or in a
 `Google Colaboratory <https://colab.google/>`_ notebook. To install **ASteCA** locally
-run the following `pip`_ command:
+run the following `pip`_ command in a terminal session:
 
 .. tab:: Unix/macOS
 
@@ -19,9 +19,8 @@ run the following `pip`_ command:
 
       py -m pip install asteca
 
-in a terminal session. It is recommended to set up a local environment first.
-There are several tools that handle this: `conda`_, `uv`_, or Python's own `venv`_.
-
+It is recommended to set up a local environment first. There are several tools that
+handle this: `conda`_, `uv`_, or Python's own `venv`_.
 
 To install **ASteCA** in Google Colaboratory, run in a notebook's code cell:
 

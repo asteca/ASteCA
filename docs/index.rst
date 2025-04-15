@@ -10,8 +10,8 @@ ASteCA
 ======
 
 The *Automated Stellar Cluster Analysis* package or **ASteCA** is an
-open-source tool developed in Python for the analysis of stellar
-clusters. It is designed to determine their structural parameters, membership
+open-source tool developed in Python for the analysis of `stellar
+clusters`_. It is designed to determine their structural parameters, membership
 probabilities, and both intrinsic and extrinsic fundamental properties, including
 extinction, distance, metallicity, age, binarity, and mass.
 
@@ -52,6 +52,8 @@ using the following BibTeX entry:
 **ASteCA** is free software made available under the MIT License. For details
 see the `LICENSE`_.
 
+
+.. _stellar clusters: https://en.wikipedia.org/wiki/Star_cluster
 .. _LICENSE: https://github.com/asteca/ASteCA/blob/master/LICENSE.txt
 
 

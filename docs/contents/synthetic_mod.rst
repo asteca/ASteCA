@@ -27,8 +27,8 @@ object previously generated, as explained in the section :ref:`isochrones_module
     synthcl = asteca.Synthetic(isochs)
 
 This will perform the required initial processing and load the theoretical isochrones
-into the :class:`synthcl` object. The processing involves sampling an initial
-mass function (IMF), setting the distributions for the binary systems' mass ratio,
+into the :class:`synthcl` object. The processing involves sampling an `initial
+mass function`_ (IMF), setting the distributions for the binary systems' mass ratio,
 and the differential reddening (these two last processes are optional).
 
 The basic example above uses the default values for these three processes, but
@@ -84,7 +84,7 @@ Currently these are associated to the following IMFs:
     :align: center
 
 as defined in `Salpeter (1995)`_, `Kroupa (2001)`_, and `Chabrier et al. (2014)`_
-(currently the default value). The ``max_mass`` argument simply fixes the total mass
+(the default value). The ``max_mass`` argument simply fixes the total mass
 value to be sampled. This value should be large enough to allow generating as many
 synthetic stars as those present in the observed cluster. The default value is
 :math:`10000\;M_{\odot}` which should be more than enough for the vast majority of
@@ -137,7 +137,7 @@ distributions, as well as the distributions set by the user via a float value fo
 ``gamma``, are independent of mass values.
 
 
-
+.. _initial mass function: https://en.wikipedia.org/wiki/Initial_mass_function
 .. _Cardelli, Clayton & Mathis (1989): https://ui.adsabs.harvard.edu/abs/1989ApJ...345..245C
 .. _O'Donnell (1994): https://ui.adsabs.harvard.edu/abs/1994ApJ...422..158O
 .. _Gaia's (E)DR3: https://www.cosmos.esa.int/web/gaia/edr3-extinction-law
@@ -455,3 +455,5 @@ using Eq :eq:`eq_Mi1` as:
 
 The distributions for these masses are obtained through a bootstrap process that
 takes the uncertainties in the fundamental parameters into account.
+
+

@@ -32,13 +32,20 @@ To use these methods we need to estimate the cluster's number of members as desc
 the :ref:`nmembers` section, which is done by calling the
 :py:meth:`asteca.Cluster.get_nmembers` method.
 
-With the ``N_cluster`` attribute in place, you can define a :py:obj:`membership` object
-and apply either the :py:meth:`bayesian` or the :py:meth:`fastmp` method following:
+With the ``N_cluster`` attribute in place in a
+:py:class:`Cluster <asteca.cluster.Cluster>` object, here called ``my_field``, you can
+define a :py:class:`Membership <asteca.membership.Membership>` object, here called
+:py:obj:`memb`:
 
 .. code-block:: python
 
     # Define a `membership` object
     memb = asteca.Membership(my_field)
+
+and apply either the :py:meth:`bayesian` or the :py:meth:`fastmp` method:
+
+
+.. code-block:: python
 
     # Run `fastmp` method
     probs_fastmp = memb.fastmp()
@@ -46,7 +53,7 @@ and apply either the :py:meth:`bayesian` or the :py:meth:`fastmp` method followi
     # Run `bayesian` method
     probs_bayes = memb.bayesian()
 
-The output stored in the ``probs_fastmp`` or ``probs_bayes`` variables are the
+The arrays stored in the ``probs_fastmp`` or ``probs_bayes`` variables are the
 per-star membership probabilities. The results will naturally not be equivalent as both
 algorithms are rather different. The :py:meth:`bayesian` algorithm for example tends to
 assign lower probabilities than the :py:meth:`fastmp` algorithm.
