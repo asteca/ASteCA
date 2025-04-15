@@ -19,19 +19,15 @@ run the following `pip`_ command:
 
       py -m pip install asteca
 
-in a terminal session, or even better set up a local environment. There are several
-tools that handle this, like `conda`_, `uv`_, or Python's own `venv`_,
+in a terminal session. It is recommended to set up a local environment first.
+There are several tools that handle this: `conda`_, `uv`_, or Python's own `venv`_.
 
 
-To install in Google Colaboratory, add a ``!`` to the install command and run it in a
-Colab notebook's code cell:
+To install **ASteCA** in Google Colaboratory, run in a notebook's code cell:
 
 .. code-block:: bash
 
   !pip install asteca
-
-You might need to restart the Colab session for the installation to work
-(*Runtime / Restart session*)
 
 To verify that the installation was successful, import **ASteCA** and print the
 installed version number with:

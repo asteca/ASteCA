@@ -9,7 +9,8 @@
 ASteCA
 ======
 
-**ASteCA** is an open-source tool developed in Python for the analysis of stellar
+The *Automated Stellar Cluster Analysis* package or **ASteCA** is an
+open-source tool developed in Python for the analysis of stellar
 clusters. It is designed to determine their structural parameters, membership
 probabilities, and both intrinsic and extrinsic fundamental properties, including
 extinction, distance, metallicity, age, binarity, and mass.
@@ -20,21 +21,15 @@ extinction, distance, metallicity, age, binarity, and mass.
    list of the changes implemented.
 
 If you have any questions about this package and how to use it in your research
-`contact me`_.  If you find something wrong, confusing or missing, please
-`open a new issue`_ in the code's repository.
+please `contact me`_ or `open a new issue`_ in the code's repository.
 
 
 .. _contact me: mailto:gabrielperren@gmail.com
 .. _open a new issue: https://github.com/Gabriel-p/asteca/issues/new
 
 
-License & Attribution
-=====================
-
-Copyright 2015-2025 Gabriel I Perren.
-
-**ASteCA** is free software made available under the MIT License. For details
-see the `LICENSE`_.
+Attribution & License
+*********************
 
 If you make use of **ASteCA** in your research, please cite its `original
 article <http://www.aanda.org/articles/aa/abs/2015/04/aa24946-14/aa24946-14.html>`_
@@ -54,17 +49,19 @@ using the following BibTeX entry:
        month = "04",
    }
 
+**ASteCA** is free software made available under the MIT License. For details
+see the `LICENSE`_.
 
 .. _LICENSE: https://github.com/asteca/ASteCA/blob/master/LICENSE.txt
 
 
 TOC
-===
+***
 
 .. toctree::
    :maxdepth: 2
 
    contents/installation
-   contents/getting_started
    contents/user_guide
+   contents/tutorials
    contents/api
