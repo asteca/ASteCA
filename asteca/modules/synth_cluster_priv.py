@@ -955,7 +955,11 @@ def cut_max_mag(isoch_moved: np.ndarray, max_mag_syn: float) -> np.ndarray:
 
 
 def mass_interp(
-    isoch_cut: np.ndarray, m_ini_idx: int, st_dist_mass: np.ndarray, N_obs_stars: int
+    isoch_cut: np.ndarray,
+    m_ini_idx: int,
+    st_dist_mass: np.ndarray,
+    N_obs_stars: int,
+    binar_flag: bool,
 ) -> np.ndarray:
     """For each mass in the sampled IMF mass distribution, interpolate its value
     (and those of all the sub-arrays in 'isoch_cut') into the isochrone.
@@ -991,42 +995,25 @@ def mass_interp(
     if not mass_dist.any():
         return np.array([])
 
-    # # This is about 2x faster than interp1d() but it comes at the cost of a more
-    # # coarse distribution of stars throughout the isochrone. To fix this, we have to
-    # # apply a random noise to the magnitude(s) proportional to the percentage that
-    # # the masses sampled differ from those in the isochrone. This lowers the
-    # # performance to an increase of ~22%
-    # idx = np.searchsorted(mass_ini, mass_dist)
-    # isoch_mass = isoch_cut[:, idx]
-    # m_perc = (isoch_mass[m_ini_idx]-mass_dist)/mass_dist
-    # isoch_mass[0] += isoch_mass[0]*m_perc
-    # if isoch_mass.shape[0] > m_ini_idx:
-    #     isoch_mass[m_ini_idx+1] += isoch_mass[m_ini_idx+1]*m_perc
-    # return isoch_mass
-
-    # # This is equivalent to the the block below but slower for more than 5
-    # # dimensions, and *very* slightly faster for lower dimensions
-    # isoch_mass = np.empty([isoch_cut.shape[0], mass_dist.size])
-    # for i, arr in enumerate(isoch_cut):
-    #     isoch_mass[i] = np.interp(mass_dist, mass_ini, arr)
-
     # Interpolate the sampled stars (masses) into the isochrone
-    isoch_mass = interp_mass_isoch(isoch_cut, mass_ini, mass_dist)
+    isoch_mass = interp_mass_isoch(
+        isoch_cut, mass_ini, mass_dist, m_ini_idx, binar_flag
+    )
 
     return isoch_mass
 
 
 def interp_mass_isoch(
-    isoch_cut: np.ndarray, mass_ini: np.ndarray, mass_dist: np.ndarray
+    isoch_cut: np.ndarray,
+    mass_ini: np.ndarray,
+    mass_dist: np.ndarray,
+    m_ini_idx: int,
+    binar_flag: bool,
 ) -> np.ndarray:
     """Find where in the original data, the values to interpolate would be inserted.
 
     NOTE: I already tried to speed this block up using numba (@jit(nopython=True))
     but it does not help. The code runs even slower.
-
-    NOTE: this is a stripped down version of scipy.inter1d (kind='linear') which
-    is now legacy code (https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.interp1d.html)
-    Scipy now recommends using np.interp for simple linear interpolation
 
     :param isoch_cut: Isochrone array.
     :type isoch_cut: np.ndarray
@@ -1034,13 +1021,24 @@ def interp_mass_isoch(
     :type mass_ini: np.ndarray
     :param mass_dist: Array of sampled masses.
     :type mass_dist: np.ndarray
+    :param m_ini_idx: Index of primary mass
+    :type m_ini_idx: int
+    :param binar_flag: Binarity flag
+    :type binar_flag: bool
 
     :returns: Interpolated isochrone array.
     :rtype: np.ndarray
     """
+
+    # *****************************************************************************
+    # This is a stripped down version of scipy.inter1d (kind='linear') which
+    # is now legacy code (https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.interp1d.html)
+    # Scipy now recommends using np.interp for simple linear interpolation but it
+    # is quite slower.
+    #
     # Note: If x_new[n] == x[m], then m is returned by searchsorted.
     x_new_indices = np.searchsorted(mass_ini, mass_dist)
-
+    #
     # Calculate the slope of regions that each x_new value falls in.
     lo = x_new_indices - 1
     x_lo = mass_ini[lo]
@@ -1053,6 +1051,54 @@ def interp_mass_isoch(
     y_diff = slope * x_diff
     # Calculate the actual value for each entry in x_new.
     isoch_mass = y_diff + y_lo
+    # *****************************************************************************
+
+    # *****************************************************************************
+    # This is slower for more than 5 dimensions, and *very* slightly faster for lower
+    # dimensions
+    # isoch_mass = np.empty([isoch_cut.shape[0], mass_dist.size])
+    # for i, arr in enumerate(isoch_cut):
+    #     isoch_mass[i] = np.interp(mass_dist, mass_ini, arr)
+
+    # # Same performance as above
+    # isoch_mass = []
+    # for arr in isoch_cut:
+    #     isoch_mass.append(np.interp(mass_dist, mass_ini, arr))
+    # isoch_mass = np.array(isoch_mass)
+    # *****************************************************************************
+
+    # *****************************************************************************
+    # This is about 2x faster than interp1d() but it comes at the cost of a more
+    # coarse distribution of stars throughout the isochrone. To fix this, we have to
+    # apply a random noise to the magnitude(s) proportional to the percentage that
+    # the masses sampled differ from those in the isochrone. This lowers the
+    # performance to an increase of ~22%
+    #
+    # idx = np.searchsorted(mass_ini, mass_dist)
+    # isoch_mass = isoch_cut[:, idx]
+
+    # Random noise applied to magnitudes. Does not really work that good
+    # m_perc = (isoch_mass[m_ini_idx] - mass_dist) / mass_dist
+    # # Random noise to magnitude
+    # isoch_mass[0] += isoch_mass[0] * m_perc
+    # if binar_flag:
+    #     # Random noise to binary magnitude
+    #     isoch_mass[m_ini_idx + 2] += isoch_mass[m_ini_idx + 2] * m_perc
+    # *****************************************************************************
+
+    # import matplotlib.pyplot as plt
+
+    # # plt.subplot(121)
+    # # plt.title("interp1d")
+    # plt.scatter(isoch_mass0[1], isoch_mass0[0], alpha=0.25, label="interp1d")
+    # # plt.gca().invert_yaxis()
+    # # plt.subplot(122)
+    # # plt.title("searchsorted")
+    # plt.scatter(isoch_mass[1], isoch_mass[0], alpha=0.25, label="searchsorted")
+    # plt.gca().invert_yaxis()
+    # plt.legend()
+    # plt.show()
+    # # breakpoint()
 
     return isoch_mass
 

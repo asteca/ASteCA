@@ -366,7 +366,11 @@ class Synthetic:
 
         # Interpolate IMF's sampled masses into the isochrone.
         isoch_mass = scp.mass_interp(
-            isoch_cut, self.m_ini_idx, self.st_dist_mass[ml][al], N_synth_stars
+            isoch_cut,
+            self.m_ini_idx,
+            self.st_dist_mass[ml][al],
+            N_synth_stars,
+            binar_flag,
         )
         if not isoch_mass.any():
             return np.array([])
