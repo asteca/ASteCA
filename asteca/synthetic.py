@@ -332,9 +332,6 @@ class Synthetic:
                 ah,
             )
 
-        # Move theoretical isochrone using the distance modulus
-        isoch_moved = scp.move_isochrone(isochrone, self.m_ini_idx, dm)
-
         binar_flag = True
         if alpha == 0.0 and beta == 0.0:
             binar_flag = False
