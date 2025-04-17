@@ -521,12 +521,29 @@ def merge_ps_massini_check(mass_col: str, isochrones: dict) -> tuple[list, list]
             met_vals.append(df_age_0)
         isochrones_ordered.append(met_vals)
 
-    # Check array sizes
+    # Check array sizes and mass order (min to max)
     Nvals = []
     for met in isochrones_ordered:
         for age in met:
-            for arr in age.values():
+            for k, arr in age.items():
                 Nvals.append(arr.shape[0])
+                if k == mass_col:
+                    # Use a mass tolerance instead of the 'sort_flag':
+                    #
+                    # sort_flag = all(arr[i] <= arr[i + 1] for i in range(len(arr) - 1))
+                    #
+                    # which checks if all masses are perfectly sorted, because the
+                    # PARSEC isochrones contain some rounding errors of the order
+                    # 10**-7, 10**-8 for large masses, which would always set the flag
+                    # to False
+                    max_mass_diff = max(
+                        (arr[i] - arr[i + 1]) for i in range(len(arr) - 1)
+                    )
+                    if max_mass_diff > 0.01:
+                        raise ValueError(
+                            "Masses are not min-max sorted in loaded isochrones."
+                        )
+
     if not np.all(Nvals):
         raise ValueError(
             "Shape mismatch in loaded isochrones. This usually means that an\n"
