@@ -339,6 +339,9 @@ class Synthetic:
         if alpha == 0.0 and beta == 0.0:
             binar_flag = False
 
+        # Move theoretical isochrone using the distance modulus
+        isoch_moved = scp.move_isochrone(isochrone, binar_flag, self.m_ini_idx, dm)
+
         # Apply extinction correction
         isoch_extin = scp.extinction(
             self.ext_law,

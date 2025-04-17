@@ -690,12 +690,16 @@ def zaWAverage(
     return isochrone
 
 
-def move_isochrone(isochrone: np.ndarray, m_ini_idx: int, dm: float) -> np.ndarray:
+def move_isochrone(
+    isochrone: np.ndarray, binar_flag: bool, m_ini_idx: int, dm: float
+) -> np.ndarray:
     """Receives an isochrone of a given age and metallicity and modifies
     its magnitude values according to a given distance modulus.
 
     :param isochrone: Isochrone array.
     :type isochrone: np.ndarray
+    :param binar_flag: Binary flag
+    :type binar_flag: bool
     :param m_ini_idx: Index of the initial mass.
     :type m_ini_idx: int
     :param dm: Distance modulus.
@@ -706,8 +710,11 @@ def move_isochrone(isochrone: np.ndarray, m_ini_idx: int, dm: float) -> np.ndarr
     """
     # Move magnitude
     isochrone[0] += dm
-    # Move binary magnitude if it exists
-    if isochrone.shape[0] > m_ini_idx + 1:
+    # Move binary magnitude if required
+    # if isochrone.shape[0] > m_ini_idx + 1:
+    if binar_flag:
+        # m_ini_idx + 1 --> Secondary binary mass
+        # m_ini_idx + 2 --> Binary magnitude
         isochrone[m_ini_idx + 2] += dm
 
     return isochrone
