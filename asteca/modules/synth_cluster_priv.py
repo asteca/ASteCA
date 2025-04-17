@@ -1091,7 +1091,6 @@ def binarity(
         return isoch_mass[: m_ini_idx + 2]
 
     Ns = isoch_mass.shape[-1]
-    mass = isoch_mass[m_ini_idx]
 
     # Distribution of probability of binarity (multiplicity fraction) versus
     # primary masses.
@@ -1099,7 +1098,9 @@ def binarity(
     # Offner et al. (2022); Fig 1 (left), Table 1
     # b_p = np.clip(alpha + beta * np.log(mass), a_min=0, a_max=1)
     # b_p = np.clip(alpha + beta * np.arctan(mass), a_min=0, a_max=1)
-    b_p = np.clip(alpha + beta * (1 / (1 + 1.4 / mass)), a_min=0, a_max=1)
+    b_p = np.clip(
+        alpha + beta * (1 / (1 + 1.4 / isoch_mass[m_ini_idx])), a_min=0, a_max=1
+    )
 
     # Stars (masses) with the largest binary probabilities are selected
     # proportional to their probability
