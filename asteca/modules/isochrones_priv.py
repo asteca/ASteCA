@@ -121,7 +121,7 @@ def load(
     met_age_dict = {"met": all_m, "loga": all_a}
 
     # theor_tracks.shape = (N_z, N_a, N_cols, N_interp)
-    theor_tracks, color_filters = shape_isochrones(
+    theor_tracks, color_filters = reshape_isochrones(
         magnitude, color, color2, mass_col, isochrones
     )
 
@@ -537,7 +537,7 @@ def merge_ps_massini_check(mass_col: str, isochrones: dict) -> tuple[list, list]
     return isochrones_ordered, met_age_arr
 
 
-def shape_isochrones(
+def reshape_isochrones(
     magnitude: str,
     color: tuple,
     color2: tuple | None,
