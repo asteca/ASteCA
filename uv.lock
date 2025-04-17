@@ -4,7 +4,7 @@ requires-python = ">=3.11.11"
 
 [[package]]
 name = "asteca"
-version = "0.5.9.dev0"
+version = "0.6.0.dev0"
 source = { editable = "." }
 dependencies = [
     { name = "astropy" },
