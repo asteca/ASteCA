@@ -958,7 +958,7 @@ def mass_interp(
     isoch_cut: np.ndarray,
     m_ini_idx: int,
     st_dist_mass: np.ndarray,
-    N_obs_stars: int,
+    N_synth_stars: int,
     binar_flag: bool,
 ) -> np.ndarray:
     """For each mass in the sampled IMF mass distribution, interpolate its value
@@ -973,8 +973,10 @@ def mass_interp(
     :type m_ini_idx: int
     :param st_dist_mass: Array of sampled masses.
     :type st_dist_mass: np.ndarray
-    :param N_obs_stars: Number of observed stars.
-    :type N_obs_stars: int
+    :param N_synth_stars: Number of observed stars.
+    :type N_synth_stars: int
+    :param binar_flag: Binary system flag
+    :type binar_flag: bool
 
     :returns: Interpolated isochrone array.
     :rtype: np.ndarray
@@ -990,8 +992,9 @@ def mass_interp(
     # (~msk_max).sum(): stars lost above the maximum mass (evolutionary)
     msk_m = (st_dist_mass >= mass_ini.min()) & (st_dist_mass <= mass_ini.max())
 
-    # Interpolate the same number of observed stars into the isochrone
-    mass_dist = st_dist_mass[msk_m][:N_obs_stars]
+    # Extract up to 'N_synth_stars' masses sampled from an IMF, within the mass range
+    mass_dist = st_dist_mass[msk_m][:N_synth_stars]
+
     if not mass_dist.any():
         return np.array([])
 
