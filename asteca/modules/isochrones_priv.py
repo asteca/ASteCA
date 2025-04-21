@@ -109,7 +109,7 @@ def load(
     # N_interp = 500 gives poor photometric results
     # Time performance:
     # 10_000: 1, 5000: 0.74, 2500: 0.63, 2000: 0.59, 1000: 0.53, 500: 0.51
-    isochrones = interp_df(N_interp, met_age_vals, isoch_arrays)
+    isochrones = interp_df(N_interp, mass_col, met_age_vals, isoch_arrays)
 
     isochrones, met_age_arr = merge_ps_massini_check(mass_col, isochrones)
 
@@ -408,6 +408,7 @@ def get_BASTI_z_a_val(full_header: list, met_col: str, age_col: str) -> tuple[st
 
 def interp_df(
     N_interp: int,
+    mass_col: str,
     met_age_vals: list,
     isoch_arrays: list[np.ndarray],
 ) -> dict:
@@ -434,6 +435,21 @@ def interp_df(
     met_age_sorted = [met_age_vals[i] for i in sorted_indexes]
     # Sort data frames
     isochs_sorted = [isoch_arrays[i] for i in sorted_indexes]
+
+    # mass_min, mass_max = np.inf, 0
+    # for isoch in isochs_sorted:
+    #     # print(isoch[mass_col].min(), isoch[mass_col].max())
+    #     mass_min = min(mass_min, isoch[mass_col].min())
+    #     mass_max = max(mass_max, isoch[mass_col].max())
+    # print(mass_min, mass_max)
+    # # mass_dist = np.linspace(mass_min, mass_max, N_interp)
+
+    # mass_dist = np.linspace(0.08, 150, N_interp)
+    # mass_dist1 = np.linspace(0.08, 1, 1000, endpoint=False)
+    # mass_dist2 = np.linspace(1, 5, 1000, endpoint=False)
+    # mass_dist3 = np.linspace(5, 10, 1500, endpoint=False)
+    # mass_dist4 = np.linspace(10, 150, 200)
+    # mass_dist = np.concatenate([mass_dist1, mass_dist2, mass_dist3, mass_dist4])
 
     # Interpolate
     # Uniform distribution
@@ -468,10 +484,12 @@ def interp_df(
 
         isoch = isochs_sorted[i]
         xp = np.linspace(0.0, 1.0, len(isoch))
+
         isoch_interp = {}
         for col in isoch.dtype.names:
             isoch_interp[col] = np.interp(xx, xp, isoch[col])
-
+            #
+            # isoch_interp[col] = np.interp(mass_dist, isoch[mass_col], isoch[col])
         isochrones[met][age].append(isoch_interp)
 
     return isochrones
