@@ -809,7 +809,8 @@ class Synthetic:
         # Generate physical synthetic cluster to extract the max mass
         max_mass = self.generate(fit_params_copy)[self.m_ini_idx].max()
 
-        # Generate displaced isochrone
+        # Generate displaced isochrone, The 'N_stars=-1' indicates to return the
+        # array right after the magnitude cut
         fit_params_copy["DR"] = 0.0
         isochrone = self.generate(fit_params_copy, N_stars=-1)
 
