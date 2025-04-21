@@ -180,3 +180,46 @@ class Isochrones:
             round_n += 1
         # Replace old values
         self.met_age_dict["met"] = feh_r
+
+    def interpolate(self, met: float, loga: float) -> np.ndarray:
+        """ """
+        met_msk = self.met_age_dict["met"] == met
+        age_msk = self.met_age_dict["loga"] == loga
+
+        # Index of the first element in mask that is True
+        try:
+            met_i = np.where(met_msk)[0][0]
+            age_i = np.where(age_msk)[0][0]
+            isoch = self.theor_tracks[met_i][age_i]
+        except IndexError:
+            from .modules import synth_cluster_priv as scp
+
+            params = {
+                "met": met,
+                "loga": loga,
+                "alpha": 0,
+                "beta": 0,
+                "Av": 0,
+                "DR": 0,
+                "Rv": 0,
+                "dm": 0,
+            }
+            ml, mh, al, ah = scp.properModel(self.met_age_dict, {}, params)[-4:]
+            # Add dimension of zeroes to array
+            padded_arr = np.pad(self.theor_tracks, ((0, 0), (0, 0), (0, 2), (0, 0)))
+
+            m_ini_idx = self.theor_tracks.shape[2]
+
+            isoch = scp.zaWAverage(
+                padded_arr,
+                self.met_age_dict,
+                m_ini_idx,
+                met,
+                loga,
+                ml,
+                mh,
+                al,
+                ah,
+            )[:m_ini_idx, :]
+
+        return isoch
