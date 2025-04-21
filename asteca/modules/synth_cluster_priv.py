@@ -538,28 +538,36 @@ def properModel(
     # duplicated values with those in `fit_params`
     fit_params = def_params | fit_params
 
-    model_full = np.array(
-        [
-            fit_params[k]
-            for k in ["met", "loga", "alpha", "beta", "Av", "DR", "Rv", "dm"]
-        ]
-    )
-
-    if len(met_age_dict["met"]) == 1:
-        ml = mh = 0
-    else:
-        par = met_age_dict["met"]
-        mh = min(len(par) - 1, np.searchsorted(par, model_full[0]))
+    ml, mh = 0, 0
+    if len(met_age_dict["met"]) > 1:
+        mh = min(
+            len(met_age_dict["met"]) - 1,
+            np.searchsorted(met_age_dict["met"], fit_params["met"]),
+        )
         ml = mh - 1
 
-    if len(met_age_dict["loga"]) == 1:
-        al = ah = 0
-    else:
-        par = met_age_dict["loga"]
-        ah = min(len(par) - 1, np.searchsorted(par, model_full[1]))
+    al, ah = 0, 0
+    if len(met_age_dict["loga"]) > 1:
+        ah = min(
+            len(met_age_dict["loga"]) - 1,
+            np.searchsorted(met_age_dict["loga"], fit_params["loga"]),
+        )
         al = ah - 1
 
-    return *model_full, ml, mh, al, ah
+    return (
+        fit_params["met"],
+        fit_params["loga"],
+        fit_params["alpha"],
+        fit_params["beta"],
+        fit_params["Av"],
+        fit_params["DR"],
+        fit_params["Rv"],
+        fit_params["dm"],
+        ml,
+        mh,
+        al,
+        ah,
+    )
 
 
 def zaWAverage(
@@ -661,31 +669,60 @@ def zaWAverage(
     # #
     # import matplotlib.pyplot as plt
 
-    # # print(z_model, a_model, ml, mh, al, ah)
-    # # plt.subplot(121)
-    # # plt.scatter(*pts.T, c="r")
-    # # plt.scatter(z_model, a_model, marker="x", c="g")
-    # # # First color
-    # # plt.subplot(122)
-    # plt.scatter(theor_tracks[ml][al][1], theor_tracks[ml][al][0], c="b", alpha=0.2)
-    # plt.scatter(theor_tracks[ml][ah][1], theor_tracks[ml][ah][0], c="r", alpha=0.2)
-    # plt.scatter(theor_tracks[mh][al][1], theor_tracks[mh][al][0], c="cyan", alpha=0.2)
+    # print(z_model, a_model, ml, mh, al, ah)
+    # plt.subplot(131)
+    # plt.scatter(*pts.T, c="r")
+    # plt.scatter(z_model, a_model, marker="x", c="g")
+    # # First color
+    # plt.subplot(132)
     # plt.scatter(
-    #     theor_tracks[mh][ah][1], theor_tracks[mh][ah][0], c="orange", alpha=0.2
+    #     theor_tracks[ml][al][1], theor_tracks[ml][al][0], c="b", alpha=0.2, label="mlal"
+    # )
+    # plt.scatter(
+    #     theor_tracks[ml][ah][1], theor_tracks[ml][ah][0], c="r", alpha=0.2, label="mlah"
+    # )
+    # plt.scatter(
+    #     theor_tracks[mh][al][1],
+    #     theor_tracks[mh][al][0],
+    #     c="cyan",
+    #     alpha=0.2,
+    #     label="mhal",
+    # )
+    # plt.scatter(
+    #     theor_tracks[mh][ah][1],
+    #     theor_tracks[mh][ah][0],
+    #     c="orange",
+    #     alpha=0.2,
+    #     label="mhah",
     # )
     # plt.scatter(isochrone[1], isochrone[0], c="k", marker="x", alpha=0.5, label="avrg")
     # plt.gca().invert_yaxis()
     # plt.legend()
-    # # Second color
-    # # plt.subplot(133)
-    # # plt.scatter(theor_tracks[ml][al][2], theor_tracks[ml][al][0], c='b')
-    # # plt.scatter(theor_tracks[ml][ah][2], theor_tracks[ml][ah][0], c='r')
-    # # plt.scatter(theor_tracks[mh][al][2], theor_tracks[mh][al][0], c='cyan')
-    # # plt.scatter(theor_tracks[mh][ah][2], theor_tracks[mh][ah][0], c='orange')
-    # # plt.scatter(isochrone[2], isochrone[0], c='g', ls='--')
-    # # plt.gca().invert_yaxis()
+    # # Plot masses
+    # plt.subplot(133)
+    # mmin = theor_tracks[ml][al][m_ini_idx].min()
+    # mmax = theor_tracks[ml][al][m_ini_idx].max()
+    # plt.plot(theor_tracks[ml][al][m_ini_idx], label=f"mlal, [{mmin:.2f}, {mmax:.2f}]")
+    # mmin = theor_tracks[ml][ah][m_ini_idx].min()
+    # mmax = theor_tracks[ml][ah][m_ini_idx].max()
+    # plt.plot(theor_tracks[ml][ah][m_ini_idx], label=f"mlah, [{mmin:.2f}, {mmax:.2f}]")
+    # mmin = theor_tracks[mh][al][m_ini_idx].min()
+    # mmax = theor_tracks[mh][al][m_ini_idx].max()
+    # plt.plot(theor_tracks[mh][al][m_ini_idx], label=f"mhal, [{mmin:.2f}, {mmax:.2f}]")
+    # mmin = theor_tracks[mh][ah][m_ini_idx].min()
+    # mmax = theor_tracks[mh][ah][m_ini_idx].max()
+    # plt.plot(theor_tracks[mh][ah][m_ini_idx], label=f"mhah, [{mmin:.2f}, {mmax:.2f}]")
+    # plt.legend()
     # plt.show()
-    # # breakpoint()
+
+    # Second color
+    # plt.subplot(133)
+    # plt.scatter(theor_tracks[ml][al][2], theor_tracks[ml][al][0], c='b')
+    # plt.scatter(theor_tracks[ml][ah][2], theor_tracks[ml][ah][0], c='r')
+    # plt.scatter(theor_tracks[mh][al][2], theor_tracks[mh][al][0], c='cyan')
+    # plt.scatter(theor_tracks[mh][ah][2], theor_tracks[mh][ah][0], c='orange')
+    # plt.scatter(isochrone[2], isochrone[0], c='g', ls='--')
+    # plt.gca().invert_yaxis()
 
     return isochrone
 
