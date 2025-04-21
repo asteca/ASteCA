@@ -664,56 +664,150 @@ def zaWAverage(
     # Now for the secondary masses
     isochrone[m_ini_idx + 1] = theor_tracks[m0][a0][m_ini_idx + 1]
 
-    # #
-    # #
-    # #
-    # import matplotlib.pyplot as plt
+    temp_plot(
+        theor_tracks,
+        isochrone,
+        m_ini_idx,
+        ml,
+        mh,
+        al,
+        ah,
+        z_model,
+        a_model,
+        pts,
+        weights,
+    )
 
-    # print(z_model, a_model, ml, mh, al, ah)
-    # plt.subplot(131)
-    # plt.scatter(*pts.T, c="r")
-    # plt.scatter(z_model, a_model, marker="x", c="g")
-    # # First color
-    # plt.subplot(132)
-    # plt.scatter(
-    #     theor_tracks[ml][al][1], theor_tracks[ml][al][0], c="b", alpha=0.2, label="mlal"
-    # )
-    # plt.scatter(
-    #     theor_tracks[ml][ah][1], theor_tracks[ml][ah][0], c="r", alpha=0.2, label="mlah"
-    # )
-    # plt.scatter(
-    #     theor_tracks[mh][al][1],
-    #     theor_tracks[mh][al][0],
-    #     c="cyan",
-    #     alpha=0.2,
-    #     label="mhal",
-    # )
-    # plt.scatter(
-    #     theor_tracks[mh][ah][1],
-    #     theor_tracks[mh][ah][0],
-    #     c="orange",
-    #     alpha=0.2,
-    #     label="mhah",
-    # )
-    # plt.scatter(isochrone[1], isochrone[0], c="k", marker="x", alpha=0.5, label="avrg")
-    # plt.gca().invert_yaxis()
-    # plt.legend()
-    # # Plot masses
-    # plt.subplot(133)
-    # mmin = theor_tracks[ml][al][m_ini_idx].min()
-    # mmax = theor_tracks[ml][al][m_ini_idx].max()
-    # plt.plot(theor_tracks[ml][al][m_ini_idx], label=f"mlal, [{mmin:.2f}, {mmax:.2f}]")
-    # mmin = theor_tracks[ml][ah][m_ini_idx].min()
-    # mmax = theor_tracks[ml][ah][m_ini_idx].max()
-    # plt.plot(theor_tracks[ml][ah][m_ini_idx], label=f"mlah, [{mmin:.2f}, {mmax:.2f}]")
-    # mmin = theor_tracks[mh][al][m_ini_idx].min()
-    # mmax = theor_tracks[mh][al][m_ini_idx].max()
-    # plt.plot(theor_tracks[mh][al][m_ini_idx], label=f"mhal, [{mmin:.2f}, {mmax:.2f}]")
-    # mmin = theor_tracks[mh][ah][m_ini_idx].min()
-    # mmax = theor_tracks[mh][ah][m_ini_idx].max()
-    # plt.plot(theor_tracks[mh][ah][m_ini_idx], label=f"mhah, [{mmin:.2f}, {mmax:.2f}]")
-    # plt.legend()
-    # plt.show()
+    return isochrone
+
+
+def temp_plot(
+    theor_tracks, isochrone, m_ini_idx, ml, mh, al, ah, z_model, a_model, pts, weights
+):
+    """ """
+    import matplotlib.pyplot as plt
+
+    print("ml, mh, al, ah:", ml, mh, al, ah)
+    print("z_model, a_model:", z_model, a_model)
+    print("(z, loga) grid:", *pts)
+    print("weights:", weights)
+
+    plt.subplot(221)
+    plt.scatter(
+        theor_tracks[ml][al][m_ini_idx],  # / theor_tracks[ml][al][m_ini_idx].max(),
+        theor_tracks[ml][al][0],
+        c="b",
+        alpha=0.5,
+        label="mlal",
+    )
+    plt.scatter(
+        theor_tracks[ml][ah][m_ini_idx],  # / theor_tracks[ml][ah][m_ini_idx].max(),
+        theor_tracks[ml][ah][0],
+        c="r",
+        alpha=0.5,
+        label="mlah",
+    )
+    plt.scatter(
+        theor_tracks[mh][al][m_ini_idx],  # / theor_tracks[mh][al][m_ini_idx].max(),
+        theor_tracks[mh][al][0],
+        c="cyan",
+        alpha=0.5,
+        label="mhal",
+    )
+    plt.scatter(
+        theor_tracks[mh][ah][m_ini_idx],  # / theor_tracks[mh][ah][m_ini_idx].max(),
+        theor_tracks[mh][ah][0],
+        c="orange",
+        alpha=0.5,
+        label="mhah",
+    )
+    plt.xlabel("mass")
+    plt.ylabel("mag")
+    plt.scatter(isochrone[m_ini_idx], isochrone[0], marker="x", c="k")
+    plt.legend()
+
+    #
+    plt.subplot(222)
+    plt.scatter(
+        theor_tracks[ml][al][m_ini_idx],  # / theor_tracks[ml][al][m_ini_idx].max(),
+        theor_tracks[ml][al][1],
+        c="b",
+        alpha=0.5,
+        label="mlal",
+    )
+    plt.scatter(
+        theor_tracks[ml][ah][m_ini_idx],  # / theor_tracks[ml][ah][m_ini_idx].max(),
+        theor_tracks[ml][ah][1],
+        c="r",
+        alpha=0.5,
+        label="mlah",
+    )
+    plt.scatter(
+        theor_tracks[mh][al][m_ini_idx],  # / theor_tracks[mh][al][m_ini_idx].max(),
+        theor_tracks[mh][al][1],
+        c="cyan",
+        alpha=0.5,
+        label="mhal",
+    )
+    plt.scatter(
+        theor_tracks[mh][ah][m_ini_idx],  # / theor_tracks[mh][ah][m_ini_idx].max(),
+        theor_tracks[mh][ah][1],
+        c="orange",
+        alpha=0.5,
+        label="mhah",
+    )
+    plt.scatter(isochrone[m_ini_idx], isochrone[1], marker="x", c="k")
+    plt.xlabel("mass")
+    plt.ylabel("color")
+    plt.legend()
+
+    # First color
+    plt.subplot(223)
+    plt.scatter(
+        theor_tracks[ml][al][1], theor_tracks[ml][al][0], c="b", alpha=0.2, label="mlal"
+    )
+    plt.scatter(
+        theor_tracks[ml][ah][1], theor_tracks[ml][ah][0], c="r", alpha=0.2, label="mlah"
+    )
+    plt.scatter(
+        theor_tracks[mh][al][1],
+        theor_tracks[mh][al][0],
+        c="cyan",
+        alpha=0.2,
+        label="mhal",
+    )
+    plt.scatter(
+        theor_tracks[mh][ah][1],
+        theor_tracks[mh][ah][0],
+        c="orange",
+        alpha=0.2,
+        label="mhah",
+    )
+    plt.scatter(isochrone[1], isochrone[0], c="k", marker="x", alpha=0.5, label="avrg")
+    plt.gca().invert_yaxis()
+    plt.legend()
+    plt.xlabel("color")
+    plt.ylabel("mag")
+
+    # Plot aligned masses
+    plt.subplot(224)
+    mmin = theor_tracks[ml][al][m_ini_idx].min()
+    mmax = theor_tracks[ml][al][m_ini_idx].max()
+    plt.plot(theor_tracks[ml][al][m_ini_idx], label=f"mlal, [{mmin:.2f}, {mmax:.2f}]")
+    mmin = theor_tracks[ml][ah][m_ini_idx].min()
+    mmax = theor_tracks[ml][ah][m_ini_idx].max()
+    plt.plot(theor_tracks[ml][ah][m_ini_idx], label=f"mlah, [{mmin:.2f}, {mmax:.2f}]")
+    mmin = theor_tracks[mh][al][m_ini_idx].min()
+    mmax = theor_tracks[mh][al][m_ini_idx].max()
+    plt.plot(theor_tracks[mh][al][m_ini_idx], label=f"mhal, [{mmin:.2f}, {mmax:.2f}]")
+    mmin = theor_tracks[mh][ah][m_ini_idx].min()
+    mmax = theor_tracks[mh][ah][m_ini_idx].max()
+    plt.plot(theor_tracks[mh][ah][m_ini_idx], label=f"mhah, [{mmin:.2f}, {mmax:.2f}]")
+    plt.legend()
+    plt.xlabel("aligned points")
+    plt.ylabel("mass")
+
+    plt.show()
 
     # Second color
     # plt.subplot(133)
@@ -723,8 +817,6 @@ def zaWAverage(
     # plt.scatter(theor_tracks[mh][ah][2], theor_tracks[mh][ah][0], c='orange')
     # plt.scatter(isochrone[2], isochrone[0], c='g', ls='--')
     # plt.gca().invert_yaxis()
-
-    return isochrone
 
 
 def move_isochrone(
