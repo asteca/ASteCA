@@ -180,7 +180,7 @@ class Isochrones:
         # Replace old values
         self.met_age_dict["met"] = feh_r
 
-    def interpolate(self, met: float, loga: float) -> np.ndarray:
+    def _interpolate(self, met: float, loga: float) -> np.ndarray:
         """ """
         met_msk = self.met_age_dict["met"] == met
         age_msk = self.met_age_dict["loga"] == loga
