@@ -1,4 +1,5 @@
 import os
+import warnings
 
 import numpy as np
 
@@ -119,6 +120,12 @@ def load(
     all_m = np.array(list(dict.fromkeys(all_m))).astype(float)
     all_a = np.array(list(dict.fromkeys(all_a))).astype(float)
     met_age_dict = {"met": all_m, "loga": all_a}
+
+    if max(met_age_dict["loga"][1:] - met_age_dict["loga"][:-1]) > 0.25:
+        warnings.warn(
+            "The isochrones grid has very large steps in log(age). This can impact "
+            + "the proper generation of synthetic clusters. Consider using a smaller step."
+        )
 
     # theor_tracks.shape = (N_z, N_a, N_cols, N_interp)
     theor_tracks, color_filters = reshape_isochrones(
