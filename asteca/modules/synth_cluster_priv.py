@@ -648,7 +648,7 @@ def zaWAverage(
         return np.array(theor_tracks[m0][a0])
 
     # Weighted average by the (inverse) distance to the four (z, a) grid
-    # points. This way is faster than using 'np.average()'.
+    # points. This way is faster than using 'np.average()' with weights.
     inv_d = 1.0 / dist  # Inverse of the distance.
     weights = inv_d / sum(inv_d)  # Weights
     isochrone = (
@@ -664,25 +664,37 @@ def zaWAverage(
     # Now for the secondary masses
     isochrone[m_ini_idx + 1] = theor_tracks[m0][a0][m_ini_idx + 1]
 
-    temp_plot(
-        theor_tracks,
-        isochrone,
-        m_ini_idx,
-        ml,
-        mh,
-        al,
-        ah,
-        z_model,
-        a_model,
-        pts,
-        weights,
-    )
+    # temp_plot(
+    #     "OLD",
+    #     theor_tracks,
+    #     isochrone,
+    #     m_ini_idx,
+    #     ml,
+    #     mh,
+    #     al,
+    #     ah,
+    #     z_model,
+    #     a_model,
+    #     pts,
+    #     weights,
+    # )
 
     return isochrone
 
 
 def temp_plot(
-    theor_tracks, isochrone, m_ini_idx, ml, mh, al, ah, z_model, a_model, pts, weights
+    title,
+    theor_tracks,
+    isochrone,
+    m_ini_idx,
+    ml,
+    mh,
+    al,
+    ah,
+    z_model,
+    a_model,
+    pts,
+    weights,
 ):
     """ """
     import matplotlib.pyplot as plt
@@ -692,71 +704,84 @@ def temp_plot(
     print("(z, loga) grid:", *pts)
     print("weights:", weights)
 
+    plt.suptitle(title)
+
     plt.subplot(221)
+    N_pts = len(theor_tracks[ml][al][m_ini_idx])
     plt.scatter(
-        theor_tracks[ml][al][m_ini_idx],  # / theor_tracks[ml][al][m_ini_idx].max(),
+        # theor_tracks[ml][al][m_ini_idx],
+        np.arange(0, N_pts),
         theor_tracks[ml][al][0],
         c="b",
         alpha=0.5,
-        label="mlal",
+        label=f"mlal (w={weights[0]:.3f})",
     )
     plt.scatter(
-        theor_tracks[ml][ah][m_ini_idx],  # / theor_tracks[ml][ah][m_ini_idx].max(),
+        # theor_tracks[ml][ah][m_ini_idx],
+        np.arange(0, N_pts),
         theor_tracks[ml][ah][0],
         c="r",
         alpha=0.5,
-        label="mlah",
+        label=f"mlah (w={weights[1]:.3f})",
     )
     plt.scatter(
-        theor_tracks[mh][al][m_ini_idx],  # / theor_tracks[mh][al][m_ini_idx].max(),
+        # theor_tracks[mh][al][m_ini_idx],
+        np.arange(0, N_pts),
         theor_tracks[mh][al][0],
         c="cyan",
         alpha=0.5,
-        label="mhal",
+        label=f"mhal (w={weights[2]:.3f})",
     )
     plt.scatter(
-        theor_tracks[mh][ah][m_ini_idx],  # / theor_tracks[mh][ah][m_ini_idx].max(),
+        # theor_tracks[mh][ah][m_ini_idx],
+        np.arange(0, N_pts),
         theor_tracks[mh][ah][0],
         c="orange",
         alpha=0.5,
-        label="mhah",
+        label=f"mhah (w={weights[3]:.3f})",
     )
     plt.xlabel("mass")
     plt.ylabel("mag")
-    plt.scatter(isochrone[m_ini_idx], isochrone[0], marker="x", c="k")
+    # plt.scatter(isochrone[m_ini_idx], isochrone[0], marker="x", c="k")
+    plt.scatter(np.arange(0, len(isochrone[0])), isochrone[0], marker="x", c="k")
     plt.legend()
 
     #
     plt.subplot(222)
     plt.scatter(
-        theor_tracks[ml][al][m_ini_idx],  # / theor_tracks[ml][al][m_ini_idx].max(),
+        # theor_tracks[ml][al][m_ini_idx],
+        np.arange(0, N_pts),
         theor_tracks[ml][al][1],
         c="b",
         alpha=0.5,
         label="mlal",
     )
     plt.scatter(
-        theor_tracks[ml][ah][m_ini_idx],  # / theor_tracks[ml][ah][m_ini_idx].max(),
+        # theor_tracks[ml][ah][m_ini_idx],
+        np.arange(0, N_pts),
         theor_tracks[ml][ah][1],
         c="r",
         alpha=0.5,
         label="mlah",
     )
     plt.scatter(
-        theor_tracks[mh][al][m_ini_idx],  # / theor_tracks[mh][al][m_ini_idx].max(),
+        # theor_tracks[mh][al][m_ini_idx],
+        np.arange(0, N_pts),
         theor_tracks[mh][al][1],
         c="cyan",
         alpha=0.5,
         label="mhal",
     )
     plt.scatter(
-        theor_tracks[mh][ah][m_ini_idx],  # / theor_tracks[mh][ah][m_ini_idx].max(),
+        # theor_tracks[mh][ah][m_ini_idx],
+        np.arange(0, N_pts),
         theor_tracks[mh][ah][1],
         c="orange",
         alpha=0.5,
         label="mhah",
     )
-    plt.scatter(isochrone[m_ini_idx], isochrone[1], marker="x", c="k")
+    # plt.scatter(isochrone[m_ini_idx], isochrone[1], marker="x", c="k")
+    plt.scatter(np.arange(0, len(isochrone[0])), isochrone[1], marker="x", c="k")
     plt.xlabel("mass")
     plt.ylabel("color")
     plt.legend()
