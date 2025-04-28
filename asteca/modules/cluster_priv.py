@@ -4,6 +4,8 @@ import astropy.units as u
 import numpy as np
 from astropy.coordinates import SkyCoord
 from scipy import spatial, stats
+from scipy.optimize import least_squares
+from astropy.modeling.models import KingProjectedAnalytic1D
 
 
 def radec2lonlat(ra: float | np.ndarray, dec: float | np.ndarray) -> np.ndarray:
@@ -474,3 +476,92 @@ def get_KDE_cent(values: np.ndarray, gd: int) -> tuple[float, float]:
     x_c, y_c = positions.T[np.argmax(k_pos)]
 
     return x_c, y_c
+
+
+def king_radius(x, y, cent):
+    """ """
+    x0, y0, _ = RDPCurve(x, y, cent)
+
+    kp = KingProjectedAnalytic1D()
+
+    def lnlike(theta):
+        """Returns a value from np.inf to 0 for an exact match"""
+        cd, rc, rt, fd = theta
+        return y0 - (kp.evaluate(x0, cd, rc, rt) + fd)
+
+    rc0, rt0, fd0 = 0.25 * max(x0), np.median(x0), max(0, np.median(y0[-10:]))
+    cd0 = (max(y0) - fd0) / (1 - 1.0 / np.sqrt(1.0 + (rt0 / rc0) ** 2)) ** 2
+    p_init = np.array([cd0, rc0, rt0, fd0])
+
+    min_cd, max_cd = fd0, 10 * max(y0)
+    min_rc, max_rc = x0[0], x0[-1]
+    min_rt, max_rt = x0[0], 2 * x0[-1]
+    min_fd, max_fd = fd0 * 0.1, max(y0)
+    bounds = np.array(
+        [(min_cd, max_cd), (min_rc, max_rc), (min_rt, max_rt), (min_fd, max_fd)]
+    ).T
+
+    try:
+        res = least_squares(lnlike, p_init, bounds=bounds)
+        cd0, rc0, rt0, fd0 = res.x
+        lkl = res.cost * 2
+    except ValueError:
+        lkl = np.inf
+
+    import matplotlib.pyplot as plt
+    plt.scatter(x0, y0)
+    plt.show()
+    breakpoint()
+
+    return cd0, rc0, rt0, fd0
+
+
+def RDPCurve(x, y, cent, RDP_rings=50, rings_rm=0.1, Nmin=10, **kwargs):
+    """
+    Obtain the RDP using the concentric rings method.
+
+    HARDCODED:
+    RDP_rings: number of rings to (initially) try to define
+    rings_rm: remove the more conflicting last X% of radii values.
+    Nmin: minimum number of stars that a ring should contain. Else, expand it.
+    """
+
+    xmax = min(abs(x.max() - cent[0]), abs(x.min() - cent[0]))
+    ymax = min(abs(y.max() - cent[1]), abs(y.min() - cent[1]))
+    rdp_max = min(xmax, ymax) * 0.95
+
+    # Frame limits
+    xy_cent_dist = spatial.distance.cdist([cent], np.array([x, y]).T)[0]
+
+    # Handle the case where int()==0
+    # max_i = max(1, int(rings_rm * RDP_rings))
+    # The +1 adds a ring accounting for the initial 0. in the array
+    radii = np.linspace(0.0, rdp_max, RDP_rings + 1)  # + max_i)[:-max_i]
+
+    # Areas and #stars for all rad values.
+    rdp_radii, rdp_points, rdp_stddev = [], [], []
+    l_prev, N_in_prev = np.inf, 0.0
+    for lw, h in zip(*[radii[:-1], radii[1:]]):
+        N_in = ((xy_cent_dist >= lw) & (xy_cent_dist < h)).sum() + N_in_prev
+
+        # If N_in < Nmin take the next ellipse-ring (discard this lw).
+        l_now = min(lw, l_prev)
+
+        # Require that at least 'Nmin' stars are within the ellipse-ring.
+        if N_in > Nmin:
+            ring_area = np.pi * (h**2 - l_now**2)
+            # Store RDP parameters.
+            rad_med = h if l_now == 0.0 else 0.5 * (l_now + h)
+            rdp_radii.append(rad_med)
+            rdp_points.append(N_in / ring_area)
+            rdp_stddev.append(np.sqrt(N_in) / ring_area)
+
+            # Reset
+            l_prev, N_in_prev = np.inf, 0.0
+
+        else:
+            l_prev = l_now
+            N_in_prev += N_in
+
+    rdp_points = np.array(rdp_points) / np.max(rdp_points)
+    return np.array(rdp_radii), rdp_points, rdp_stddev
