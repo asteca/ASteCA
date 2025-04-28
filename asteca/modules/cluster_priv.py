@@ -3,9 +3,9 @@ import warnings
 import astropy.units as u
 import numpy as np
 from astropy.coordinates import SkyCoord
+from astropy.modeling.models import KingProjectedAnalytic1D
 from scipy import spatial, stats
 from scipy.optimize import least_squares
-from astropy.modeling.models import KingProjectedAnalytic1D
 
 
 def radec2lonlat(ra: float | np.ndarray, dec: float | np.ndarray) -> np.ndarray:
@@ -478,7 +478,11 @@ def get_KDE_cent(values: np.ndarray, gd: int) -> tuple[float, float]:
     return x_c, y_c
 
 
-def king_radius(x, y, cent):
+def fdens_radius(x, y, cent):
+    return np.nan
+
+
+def king_radius(x, y, cent) -> tuple[float, float, float, float]:
     """ """
     x0, y0, _ = RDPCurve(x, y, cent)
 
@@ -501,17 +505,18 @@ def king_radius(x, y, cent):
         [(min_cd, max_cd), (min_rc, max_rc), (min_rt, max_rt), (min_fd, max_fd)]
     ).T
 
-    try:
-        res = least_squares(lnlike, p_init, bounds=bounds)
-        cd0, rc0, rt0, fd0 = res.x
-        lkl = res.cost * 2
-    except ValueError:
-        lkl = np.inf
+    # try:
+    res = least_squares(lnlike, p_init, bounds=bounds)
+    cd0, rc0, rt0, fd0 = res.x
+    #     lkl = res.cost * 2
+    # except ValueError:
+    #     lkl = np.inf
 
-    import matplotlib.pyplot as plt
-    plt.scatter(x0, y0)
-    plt.show()
-    breakpoint()
+    # import matplotlib.pyplot as plt
+
+    # plt.scatter(x0, y0)
+    # plt.show()
+    # breakpoint()
 
     return cd0, rc0, rt0, fd0
 

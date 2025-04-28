@@ -332,6 +332,7 @@ class Cluster:
             radius = cp.fdens_radius(xv, yv, list(xy_center))
             self._vp("\nRadius estimated")
             self._vp(f"Radius         : {radius:.3f}", 1)
+            self.radius = radius
         elif algo == "king":
             amplitude, radius_core, radius, field_dens = cp.king_radius(
                 xv, yv, xy_center
