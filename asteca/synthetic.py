@@ -434,16 +434,12 @@ class Synthetic:
 
         pars_k = ("met", "loga", "alpha", "beta", "Rv", "DR", "Av", "dm")
         self._vp("\nGenerate synthetic models", 1)
-        self._vp(
-            "Model          :"
-            + ", ".join(f"{k}: {round(model[k], 4)}" for k in pars_k),
-            2,
-        )
-        self._vp(
-            "Model STDDEV   :"
-            + ", ".join(f"{k}: {round(model_std[k], 4)}" for k in pars_k),
-            2,
-        )
+        self._vp("par            : mean +/ STDDEV", 2)
+        for k in pars_k:
+            self._vp(
+                f"{k:<15}: {round(model[k], 4)} +/- {round(model_std[k], 4)}",
+                2,
+            )
 
         # Check isochrones ranges
         for par in ("met", "loga"):
