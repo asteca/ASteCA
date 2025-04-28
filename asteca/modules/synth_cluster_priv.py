@@ -538,28 +538,36 @@ def properModel(
     # duplicated values with those in `fit_params`
     fit_params = def_params | fit_params
 
-    model_full = np.array(
-        [
-            fit_params[k]
-            for k in ["met", "loga", "alpha", "beta", "Av", "DR", "Rv", "dm"]
-        ]
-    )
-
-    if len(met_age_dict["met"]) == 1:
-        ml = mh = 0
-    else:
-        par = met_age_dict["met"]
-        mh = min(len(par) - 1, np.searchsorted(par, model_full[0]))
+    ml, mh = 0, 0
+    if len(met_age_dict["met"]) > 1:
+        mh = min(
+            len(met_age_dict["met"]) - 1,
+            np.searchsorted(met_age_dict["met"], fit_params["met"]),
+        )
         ml = mh - 1
 
-    if len(met_age_dict["loga"]) == 1:
-        al = ah = 0
-    else:
-        par = met_age_dict["loga"]
-        ah = min(len(par) - 1, np.searchsorted(par, model_full[1]))
+    al, ah = 0, 0
+    if len(met_age_dict["loga"]) > 1:
+        ah = min(
+            len(met_age_dict["loga"]) - 1,
+            np.searchsorted(met_age_dict["loga"], fit_params["loga"]),
+        )
         al = ah - 1
 
-    return *model_full, ml, mh, al, ah
+    return (
+        fit_params["met"],
+        fit_params["loga"],
+        fit_params["alpha"],
+        fit_params["beta"],
+        fit_params["Av"],
+        fit_params["DR"],
+        fit_params["Rv"],
+        fit_params["dm"],
+        ml,
+        mh,
+        al,
+        ah,
+    )
 
 
 def zaWAverage(
@@ -640,7 +648,7 @@ def zaWAverage(
         return np.array(theor_tracks[m0][a0])
 
     # Weighted average by the (inverse) distance to the four (z, a) grid
-    # points. This way is faster than using 'np.average()'.
+    # points. This way is faster than using 'np.average()' with weights.
     inv_d = 1.0 / dist  # Inverse of the distance.
     weights = inv_d / sum(inv_d)  # Weights
     isochrone = (
@@ -656,46 +664,196 @@ def zaWAverage(
     # Now for the secondary masses
     isochrone[m_ini_idx + 1] = theor_tracks[m0][a0][m_ini_idx + 1]
 
-    # #
-    # #
-    # #
-    # import matplotlib.pyplot as plt
-
-    # # print(z_model, a_model, ml, mh, al, ah)
-    # # plt.subplot(121)
-    # # plt.scatter(*pts.T, c="r")
-    # # plt.scatter(z_model, a_model, marker="x", c="g")
-    # # # First color
-    # # plt.subplot(122)
-    # plt.scatter(theor_tracks[ml][al][1], theor_tracks[ml][al][0], c="b", alpha=0.2)
-    # plt.scatter(theor_tracks[ml][ah][1], theor_tracks[ml][ah][0], c="r", alpha=0.2)
-    # plt.scatter(theor_tracks[mh][al][1], theor_tracks[mh][al][0], c="cyan", alpha=0.2)
-    # plt.scatter(
-    #     theor_tracks[mh][ah][1], theor_tracks[mh][ah][0], c="orange", alpha=0.2
+    # temp_plot(
+    #     "OLD",
+    #     theor_tracks,
+    #     isochrone,
+    #     m_ini_idx,
+    #     ml,
+    #     mh,
+    #     al,
+    #     ah,
+    #     z_model,
+    #     a_model,
+    #     pts,
+    #     weights,
     # )
-    # plt.scatter(isochrone[1], isochrone[0], c="k", marker="x", alpha=0.5, label="avrg")
-    # plt.gca().invert_yaxis()
-    # plt.legend()
-    # # Second color
-    # # plt.subplot(133)
-    # # plt.scatter(theor_tracks[ml][al][2], theor_tracks[ml][al][0], c='b')
-    # # plt.scatter(theor_tracks[ml][ah][2], theor_tracks[ml][ah][0], c='r')
-    # # plt.scatter(theor_tracks[mh][al][2], theor_tracks[mh][al][0], c='cyan')
-    # # plt.scatter(theor_tracks[mh][ah][2], theor_tracks[mh][ah][0], c='orange')
-    # # plt.scatter(isochrone[2], isochrone[0], c='g', ls='--')
-    # # plt.gca().invert_yaxis()
-    # plt.show()
-    # # breakpoint()
 
     return isochrone
 
 
-def move_isochrone(isochrone: np.ndarray, m_ini_idx: int, dm: float) -> np.ndarray:
+def temp_plot(
+    title,
+    theor_tracks,
+    isochrone,
+    m_ini_idx,
+    ml,
+    mh,
+    al,
+    ah,
+    z_model,
+    a_model,
+    pts,
+    weights,
+):
+    """ """
+    import matplotlib.pyplot as plt
+
+    print("ml, mh, al, ah:", ml, mh, al, ah)
+    print("z_model, a_model:", z_model, a_model)
+    print("(z, loga) grid:", *pts)
+    print("weights:", weights)
+
+    plt.suptitle(title)
+
+    plt.subplot(221)
+    N_pts = len(theor_tracks[ml][al][m_ini_idx])
+    plt.scatter(
+        # theor_tracks[ml][al][m_ini_idx],
+        np.arange(0, N_pts),
+        theor_tracks[ml][al][0],
+        c="b",
+        alpha=0.5,
+        label=f"mlal (w={weights[0]:.3f})",
+    )
+    plt.scatter(
+        # theor_tracks[ml][ah][m_ini_idx],
+        np.arange(0, N_pts),
+        theor_tracks[ml][ah][0],
+        c="r",
+        alpha=0.5,
+        label=f"mlah (w={weights[1]:.3f})",
+    )
+    plt.scatter(
+        # theor_tracks[mh][al][m_ini_idx],
+        np.arange(0, N_pts),
+        theor_tracks[mh][al][0],
+        c="cyan",
+        alpha=0.5,
+        label=f"mhal (w={weights[2]:.3f})",
+    )
+    plt.scatter(
+        # theor_tracks[mh][ah][m_ini_idx],
+        np.arange(0, N_pts),
+        theor_tracks[mh][ah][0],
+        c="orange",
+        alpha=0.5,
+        label=f"mhah (w={weights[3]:.3f})",
+    )
+    plt.xlabel("mass")
+    plt.ylabel("mag")
+    # plt.scatter(isochrone[m_ini_idx], isochrone[0], marker="x", c="k")
+    plt.scatter(np.arange(0, len(isochrone[0])), isochrone[0], marker="x", c="k")
+    plt.legend()
+
+    #
+    plt.subplot(222)
+    plt.scatter(
+        # theor_tracks[ml][al][m_ini_idx],
+        np.arange(0, N_pts),
+        theor_tracks[ml][al][1],
+        c="b",
+        alpha=0.5,
+        label="mlal",
+    )
+    plt.scatter(
+        # theor_tracks[ml][ah][m_ini_idx],
+        np.arange(0, N_pts),
+        theor_tracks[ml][ah][1],
+        c="r",
+        alpha=0.5,
+        label="mlah",
+    )
+    plt.scatter(
+        # theor_tracks[mh][al][m_ini_idx],
+        np.arange(0, N_pts),
+        theor_tracks[mh][al][1],
+        c="cyan",
+        alpha=0.5,
+        label="mhal",
+    )
+    plt.scatter(
+        # theor_tracks[mh][ah][m_ini_idx],
+        np.arange(0, N_pts),
+        theor_tracks[mh][ah][1],
+        c="orange",
+        alpha=0.5,
+        label="mhah",
+    )
+    # plt.scatter(isochrone[m_ini_idx], isochrone[1], marker="x", c="k")
+    plt.scatter(np.arange(0, len(isochrone[0])), isochrone[1], marker="x", c="k")
+    plt.xlabel("mass")
+    plt.ylabel("color")
+    plt.legend()
+
+    # First color
+    plt.subplot(223)
+    plt.scatter(
+        theor_tracks[ml][al][1], theor_tracks[ml][al][0], c="b", alpha=0.2, label="mlal"
+    )
+    plt.scatter(
+        theor_tracks[ml][ah][1], theor_tracks[ml][ah][0], c="r", alpha=0.2, label="mlah"
+    )
+    plt.scatter(
+        theor_tracks[mh][al][1],
+        theor_tracks[mh][al][0],
+        c="cyan",
+        alpha=0.2,
+        label="mhal",
+    )
+    plt.scatter(
+        theor_tracks[mh][ah][1],
+        theor_tracks[mh][ah][0],
+        c="orange",
+        alpha=0.2,
+        label="mhah",
+    )
+    plt.scatter(isochrone[1], isochrone[0], c="k", marker="x", alpha=0.5, label="avrg")
+    plt.gca().invert_yaxis()
+    plt.legend()
+    plt.xlabel("color")
+    plt.ylabel("mag")
+
+    # Plot aligned masses
+    plt.subplot(224)
+    mmin = theor_tracks[ml][al][m_ini_idx].min()
+    mmax = theor_tracks[ml][al][m_ini_idx].max()
+    plt.plot(theor_tracks[ml][al][m_ini_idx], label=f"mlal, [{mmin:.2f}, {mmax:.2f}]")
+    mmin = theor_tracks[ml][ah][m_ini_idx].min()
+    mmax = theor_tracks[ml][ah][m_ini_idx].max()
+    plt.plot(theor_tracks[ml][ah][m_ini_idx], label=f"mlah, [{mmin:.2f}, {mmax:.2f}]")
+    mmin = theor_tracks[mh][al][m_ini_idx].min()
+    mmax = theor_tracks[mh][al][m_ini_idx].max()
+    plt.plot(theor_tracks[mh][al][m_ini_idx], label=f"mhal, [{mmin:.2f}, {mmax:.2f}]")
+    mmin = theor_tracks[mh][ah][m_ini_idx].min()
+    mmax = theor_tracks[mh][ah][m_ini_idx].max()
+    plt.plot(theor_tracks[mh][ah][m_ini_idx], label=f"mhah, [{mmin:.2f}, {mmax:.2f}]")
+    plt.legend()
+    plt.xlabel("aligned points")
+    plt.ylabel("mass")
+
+    plt.show()
+
+    # Second color
+    # plt.subplot(133)
+    # plt.scatter(theor_tracks[ml][al][2], theor_tracks[ml][al][0], c='b')
+    # plt.scatter(theor_tracks[ml][ah][2], theor_tracks[ml][ah][0], c='r')
+    # plt.scatter(theor_tracks[mh][al][2], theor_tracks[mh][al][0], c='cyan')
+    # plt.scatter(theor_tracks[mh][ah][2], theor_tracks[mh][ah][0], c='orange')
+    # plt.scatter(isochrone[2], isochrone[0], c='g', ls='--')
+    # plt.gca().invert_yaxis()
+
+
+def move_isochrone(
+    isochrone: np.ndarray, binar_flag: bool, m_ini_idx: int, dm: float
+) -> np.ndarray:
     """Receives an isochrone of a given age and metallicity and modifies
     its magnitude values according to a given distance modulus.
 
     :param isochrone: Isochrone array.
     :type isochrone: np.ndarray
+    :param binar_flag: Binary flag
+    :type binar_flag: bool
     :param m_ini_idx: Index of the initial mass.
     :type m_ini_idx: int
     :param dm: Distance modulus.
@@ -706,8 +864,11 @@ def move_isochrone(isochrone: np.ndarray, m_ini_idx: int, dm: float) -> np.ndarr
     """
     # Move magnitude
     isochrone[0] += dm
-    # Move binary magnitude if it exists
-    if isochrone.shape[0] > m_ini_idx + 1:
+    # Move binary magnitude if required
+    # if isochrone.shape[0] > m_ini_idx + 1:
+    if binar_flag:
+        # m_ini_idx + 1 --> Secondary binary mass
+        # m_ini_idx + 2 --> Binary magnitude
         isochrone[m_ini_idx + 2] += dm
 
     return isochrone
@@ -948,7 +1109,11 @@ def cut_max_mag(isoch_moved: np.ndarray, max_mag_syn: float) -> np.ndarray:
 
 
 def mass_interp(
-    isoch_cut: np.ndarray, m_ini_idx: int, st_dist_mass: np.ndarray, N_obs_stars: int
+    isoch_cut: np.ndarray,
+    m_ini_idx: int,
+    st_dist_mass: np.ndarray,
+    N_synth_stars: int,
+    binar_flag: bool,
 ) -> np.ndarray:
     """For each mass in the sampled IMF mass distribution, interpolate its value
     (and those of all the sub-arrays in 'isoch_cut') into the isochrone.
@@ -962,8 +1127,10 @@ def mass_interp(
     :type m_ini_idx: int
     :param st_dist_mass: Array of sampled masses.
     :type st_dist_mass: np.ndarray
-    :param N_obs_stars: Number of observed stars.
-    :type N_obs_stars: int
+    :param N_synth_stars: Number of observed stars.
+    :type N_synth_stars: int
+    :param binar_flag: Binary system flag
+    :type binar_flag: bool
 
     :returns: Interpolated isochrone array.
     :rtype: np.ndarray
@@ -979,47 +1146,31 @@ def mass_interp(
     # (~msk_max).sum(): stars lost above the maximum mass (evolutionary)
     msk_m = (st_dist_mass >= mass_ini.min()) & (st_dist_mass <= mass_ini.max())
 
-    # Interpolate the same number of observed stars into the isochrone
-    mass_dist = st_dist_mass[msk_m][:N_obs_stars]
+    # Extract up to 'N_synth_stars' masses sampled from an IMF, within the mass range
+    mass_dist = st_dist_mass[msk_m][:N_synth_stars]
+
     if not mass_dist.any():
         return np.array([])
 
-    # # This is about 2x faster than interp1d() but it comes at the cost of a more
-    # # coarse distribution of stars throughout the isochrone. To fix this, we have to
-    # # apply a random noise to the magnitude(s) proportional to the percentage that
-    # # the masses sampled differ from those in the isochrone. This lowers the
-    # # performance to an increase of ~22%
-    # idx = np.searchsorted(mass_ini, mass_dist)
-    # isoch_mass = isoch_cut[:, idx]
-    # m_perc = (isoch_mass[m_ini_idx]-mass_dist)/mass_dist
-    # isoch_mass[0] += isoch_mass[0]*m_perc
-    # if isoch_mass.shape[0] > m_ini_idx:
-    #     isoch_mass[m_ini_idx+1] += isoch_mass[m_ini_idx+1]*m_perc
-    # return isoch_mass
-
-    # # This is equivalent to the the block below but slower for more than 5
-    # # dimensions, and *very* slightly faster for lower dimensions
-    # isoch_mass = np.empty([isoch_cut.shape[0], mass_dist.size])
-    # for i, arr in enumerate(isoch_cut):
-    #     isoch_mass[i] = np.interp(mass_dist, mass_ini, arr)
-
     # Interpolate the sampled stars (masses) into the isochrone
-    isoch_mass = interp_mass_isoch(isoch_cut, mass_ini, mass_dist)
+    isoch_mass = interp_mass_isoch(
+        isoch_cut, mass_ini, mass_dist, m_ini_idx, binar_flag
+    )
 
     return isoch_mass
 
 
 def interp_mass_isoch(
-    isoch_cut: np.ndarray, mass_ini: np.ndarray, mass_dist: np.ndarray
+    isoch_cut: np.ndarray,
+    mass_ini: np.ndarray,
+    mass_dist: np.ndarray,
+    m_ini_idx: int,
+    binar_flag: bool,
 ) -> np.ndarray:
     """Find where in the original data, the values to interpolate would be inserted.
 
     NOTE: I already tried to speed this block up using numba (@jit(nopython=True))
     but it does not help. The code runs even slower.
-
-    NOTE: this is a stripped down version of scipy.inter1d (kind='linear') which
-    is now legacy code (https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.interp1d.html)
-    Scipy now recommends using np.interp for simple linear interpolation
 
     :param isoch_cut: Isochrone array.
     :type isoch_cut: np.ndarray
@@ -1027,13 +1178,24 @@ def interp_mass_isoch(
     :type mass_ini: np.ndarray
     :param mass_dist: Array of sampled masses.
     :type mass_dist: np.ndarray
+    :param m_ini_idx: Index of primary mass
+    :type m_ini_idx: int
+    :param binar_flag: Binarity flag
+    :type binar_flag: bool
 
     :returns: Interpolated isochrone array.
     :rtype: np.ndarray
     """
+
+    # *****************************************************************************
+    # This is a stripped down version of scipy.inter1d (kind='linear') which
+    # is now legacy code (https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.interp1d.html)
+    # Scipy now recommends using np.interp for simple linear interpolation but it
+    # is quite slower.
+    #
     # Note: If x_new[n] == x[m], then m is returned by searchsorted.
     x_new_indices = np.searchsorted(mass_ini, mass_dist)
-
+    #
     # Calculate the slope of regions that each x_new value falls in.
     lo = x_new_indices - 1
     x_lo = mass_ini[lo]
@@ -1046,6 +1208,53 @@ def interp_mass_isoch(
     y_diff = slope * x_diff
     # Calculate the actual value for each entry in x_new.
     isoch_mass = y_diff + y_lo
+    # *****************************************************************************
+
+    # *****************************************************************************
+    # This is slower for more than 5 dimensions, and *very* slightly faster for lower
+    # dimensions
+    # isoch_mass = np.empty([isoch_cut.shape[0], mass_dist.size])
+    # for i, arr in enumerate(isoch_cut):
+    #     isoch_mass[i] = np.interp(mass_dist, mass_ini, arr)
+
+    # # Same performance as above
+    # isoch_mass = []
+    # for arr in isoch_cut:
+    #     isoch_mass.append(np.interp(mass_dist, mass_ini, arr))
+    # isoch_mass = np.array(isoch_mass)
+    # *****************************************************************************
+
+    # *****************************************************************************
+    # This is about 2x faster than interp1d() but it comes at the cost of a more
+    # coarse distribution of stars throughout the isochrone. To fix this, we have to
+    # apply a random noise to the magnitude(s) proportional to the percentage that
+    # the masses sampled differ from those in the isochrone. This lowers the
+    # performance to an increase of ~22%
+    #
+    # idx = np.searchsorted(mass_ini, mass_dist)
+    # isoch_mass = isoch_cut[:, idx]
+
+    # Random noise applied to magnitudes. Does not really work that good
+    # m_perc = (isoch_mass[m_ini_idx] - mass_dist) / mass_dist
+    # # Random noise to magnitude
+    # isoch_mass[0] += isoch_mass[0] * m_perc
+    # if binar_flag:
+    #     # Random noise to binary magnitude
+    #     isoch_mass[m_ini_idx + 2] += isoch_mass[m_ini_idx + 2] * m_perc
+    # *****************************************************************************
+
+    # import matplotlib.pyplot as plt
+    # # plt.subplot(121)
+    # # plt.title("interp1d")
+    # plt.scatter(isoch_mass0[1], isoch_mass0[0], alpha=0.25, label="interp1d")
+    # # plt.gca().invert_yaxis()
+    # # plt.subplot(122)
+    # # plt.title("searchsorted")
+    # plt.scatter(isoch_mass[1], isoch_mass[0], alpha=0.25, label="searchsorted")
+    # plt.gca().invert_yaxis()
+    # plt.legend()
+    # plt.show()
+    # # breakpoint()
 
     return isoch_mass
 
@@ -1084,7 +1293,6 @@ def binarity(
         return isoch_mass[: m_ini_idx + 2]
 
     Ns = isoch_mass.shape[-1]
-    mass = isoch_mass[m_ini_idx]
 
     # Distribution of probability of binarity (multiplicity fraction) versus
     # primary masses.
@@ -1092,7 +1300,9 @@ def binarity(
     # Offner et al. (2022); Fig 1 (left), Table 1
     # b_p = np.clip(alpha + beta * np.log(mass), a_min=0, a_max=1)
     # b_p = np.clip(alpha + beta * np.arctan(mass), a_min=0, a_max=1)
-    b_p = np.clip(alpha + beta * (1 / (1 + 1.4 / mass)), a_min=0, a_max=1)
+    b_p = np.clip(
+        alpha + beta * (1 / (1 + 1.4 / isoch_mass[m_ini_idx])), a_min=0, a_max=1
+    )
 
     # Stars (masses) with the largest binary probabilities are selected
     # proportional to their probability

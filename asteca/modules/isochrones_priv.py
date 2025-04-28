@@ -1,4 +1,5 @@
 import os
+import warnings
 
 import numpy as np
 
@@ -13,11 +14,17 @@ import numpy as np
 # DEPRECATED 17/03/25. When I replaced pandas with np.genfromtxt this parameter
 # became obsolete because np.genfromtxt does not accept regex. By default it splits
 # columns using empty spaces, which works for now at least.
+#
 # sep_cols: regular expression to separate columns in the isochrone files
 
 phot_systs_data = {
     "PARSEC": {
-        "col_names": {"mass_col": "Mini", "met_col": "Zini", "age_col": "logAge"},
+        "col_names": {
+            "eep_col": None,
+            "mass_col": "Mini",
+            "met_col": "Zini",
+            "age_col": "logAge",
+        },
         "comment_char": "#",
         # "sep_cols": r"\s+",
         "idx_col_line": -1,
@@ -26,6 +33,7 @@ phot_systs_data = {
     },
     "MIST": {
         "col_names": {
+            "eep_col": "EEP",
             "mass_col": "initial_mass",
             "met_col": "Zinit",
             "age_col": "log10_isochrone_age_yr",
@@ -36,6 +44,7 @@ phot_systs_data = {
     },
     "BASTI": {
         "col_names": {
+            "eep_col": None,
             "mass_col": "M/Mo(ini)",
             "met_col": "Z =",
             "age_col": "Age (Myr) =",
@@ -60,7 +69,7 @@ def load(
 ) -> tuple[np.ndarray, list, dict, int]:
     """Load the theoretical isochrones and return processed data.
 
-    :param model: The model must be one of the supported isochrone services.
+    :param model: The model must be one of the supported isochrone services (uppercase).
     :type model: str
     :param isochs_path: Path to the isochrone files.
     :type isochs_path: str
@@ -84,7 +93,7 @@ def load(
         dictionary with metallicities and ages, and number of files read.
     :rtype: tuple[np.ndarray, list, dict, int]
     """
-    cols_keep, mass_col, met_col, age_col = get_columns(
+    all_filters, eep_col, mass_col, met_col, age_col = get_columns(
         column_names, model, magnitude, color, color2
     )
 
@@ -96,10 +105,14 @@ def load(
         model,
         parsec_rm_stage_9,
         f_paths,
+        all_filters,
+        eep_col,
+        mass_col,
         met_col,
         age_col,
-        cols_keep,
     )
+
+    met_age_sorted, isochs_sorted = sort_by_met_age(met_age_vals, isoch_arrays)
 
     # N_interp = 10_000 gives excellent photometric results
     # N_interp = 5000 gives good photometric results
@@ -109,7 +122,9 @@ def load(
     # N_interp = 500 gives poor photometric results
     # Time performance:
     # 10_000: 1, 5000: 0.74, 2500: 0.63, 2000: 0.59, 1000: 0.53, 500: 0.51
-    isochrones = interp_df(N_interp, met_age_vals, isoch_arrays)
+    isochrones = interp_isochrones(
+        N_interp, mass_col, eep_col, met_age_sorted, isochs_sorted
+    )
 
     isochrones, met_age_arr = merge_ps_massini_check(mass_col, isochrones)
 
@@ -120,8 +135,14 @@ def load(
     all_a = np.array(list(dict.fromkeys(all_a))).astype(float)
     met_age_dict = {"met": all_m, "loga": all_a}
 
+    if max(met_age_dict["loga"][1:] - met_age_dict["loga"][:-1]) > 0.25:
+        warnings.warn(
+            "The isochrones grid has very large steps in log(age). This can impact "
+            + "the proper generation of synthetic clusters. Consider using a smaller step."
+        )
+
     # theor_tracks.shape = (N_z, N_a, N_cols, N_interp)
-    theor_tracks, color_filters = shape_isochrones(
+    theor_tracks, color_filters = reshape_isochrones(
         magnitude, color, color2, mass_col, isochrones
     )
 
@@ -134,7 +155,7 @@ def get_columns(
     magnitude: str,
     color: tuple,
     color2: tuple | None,
-) -> tuple[list, str, str, str]:
+) -> tuple[list, str | None, str, str, str]:
     """Get the column names for the isochrones.
 
     :param column_names: Dictionary with the column names for the isochrones,
@@ -150,15 +171,16 @@ def get_columns(
         defaults to None
     :type color2: tuple | None
 
-    :return: List of columns to keep, mass column name, metallicity column name,
-        and age column name.
-    :rtype: tuple[list, str, str, str]
+    :return: List of filters plus EEP, mass, metallicity, and age column names.
+    :rtype: tuple[list, str | None, str, str, str]
     """
     if column_names is None:
+        eep_col = phot_systs_data[model]["col_names"]["eep_col"]
         mass_col = phot_systs_data[model]["col_names"]["mass_col"]
         met_col = phot_systs_data[model]["col_names"]["met_col"]
         age_col = phot_systs_data[model]["col_names"]["age_col"]
     else:
+        eep_col = column_names["eep_col"]
         mass_col = column_names["mass_col"]
         met_col = column_names["met_col"]
         age_col = column_names["age_col"]
@@ -167,9 +189,8 @@ def get_columns(
     all_filters = [magnitude] + list(color)
     if color2 is not None:
         all_filters += list(color2)
-    cols_keep = list(dict.fromkeys(all_filters)) + [mass_col]
 
-    return cols_keep, mass_col, met_col, age_col
+    return all_filters, eep_col, mass_col, met_col, age_col
 
 
 def extract_paths(isochs_path: str) -> list:
@@ -210,28 +231,42 @@ def read(
     model: str,
     parsec_rm_stage_9: bool,
     f_paths: list,
+    all_filters: list,
+    eep_col: str | None,
+    mass_col: str,
     met_col: str,
     age_col: str,
-    cols_keep: list,
 ) -> tuple[list[str], list[np.ndarray]]:
     """Read isochrone files and store them as numpy arrays along with its associated
     metallicity and age values.
+
     :param model: Isochrone model name.
     :type model: str
     :param parsec_rm_stage_9: Remove post-AGB stage for PARSEC models.
     :type parsec_rm_stage_9: bool
     :param f_paths: List of isochrone file paths.
     :type f_paths: list
+    :param all_filters: List of photometric magnitude  + color(s)
+    :type all_filters: list
+    :param eep_col: Column name for EEP
+    :type eep_col: str | None
+    :param mass_col: Column name for initial mass
+    :type mass_col: str
     :param met_col: Metallicity column name.
     :type met_col: str
     :param age_col: Age column name.
     :type age_col: str
-    :param cols_keep: List of columns to keep.
-    :type cols_keep: list
+
     :return: First list contains the met and age values (as strings), second list
      contains the associated isochrones as numpy arrays
     :rtype: tuple[list[str], list[np.ndarray]]
     """
+
+    # MIST isochrones require 'eep_col'
+    cols_keep = all_filters + [mass_col]
+    if eep_col is not None:
+        cols_keep += [eep_col]
+
     met_age_vals, isoch_arrays = [], []
     for file_path in f_paths:
         # Extract columns names and full header
@@ -406,22 +441,20 @@ def get_BASTI_z_a_val(full_header: list, met_col: str, age_col: str) -> tuple[st
     return met, age
 
 
-def interp_df(
-    N_interp: int,
+def sort_by_met_age(
     met_age_vals: list,
     isoch_arrays: list[np.ndarray],
-) -> dict:
-    """Interpolate the isochrone data.
+) -> tuple[list, list]:
+    """
+    Sort the isochrones by metallicity and age.
 
-    :param N_interp: Number of points to interpolate.
-    :type N_interp: int
     :param met_age_vals: List of metallicity and ages
     :type met_age_vals: list
-    :param isoch_arrays: List of isochrones as numpy array
+    :param isoch_arrays: List of isochrones as numpy arrays
     :type isoch_arrays: list[np.ndarray]
 
-    :return: Dictionary of isochrones.
-    :rtype: dict
+    :return: Lists with sorted met and age values, and sorted isochrones.
+    :rtype: tuple[list, list]
     """
     # Convert the string elements to floats for sorting
     met_age_f = [(float(x), float(y)) for x, y in met_age_vals]
@@ -435,43 +468,97 @@ def interp_df(
     # Sort data frames
     isochs_sorted = [isoch_arrays[i] for i in sorted_indexes]
 
-    # Interpolate
-    # Uniform distribution
-    # xx = np.linspace(0.0, 1.0, N_interp)
+    return met_age_sorted, isochs_sorted
 
-    # More resolution for smaller masses. Helps with the photometric artifacts that
-    # appear with binary systems in the low mass region, when N_interp<5000 is used
-    N1, N2, N3, N4 = (
-        int(0.6 * N_interp),
-        int(0.2 * N_interp),
-        int(0.1 * N_interp),
-        int(0.1 * N_interp),
-    )
-    xx = np.array(
-        list(np.linspace(0.0, 0.25, N1, endpoint=False))
-        + list(np.linspace(0.25, 0.5, N2, endpoint=False))
-        + list(np.linspace(0.5, 0.75, N3, endpoint=False))
-        + list(np.linspace(0.75, 1, N4, endpoint=True))
-    )
+
+def interp_isochrones(
+    N_interp: int,
+    mass_col: str,
+    eep_col: str | None,
+    met_age_sorted: list,
+    isochs_sorted: list[np.ndarray],
+) -> dict:
+    """
+    Interpolate the isochrone data based on either mass or EEP distribution.
+
+    :param N_interp: Number of points to interpolate (for mass distribution).
+    :type N_interp: int
+    :param mass_col: Column name for the initial mass (for mass distribution).
+    :type mass_col: str
+    :param eep_col: Column name for the EEP (for EEP distribution).
+    :type eep_col: str | None
+    :param met_age_sorted: List of sorted metallicity and ages.
+    :type met_age_sorted: list
+    :param isochs_sorted: List of sorted isochrones as numpy arrays.
+    :type isochs_sorted: list[np.ndarray]
+
+    :return: Dictionary of interpolated isochrones.
+    :rtype: dict
+    """
+    if eep_col is None:
+        # Define mass distribution parameters
+        percs = np.array([0.5, 1, 1.5, 2, 5]) / np.sum([0.5, 1, 1.5, 2, 5])
+        b1, b2, b3, b4 = [int(N_interp * p) for p in percs[:4]]
+        b5 = N_interp - (b1 + b2 + b3 + b4)
+        # Per isochrone mass based distribution
+        mass_percs = np.array([0.25, 0.5, 0.75, 0.9])
+
+        # General distribution, isochrone independent. The above works a bit better
+        # mp = np.array([0.0, 0.25, 0.5, 0.75, 0.9, 1.])
+        # m1 = np.linspace(mp[0], mp[1], b1, endpoint=False)
+        # m2 = np.linspace(mp[1], mp[2], b2, endpoint=False)
+        # m3 = np.linspace(mp[2], mp[3], b3, endpoint=False)
+        # m4 = np.linspace(mp[3], mp[4], b4, endpoint=False)
+        # m5 = np.linspace(mp[4], mp[5], b5)
+        # mass_dist = np.concatenate([m1, m2, m3, m4, m5])
+    else:
+        # Define EEP distribution
+        eep_min = int(min([min(isoch[eep_col]) for isoch in isochs_sorted]))
+        eep_max = int(max([max(isoch[eep_col]) for isoch in isochs_sorted]))
+        eep_dist = np.arange(eep_min, eep_max + 1)
 
     isochrones = {}
     for i, (met, age) in enumerate(met_age_sorted):
-        # Generate entry in dictionary
-        try:
-            isochrones[met]
-        except KeyError:
-            isochrones[met] = {}
-        try:
-            isochrones[met][age]
-        except KeyError:
-            isochrones[met][age] = []
+        # # Generate entry in dictionary
+        # try:
+        #     isochrones[met]
+        # except KeyError:
+        #     isochrones[met] = {}
+        # try:
+        #     isochrones[met][age]
+        # except KeyError:
+        #     isochrones[met][age] = []
+
+        # Create nested dictionary structure (equivalent to the block above)
+        isochrones.setdefault(met, {}).setdefault(age, [])
 
         isoch = isochs_sorted[i]
-        xp = np.linspace(0.0, 1.0, len(isoch))
-        isoch_interp = {}
-        for col in isoch.dtype.names:
-            isoch_interp[col] = np.interp(xx, xp, isoch[col])
 
+        if eep_col is None:
+            # Mass-based interpolation
+            mmin, mmax = isoch[mass_col].min(), isoch[mass_col].max()
+            mstep1, mstep2, mstep3, mstep4 = mmax * mass_percs  # pyright: ignore
+            m1 = np.linspace(mmin, mstep1, b1, endpoint=False)  # pyright: ignore
+            m2 = np.linspace(mstep1, mstep2, b2, endpoint=False)  # pyright: ignore
+            m3 = np.linspace(mstep2, mstep3, b3, endpoint=False)  # pyright: ignore
+            m4 = np.linspace(mstep3, mstep4, b4, endpoint=False)  # pyright: ignore
+            m5 = np.linspace(mstep4, mmax, b5)  # pyright: ignore
+            mass_dist = np.concatenate([m1, m2, m3, m4, m5])
+            interp_dist, interp_col = mass_dist, isoch[mass_col]
+            # # General distribution, isochrone independent
+            # interp_dist, interp_col = mass_dist, np.linspace(0.0, 1.0, len(isoch))
+            # Keep all columns
+            cols_keep = isoch.dtype.names
+        else:
+            # EEP-based interpolation
+            interp_dist, interp_col = eep_dist, isoch[eep_col]  # pyright: ignore
+            # Remove EEP column
+            cols_keep = [_ for _ in isoch.dtype.names if _ != eep_col]
+
+        # Interpolate all columns
+        isoch_interp = {}
+        for col in cols_keep:
+            isoch_interp[col] = np.interp(interp_dist, interp_col, isoch[col])
         isochrones[met][age].append(isoch_interp)
 
     return isochrones
@@ -521,12 +608,29 @@ def merge_ps_massini_check(mass_col: str, isochrones: dict) -> tuple[list, list]
             met_vals.append(df_age_0)
         isochrones_ordered.append(met_vals)
 
-    # Check array sizes
+    # Check array sizes and mass order (min to max)
     Nvals = []
     for met in isochrones_ordered:
         for age in met:
-            for arr in age.values():
+            for k, arr in age.items():
                 Nvals.append(arr.shape[0])
+                if k == mass_col:
+                    # Use a mass tolerance instead of the 'sort_flag':
+                    #
+                    # sort_flag = all(arr[i] <= arr[i + 1] for i in range(len(arr) - 1))
+                    #
+                    # which checks if all masses are perfectly sorted, because the
+                    # PARSEC isochrones contain some rounding errors of the order
+                    # 10**-7, 10**-8 for large masses, which would always set the flag
+                    # to False
+                    max_mass_diff = max(
+                        (arr[i] - arr[i + 1]) for i in range(len(arr) - 1)
+                    )
+                    if max_mass_diff > 0.01:
+                        raise ValueError(
+                            "Masses are not min-max sorted in loaded isochrones."
+                        )
+
     if not np.all(Nvals):
         raise ValueError(
             "Shape mismatch in loaded isochrones. This usually means that an\n"
@@ -537,7 +641,7 @@ def merge_ps_massini_check(mass_col: str, isochrones: dict) -> tuple[list, list]
     return isochrones_ordered, met_age_arr
 
 
-def shape_isochrones(
+def reshape_isochrones(
     magnitude: str,
     color: tuple,
     color2: tuple | None,

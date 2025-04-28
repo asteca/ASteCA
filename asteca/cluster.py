@@ -84,7 +84,7 @@ class Cluster:
         self.N_clust_max = N_clust_max
         self.verbose = verbose
 
-        self._vp("\nInstantiating cluster...")
+        self._vp("\nInstantiating cluster")
         self._load_column_data()
         self._vp(f"N_stars        : {self.N_stars}", 1)
         self._vp(f"N_clust_min    : {self.N_clust_min}", 1)
@@ -298,45 +298,54 @@ class Cluster:
         self._vp("\nCenter coordinates found")
         self._vp(mssg, 1)
 
-    def _get_radius(self, radius: float) -> None:
-        self._vp(f"Radius         : {radius}", 1)
-        self.radius = radius
+    def _get_radius(self, algo: str = "king") -> None:
+        """Estimate the cluster radius
 
-    # def get_radius(self, algo: str = "field_dens") -> None:
-    #     """Estimate the cluster radius
+        - ``field_dens``: xxx
+        - ``king``: xxx
 
-    #     - ``field_dens``: xxx
-    #     - ``king``: xxx
+        :param algo: Algorithm used to estimate the radius, one of
+            (``field_dens, king``); defaults to ``field_dens``
+        :type algo: str
 
-    #     :param algo: Algorithm used to estimate the radius, one of
-    #         (``field_dens, king``); defaults to ``field_dens``
-    #     :type algo: str
+        :raises ValueError: If required attributes are  missing from the
+            :py:class:`Cluster <asteca.cluster.Cluster>` object
+        """
 
-    #     :raises ValueError: If required attributes are  missing from the
-    #         :py:class:`Cluster <asteca.cluster.Cluster>` object
-    #     """
+        if algo == "field_dens":
+            for k in ("ra", "dec", "radec_c"):
+                if hasattr(self, k) is False:
+                    raise ValueError(f"'{k}' must be present as a 'cluster' attribute")
+        elif algo == "king":
+            for k in ("ra", "dec", "radec_c"):
+                if hasattr(self, k) is False:
+                    raise ValueError(f"'{k}' must be present as a 'cluster' attribute")
+        else:
+            raise ValueError(f"Unrecognized method '{algo}")
 
-    #     if algo == "field_dens":
-    #         for k in ("ra", "dec", "radec_c"):
-    #             if hasattr(self, k) is False:
-    #                 raise ValueError(f"'{k}' must be present as a 'cluster' attribute")
-    #     elif algo == "king":
-    #         for k in ("ra", "dec", "radec_c"):
-    #             if hasattr(self, k) is False:
-    #                 raise ValueError(f"'{k}' must be present as a 'cluster' attribute")
+        from .modules import cluster_priv as cp
 
-    #     xv, yv = self.ra_v, self.dec_v
-    #     xy_center = self.radec_c
+        xv, yv = self.ra, self.dec
+        xy_center = self.radec_c
 
-    #     if algo == "field_dens":
-    #         radius = cp.fdens_radius(xv, yv, list(xy_center))
-    #     elif algo == "king":
-    #         radius = cp.king_radius(xv, yv, xy_center, self.N_cluster)
-    #     else:
-    #         raise ValueError(f"Unrecognized method '{algo}")
-
-    #     print(f"\nRadius         : {radius}")
-    #     self.radius = radius
+        if algo == "field_dens":
+            radius = cp.fdens_radius(xv, yv, list(xy_center))
+            self._vp("\nRadius estimated")
+            self._vp(f"Radius         : {radius:.3f}", 1)
+            self.radius = radius
+        elif algo == "king":
+            amplitude, radius_core, radius, field_dens = cp.king_radius(
+                xv, yv, xy_center
+            )
+            self._vp("\nKing parameters density estimated")
+            self._vp(f"Field density  : {field_dens:.3f}", 1)
+            self._vp(f"Amplitude      : {amplitude:.3f}", 1)
+            self._vp(f"Radius (core)  : {radius_core:.3f}", 1)
+            self._vp(f"Radius (tidal) : {radius:.3f}", 1)
+            self.field_density = field_dens
+            self.amplitude = amplitude
+            self.radius_core = radius_core
+            self.radius = radius
 
     def get_nmembers(self, algo: str = "ripley", eq_to_gal: bool = True) -> None:
         """Estimate the number of members for the cluster. Algorithms:

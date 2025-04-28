@@ -118,7 +118,7 @@ class Synthetic:
                 + f"one of {ext_laws}"
             )
 
-        self._vp("\nInstantiating synthetic...")
+        self._vp("\nInstantiating synthetic")
 
         from .modules import synth_cluster_priv as scp
 
@@ -261,6 +261,7 @@ class Synthetic:
             self.rand_floats["norm"][1],
         )
 
+        self._vp("\nCalibrated observed cluster")
         self._vp(f"N_stars_obs    : {self.N_stars_obs}", 1)
         self._vp(f"Max magnitude  : {self.max_mag_syn_obs:.2f}", 1)
         self._vp("Error distribution loaded", 1)
@@ -332,12 +333,17 @@ class Synthetic:
                 ah,
             )
 
-        # Move theoretical isochrone using the distance modulus
-        isoch_moved = scp.move_isochrone(isochrone, self.m_ini_idx, dm)
-
         binar_flag = True
         if alpha == 0.0 and beta == 0.0:
             binar_flag = False
+
+            # # TODO: this was not tested thoroughly (April 2025)
+            # # Remove binary photometry
+            # isochrone = isochrone[: self.m_ini_idx + 2]
+            # # TODO: this was not tested thoroughly
+
+        # Move theoretical isochrone using the distance modulus
+        isoch_moved = scp.move_isochrone(isochrone, binar_flag, self.m_ini_idx, dm)
 
         # Apply extinction correction
         isoch_extin = scp.extinction(
@@ -366,7 +372,11 @@ class Synthetic:
 
         # Interpolate IMF's sampled masses into the isochrone.
         isoch_mass = scp.mass_interp(
-            isoch_cut, self.m_ini_idx, self.st_dist_mass[ml][al], N_synth_stars
+            isoch_cut,
+            self.m_ini_idx,
+            self.st_dist_mass[ml][al],
+            N_synth_stars,
+            binar_flag,
         )
         if not isoch_mass.any():
             return np.array([])
@@ -423,17 +433,13 @@ class Synthetic:
                 model_std[k] = 0
 
         pars_k = ("met", "loga", "alpha", "beta", "Rv", "DR", "Av", "dm")
-        self._vp("\nGenerate synthetic models...", 1)
-        self._vp(
-            "Model          :"
-            + ", ".join(f"{k}: {round(model[k], 4)}" for k in pars_k),
-            2,
-        )
-        self._vp(
-            "Model STDDEV   :"
-            + ", ".join(f"{k}: {round(model_std[k], 4)}" for k in pars_k),
-            2,
-        )
+        self._vp("\nGenerate synthetic models", 1)
+        self._vp("par            : mean +/ STDDEV", 2)
+        for k in pars_k:
+            self._vp(
+                f"{k:<15}: {round(model[k], 4)} +/- {round(model_std[k], 4)}",
+                2,
+            )
 
         # Check isochrones ranges
         for par in ("met", "loga"):
@@ -715,6 +721,9 @@ class Synthetic:
         for i, model in enumerate(self.sampled_models):
             # Extract met and loga
             z_met, loga = model["met"], model["loga"]
+
+            # Convert back to Z if values are stored as FeH. This is required for the
+            # 'mu_ev' estimation in the stellar_evol_mass_loss() function
             if self.isochs.z_to_FeH is not None:
                 z_met = self.isochs.z_to_FeH * 10**z_met
 
@@ -800,7 +809,8 @@ class Synthetic:
         # Generate physical synthetic cluster to extract the max mass
         max_mass = self.generate(fit_params_copy)[self.m_ini_idx].max()
 
-        # Generate displaced isochrone
+        # Generate displaced isochrone, The 'N_stars=-1' indicates to return the
+        # array right after the magnitude cut
         fit_params_copy["DR"] = 0.0
         isochrone = self.generate(fit_params_copy, N_stars=-1)
 

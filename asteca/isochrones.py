@@ -45,8 +45,7 @@ class Isochrones:
         used to generate the synthetic clusters. If ``float``, it must represent the
         solar metallicity for these isochrones. The metallicity values will then be
         converted to ``[FeH]`` values, to be used by the
-        :py:meth:`Synthetic.generate() <asteca.synthetic.Synthetic.generate>` method,
-        defaults to ``None``
+        :py:meth:`Synthetic.generate` method, defaults to ``None``
     :type z_to_FeH: float | None
     :param N_interp: Number of interpolation points used to ensure that all isochrones
         are the same shape, defaults to ``2000``
@@ -120,7 +119,7 @@ class Isochrones:
                 f"Model '{self.model}' not recognized. Should be one of {models}"
             )
 
-        self._vp("\nInstantiating isochrones...")
+        self._vp("\nInstantiating isochrones")
         # Load isochrone files
         self.theor_tracks, self.color_filters, self.met_age_dict, N_isoch_files = (
             isochrones_priv.load(
@@ -180,3 +179,46 @@ class Isochrones:
             round_n += 1
         # Replace old values
         self.met_age_dict["met"] = feh_r
+
+    def _interpolate(self, met: float, loga: float) -> np.ndarray:
+        """ """
+        met_msk = self.met_age_dict["met"] == met
+        age_msk = self.met_age_dict["loga"] == loga
+
+        # Index of the first element in mask that is True
+        try:
+            met_i = np.where(met_msk)[0][0]
+            age_i = np.where(age_msk)[0][0]
+            isoch = self.theor_tracks[met_i][age_i]
+        except IndexError:
+            from .modules import synth_cluster_priv as scp
+
+            params = {
+                "met": met,
+                "loga": loga,
+                "alpha": 0,
+                "beta": 0,
+                "Av": 0,
+                "DR": 0,
+                "Rv": 0,
+                "dm": 0,
+            }
+            ml, mh, al, ah = scp.properModel(self.met_age_dict, {}, params)[-4:]
+            # Add dimension of zeroes to array
+            padded_arr = np.pad(self.theor_tracks, ((0, 0), (0, 0), (0, 2), (0, 0)))
+
+            m_ini_idx = self.theor_tracks.shape[2]
+
+            isoch = scp.zaWAverage(
+                padded_arr,
+                self.met_age_dict,
+                m_ini_idx,
+                met,
+                loga,
+                ml,
+                mh,
+                al,
+                ah,
+            )[:m_ini_idx, :]
+
+        return isoch

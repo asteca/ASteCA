@@ -2,8 +2,22 @@
 
 .. _changelog:
 
+
 Changelog
 #########
+
+
+`[v0.6.1] <https://github.com/asteca/asteca/releases/tag/v0.6.1>`__ - 2025-04-28
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+- Isochrones module:
+   - Fixed improper MIST isochrone generation (https://github.com/asteca/ASteCA/issues/569) via EEP (Equivalent Evolutionary Point) interpolation
+   - Changed to per-isochrone mass based interpolation for other services
+
+- Documentation & Code Structure:
+   - Fixed LaTeX rendering issues
+   - Added umami tracker (https://github.com/asteca/ASteCA/issues/571)
+
 
 
 `[v0.6.0] <https://github.com/asteca/asteca/releases/tag/v0.6.0>`__ - 2025-04-15
