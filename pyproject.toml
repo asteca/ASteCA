@@ -1,6 +1,6 @@
 [project]
 name = "asteca"
-version = "0.6.0-dev"
+version = "0.6.1"
 description = "Stellar cluster analysis package"
 authors = [
     {name = "Gabriel I Perren", email = "gabrielperren@gmail.com"}
