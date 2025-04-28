@@ -298,7 +298,7 @@ class Cluster:
         self._vp("\nCenter coordinates found")
         self._vp(mssg, 1)
 
-    def get_radius(self, algo: str = "king") -> None:
+    def _get_radius(self, algo: str = "king") -> None:
         """Estimate the cluster radius
 
         - ``field_dens``: xxx
