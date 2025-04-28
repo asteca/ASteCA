@@ -123,7 +123,7 @@ class Membership:
             center = cp.radec2lonlat(*center)
             cent_str = "lonlat_c"
 
-        self._vp("\nRunning Bayesian DA...")
+        self._vp("\nRunning Bayesian DA")
         self._vp("{}       : ({:.4f}, {:.4f})".format(cent_str, *center), 1)
         self._vp(f"radius         : {self.my_field.radius:.4f} [deg]", 1)
         self._vp(f"N_cluster      : {self.my_field.N_cluster}", 1)
@@ -231,7 +231,7 @@ class Membership:
             xy_center = (float(xc), float(yc))
             cent_str = "lonlat_c"
 
-        self._vp("\nRunning fastMP...")
+        self._vp("\nRunning fastMP")
         self._vp("{}       : ({:.4f}, {:.4f})".format(cent_str, *xy_center), 1)
         self._vp("pms_c          : ({:.3f}, {:.3f})".format(*self.my_field.pms_c), 1)
         self._vp(f"plx_c          : {self.my_field.plx_c:.3f}", 1)

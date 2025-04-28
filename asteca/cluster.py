@@ -84,7 +84,7 @@ class Cluster:
         self.N_clust_max = N_clust_max
         self.verbose = verbose
 
-        self._vp("\nInstantiating cluster...")
+        self._vp("\nInstantiating cluster")
         self._load_column_data()
         self._vp(f"N_stars        : {self.N_stars}", 1)
         self._vp(f"N_clust_min    : {self.N_clust_min}", 1)

@@ -119,7 +119,7 @@ class Isochrones:
                 f"Model '{self.model}' not recognized. Should be one of {models}"
             )
 
-        self._vp("\nInstantiating isochrones...")
+        self._vp("\nInstantiating isochrones")
         # Load isochrone files
         self.theor_tracks, self.color_filters, self.met_age_dict, N_isoch_files = (
             isochrones_priv.load(

@@ -118,7 +118,7 @@ class Synthetic:
                 + f"one of {ext_laws}"
             )
 
-        self._vp("\nInstantiating synthetic...")
+        self._vp("\nInstantiating synthetic")
 
         from .modules import synth_cluster_priv as scp
 
@@ -261,6 +261,7 @@ class Synthetic:
             self.rand_floats["norm"][1],
         )
 
+        self._vp("\nCalibrated observed cluster")
         self._vp(f"N_stars_obs    : {self.N_stars_obs}", 1)
         self._vp(f"Max magnitude  : {self.max_mag_syn_obs:.2f}", 1)
         self._vp("Error distribution loaded", 1)
@@ -432,7 +433,7 @@ class Synthetic:
                 model_std[k] = 0
 
         pars_k = ("met", "loga", "alpha", "beta", "Rv", "DR", "Av", "dm")
-        self._vp("\nGenerate synthetic models...", 1)
+        self._vp("\nGenerate synthetic models", 1)
         self._vp(
             "Model          :"
             + ", ".join(f"{k}: {round(model[k], 4)}" for k in pars_k),
@@ -724,6 +725,9 @@ class Synthetic:
         for i, model in enumerate(self.sampled_models):
             # Extract met and loga
             z_met, loga = model["met"], model["loga"]
+
+            # Convert back to Z if values are stored as FeH. This is required for the
+            # 'mu_ev' estimation in the stellar_evol_mass_loss() function
             if self.isochs.z_to_FeH is not None:
                 z_met = self.isochs.z_to_FeH * 10**z_met
 
