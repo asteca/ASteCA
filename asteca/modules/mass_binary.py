@@ -318,6 +318,8 @@ def minit_LGB05(
 ) -> float:
     """Estimate the initial mass from Lamers et al. 2005.
 
+    For loga>10 the M_init value grows *very* fast
+
     :param loga: Logarithm of the age.
     :type loga: float
     :param M_actual: Actual mass.
