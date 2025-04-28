@@ -423,7 +423,7 @@ def get_2D_center(
         x, y = values
 
     # Approximate center values
-    x_cent_pix, y_cent_pix = get_XY(values, gd=50)
+    x_cent_pix, y_cent_pix = get_KDE_cent(values, gd=50)
 
     # Restrict the KDE to a smaller area to improve performance
     if values.shape[1] > 500:
@@ -437,12 +437,12 @@ def get_2D_center(
         values = values[:, msk]
 
     # Final center values
-    x_c, y_c = get_XY(values, gd=100)
+    x_c, y_c = get_KDE_cent(values, gd=100)
 
     return x_c, y_c
 
 
-def get_XY(values: np.ndarray, gd: int) -> tuple[float, float]:
+def get_KDE_cent(values: np.ndarray, gd: int) -> tuple[float, float]:
     """Estimate the center coordinates using a Gaussian Kernel Density Estimation.
 
     :param values: Array of x and y coordinates.
