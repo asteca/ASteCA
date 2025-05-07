@@ -507,46 +507,9 @@ class Synthetic:
 
         from .modules import mass_binary as mb
 
-        # Observed photometry
-        cluster_colors = [self.cluster_colors[0]]
-        if self.cluster_colors[1] is not None:
-            cluster_colors.append(self.cluster_colors[1])
-        obs_phot = np.array([self.cluster_mag] + [_ for _ in cluster_colors])
-        # Replace nans in mag and colors to avoid crashing KDTree()
-        nan_msk = np.full(obs_phot.shape[1], False)
-        for ophot in obs_phot:
-            nan_msk = nan_msk | np.isnan(ophot)
-        obs_phot[:, nan_msk] = -10.0
-        obs_phot = obs_phot.T
-
-        #
-        close_stars_idxs = []
-        for isoch in self.sampled_synthcls:
-            close_stars_idxs.append(mb.get_close_idxs(self.m_ini_idx, obs_phot, isoch))
-
-        #
-        m12_masses = []
-        for i, isoch in enumerate(self.sampled_synthcls):
-            m1_obs, m2_obs = mb.get_m1m2(self.m_ini_idx, isoch, close_stars_idxs[i])
-            m12_masses.append([m1_obs, m2_obs])
-        m12_masses = np.array(m12_masses)
-
-        # Primary masses (median + stddev)
-        m1_med = np.median(m12_masses[:, 0, :], 0)
-        m1_std = np.std(m12_masses[:, 0, :], 0)
-        # Secondary masses  (median + stddev). Hide 'All-nan slice' warnings
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            m2_med = np.nanmedian(m12_masses[:, 1, :], 0)
-            # m2 can not be larger than m1
-            m2_med = np.min([m1_med, m2_med], 0)
-            m2_std = np.nanstd(m12_masses[:, 1, :], 0)
-
-        # Binary probability per observed star. Check how many times the secondary mass
-        # of an observed star was assigned a value 'not np.nan', i.e.: was identified
-        # as a binary system. Dividing this value by the number of synthetic models
-        # used, results in the per observed star probability of being a binary system.
-        binar_prob = (~np.isnan(m12_masses[:, 1, :])).sum(0) / m12_masses.shape[0]
+        m1_med, m1_std, m2_med, m2_std, binar_prob, nan_msk = mb.get_stellar_masses(
+            self.cluster_mag, self.cluster_colors, self.m_ini_idx, self.sampled_synthcls
+        )
 
         # Store as dictionary
         data = {
@@ -598,7 +561,8 @@ class Synthetic:
         N_stars = len(binar_prob)
         # Observe systems (Nsamples) and store how many are single/binaries
         b_fr_vals = self.rng.random((Nsamples, N_stars)) < binar_prob
-        # Average the binary fraction for each observation
+        # Average the binary fraction for each observation. This results in a
+        # distribution for the total binary fraction
         b_fr_sum = np.sum(b_fr_vals, axis=1) / N_stars
         # Return the median and STDDEV values
         bfr_med, bfr_std = np.median(b_fr_sum), np.std(b_fr_sum)
