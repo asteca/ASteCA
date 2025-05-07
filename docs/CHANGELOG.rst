@@ -91,7 +91,7 @@ Changelog
   :py:meth:`asteca.synthetic.Synthetic.stellar_masses`,
   :py:meth:`asteca.synthetic.Synthetic.binary_fraction`,
   :py:meth:`asteca.synthetic.Synthetic.cluster_masses`, to estimate individual masses,
-  total binarity fraction, and total masses (see: :ref:`masses_and_binarity`)
+  total binarity fraction, and total masses
 - Added the :py:meth:`asteca.cluster.Cluster.get_nmembers` method to estimate the
   number of members for a cluster embedded in a field.
 
