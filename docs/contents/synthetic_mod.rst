@@ -212,10 +212,10 @@ extrinsic cluster characteristics:
   extinction ``Rv``)
 
 These eight parameters are described in more depth in the following sub-sections.
-**ASteCA** also allows estimating the cluster's mass and binary fraction for an
-observed cluster. This process is optional and requires dictionaries with fitted
-fundamental parameters and their STDDEVS (see :ref:`masses_and_binarity` for more
-details).
+**ASteCA** also allows estimating a cluster's member stars masses and binary
+probability, as well as its total mass and binary fraction. This process is optional and
+requires dictionaries with fitted fundamental parameters and their STDDEVS; see
+:ref:`masses_and_binarity` for more details.
 
 An example of the dictionary of parameters used for the generation of a synthetic
 cluster is shown below, applied to a previously defined :obj:`synthcl` object:
@@ -254,6 +254,8 @@ on how to generate and process synthetic clusters with **ASteCA**.
 
 
 
+
+.. _intrinsic_parameters:
 
 Intrinsic parameters
 ====================
@@ -330,21 +332,181 @@ normal distribution.
 
 .. _masses_and_binarity:
 
-Mass and binarity
-*****************
+Masses and binarity
+*******************
 
 Using methods available in the :py:class:`asteca.Synthetic` class, we can estimate
 for an observed cluster:
 
-- The individual stellar masses and their probability of being binary systems,
-- the total binary fraction of the cluster, and 
-- the different masses associated to the cluster
+1. The individual stellar masses and their probability of being binary systems,
+   via the :py:meth:`asteca.Synthetic.stellar_masses` method
+2. The total binary fraction of the cluster, via the
+   :py:meth:`asteca.Synthetic.binary_fraction` method
+3. The different total masses associated to the cluster, via the
+   :py:meth:`asteca.Synthetic.cluster_masses` method
 
-The :ref:`masses_bfr_ntbk` tutorial contains more details and examples on how to
-perform these analyses.
+The user can choose to perform all or only some of them.
 
-Regarding the cluster masses, **ASteCA** estimates several different masses for the
-cluster, as explained below.
+For all these analyses the first step is to call the
+:py:meth:`asteca.Synthetic.get_models` method. This method requires two arguments:
+a ``model`` dictionary, which is a dictionary of parameters to be fitted, and a
+``model_std`` dictionary, which contains the uncertainties (standard deviations)
+associated to each parameter in ``model``. 
+
+This method will store in the :obj:`synthetic` object a number of generated synthetic 
+clusters, sampled from a normal distribution centered on the ``model`` values with
+STDDEVs taken from the ``model_std`` values. By default `200` models are generated but
+this can be changed via the ``N_models`` argument of the method.
+
+After calling this method, the individual stellar masses and binarity, the cluster total
+binarity fraction, and the cluster total masses can be estimated as shown in the
+following sub-sections.
+
+The :ref:`masses_bfr_ntbk` tutorial contains examples on how to perform these analyses.
+
+
+
+
+
+.. _stellar_masses:
+
+Stellar masses
+==============
+
+
+**ASteCA** provides a simple method to assign, for each member star of your observed
+cluster, its individual masses and probabilities of belonging to a binary system. The
+method is called  :py:meth:`asteca.Synthetic.stellar_masses`, and given a
+:obj:`synthetic` object it applies the following algorithm:
+
+1. Starting from an observed cluster
+2. Generate a synthetic cluster with some fundamental parameters
+3. Select a given star from the observed cluster
+4. Find the closest synthetic star (in photometric space) to this observed star
+5. Extract from that synthetic star its primary and secondary mass values (if the
+   synthetic star is *not* a binary system, the secondary mass value is ``NaN``)
+6. Attach both mass values to the observed star
+7. Repeat for all stars in the observed cluster
+8. Repeat for ``N_models`` synthetic clusters (obtained via the
+   :py:meth:`asteca.Synthetic.get_models` method)
+
+At the end of this process each observed star will have ``N_models`` (synthetic) primary
+and secondary masses assigned. All primary masses are floats, but *some* secondary
+masses can be ``NaN`` values. If no binary systems were generated for the synthetic
+clusters (i.e.: if ``alpha=0, beta=0``), then *all* the ``N_models`` secondary masses
+assigned to *all* the observed stars will be ``NaN`` values.
+
+For example, observed star ``i`` will have the following two arrays attached to it:
+
+.. code-block:: python
+
+    observed_star_i = {
+        m1_array: [0.5, 1.01, 0.32, ...],  # N_models estimates for the primary mass
+        m2_array: [0.15, 0.69, NaN, ...],  # N_models estimates for the secondary mass
+    }
+
+and so will every other observed star in the cluster.
+
+By taking the median and the STDDEV of these two arrays, we obtain an estimate of the
+primary and secondary masses (called ``m1`` and ``m2`` respectively), as well as their
+uncertainties (``m1_std`` and ``m2_std``), for each observed star, i.e.:
+
+.. code-block:: python
+
+    observed_star_i = {
+        m1: 0.73,  m1_std: 0.09,
+        m2: 0.32,  m2_std: 0.01,
+    }
+
+.. note::
+
+   All observed stars will have a primary and a secondary mass assigned after this
+   process (the secondary mass can be a ``NaN`` value). This does not mean that all
+   observed stars are binary systems. The user has to decide which observed stars are binary systems and which ones are single systems. This is explained below.
+
+How do we decide if an observed star is a single or a binary system? By counting the
+times each observed star was assigned to a (synthetic) binary system in the algorithm
+described above, we can estimate a "`binary probability`" (``binar_prob``) for each
+observed star. Given this value, we can simply select a cut for example at ``0.5`` so
+that all observed star with ``binar_prob>0.5`` are considered binary systems, and the
+rest are single systems.
+
+For observed stars associated to single systems, only the primary mass (``m1``) makes
+sense. On the other hand, for those observed stars better described as binary systems
+(i.e: those with ``binar_prob>0.5``), the secondary mass value estimated above
+(``m2``) can be used to describe the total mass of the "`observed binary system`" as
+``m_tot = m1+m2``.
+
+For example, if ``observed_star_i`` has ``binar_prob=0.95`` we can decide that it is
+a binary system. Hence the primary and secondary mass values are valid and we can
+use them to describe the observed binary system as:
+
+.. code-block:: python
+
+    observed_binary_star_i = {
+        m1: 0.73,  m1_std: 0.09,
+        m2: 0.32,  m2_std: 0.01,
+    }
+
+for a total mass of the binary system of ``m_tot = m1 + m2 = 1.05``.
+
+If, on the other hand, ``observed_star_i`` has ``binar_prob=0.25`` we can decide that
+it is a single system. Hence the secondary mass value is of no interest and we can
+ignore it. The observed star will then be described as:
+
+.. code-block:: python
+
+    observed_single_star_i = {
+        m1: 0.73,  m1_std: 0.09,
+    }
+
+See the :ref:`masses_bfr_ntbk` tutorial for a full example on how this analysis is
+performed for an observed cluster.
+
+
+
+
+.. _binary_fraction:
+
+Binary fraction
+===============
+
+The fraction of generated synthetic binary systems is handled through the
+``alpha, beta`` parameters as explained in :ref:`intrinsic_parameters`. There is thus
+no proper *binary fraction* parameter used when generating synthetic clusters. This
+parameter can be estimated using the :meth:`asteca.Synthetic.binary_fraction` method
+on a :obj:`synthetic` object.
+
+The method takes an array of binary probabilities (for example the ``binar_prob``
+array obtained in the section above), and calculates the median and STDDEV
+binary fraction associated to the observed cluster from where the array came from.
+
+Each probability value in the array is compared several thousand times against a random
+value sampled in the ``[0.0, 1.0]`` range. This simulates measurements where each star
+is part of a binary system or not, depending on whether its associated binary
+probability is larger than the random value. 
+
+By counting the number of observed stars that are identified as binary systems in each
+of these thousand samples, we can estimate the distribution of the total binary fraction
+of the observed cluster.
+
+Finally, the median and standard deviation of these binary fractions across all samples 
+are computed and returned as summary statistics.
+
+This process is much more reasonable than simply counting the number of values in
+``binar_prob`` that are beyond a given probability cut (usually ``0.5``), because
+it takes into account the *distribution* of binary probabilities for the observed stars.
+
+
+
+
+.. _cluster_mass:
+
+Cluster mass
+============
+
+**ASteCA** is able to estimate different masses for an observed cluster, as explained
+below.
 
 The total initial mass of a cluster can be split in several parts, as follows:
 
