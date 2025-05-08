@@ -75,12 +75,17 @@ def get_stellar_masses(
 
     # Assign primary and secondary (synthetic) masses to each observed star,
     # for each synthetic model generated
-    m12_obs = []
+    m12_obs, weights = [], []
     for isoch in sampled_synthcls:
         # Indexes of the closest (photometrically) synthetic stars to the observed
         # stars
         tree = KDTree(isoch[:m_ini_idx].T)
-        _, close_stars_idxs = tree.query(obs_phot, k=1)
+        dist, close_stars_idxs = tree.query(obs_phot, k=1)
+
+        # # Store inverse normalized distance used as weights
+        # inv_dist = 1 / dist
+        # inv_dist_norm = inv_dist / inv_dist.max()
+        # weights.append(inv_dist_norm)
 
         # The secondary mass is stored after the primary mass, hence the ':'
         m12_obs.append(isoch[m_ini_idx:, close_stars_idxs])
@@ -92,6 +97,8 @@ def get_stellar_masses(
 
     # Primary mass values (median + stddev)
     m1_med = np.median(m1_obs, 0)
+    # # Weighted average is simlar to median
+    # m1_med = np.average(m1_obs, 0, weights)
     m1_std = np.std(m1_obs, 0)
 
     # Secondary mass values (median + stddev)
