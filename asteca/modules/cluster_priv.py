@@ -21,7 +21,22 @@ def radec2lonlat(ra: float | np.ndarray, dec: float | np.ndarray) -> np.ndarray:
     """
     gc = SkyCoord(ra=ra * u.degree, dec=dec * u.degree)  # pyright: ignore
     lb = gc.transform_to("galactic")
-    return np.array([lb.l.value, lb.b.value])  # pyright: ignore
+
+    lon_v = lb.l.value  # pyright: ignore
+    if isinstance(ra, np.ndarray):  # Check for arrays
+        lon = np.array(lb.l)
+        if lon.max() - lon.min() > 180:
+            # Fix frame that wraps around 360 in longitude
+            lon_cent = 0.5 * (lon.max() + lon.min())
+            if lon_cent > 180:
+                msk = lon < 180
+                lon[msk] += 360
+            else:
+                msk = lon > 180
+                lon[msk] -= 360
+            lon_v = lon
+
+    return np.array([lon_v, lb.b.value])  # pyright: ignore
 
 
 def lonlat2radec(lon: float | np.ndarray, lat: float | np.ndarray) -> np.ndarray:
