@@ -115,6 +115,8 @@ class Cluster:
                 raise ValueError("Magnitude uncertainty is required")
             self.mag = np.asarray(self.magnitude, dtype=float)
             self.e_mag = np.asarray(self.e_mag, dtype=float)
+            if (self.e_mag <= 0).any():
+                raise ValueError("Magnitude uncertainties must be > 0")
             cols_read.append("Magnitude")
             cols_read.append("e_mag")
             N_stars_lst.append(len(self.mag))
@@ -125,6 +127,8 @@ class Cluster:
                 raise ValueError("Color uncertainty is required")
             self.color = np.asarray(self.color, dtype=float)
             self.e_color = np.asarray(self.e_color, dtype=float)
+            if (self.e_color <= 0).any():
+                raise ValueError("Color uncertainties must be > 0")
             cols_read.append("Color")
             cols_read.append("e_color")
             N_stars_lst.append(len(self.color))
@@ -138,6 +142,8 @@ class Cluster:
                 raise ValueError("Color2 uncertainty is required")
             self.color2 = np.asarray(self.color2, dtype=float)
             self.e_color2 = np.asarray(self.e_color2, dtype=float)
+            if (self.e_color2 <= 0).any():
+                raise ValueError("Color2 uncertainties must be > 0")
             cols_read.append("Color2")
             cols_read.append("e_color2")
             N_stars_lst.append(len(self.color2))
@@ -148,6 +154,8 @@ class Cluster:
                 raise ValueError("Parallax uncertainty is required")
             self.plx = np.asarray(self.plx, dtype=float)
             self.e_plx = np.asarray(self.e_plx, dtype=float)
+            if (self.e_plx <= 0).any():
+                raise ValueError("Parallax uncertainties must be > 0")
             cols_read.append("Plx")
             N_stars_lst.append(len(self.plx))
             N_stars_lst.append(len(self.e_plx))
@@ -157,6 +165,8 @@ class Cluster:
                 raise ValueError("pmRA uncertainty is required")
             self.pmra = np.asarray(self.pmra, dtype=float)
             self.e_pmra = np.asarray(self.e_pmra, dtype=float)
+            if (self.e_pmra <= 0).any():
+                raise ValueError("pmRA uncertainties must be > 0")
             cols_read.append("pmRA")
             N_stars_lst.append(len(self.pmra))
             N_stars_lst.append(len(self.e_pmra))
@@ -166,6 +176,8 @@ class Cluster:
                 raise ValueError("pmDE uncertainty is required")
             self.pmde = np.asarray(self.pmde, dtype=float)
             self.e_pmde = np.asarray(self.e_pmde, dtype=float)
+            if (self.e_pmde <= 0).any():
+                raise ValueError("pmDE uncertainties must be > 0")
             cols_read.append("pmDE")
             N_stars_lst.append(len(self.pmde))
             N_stars_lst.append(len(self.e_pmde))
@@ -408,6 +420,7 @@ class Cluster:
                 self.plx,
                 self.pms_c,
                 self.plx_c,
+                self.N_clust_max,
             )
         elif algo == "density":
             if hasattr(self, "radec_c") is False or hasattr(self, "radius") is False:
