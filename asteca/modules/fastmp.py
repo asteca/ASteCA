@@ -52,7 +52,7 @@ def fastMP(
     lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx = X_no_nan
 
     # Remove the most obvious field stars to speed up the process
-    idx_clean, lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx = cp.first_filter(
+    lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx, idx_clean = cp.first_filter(
         N_clust_max,
         idx_clean,
         vpd_c,

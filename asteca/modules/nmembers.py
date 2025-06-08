@@ -117,10 +117,11 @@ def ripley_nmembs(
     idx_clean, X_no_nan = cp.reject_nans(X)
     # Unpack input data with no 'nans'
     lon, lat, pmRA, pmDE, plx = X_no_nan
-    e_pmRA, e_pmDE, e_plx = [np.array(range(len(x)))] * 3
+    # These arrays are not used, fill with dummy values
+    e_pmRA, e_pmDE, e_plx = [np.empty(len(x))] * 3
 
     # Remove the most obvious field stars to speed up the process
-    idx_clean, x, y, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx = cp.first_filter(
+    x, y, pmRA, pmDE, plx, _, _, _, _ = cp.first_filter(
         N_clust_max,
         idx_clean,
         vpd_c,
@@ -135,12 +136,12 @@ def ripley_nmembs(
         e_plx,
     )
 
+    # Initialize Ripley's K-function estimator
     rads, Kest, C_thresh_N = init_ripley(x, y)
 
     # Obtain the ordered indexes of the distances to the (pmra, pmde, plx) center
     cents_3d = np.array([list(vpd_c) + [plx_c]])
-    data_3d = np.array([pmRA, pmDE, plx]).T
-    d_pm_plx_idxs = cp.get_Nd_dists(cents_3d, data_3d)
+    d_pm_plx_idxs = cp.get_Nd_dists(cents_3d, np.array([pmRA, pmDE, plx]).T)
 
     # Select those clusters where the stars are different enough from a
     # random distribution
