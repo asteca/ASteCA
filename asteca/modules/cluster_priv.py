@@ -250,51 +250,66 @@ def first_filter(
     :type N_times: int
 
     :returns:
-        - Updated indexes of the surviving stars.
         - Updated arrays of the surviving stars' parameters (longitude, latitude,
-          proper motions, parallax).
-        - Updated arrays of the surviving stars' errors (proper motions and parallax).
+          proper motions, parallax) and the PMs+Plx uncertainties
+        - Updated indexes of the surviving stars.
     :rtype: tuple[
         np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray,
         np.ndarray, np.ndarray, np.ndarray]
     """
-    # Remove obvious field stars
+    # Proper motion distances
     pms = np.array([pmRA, pmDE]).T
     pm_rad = spatial.distance.cdist(pms, np.array([vpd_c])).T[0]
+
+    # Removal criteria:
+    # -Closer stars: use 'v_kms_max' as the maximum velocity
+    # -More distant stars: use 'pm_max' as the maximum proper motion
     msk1 = (plx > plx_cut) & (pm_rad / (abs(plx) + 0.0001) < v_kms_max)
     msk2 = (plx <= plx_cut) & (pm_rad < pm_max)
-    # Stars to keep
+    # Stars to keep: those that satisfy either of the two conditions
     msk = msk1 | msk2
 
-    # Update arrays
-    lon, lat, pmRA, pmDE, plx = lon[msk], lat[msk], pmRA[msk], pmDE[msk], plx[msk]
-    e_pmRA, e_pmDE, e_plx = e_pmRA[msk], e_pmDE[msk], e_plx[msk]
-    # Update indexes of surviving elements
+    # Remove obvious field stars
+    lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx = (
+        lon[msk],
+        lat[msk],
+        pmRA[msk],
+        pmDE[msk],
+        plx[msk],
+        e_pmRA[msk],
+        e_pmDE[msk],
+        e_plx[msk],
+    )
+    # Indexes of surviving elements
     idx_all = idx_all[msk]
 
+    # Return here if the number of stars is already less than the maximum
     if msk.sum() < N_clust_max * N_times:
-        return idx_all, lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx
+        return lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx, idx_all
 
-    # Sorted indexes of distances to pms+plx center
+    # Sorted indexes of distances to PMs+Plx center
     cents_3d = np.array([list(vpd_c) + [plx_c]])
     data_3d = np.array([pmRA, pmDE, plx]).T
     d_pm_plx_idxs = get_Nd_dists(cents_3d, data_3d)
-    # Indexes of stars to keep and reject based on their distance
+
+    # Indexes of the 'N_clust_max*N_times' stars closest to the PMs+Plx center
     idx_acpt = d_pm_plx_idxs[: int(N_clust_max * N_times)]
 
-    # Update arrays
-    lon, lat, pmRA, pmDE, plx = (
+    # Update arrays with the selected stars
+    lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx = (
         lon[idx_acpt],
         lat[idx_acpt],
         pmRA[idx_acpt],
         pmDE[idx_acpt],
         plx[idx_acpt],
+        e_pmRA[idx_acpt],
+        e_pmDE[idx_acpt],
+        e_plx[idx_acpt],
     )
-    e_pmRA, e_pmDE, e_plx = e_pmRA[idx_acpt], e_pmDE[idx_acpt], e_plx[idx_acpt]
     # Update indexes of surviving elements
     idx_all = idx_all[idx_acpt]
 
-    return idx_all, lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx
+    return lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx, idx_all
 
 
 def filter_pms_stars(
