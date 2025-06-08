@@ -184,6 +184,119 @@ def get_Nd_dists(cents: np.ndarray, data: np.ndarray) -> np.ndarray:
     return d_idxs
 
 
+def first_filter(
+    N_clust_max: int,
+    idx_all: np.ndarray,
+    vpd_c: tuple[float, float],
+    plx_c: float,
+    lon: np.ndarray,
+    lat: np.ndarray,
+    pmRA: np.ndarray,
+    pmDE: np.ndarray,
+    plx: np.ndarray,
+    e_pmRA: np.ndarray,
+    e_pmDE: np.ndarray,
+    e_plx: np.ndarray,
+    plx_cut: float = 0.5,
+    v_kms_max: float = 5.0,
+    pm_max: float = 3.0,
+    N_times: int = 5,
+) -> tuple[
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+]:
+    """Perform an initial filtering of stars based on parallax and proper motion.
+
+    :param N_clust_max: Maximum number of stars in the cluster.
+    :type N_clust_max: int
+    :param idx_all: Indexes of the input stars.
+    :type idx_all: np.ndarray
+    :param vpd_c: Center proper motion values (pmRA, pmDE).
+    :type vpd_c: tuple[float, float]
+    :param plx_c: Center parallax value.
+    :type plx_c: float
+    :param lon: Longitude of the stars.
+    :type lon: np.ndarray
+    :param lat: Latitude of the stars.
+    :type lat: np.ndarray
+    :param pmRA: Proper motions in right ascension.
+    :type pmRA: np.ndarray
+    :param pmDE: Proper motions in declination.
+    :type pmDE: np.ndarray
+    :param plx: Parallax values of the stars.
+    :type plx: np.ndarray
+    :param e_pmRA: Errors in proper motions (pmRA).
+    :type e_pmRA: np.ndarray
+    :param e_pmDE: Errors in proper motions (pmDE).
+    :type e_pmDE: np.ndarray
+    :param e_plx: Errors in parallax.
+    :type e_plx: np.ndarray
+    :param plx_cut: Parallax threshold for switching filtering criteria between using
+        'v_kms_max' or 'pm_max'. Default is 0.5.
+    :type plx_cut: float
+    :param v_kms_max: Maximum velocity in km/s for filtering. Default is 5.
+    :type v_kms_max: float
+    :param pm_max: Maximum proper motion for filtering. Default is 3.
+    :type pm_max: float
+    :param N_times: Multiplicative factor for determining how many stars to keep.
+        Default is 5.
+    :type N_times: int
+
+    :returns:
+        - Updated indexes of the surviving stars.
+        - Updated arrays of the surviving stars' parameters (longitude, latitude,
+          proper motions, parallax).
+        - Updated arrays of the surviving stars' errors (proper motions and parallax).
+    :rtype: tuple[
+        np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray,
+        np.ndarray, np.ndarray, np.ndarray]
+    """
+    # Remove obvious field stars
+    pms = np.array([pmRA, pmDE]).T
+    pm_rad = spatial.distance.cdist(pms, np.array([vpd_c])).T[0]
+    msk1 = (plx > plx_cut) & (pm_rad / (abs(plx) + 0.0001) < v_kms_max)
+    msk2 = (plx <= plx_cut) & (pm_rad < pm_max)
+    # Stars to keep
+    msk = msk1 | msk2
+
+    # Update arrays
+    lon, lat, pmRA, pmDE, plx = lon[msk], lat[msk], pmRA[msk], pmDE[msk], plx[msk]
+    e_pmRA, e_pmDE, e_plx = e_pmRA[msk], e_pmDE[msk], e_plx[msk]
+    # Update indexes of surviving elements
+    idx_all = idx_all[msk]
+
+    if msk.sum() < N_clust_max * N_times:
+        return idx_all, lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx
+
+    # Sorted indexes of distances to pms+plx center
+    cents_3d = np.array([list(vpd_c) + [plx_c]])
+    data_3d = np.array([pmRA, pmDE, plx]).T
+    d_pm_plx_idxs = get_Nd_dists(cents_3d, data_3d)
+    # Indexes of stars to keep and reject based on their distance
+    idx_acpt = d_pm_plx_idxs[: int(N_clust_max * N_times)]
+
+    # Update arrays
+    lon, lat, pmRA, pmDE, plx = (
+        lon[idx_acpt],
+        lat[idx_acpt],
+        pmRA[idx_acpt],
+        pmDE[idx_acpt],
+        plx[idx_acpt],
+    )
+    e_pmRA, e_pmDE, e_plx = e_pmRA[idx_acpt], e_pmDE[idx_acpt], e_plx[idx_acpt]
+    # Update indexes of surviving elements
+    idx_all = idx_all[idx_acpt]
+
+    return idx_all, lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx
+
+
 def filter_pms_stars(
     xy_c: tuple[float, float] | None,
     plx_c: float | None,

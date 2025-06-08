@@ -70,6 +70,7 @@ def ripley_nmembs(
     plx: np.ndarray,
     vpd_c: tuple[float, float],
     plx_c: float,
+    N_clust_max: int,
     N_clust: int = 50,
     N_extra: int = 5,
     N_step: int = 10,
@@ -90,6 +91,8 @@ def ripley_nmembs(
     :type vpd_c: tuple[float, float]
     :param plx_c: Center parallax value.
     :type plx_c: float
+    :param N_clust_max: Maximum number of stars to consider as a cluster
+    :type N_clust_max: int
     :param N_clust: Initial number of stars to consider as a cluster, defaults to 50
     :type N_clust: int
     :param N_extra: Number of extra iterations to perform if the initial
@@ -101,6 +104,37 @@ def ripley_nmembs(
     :return: Estimated number of cluster members.
     :rtype: int
     """
+    # Generate input data array
+    X = np.array(
+        [
+            x,
+            y,
+            pmRA,
+            pmDE,
+            plx,
+        ]
+    )
+    idx_clean, X_no_nan = cp.reject_nans(X)
+    # Unpack input data with no 'nans'
+    lon, lat, pmRA, pmDE, plx = X_no_nan
+    e_pmRA, e_pmDE, e_plx = [np.array(range(len(x)))] * 3
+
+    # Remove the most obvious field stars to speed up the process
+    idx_clean, x, y, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx = cp.first_filter(
+        N_clust_max,
+        idx_clean,
+        vpd_c,
+        plx_c,
+        lon,
+        lat,
+        pmRA,
+        pmDE,
+        plx,
+        e_pmRA,
+        e_pmDE,
+        e_plx,
+    )
+
     rads, Kest, C_thresh_N = init_ripley(x, y)
 
     # Obtain the ordered indexes of the distances to the (pmra, pmde, plx) center
