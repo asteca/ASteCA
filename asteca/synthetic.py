@@ -270,9 +270,9 @@ class Synthetic:
         self.cluster_mag = cluster.mag
         self.cluster_colors = [cluster.color, cluster.color2]
 
-        # Used by the `cluster_masses()` method
-        self.cluster_ra = cluster.ra
-        self.cluster_dec = cluster.dec
+        # # Used by the `cluster_masses()` method
+        # self.cluster_ra = cluster.ra
+        # self.cluster_dec = cluster.dec
 
     def generate(self, params: dict, N_stars: int = 100) -> np.ndarray:
         """Generate a synthetic cluster.
@@ -572,6 +572,7 @@ class Synthetic:
 
     def cluster_masses(
         self,
+        radec_c: tuple | None = None,
         rho_amb: float | None = None,
         M_B: float = 2.5e10,
         r_B: float = 0.5e3,
@@ -602,9 +603,12 @@ class Synthetic:
         - ``M_actual = M_obs + M_phot``
         - ``M_init = M_actual + M_evol + M_dyn``
 
+        :param radec_c: Center coordinates in ``(RA, DEC)``. If ``None``, the ``rho_amb``
+            parameter must be given; defaults to ``None``.
+        :type radec_c: tuple | None
         :param rho_amb: Ambient density. If ``None``, it is estimated using the
-            cluster's position and a model for the Galaxy's potential; defaults to
-            ``None``.
+            cluster's position (``radec_c``) and a model for the Galaxy's potential;
+            defaults to ``None``.
         :type rho_amb: float | None
         :param M_B: Bulge mass (in solar masses); defaults to ``2.5e10`` (from
             `Haghi et al. 2015 <https://doi.org/10.1093/mnras/stv827>`__, Table 1)
@@ -655,6 +659,11 @@ class Synthetic:
                 "This method requires running the get_models() method first"
             )
 
+        if radec_c is None and rho_amb is None:
+            raise ValueError(
+                "This method requires either 'radec_c' or 'rho_amb' values"
+            )
+
         from .modules import mass_binary as mb
 
         # The number of stars in the synthetic clusters is not constant so we estimate
@@ -668,13 +677,10 @@ class Synthetic:
                 + "argument for a more accurate mass estimation"
             )
 
-        # Estimate the center coordinates from the cluster's median values
-        radec_c = (np.median(self.cluster_ra), np.median(self.cluster_dec))  # pyright: ignore
-
         if rho_amb is not None:
             # Input float to array
             rho_amb_arr = np.ones(len(self.sampled_models)) * rho_amb
-        else:
+        elif radec_c is not None:
             # Obtain galactic vertical distance and distance to center
             Z, R_GC, R_xy = mb.galactic_coords(self.sampled_models, radec_c)
             rho_amb_arr = mb.ambient_density(
