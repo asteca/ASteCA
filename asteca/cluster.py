@@ -63,7 +63,7 @@ class Cluster:
         pmde: np.ndarray | None = None,
         e_pmde: np.ndarray | None = None,
         N_clust_min: int = 25,
-        N_clust_max: int = 5000,
+        N_clust_max: int = 2000,
         verbose: int = 1,
     ) -> None:
         self.ra = ra
