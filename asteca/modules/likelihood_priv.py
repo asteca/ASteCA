@@ -131,9 +131,9 @@ def tremmel(
     :return: Log likelihood value.
     :rtype: float
     """
-    # If synthetic cluster is empty, assign a small likelihood value.
+    # If synthetic cluster is empty, assign '1' indicating a large distance
     if not synth_clust.any():
-        return -1.0e09
+        return 1
 
     # Obtain histogram for the synthetic cluster.
     mag, colors = synth_clust[0], synth_clust[1:]
