@@ -113,39 +113,7 @@ def tremmel(
     synth_clust: np.ndarray,
 ) -> float:
     r"""Poisson likelihood ratio as defined in Tremmel et al (2013), Eq 10 with
-    v_{i,j}=1. This returns the log likelihood.
-
-    .. math::
-
-        p(d|\theta) = \prod_i^N \frac{\Gamma(n_i+m_i+\frac{1}{2})}
-        {2^{n_i+m_i+\frac{1}{2}} n_i!\Gamma(m_i+\frac{1}{2}))}
-
-    .. math::
-
-        \log(p) = \sum_i^N \left[\log\Gamma(n_i+m_i+\frac{1}{2})
-        - (m_i+n_i+\frac{1}{2})\log2 -\log n_i!
-        - \log \Gamma(m_i+\frac{1}{2}) \right]
-
-    Minus logarithm:
-
-    .. math::
-
-        \log(p) = \sum_i^N \left[\log\Gamma(n_i+m_i+\frac{1}{2})-
-        \log \Gamma(m_i+\frac{1}{2}) \right]
-        - 0.693  (M+N+\frac{1}{2}) - \sum_i^N \log n_i!
-
-    .. math::
-
-        \log(p) = SumLogGamma(n_i, m_i) -0.693 (N+\frac{1}{2}) -
-        \sum_i^N \log n_i! - 0.693\,M
-
-    .. math::
-
-        \log(p) = f(n_i) + SumLogGamma(n_i, m_i) - 0.693\,M
-
-    .. math::
-
-        \log(p)\approx SumLogGamma(n_i, m_i) - 0.693\,M
+    v_{i,j}=1 (see documentation). This returns the log likelihood.
 
     :param ranges: Per-dimension ranges.
     :type ranges: list
