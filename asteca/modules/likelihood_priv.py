@@ -106,10 +106,12 @@ def bin_edges_f(
 
 def tremmel(
     ranges: list,
+    obs_mag_median: float,
+    obs_col_median: float,
     Nbins: list,
     cl_z_idx: np.ndarray,
     cl_histo_f_z: np.ndarray,
-    max_lkl: float,
+    max_lkl: None | float,
     synth_clust: np.ndarray,
 ) -> float:
     r"""Poisson likelihood ratio as defined in Tremmel et al (2013), Eq 10 with
@@ -131,9 +133,9 @@ def tremmel(
     :return: Log likelihood value.
     :rtype: float
     """
-    # If synthetic cluster is empty, assign '1' indicating a large distance
+    # If synthetic cluster is empty, assign '10' indicating a large distance
     if not synth_clust.any():
-        return 1
+        return 10
 
     # Obtain histogram for the synthetic cluster.
     mag, colors = synth_clust[0], synth_clust[1:]
@@ -163,11 +165,26 @@ def tremmel(
         loggamma(cl_histo_f_z + syn_histo_f_z + 0.5) - loggamma(syn_histo_f_z + 0.5)
     )
 
-    # M = syn_histo_f_z.sum() <-- This is wrong and even more, this term should not
-    # have been present at all
-    # tremmel_lkl = SumLogGamma #- 0.693 * syn_histo_f_z.sum()  # ln(2) ~ 0.693
+    # If this is the call made to calibrate the likelihood
+    if max_lkl is None:
+        return tremmel_lkl
 
-    return 1 - tremmel_lkl / max_lkl
+    # Normalize and invert the likelihood so that its values are equivalent to a
+    # distance that goes from 0 (exact match) to 1 (no match).
+    dist = 1 - tremmel_lkl / max_lkl
+
+    # This factor helps to "pull" the solution closer to the region where the observed
+    # cluster is located in the CMD, by adding a penalty based on the photometric
+    # distance between the synthetic cluster and the observed cluster.
+    cmd_dist = 0
+    # Only use penalty when the normalized distance is large
+    if dist > 1:
+        cmd_dist = (obs_mag_median - np.median(mag)) ** 2 + (
+            obs_col_median - np.median(colors[0])
+        ) ** 2
+        return dist + cmd_dist
+
+    return dist
 
 
 # def visual(cluster_dict, synth_clust):

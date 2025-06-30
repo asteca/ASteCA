@@ -75,13 +75,13 @@ class Likelihood:
         self.ranges, self.Nbins, self.cl_z_idx, self.cl_histo_f_z = lpriv.lkl_data(
             bin_method, self.mag, colors
         )
+        self.obs_mag_median = np.nanmedian(self.mag).astype(float)
+        self.obs_col_median = np.nanmedian(colors[0]).astype(float)
 
-        self.max_lkl = 1
+        self.max_lkl = None
         if self.lkl_name == "plr":
             # Evaluate cluster against itself to obtain the maximum likelihood.
-            # Since the initial max_lkl=1, subtracting 1 inverts it back to the
-            # original likelihood value
-            self.max_lkl = 1 - self.get(np.array([self.mag, *colors]))
+            self.max_lkl = self.get(np.array([self.mag, *colors]))
 
         print("\nLikelihood object generated")
 
@@ -108,6 +108,8 @@ class Likelihood:
         if self.lkl_name == "plr":
             return lpriv.tremmel(
                 self.ranges,
+                self.obs_mag_median,
+                self.obs_col_median,
                 self.Nbins,
                 self.cl_z_idx,
                 self.cl_histo_f_z,
