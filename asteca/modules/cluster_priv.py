@@ -283,9 +283,9 @@ def first_filter(
     # Indexes of surviving elements
     idx_all = idx_all[msk]
 
-    # Return here if the number of stars is already less than the maximum
-    if msk.sum() < N_clust_max * N_times:
-        return lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx, idx_all
+    # # Return here if the number of stars is already less than the maximum
+    # if msk.sum() < N_clust_max * N_times:
+    #     return lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx, idx_all
 
     # Sorted indexes of distances to PMs+Plx center
     cents_3d = np.array([list(vpd_c) + [plx_c]])
