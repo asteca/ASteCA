@@ -74,7 +74,7 @@ def ripley_nmembs(
     N_clust: int = 50,
     N_extra: int = 5,
     N_step: int = 10,
-) -> int:
+) -> np.ndarray:
     """Estimate the number of cluster members using Ripley's K-function.
 
     :param x: Array of x-coordinates.
@@ -101,8 +101,8 @@ def ripley_nmembs(
     :param N_step: Step size for increasing the number of cluster stars, defaults to 10
     :type N_step: int
 
-    :return: Estimated number of cluster members.
-    :rtype: int
+    :return: Indexes of the estimated cluster members.
+    :rtype: np.ndarray
     """
     # Generate input data array
     X = np.array(
@@ -121,7 +121,7 @@ def ripley_nmembs(
     e_pmRA, e_pmDE, e_plx = [np.empty(len(x))] * 3
 
     # Remove the most obvious field stars to speed up the process
-    x, y, pmRA, pmDE, plx, _, _, _, _ = cp.first_filter(
+    x, y, pmRA, pmDE, plx, _, _, _, idx_clean = cp.first_filter(
         N_clust_max,
         idx_clean,
         vpd_c,
@@ -160,9 +160,9 @@ def ripley_nmembs(
             if len(idx_survived) > 0:
                 break
 
-    N_survived = len(idx_survived)
+    # N_survived = len(idx_survived)
 
-    return N_survived
+    return idx_clean[idx_survived]
 
 
 def init_ripley(

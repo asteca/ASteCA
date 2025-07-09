@@ -410,9 +410,9 @@ class Cluster:
                 or hasattr(self, "plx_c") is False
             ):
                 raise AttributeError(
-                    "The arguments (pmra, pmdec, plx, pms_c, plx_c) must be present as a 'cluster' attribute"
+                    "The arguments (pmra, pmde, plx, pms_c, plx_c) must be present as a 'cluster' attribute"
                 )
-            N_cluster = nm.ripley_nmembs(
+            idx_selected = nm.ripley_nmembs(
                 xv,
                 yv,
                 self.pmra,
@@ -422,6 +422,10 @@ class Cluster:
                 self.plx_c,
                 self.N_clust_max,
             )
+            # Stored for eventual use
+            self.ripley_idx_selected = idx_selected
+            # This is the value expected from this method
+            N_cluster = len(idx_selected)
         elif algo == "density":
             if hasattr(self, "radec_c") is False or hasattr(self, "radius") is False:
                 raise AttributeError(
