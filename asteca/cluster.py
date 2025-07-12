@@ -395,11 +395,22 @@ class Cluster:
                 "The arguments (ra, dec) must be present as a 'cluster' attribute"
             )
 
+        if hasattr(self, "radec_c") is False:
+            raise AttributeError(
+                "The argument 'radec_c' must be present as a 'cluster' attribute"
+            )
+
         # (x, y) coordinates
         xv, yv = self.ra, self.dec
         # Convert (RA, DEC) to (lon, lat)
         if eq_to_gal is True:
             xv, yv = cp.radec2lonlat(xv, yv)
+
+        ra_c, dec_c = self.radec_c
+        xy_center = (ra_c, dec_c)
+        if eq_to_gal is True:
+            lon, lat = cp.radec2lonlat(*xy_center)
+            xy_center = (lon, lat)
 
         if algo == "ripley":
             if (
@@ -418,26 +429,22 @@ class Cluster:
                 self.pmra,
                 self.pmde,
                 self.plx,
+                xy_center,
                 self.pms_c,
                 self.plx_c,
+                self.N_clust_min,
                 self.N_clust_max,
             )
             # Stored for eventual use
             self.ripley_idx_selected = idx_selected
             # This is the value expected from this method
             N_cluster = len(idx_selected)
+
         elif algo == "density":
-            if hasattr(self, "radec_c") is False or hasattr(self, "radius") is False:
+            if hasattr(self, "radius") is False:
                 raise AttributeError(
-                    "The arguments (radec_c, radius) must be present as a 'cluster' attribute"
+                    "The argument 'radius' must be present as a 'cluster' attribute"
                 )
-
-            ra_c, dec_c = self.radec_c
-            xy_center = (ra_c, dec_c)
-            if eq_to_gal is True:
-                lon, lat = cp.radec2lonlat(*xy_center)
-                xy_center = (lon, lat)
-
             N_cluster = nm.density_nmembs(xv, yv, xy_center, self.radius)
 
         if N_cluster < self.N_clust_min:

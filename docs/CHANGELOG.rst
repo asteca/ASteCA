@@ -7,6 +7,20 @@ Changelog
 #########
 
 
+`[v0.6.2] <https://github.com/asteca/asteca/releases/tag/v0.6.2>`__ - 2025-XX-YY
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+- Better `tremmel` likelihood, now it zooms in to the solution faster
+- Moved `first_filter()` out of `fastMP` to be used also by the Ripley members
+  estimator
+- Make `(RA, DEC)` optional when defining a cluster object; request the center
+  coordinates in the `synthetic.cluster_masses()` method
+- New `N_clust_max=2000` (down from `5000`)
+- Added a `local_dens_clean()` function to Ripley estimator of members for better
+  performance
+
+
+
 `[v0.6.1] <https://github.com/asteca/asteca/releases/tag/v0.6.1>`__ - 2025-04-28
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
