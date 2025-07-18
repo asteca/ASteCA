@@ -23,7 +23,7 @@ def radec2lonlat(ra: float | np.ndarray, dec: float | np.ndarray) -> np.ndarray:
     lb = gc.transform_to("galactic")
 
     lon_v = lb.l.value  # pyright: ignore
-    if isinstance(ra, np.ndarray):  # Check for arrays
+    if isinstance(ra, np.ndarray):
         lon = np.array(lb.l)
         if lon.max() - lon.min() > 180:
             # Fix frame that wraps around 360 in longitude
