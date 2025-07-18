@@ -112,7 +112,7 @@ class Membership:
         if N_runs < 10:
             raise AttributeError("Parameter 'N_runs' should be > 10")
 
-        xc, yc = self.my_field.ra, self.my_field.dec
+        xv, yv = self.my_field.ra, self.my_field.dec
         center = self.my_field.radec_c
         cent_str = "radec_c "
         # Convert (RA, DEC) to (lon, lat)
@@ -130,10 +130,10 @@ class Membership:
         self._vp(f"N_runs         : {N_runs}", 1)
 
         # Generate input data array
-        X = [self.my_field.ra, self.my_field.dec]
+        X = [xv, yv]
         e_X = []
-        if self.my_field.mag is not None:
-            X.append(self.my_field.mag)
+        if self.my_field.magnitude is not None:
+            X.append(self.my_field.magnitude)
             e_X.append(self.my_field.e_mag)
         if self.my_field.color is not None:
             X.append(self.my_field.color)
