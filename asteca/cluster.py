@@ -402,15 +402,17 @@ class Cluster:
 
         # (x, y) coordinates
         xv, yv = self.ra, self.dec
+        xy_center = (self.radec_c[0], self.radec_c[1])
         # Convert (RA, DEC) to (lon, lat)
         if eq_to_gal is True:
-            xv, yv = cp.radec2lonlat(xv, yv)
-
-        ra_c, dec_c = self.radec_c
-        xy_center = (ra_c, dec_c)
-        if eq_to_gal is True:
-            lon, lat = cp.radec2lonlat(*xy_center)
-            xy_center = (lon, lat)
+            # Add center as last element
+            xv_t = np.array(list(xv) + [xy_center[0]])
+            yv_t = np.array(list(yv) + [xy_center[1]])
+            # Convert
+            xv_t, yv_t = cp.radec2lonlat(xv_t, yv_t)
+            # Extract center value
+            xv, yv = xv_t[:-1], yv_t[:-1]
+            xy_center = (xv_t[-1], yv_t[-1])
 
         if algo == "ripley":
             if (
