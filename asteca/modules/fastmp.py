@@ -94,18 +94,12 @@ def fastMP(
         # Star selection
         st_idx = d_idxs[:N_cluster]
 
-        # Re-estimate centers using the selected stars
-        xy_c, vpd_c, plx_c = get_center(
-            xy_c,
-            vpd_c,
-            plx_c,
-            fixed_centers,
-            lon[st_idx],
-            lat[st_idx],
-            pmRA[st_idx],
-            pmDE[st_idx],
-            plx[st_idx],
-        )
+        if fixed_centers is False:
+            # Re-estimate centers using the selected stars
+            x_c, y_c, pmra_c, pmde_c, plx_c = cp.get_knn_5D_center(
+                lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c
+            )
+            xy_c, vpd_c = (x_c, y_c), (pmra_c, pmde_c)
 
         probs_all[st_idx] += 1
         probs = probs_all / (r + 1)
@@ -189,77 +183,6 @@ def get_dims_norm(
 
     data_norm = data_mvd / dims_norm
     return data_norm
-
-
-def get_center(
-    xy_c: tuple[float, float] | None,
-    vpd_c: tuple[float, float] | None,
-    plx_c: float | None,
-    fixed_centers: bool,
-    lon: np.ndarray,
-    lat: np.ndarray,
-    pmRA: np.ndarray,
-    pmDE: np.ndarray,
-    plx: np.ndarray,
-) -> tuple[tuple[float, float], tuple[float, float], float]:
-    """Return 5-dimensional center values, within the given constrains
-
-    :param xy_c: Initial center coordinates (longitude, latitude).
-    :type xy_c: tuple[float, float] | None
-    :param vpd_c: Initial center proper motion values (pmRA, pmDE).
-    :type vpd_c: tuple[float, float] | None
-    :param plx_c: Initial center parallax value.
-    :type plx_c: float | None
-    :param fixed_centers: If True, keep the centers fixed during the iterative process.
-    :type fixed_centers: bool
-    :param N_clust_min: Minimum number of stars in the cluster.
-    :type N_clust_min: int
-    :param N_clust_max: Maximum number of stars in the cluster.
-    :type N_clust_max: int
-    :param lon: Longitude of the stars.
-    :type lon: np.ndarray
-    :param lat: Latitude of the stars.
-    :type lat: np.ndarray
-    :param pmRA: Proper motions in right ascension.
-    :type pmRA: np.ndarray
-    :param pmDE: Proper motions in declination.
-    :type pmDE: np.ndarray
-    :param plx: Parallax values of the stars.
-    :type plx: np.ndarray
-
-    :returns:
-        - Refined center coordinates (longitude, latitude).
-        - Refined center proper motion values (pmRA, pmDE).
-        - Refined center parallax value.
-    :rtype: tuple[tuple[float, float], tuple[float, float], float]
-    """
-
-    # Skip process if all centers are fixed
-    if (
-        fixed_centers is True
-        and xy_c is not None
-        and vpd_c is not None
-        and plx_c is not None
-    ):
-        x_c, y_c = xy_c
-        pmra_c, pmde_c = vpd_c
-        plx_c = plx_c
-        return (x_c, y_c), (pmra_c, pmde_c), plx_c
-
-    # Estimate initial center
-    x_c, y_c, pmra_c, pmde_c, plx_c = cp.get_knn_5D_center(
-        lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c
-    )
-    # Re-write values if necessary
-    if fixed_centers is True:
-        if xy_c is not None:
-            x_c, y_c = xy_c
-        if vpd_c is not None:
-            pmra_c, pmde_c = vpd_c
-        if plx_c is not None:
-            plx_c = plx_c
-
-    return (x_c, y_c), (pmra_c, pmde_c), plx_c
 
 
 def data_sample(
