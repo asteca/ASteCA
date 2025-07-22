@@ -48,7 +48,7 @@ def fastMP(
     # Remove the most obvious field stars. This has no effect on the results but
     # speeds up the process enormously
     N_filter_max = min(N_cluster * 10, 10_000)  # FIXED VALUE
-    lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx, idx_clean = cp.first_filter(
+    idx_clean, lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx = cp.first_filter(
         idx_clean,
         vpd_c,
         plx_c,

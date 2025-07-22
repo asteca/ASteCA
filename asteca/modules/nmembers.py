@@ -121,11 +121,11 @@ def ripley_nmembs(
     # Unpack input data with no 'nans'
     lon, lat, pmRA, pmDE, plx = X_no_nan
     # These arrays are not used, fill with dummy values
-    e_pmRA, e_pmDE, e_plx = [np.empty(len(x))] * 3
+    e_pmRA, e_pmDE, e_plx = [np.empty(len(lon))] * 3
 
-    # Remove the most obvious field stars to speed up the process
-    x, y, pmRA, pmDE, plx, _, _, _, idx_clean = cp.first_filter(
-        N_clust_max,
+    # Remove the most obvious field stars
+    N_filter_max = min(N_clust_max * 5, 10_000)  # FIXED VALUE
+    idx_clean, x, y, pmRA, pmDE, plx, _, _, _ = cp.first_filter(
         idx_clean,
         vpd_c,
         plx_c,
@@ -137,6 +137,7 @@ def ripley_nmembs(
         e_pmRA,
         e_pmDE,
         e_plx,
+        N_filter_max,
     )
 
     # Initialize Ripley's K-function estimator

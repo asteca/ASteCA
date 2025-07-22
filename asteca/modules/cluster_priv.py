@@ -89,8 +89,6 @@ def get_knn_5D_center(
     xy_c: tuple[float, float] | None,
     vpd_c: tuple[float, float] | None,
     plx_c: float | None,
-    N_clust_min: int,
-    N_clust_max: int,
 ) -> tuple[float, float, float, float, float]:
     """Estimate the 5-dimensional center of a cluster.
 
@@ -115,10 +113,6 @@ def get_knn_5D_center(
     :type vpd_c: tuple[float, float] | None
     :param plx_c: Center coordinate in parallax.
     :type plx_c: float | None
-    :param N_clust_min: Minimum number of stars in the cluster.
-    :type N_clust_min: int
-    :param N_clust_max: Maximum number of stars in the cluster.
-    :type N_clust_max: int
 
     :return: Center coordinates in (lon, lat, pmRA, pmDE, plx).
     :rtype: tuple[float, float, float, float, float]
@@ -128,23 +122,24 @@ def get_knn_5D_center(
     _, X_no_nan = reject_nans(X)
     lon, lat, pmRA, pmDE, plx = X_no_nan
 
+    N_min, N_max = 25, 250  # FIXED VALUE
     N_tot = len(lon)
-    # N_clust_min < N_cent < 250
-    N_cent = max(N_clust_min, min(250, int(0.1 * N_tot)))
+    # N_min < N_cent < N_max
+    N_cent = max(N_min, min(N_max, int(0.1 * N_tot)))
 
     # Get filtered stars close to given xy+Plx centers (if given) to use
     # in the PMs center estimation.
     if xy_c is None and plx_c is None:
         # If neither xy_c nor plx_c were given and the number of stars in the frame
-        # is larger than N_clust_max, select twice the N_clust_max stars closest to the
+        # is larger than N_max, select twice the N_max stars closest to the
         # center of the XY frame (i.e.: this assumes that the cluster is centered in
-        # XY). This prevents very large frames to deviate from the actual cluster's
+        # XY). This prevents very large frames from deviating from the actual cluster's
         # center because most stars in the VPD are distributed around another center
         # value
-        if N_tot > N_clust_max:
+        if N_tot > N_max:
             data = np.array([lon, lat]).T
             cent = np.array([np.median(data, 0)])
-            idx = get_Nd_dists(cent, data)[: 2 * N_clust_max]
+            idx = get_Nd_dists(cent, data)[: 2 * N_max]
             pmRA_i, pmDE_i = pmRA[idx], pmDE[idx]
         else:
             pmRA_i, pmDE_i = np.array(pmRA), np.array(pmDE)
@@ -190,7 +185,6 @@ def get_Nd_dists(cents: np.ndarray, data: np.ndarray) -> np.ndarray:
 
 
 def first_filter(
-    N_clust_max: int,
     idx_all: np.ndarray,
     vpd_c: tuple[float, float],
     plx_c: float,
@@ -202,10 +196,10 @@ def first_filter(
     e_pmRA: np.ndarray,
     e_pmDE: np.ndarray,
     e_plx: np.ndarray,
+    N_filter_max: int,
     plx_cut: float = 0.5,
     v_kms_max: float = 5.0,
     pm_max: float = 3.0,
-    N_times: int = 5,
 ) -> tuple[
     np.ndarray,
     np.ndarray,
@@ -219,8 +213,6 @@ def first_filter(
 ]:
     """Perform an initial filtering of stars based on parallax and proper motion.
 
-    :param N_clust_max: Maximum number of stars in the cluster.
-    :type N_clust_max: int
     :param idx_all: Indexes of the input stars.
     :type idx_all: np.ndarray
     :param vpd_c: Center proper motion values (pmRA, pmDE).
@@ -243,6 +235,8 @@ def first_filter(
     :type e_pmDE: np.ndarray
     :param e_plx: Errors in parallax.
     :type e_plx: np.ndarray
+    :param N_filter_max: Maximum number of stars to return.
+    :type N_filter_max: int.
     :param plx_cut: Parallax threshold for switching filtering criteria between using
         'v_kms_max' or 'pm_max'. Default is 0.5.
     :type plx_cut: float
@@ -250,9 +244,6 @@ def first_filter(
     :type v_kms_max: float
     :param pm_max: Maximum proper motion for filtering. Default is 3.
     :type pm_max: float
-    :param N_times: Multiplicative factor for determining how many stars to keep.
-        Default is 5.
-    :type N_times: int
 
     :returns:
         - Updated arrays of the surviving stars' parameters (longitude, latitude,
@@ -271,50 +262,50 @@ def first_filter(
     # -More distant stars: use 'pm_max' as the maximum proper motion
     msk1 = (plx > plx_cut) & (pm_rad / (abs(plx) + 0.0001) < v_kms_max)
     msk2 = (plx <= plx_cut) & (pm_rad < pm_max)
+
     # Stars to keep: those that satisfy either of the two conditions
-    msk = msk1 | msk2
+    msk_keep = msk1 | msk2
 
-    # Remove obvious field stars
-    lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx = (
-        lon[msk],
-        lat[msk],
-        pmRA[msk],
-        pmDE[msk],
-        plx[msk],
-        e_pmRA[msk],
-        e_pmDE[msk],
-        e_plx[msk],
+    # If nothing survives, return original arrays
+    if msk_keep.sum() == 0:
+        return idx_all, lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx
+
+    # Update arrays to remove obvious field stars
+    idx_all, lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx = (
+        idx_all[msk_keep],
+        lon[msk_keep],
+        lat[msk_keep],
+        pmRA[msk_keep],
+        pmDE[msk_keep],
+        plx[msk_keep],
+        e_pmRA[msk_keep],
+        e_pmDE[msk_keep],
+        e_plx[msk_keep],
     )
-    # Indexes of surviving elements
-    idx_all = idx_all[msk]
 
-    # # Return here if the number of stars is already less than the maximum
-    # if msk.sum() < N_clust_max * N_times:
-    #     return lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx, idx_all
+    # Remove more stars if required
+    if len(idx_all) > N_filter_max:
+        # Distances to the PMs+Plx center for the subset of stars
+        cents_3d = np.array([list(vpd_c) + [plx_c]])
+        data_3d = np.array([pmRA, pmDE, plx]).T
+        # Sorted indices relative to the subset
+        d_pm_plx_idxs = get_Nd_dists(cents_3d, data_3d)
+        # Indexes of the 'N_filter_max' closest subset stars to the PMs+Plx center
+        msk_keep = d_pm_plx_idxs[: int(N_filter_max)]
+        # Update arrays
+        idx_all, lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx = (
+            idx_all[msk_keep],
+            lon[msk_keep],
+            lat[msk_keep],
+            pmRA[msk_keep],
+            pmDE[msk_keep],
+            plx[msk_keep],
+            e_pmRA[msk_keep],
+            e_pmDE[msk_keep],
+            e_plx[msk_keep],
+        )
 
-    # Sorted indexes of distances to PMs+Plx center
-    cents_3d = np.array([list(vpd_c) + [plx_c]])
-    data_3d = np.array([pmRA, pmDE, plx]).T
-    d_pm_plx_idxs = get_Nd_dists(cents_3d, data_3d)
-
-    # Indexes of the 'N_clust_max*N_times' stars closest to the PMs+Plx center
-    idx_acpt = d_pm_plx_idxs[: int(N_clust_max * N_times)]
-
-    # Update arrays with the selected stars
-    lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx = (
-        lon[idx_acpt],
-        lat[idx_acpt],
-        pmRA[idx_acpt],
-        pmDE[idx_acpt],
-        plx[idx_acpt],
-        e_pmRA[idx_acpt],
-        e_pmDE[idx_acpt],
-        e_plx[idx_acpt],
-    )
-    # Update indexes of surviving elements
-    idx_all = idx_all[idx_acpt]
-
-    return lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx, idx_all
+    return idx_all, lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx
 
 
 def filter_pms_stars(

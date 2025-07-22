@@ -258,8 +258,6 @@ class Cluster:
                 xy_c=lonlat_c,
                 vpd_c=pms_c,
                 plx_c=plx_c,
-                N_clust_min=self.N_clust_min,
-                N_clust_max=self.N_clust_max,
             )
             ra_c, dec_c = cp.lonlat2radec(x_c, y_c)
 
