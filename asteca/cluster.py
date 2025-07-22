@@ -249,18 +249,12 @@ class Cluster:
                 lon, lat = cp.radec2lonlat(radec_c[0], radec_c[1])
                 lonlat_c = (lon, lat)
 
-            # Remove nans
-            X = np.array([glon, glat, self.pmra, self.pmde, self.plx])
-            # Reject nan values and extract clean data
-            _, X_no_nan = cp.reject_nans(X)
-            lon, lat, pmRA, pmDE, plx = X_no_nan
-
             x_c, y_c, pmra_c, pmde_c, plx_c = cp.get_knn_5D_center(
-                lon,
-                lat,
-                pmRA,
-                pmDE,
-                plx,
+                glon,
+                glat,
+                self.pmra,
+                self.pmde,
+                self.plx,
                 xy_c=lonlat_c,
                 vpd_c=pms_c,
                 plx_c=plx_c,

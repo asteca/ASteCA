@@ -123,6 +123,11 @@ def get_knn_5D_center(
     :return: Center coordinates in (lon, lat, pmRA, pmDE, plx).
     :rtype: tuple[float, float, float, float, float]
     """
+    # Remove nans
+    X = np.array([lon, lat, pmRA, pmDE, plx])
+    _, X_no_nan = reject_nans(X)
+    lon, lat, pmRA, pmDE, plx = X_no_nan
+
     N_tot = len(lon)
     # N_clust_min < N_cent < 250
     N_cent = max(N_clust_min, min(250, int(0.1 * N_tot)))
