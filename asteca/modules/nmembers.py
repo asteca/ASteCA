@@ -169,10 +169,12 @@ def ripley_nmembs(
         dist_to_center = np.linalg.norm(xy - xy_center, axis=1)
         idx_survived = np.argsort(dist_to_center)[:10]
         return idx_clean[idx_survived]
+
     elif len(idx_survived) < N_clust_min:
         # No need for further cleaning
         return idx_clean[idx_survived]
 
+    # Apply local density based cleaning
     idx_survived = local_dens_clean(xy_center, x, y, idx_survived)
 
     return idx_clean[idx_survived]

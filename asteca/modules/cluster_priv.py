@@ -149,7 +149,7 @@ def get_knn_5D_center(
         )
 
     # (Re)estimate VPD center
-    vpd_c_i = get_pms_center(vpd_c, N_clust_min, pmRA_i, pmDE_i)
+    vpd_c_i = get_pms_center(vpd_c, pmRA_i, pmDE_i, N_min)
 
     # Get N_cent stars closest to vpd_c and given xy and/or plx centers
     lon_i, lat_i, pmRA_i, pmDE_i, plx_i = get_stars_close_center(
@@ -158,7 +158,7 @@ def get_knn_5D_center(
 
     # kNN center
     x_c, y_c, pmra_c, pmde_c, plx_c = get_kNN_center(
-        N_clust_min, np.array([lon_i, lat_i, pmRA_i, pmDE_i, plx_i]).T
+        np.array([lon_i, lat_i, pmRA_i, pmDE_i, plx_i]).T, N_min
     )
 
     return x_c, y_c, pmra_c, pmde_c, plx_c
@@ -369,9 +369,9 @@ def filter_pms_stars(
 
 def get_pms_center(
     vpd_c: tuple[float, float] | None,
-    N_clust_min: int,
     pmRA: np.ndarray,
     pmDE: np.ndarray,
+    N_clust_min: int,
     N_bins: int = 50,
     zoom_f: int = 4,
     N_zoom: int = 10,
@@ -380,12 +380,12 @@ def get_pms_center(
 
     :param vpd_c: Center coordinates in proper motions (pmRA, pmDE).
     :type vpd_c: tuple[float, float] | None
-    :param N_clust_min: Minimum number of stars in the cluster.
-    :type N_clust_min: int
     :param pmRA: Proper motion in Right Ascension.
     :type pmRA: np.ndarray
     :param pmDE: Proper motion in Declination.
     :type pmDE: np.ndarray
+    :param N_clust_min: Minimum number of stars in the cluster.
+    :type N_clust_min: int
     :param N_bins: Number of bins for the 2D histogram, defaults to 50
     :type N_bins: int
     :param zoom_f: Zoom factor for the iterative center estimation, defaults to 4
@@ -503,7 +503,7 @@ def get_stars_close_center(
 
 
 def get_kNN_center(
-    N_clust_min: int, data: np.ndarray
+    data: np.ndarray, N_clust_min: int
 ) -> tuple[float, float, float, float, float]:
     """Estimate 5D center with kNN.
 
