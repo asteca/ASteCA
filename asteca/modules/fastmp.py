@@ -9,8 +9,6 @@ def fastMP(
     vpd_c: tuple[float, float],
     plx_c: float,
     N_cluster: int,
-    N_clust_min: int,
-    N_clust_max: int,
     fixed_centers: bool,
     X: np.ndarray,
     N_resample: int,
@@ -27,10 +25,6 @@ def fastMP(
     :type plx_c: float
     :param N_cluster: Number of stars to select for cluster identification.
     :type N_cluster: int
-    :param N_clust_min: Minimum number of stars in the cluster.
-    :type N_clust_min: int
-    :param N_clust_max: Maximum number of stars in the cluster.
-    :type N_clust_max: int
     :param fixed_centers: If True, keep the centers fixed during the iterative process.
     :type fixed_centers: bool
     :param X: Input data array containing coordinates, proper motions, and parallax
@@ -51,9 +45,10 @@ def fastMP(
     # Unpack input data with no 'nans'
     lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx = X_no_nan
 
-    # Remove the most obvious field stars to speed up the process
+    # Remove the most obvious field stars. This has no effect on the results but
+    # speeds up the process enormously
+    N_filter_max = min(N_cluster * 10, 10_000)  # FIXED VALUE
     lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx, idx_clean = cp.first_filter(
-        N_clust_max,
         idx_clean,
         vpd_c,
         plx_c,
@@ -65,6 +60,7 @@ def fastMP(
         e_pmRA,
         e_pmDE,
         e_plx,
+        N_filter_max,
     )
 
     st_idx = None
@@ -104,8 +100,6 @@ def fastMP(
             vpd_c,
             plx_c,
             fixed_centers,
-            N_clust_min,
-            N_clust_max,
             lon[st_idx],
             lat[st_idx],
             pmRA[st_idx],
@@ -202,8 +196,6 @@ def get_center(
     vpd_c: tuple[float, float] | None,
     plx_c: float | None,
     fixed_centers: bool,
-    N_clust_min: int,
-    N_clust_max: int,
     lon: np.ndarray,
     lat: np.ndarray,
     pmRA: np.ndarray,
@@ -256,7 +248,7 @@ def get_center(
 
     # Estimate initial center
     x_c, y_c, pmra_c, pmde_c, plx_c = cp.get_knn_5D_center(
-        lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c, N_clust_min, N_clust_max
+        lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c
     )
     # Re-write values if necessary
     if fixed_centers is True:

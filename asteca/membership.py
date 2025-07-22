@@ -273,8 +273,6 @@ class Membership:
             self.my_field.pms_c,
             self.my_field.plx_c,
             self.my_field.N_cluster,
-            self.my_field.N_clust_min,
-            self.my_field.N_clust_max,
             fixed_centers,
             X,
             N_runs,
