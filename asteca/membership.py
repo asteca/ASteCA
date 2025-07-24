@@ -174,7 +174,7 @@ class Membership:
 
     def fastmp(
         self,
-        fixed_centers: bool = False,
+        fixed_centers: bool = True,
         N_runs: int = 1000,
         eq_to_gal: bool = True,
     ) -> np.ndarray:
@@ -187,7 +187,7 @@ class Membership:
 
         :param fixed_centers: If ``True`` the center values (radec_c, pms_c, plx_c)
             stored in the :py:class:`Cluster <asteca.cluster.Cluster>` object will be
-            kept fixed throughout the process, defaults to ``False``
+            kept fixed throughout the process, defaults to ``True``
         :type fixed_centers: bool
         :param N_runs: Maximum number of resamples, defaults to ``1000``
         :type N_runs: int
