@@ -13,11 +13,14 @@ Changelog
 - Better `tremmel` likelihood, now it zooms in to the solution faster
 - Moved `first_filter()` out of `fastMP` to be used also by the Ripley members
   estimator
+- Changed default value for `fixed_centers` in `fastMP()` to `True`
 - Make `(RA, DEC)` optional when defining a cluster object; request the center
   coordinates in the `synthetic.cluster_masses()` method
 - New `N_clust_max=2000` (down from `5000`)
-- Added a `local_dens_clean()` function to Ripley estimator of members for better
+- Added a `local_dens_clean()` function to the Ripley estimator of members for better
   performance
+- Removed iterative IQR normalization in `fastMP()`. It caused issues for some OCs
+  that ended up looking stretched out in the LON/LAT axis
 
 
 
