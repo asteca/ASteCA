@@ -217,7 +217,7 @@ class Synthetic:
         """
         from .modules import synth_cluster_priv as scp
 
-        for attr in ("mag", "color", "ra", "dec"):
+        for attr in ("mag", "color"):  # , "ra", "dec"):
             if getattr(cluster, attr) is None:
                 raise ValueError(
                     f"Attribute '{attr}' is required to calibrate 'Cluster' object."
