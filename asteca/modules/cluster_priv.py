@@ -236,7 +236,7 @@ def first_filter(
     :param e_plx: Errors in parallax.
     :type e_plx: np.ndarray
     :param N_filter_max: Maximum number of stars to return.
-    :type N_filter_max: int.
+    :type N_filter_max: int
     :param plx_cut: Parallax threshold for switching filtering criteria between using
         'v_kms_max' or 'pm_max'. Default is 0.5.
     :type plx_cut: float
@@ -503,10 +503,10 @@ def get_kNN_center(
 ) -> tuple[float, float, float, float, float]:
     """Estimate 5D center with kNN.
 
-    :param N_clust_min: Minimum number of stars in the cluster.
-    :type N_clust_min: int
     :param data: Array of data.
     :type data: np.ndarray
+    :param N_clust_min: Minimum number of stars in the cluster.
+    :type N_clust_min: int
 
     :return: Center coordinates in (lon, lat, pmRA, pmDE, plx).
     :rtype: tuple[float, float, float, float, float]

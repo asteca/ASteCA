@@ -659,11 +659,6 @@ class Synthetic:
                 "This method requires running the get_models() method first"
             )
 
-        if radec_c is None and rho_amb is None:
-            raise ValueError(
-                "This method requires either 'radec_c' or 'rho_amb' values"
-            )
-
         from .modules import mass_binary as mb
 
         # The number of stars in the synthetic clusters is not constant so we estimate
@@ -685,6 +680,10 @@ class Synthetic:
             Z, R_GC, R_xy = mb.galactic_coords(self.sampled_models, radec_c)
             rho_amb_arr = mb.ambient_density(
                 M_B, r_B, M_D, a, b, r_s, M_s, Z, R_GC, R_xy
+            )
+        else:
+            raise ValueError(
+                "This method requires either 'radec_c' or 'rho_amb' values"
             )
 
         masses_all = []
