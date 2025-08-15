@@ -2,7 +2,7 @@ import warnings
 
 import numpy as np
 from astropy.stats import RipleysKEstimator
-from scipy.spatial import cKDTree
+from scipy.spatial import KDTree
 
 from . import cluster_priv as cp
 
@@ -90,10 +90,14 @@ def ripley_nmembs(
     :type pmDE: np.ndarray
     :param plx: Array of parallax values.
     :type plx: np.ndarray
+    :param xy_center: Center coordinates in (x,y)
+    :type xy_center: tuple[float, float]
     :param vpd_c: Center coordinates in proper motion (pmRA, pmDE).
     :type vpd_c: tuple[float, float]
     :param plx_c: Center parallax value.
     :type plx_c: float
+    :param N_clust_min: Minimum number of stars to consider as a cluster
+    :type N_clust_min: int
     :param N_clust_max: Maximum number of stars to consider as a cluster
     :type N_clust_max: int
     :param N_clust: Initial number of stars to consider as a cluster, defaults to 50
@@ -324,7 +328,7 @@ def local_dens_clean(
     dist_to_cent = np.linalg.norm(data - xy_center, axis=1)
 
     # Local density
-    tree = cKDTree(data)
+    tree = KDTree(data)
     # Query neighbors including self
     dists, _ = tree.query(data, k=N_k + 1)
     fifth_nn_dist = dists[:, N_k]  # Nth neighbor distance
