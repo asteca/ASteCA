@@ -1,29 +1,74 @@
+from typing import Literal
+
 import numpy as np
 from astropy.stats import calculate_bin_edges
 from fast_histogram import histogram2d
 from scipy.special import loggamma
 
 
+def bin_edges_f(
+    bin_method: Literal["blocks", "knuth", "scott", "freedman", "fixed"],
+    mag: np.ndarray,
+    colors: list[np.ndarray],
+) -> tuple[list, list]:
+    """Calculate bin edges for the Hess diagram.
+
+    This function calculates the bin edges for the Hess diagram, using
+    different methods.
+
+    :param bin_method: Method used for binning the data.
+    :type bin_method: Literal["blocks", "knuth", "scott", "freedman", "fixed"]
+    :param mag: Array of magnitudes.
+    :type mag: np.ndarray
+    :param colors: List of arrays of colors.
+    :type colors: list[np.ndarray]
+
+    :return: Bin ranges and number of bins.
+    :rtype: tuple[list, list]
+    """
+
+    bin_edges = []
+
+    if bin_method == "fixed":
+        N_mag, N_col = 15, 10
+        # Magnitude
+        mag_min, mag_max = np.nanmin(mag), np.nanmax(mag)
+        bin_edges.append(np.linspace(mag_min, mag_max, N_mag))
+        # Colors
+        for col in colors:
+            col_min, col_max = np.nanmin(col), np.nanmax(col)
+            bin_edges.append(np.linspace(col_min, col_max, N_col))
+    else:
+        bin_edges.append(calculate_bin_edges(mag[~np.isnan(mag)], bins=bin_method))
+        for col in colors:
+            bin_edges.append(calculate_bin_edges(col[~np.isnan(col)], bins=bin_method))
+
+    # Extract ranges and number of bins for each dimension (magnitude and colors),
+    # used by histogram2d
+    ranges, Nbins = [], []
+    for be in bin_edges:
+        ranges.append([be[0], be[-1]])
+        Nbins.append(len(be))
+
+    return ranges, Nbins
+
+
 def lkl_data(
-    bin_method: str, mag_v: np.ndarray, colors_v: list[np.ndarray]
-) -> tuple[list, list, np.ndarray, np.ndarray]:
+    mag_v: np.ndarray, colors_v: list[np.ndarray], ranges: list, Nbins: list
+) -> tuple[np.ndarray, np.ndarray]:
     """Prepare data for likelihood calculation.
 
     This function calculates the Hess diagram of the observed cluster and
     prepares the data for the likelihood calculation.
 
-    :param bin_method: Method to use for binning the data.
-    :type bin_method: str
     :param mag_v: Array of magnitudes.
     :type mag_v: np.ndarray
     :param colors_v: List of arrays of colors.
     :type colors_v: list[np.ndarray]
 
-    :return: Bin ranges, number of bins, indexes of bins with stars, and flattened histogram.
-    :rtype: tuple[list, list, np.ndarray, np.ndarray]
+    :return: Indexes of bins with stars and flattened histogram.
+    :rtype: tuple[np.ndarray, np.ndarray]
     """
-    # Obtain bin edges for each dimension, defining a grid.
-    ranges, Nbins = bin_edges_f(bin_method, mag_v, colors_v)
 
     # Obtain histogram for observed cluster.
     hess_diag = []
@@ -54,63 +99,16 @@ def lkl_data(
     cl_histo_f_z = cl_histo_f[cl_z_idx]
 
     # These variables are used by the likelihood functions called by the get() method
-    return ranges, Nbins, cl_z_idx, cl_histo_f_z
-
-
-def bin_edges_f(
-    bin_method: str, mag: np.ndarray, colors: list[np.ndarray]
-) -> tuple[list, list]:
-    """Calculate bin edges for the Hess diagram.
-
-    This function calculates the bin edges for the Hess diagram, using
-    different methods.
-
-    :param bin_method: Method to use for binning the data.
-    :type bin_method: str
-    :param mag: Array of magnitudes.
-    :type mag: np.ndarray
-    :param colors: List of arrays of colors.
-    :type colors: list[np.ndarray]
-
-    :return: Bin ranges and number of bins.
-    :rtype: tuple[list, list]
-    """
-
-    bin_edges = []
-
-    if bin_method == "fixed":
-        N_mag, N_col = 15, 10
-        # Magnitude
-        mag_min, mag_max = np.nanmin(mag), np.nanmax(mag)
-        bin_edges.append(np.linspace(mag_min, mag_max, N_mag))
-        # Colors
-        for col in colors:
-            col_min, col_max = np.nanmin(col), np.nanmax(col)
-            bin_edges.append(np.linspace(col_min, col_max, N_col))
-    else:
-        bin_edges.append(calculate_bin_edges(mag[~np.isnan(mag)], bins=bin_method))  # pyright: ignore
-        for col in colors:
-            bin_edges.append(
-                calculate_bin_edges(col[~np.isnan(col)], bins=bin_method)  # pyright: ignore
-            )
-
-    # Extract ranges and number of bins for each dimension (magnitude and colors),
-    # used by histogram2d
-    ranges, Nbins = [], []
-    for be in bin_edges:
-        ranges.append([be[0], be[-1]])
-        Nbins.append(len(be))
-
-    return ranges, Nbins
+    return cl_z_idx, cl_histo_f_z
 
 
 def tremmel(
     ranges: list,
-    obs_mag_median: float,
-    obs_col_median: float,
     Nbins: list,
     cl_z_idx: np.ndarray,
     cl_histo_f_z: np.ndarray,
+    obs_mag_median: float,
+    obs_col_median: float,
     max_lkl: None | float,
     synth_clust: np.ndarray,
 ) -> float:
@@ -125,8 +123,12 @@ def tremmel(
     :type cl_z_idx: np.ndarray
     :param cl_histo_f_z: Flattened observed Hess diagram with the empty bins removed
     :type cl_histo_f_z: np.ndarray
+    :param obs_mag_median: Medina observed magnitude
+    :type obs_mag_median: float
+    :param obs_col_median: Medina observed color
+    :type obs_col_median: float
     :param max_lkl: Maximum likelihood value, used for normalization
-    :type max_lkl: float
+    :type max_lkl: None | float
     :param synth_clust: Synthetic cluster data.
     :type synth_clust: np.ndarray
 
