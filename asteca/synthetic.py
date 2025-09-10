@@ -606,43 +606,43 @@ class Synthetic:
         :param radec_c: Center coordinates in ``(RA, DEC)``. If ``None``, the ``rho_amb``
             parameter must be given; defaults to ``None``.
         :type radec_c: tuple | None
-        :param rho_amb: Ambient density. If ``None``, it is estimated using the
-            cluster's position (``radec_c``) and a model for the Galaxy's potential;
-            defaults to ``None``.
+        :param rho_amb: Ambient density [:math:`M_{\odot}\,pc^{-3}`]. If ``None``, it
+            is estimated using the cluster's position (``radec_c``) and a model for the
+            Galaxy's potential; defaults to ``None``.
         :type rho_amb: float | None
-        :param M_B: Bulge mass (in solar masses); defaults to ``2.5e10`` (from
+        :param M_B: Bulge mass; defaults to ``2.5e10`` [:math:`M_{\odot}`] (from
             `Haghi et al. 2015 <https://doi.org/10.1093/mnras/stv827>`__, Table 1)
         :type M_B: float
-        :param r_B: Characteristic radius of the bulge (in pc); defaults to ``0.5e3``
+        :param r_B: Characteristic radius of the bulge; defaults to ``0.5e3`` [pc]
             (from `Haghi et al. 2015 <https://doi.org/10.1093/mnras/stv827>`__,
             Table 1)
         :type r_B: float
-        :param M_D: Disc mass (in solar masses); defaults to ``7.5e10`` (from
+        :param M_D: Disc mass; defaults to ``7.5e10`` [:math:`M_{\odot}`] (from
             `Haghi et al. 2015 <https://doi.org/10.1093/mnras/stv827>`__, Table 1)
         :type M_D: float
-        :param a: Disc scale radius (in pc); defaults to ``5.4e3`` (from
+        :param a: Disc scale radius; defaults to ``5400`` [pc] (from
             `Haghi et al. 2015 <https://doi.org/10.1093/mnras/stv827>`__, Table 1)
         :type a: float
-        :param b: Disc scaleheight (in pc); defaults to ``0.3e3`` (from
+        :param b: Disc scaleheight; defaults to ``300`` [pc] (from
             `Haghi et al. 2015 <https://doi.org/10.1093/mnras/stv827>`__, Table 1)
         :type b: float
-        :param M_s: Dark matter halo mass (in solar masses); defaults to ``1.87e11``
+        :param M_s: Dark matter halo mass; defaults to ``1.87e11`` [:math:`M_{\odot}`]
             (from `Sanderson et al. 2017
             <https://iopscience.iop.org/article/10.3847/1538-4357/aa5eb4>`__, Table 1)
         :type M_s: float
-        :param r_s: Dark matter halo scale radius (in pc); defaults to ``15.19e3`` (from
+        :param r_s: Dark matter halo scale radius; defaults to ``15.19e3`` [pc] (from
             `Sanderson et al. 2017
             <https://iopscience.iop.org/article/10.3847/1538-4357/aa5eb4>`__, Table 1)
         :type r_s: float
-        :param C_env: Constant related to the disruption time (in Myr); defaults to
-            ``810e6`` (from `Lamers, Gieles & Zwart 2005
+        :param C_env: Constant related to the disruption time; defaults to
+            ``810e6`` [Myr] (from `Lamers, Gieles & Zwart 2005
             <https://www.aanda.org/articles/aa/abs/2005/01/aa1476/aa1476.html>`__)
         :type C_env: float
         :param gamma: Constant related to the disruption time (no units); defaults to
             ``0.62`` (from `Lamers, Gieles & Zwart 2005
             <https://www.aanda.org/articles/aa/abs/2005/01/aa1476/aa1476.html>`__)
         :type gamma: float
-        :param epsilon: Eccentricity of the orbit; defaults to ``0.08`` (from
+        :param epsilon: Eccentricity of the orbit (no units); defaults to ``0.08`` (from
             `Angelo et al. (2023) <https://doi.org/10.1093/mnras/stad1038>`__)
         :type epsilon: float
 
