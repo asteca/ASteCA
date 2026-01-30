@@ -3,7 +3,7 @@ from typing import Literal
 import numpy as np
 from astropy.stats import calculate_bin_edges
 from fast_histogram import histogram2d
-from scipy.special import loggamma
+from scipy.special import gammaln
 
 
 def bin_edges_f(
@@ -164,7 +164,7 @@ def tremmel(
     syn_histo_f_z = syn_histo_f[cl_z_idx]
 
     tremmel_lkl = np.sum(
-        loggamma(cl_histo_f_z + syn_histo_f_z + 0.5) - loggamma(syn_histo_f_z + 0.5)
+        gammaln(cl_histo_f_z + syn_histo_f_z + 0.5) - gammaln(syn_histo_f_z + 0.5)
     )
 
     # If this is the call made to calibrate the likelihood
@@ -178,9 +178,8 @@ def tremmel(
     # This factor helps to "pull" the solution closer to the region where the observed
     # cluster is located in the CMD, by adding a penalty based on the photometric
     # distance between the synthetic cluster and the observed cluster.
-    cmd_dist = 0
     # Only use penalty when the normalized distance is large
-    if dist > 1:
+    if dist > .5:
         cmd_dist = (obs_mag_median - np.median(mag)) ** 2 + (
             obs_col_median - np.median(colors[0])
         ) ** 2
