@@ -70,7 +70,9 @@ def error_distribution(
 
     def filnans(data):
         msk = np.isnan(data)
-        data[msk] = np.interp(np.flatnonzero(msk), np.flatnonzero(~msk), data[~msk])
+        if msk.any() and (~msk).any():
+            data = np.array(data, copy=True)
+            data[msk] = np.interp(np.flatnonzero(msk), np.flatnonzero(~msk), data[~msk])
         return data
 
     # Replace nan values with interpolated values
