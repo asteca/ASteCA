@@ -7,20 +7,28 @@ Changelog
 #########
 
 
-`[v0.6.2] <https://github.com/asteca/asteca/releases/tag/v0.6.2>`__ - 2025-XX-YY
+`[v0.6.2] <https://github.com/asteca/asteca/releases/tag/v0.6.2>`__ - 2026-02-14
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-- Better `tremmel` likelihood, now it zooms in to the solution faster
-- Moved `first_filter()` out of `fastMP` to be used also by the Ripley members
-  estimator
-- Changed default value for `fixed_centers` in `fastMP()` to `True`
-- Make `(RA, DEC)` optional when defining a cluster object; request the center
-  coordinates in the `synthetic.cluster_masses()` method
-- New `N_clust_max=2000` (down from `5000`)
-- Added a `local_dens_clean()` function to the Ripley estimator of members for better
-  performance
-- Removed iterative IQR normalization in `fastMP()`. It caused issues for some OCs
-  that ended up looking stretched out in the LON/LAT axis
+- Likelihood module:
+   - Better `tremmel` likelihood, now it zooms in to the solution faster
+   - Replaced `loggamma` with `gammaln` from `scipy.special` since values are always
+     real (no change in performance)
+
+- Membership module:
+   - Moved `first_filter()` out of `fastMP` to be used also by the Ripley members
+     estimator
+   - Changed default value for `fixed_centers` in `fastMP()` to `True`
+   - Removed iterative IQR normalization in `fastMP()`. It caused issues for some OCs
+     that ended up looking stretched out in the LON/LAT axis
+
+- Cluster module:
+   - Make `(RA, DEC)` optional when defining a cluster object; request the center
+     coordinates in the `synthetic.cluster_masses()` method
+   - New `N_clust_max=2000` (down from `5000`)
+   - Added a `local_dens_clean()` function to the Ripley estimator of members for better
+     performance
+
 
 
 
