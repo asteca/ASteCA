@@ -11,7 +11,7 @@ keywords = ["cluster", "astrophysics"]
 homepage = "https://asteca.github.io/"
 repository = "https://github.com/asteca/ASteCA"
 documentation = "https://asteca.readthedocs.io/"
-requires-python = ">=3.12.12"
+requires-python = ">=3.12"
 dependencies = [
     "astropy>=7.2.0",
     "fast-histogram>=0.14",
