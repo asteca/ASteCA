@@ -86,7 +86,7 @@ employing the :math:`LogGamma()` function;
 
     The :math:`LogGamma()` function is used instead of the :math:`\Gamma()`
     function because it is numerically more stable, especially when
-    dealing with large numbers. This is implemented in `scipy.special.loggamma`_.
+    dealing with large numbers. This is implemented in `scipy.special.gammaln`_.
 
 
 We can discard the second and third terms as they depend on :math:`N` and :math:`B`
@@ -115,4 +115,4 @@ worst value is ``1``, as mentioned above.
 
 
 .. _Tremmel et al (2013): https://ui.adsabs.harvard.edu/abs/2013ApJ...766...19T/abstract
-.. _scipy.special.loggamma: https://docs.scipy.org/doc/scipy/reference/generated/scipy.special.loggamma.html
+.. _scipy.special.gammaln: https://docs.scipy.org/doc/scipy/reference/generated/scipy.special.gammaln.html
