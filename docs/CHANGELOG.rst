@@ -7,6 +7,31 @@ Changelog
 #########
 
 
+`[v0.6.2] <https://github.com/asteca/asteca/releases/tag/v0.6.2>`__ - 2026-02-14
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+- Likelihood module:
+   - Better `tremmel` likelihood, now it zooms in to the solution faster
+   - Replaced `loggamma` with `gammaln` from `scipy.special` since values are always
+     real (no change in performance)
+
+- Membership module:
+   - Moved `first_filter()` out of `fastMP` to be used also by the Ripley members
+     estimator
+   - Changed default value for `fixed_centers` in `fastMP()` to `True`
+   - Removed iterative IQR normalization in `fastMP()`. It caused issues for some OCs
+     that ended up looking stretched out in the LON/LAT axis
+
+- Cluster module:
+   - Make `(RA, DEC)` optional when defining a cluster object; request the center
+     coordinates in the `synthetic.cluster_masses()` method
+   - New `N_clust_max=2000` (down from `5000`)
+   - Added a `local_dens_clean()` function to the Ripley estimator of members for better
+     performance
+
+
+
+
 `[v0.6.1] <https://github.com/asteca/asteca/releases/tag/v0.6.1>`__ - 2025-04-28
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -91,7 +116,7 @@ Changelog
   :py:meth:`asteca.synthetic.Synthetic.stellar_masses`,
   :py:meth:`asteca.synthetic.Synthetic.binary_fraction`,
   :py:meth:`asteca.synthetic.Synthetic.cluster_masses`, to estimate individual masses,
-  total binarity fraction, and total masses (see: :ref:`masses_and_binarity`)
+  total binarity fraction, and total masses
 - Added the :py:meth:`asteca.cluster.Cluster.get_nmembers` method to estimate the
   number of members for a cluster embedded in a field.
 

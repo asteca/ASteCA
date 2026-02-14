@@ -21,7 +21,22 @@ def radec2lonlat(ra: float | np.ndarray, dec: float | np.ndarray) -> np.ndarray:
     """
     gc = SkyCoord(ra=ra * u.degree, dec=dec * u.degree)  # pyright: ignore
     lb = gc.transform_to("galactic")
-    return np.array([lb.l.value, lb.b.value])  # pyright: ignore
+
+    lon_v = lb.l.value  # pyright: ignore
+    if isinstance(ra, np.ndarray):
+        lon = np.array(lb.l)
+        if lon.max() - lon.min() > 180:
+            # Fix frame that wraps around 360 in longitude
+            lon_cent = 0.5 * (lon.max() + lon.min())
+            if lon_cent > 180:
+                msk = lon < 180
+                lon[msk] += 360
+            else:
+                msk = lon > 180
+                lon[msk] -= 360
+            lon_v = lon
+
+    return np.array([lon_v, lb.b.value])  # pyright: ignore
 
 
 def lonlat2radec(lon: float | np.ndarray, lat: float | np.ndarray) -> np.ndarray:
@@ -74,8 +89,6 @@ def get_knn_5D_center(
     xy_c: tuple[float, float] | None,
     vpd_c: tuple[float, float] | None,
     plx_c: float | None,
-    N_clust_min: int,
-    N_clust_max: int,
 ) -> tuple[float, float, float, float, float]:
     """Estimate the 5-dimensional center of a cluster.
 
@@ -100,31 +113,33 @@ def get_knn_5D_center(
     :type vpd_c: tuple[float, float] | None
     :param plx_c: Center coordinate in parallax.
     :type plx_c: float | None
-    :param N_clust_min: Minimum number of stars in the cluster.
-    :type N_clust_min: int
-    :param N_clust_max: Maximum number of stars in the cluster.
-    :type N_clust_max: int
 
     :return: Center coordinates in (lon, lat, pmRA, pmDE, plx).
     :rtype: tuple[float, float, float, float, float]
     """
+    # Remove nans
+    X = np.array([lon, lat, pmRA, pmDE, plx])
+    _, X_no_nan = reject_nans(X)
+    lon, lat, pmRA, pmDE, plx = X_no_nan
+
+    N_min, N_max = 25, 250  # FIXED VALUE
     N_tot = len(lon)
-    # N_clust_min < N_cent < 250
-    N_cent = max(N_clust_min, min(250, int(0.1 * N_tot)))
+    # N_min < N_cent < N_max
+    N_cent = max(N_min, min(N_max, int(0.1 * N_tot)))
 
     # Get filtered stars close to given xy+Plx centers (if given) to use
     # in the PMs center estimation.
     if xy_c is None and plx_c is None:
         # If neither xy_c nor plx_c were given and the number of stars in the frame
-        # is larger than N_clust_max, select twice the N_clust_max stars closest to the
+        # is larger than N_max, select twice the N_max stars closest to the
         # center of the XY frame (i.e.: this assumes that the cluster is centered in
-        # XY). This prevents very large frames to deviate from the actual cluster's
+        # XY). This prevents very large frames from deviating from the actual cluster's
         # center because most stars in the VPD are distributed around another center
         # value
-        if N_tot > N_clust_max:
+        if N_tot > N_max:
             data = np.array([lon, lat]).T
             cent = np.array([np.median(data, 0)])
-            idx = get_Nd_dists(cent, data)[: 2 * N_clust_max]
+            idx = get_Nd_dists(cent, data)[: 2 * N_max]
             pmRA_i, pmDE_i = pmRA[idx], pmDE[idx]
         else:
             pmRA_i, pmDE_i = np.array(pmRA), np.array(pmDE)
@@ -134,7 +149,7 @@ def get_knn_5D_center(
         )
 
     # (Re)estimate VPD center
-    vpd_c_i = get_pms_center(vpd_c, N_clust_min, pmRA_i, pmDE_i)
+    vpd_c_i = get_pms_center(vpd_c, pmRA_i, pmDE_i, N_min)
 
     # Get N_cent stars closest to vpd_c and given xy and/or plx centers
     lon_i, lat_i, pmRA_i, pmDE_i, plx_i = get_stars_close_center(
@@ -143,7 +158,7 @@ def get_knn_5D_center(
 
     # kNN center
     x_c, y_c, pmra_c, pmde_c, plx_c = get_kNN_center(
-        N_clust_min, np.array([lon_i, lat_i, pmRA_i, pmDE_i, plx_i]).T
+        np.array([lon_i, lat_i, pmRA_i, pmDE_i, plx_i]).T, N_min
     )
 
     return x_c, y_c, pmra_c, pmde_c, plx_c
@@ -167,6 +182,130 @@ def get_Nd_dists(cents: np.ndarray, data: np.ndarray) -> np.ndarray:
     d_idxs = dist_Nd.argsort()
 
     return d_idxs
+
+
+def first_filter(
+    idx_all: np.ndarray,
+    vpd_c: tuple[float, float],
+    plx_c: float,
+    lon: np.ndarray,
+    lat: np.ndarray,
+    pmRA: np.ndarray,
+    pmDE: np.ndarray,
+    plx: np.ndarray,
+    e_pmRA: np.ndarray,
+    e_pmDE: np.ndarray,
+    e_plx: np.ndarray,
+    N_filter_max: int,
+    plx_cut: float = 0.5,
+    v_kms_max: float = 5.0,
+    pm_max: float = 3.0,
+) -> tuple[
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+]:
+    """Perform an initial filtering of stars based on parallax and proper motion.
+
+    :param idx_all: Indexes of the input stars.
+    :type idx_all: np.ndarray
+    :param vpd_c: Center proper motion values (pmRA, pmDE).
+    :type vpd_c: tuple[float, float]
+    :param plx_c: Center parallax value.
+    :type plx_c: float
+    :param lon: Longitude of the stars.
+    :type lon: np.ndarray
+    :param lat: Latitude of the stars.
+    :type lat: np.ndarray
+    :param pmRA: Proper motions in right ascension.
+    :type pmRA: np.ndarray
+    :param pmDE: Proper motions in declination.
+    :type pmDE: np.ndarray
+    :param plx: Parallax values of the stars.
+    :type plx: np.ndarray
+    :param e_pmRA: Errors in proper motions (pmRA).
+    :type e_pmRA: np.ndarray
+    :param e_pmDE: Errors in proper motions (pmDE).
+    :type e_pmDE: np.ndarray
+    :param e_plx: Errors in parallax.
+    :type e_plx: np.ndarray
+    :param N_filter_max: Maximum number of stars to return.
+    :type N_filter_max: int
+    :param plx_cut: Parallax threshold for switching filtering criteria between using
+        'v_kms_max' or 'pm_max'. Default is 0.5.
+    :type plx_cut: float
+    :param v_kms_max: Maximum velocity in km/s for filtering. Default is 5.
+    :type v_kms_max: float
+    :param pm_max: Maximum proper motion for filtering. Default is 3.
+    :type pm_max: float
+
+    :returns:
+        - Updated arrays of the surviving stars' parameters (longitude, latitude,
+          proper motions, parallax) and the PMs+Plx uncertainties
+        - Updated indexes of the surviving stars.
+    :rtype: tuple[
+        np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray,
+        np.ndarray, np.ndarray, np.ndarray]
+    """
+    # Proper motion distances
+    pms = np.array([pmRA, pmDE]).T
+    pm_rad = spatial.distance.cdist(pms, np.array([vpd_c])).T[0]
+
+    # Removal criteria:
+    # -Closer stars: use 'v_kms_max' as the maximum velocity
+    # -More distant stars: use 'pm_max' as the maximum proper motion
+    msk1 = (plx > plx_cut) & (pm_rad / (abs(plx) + 0.0001) < v_kms_max)
+    msk2 = (plx <= plx_cut) & (pm_rad < pm_max)
+
+    # Stars to keep: those that satisfy either of the two conditions
+    msk_keep = msk1 | msk2
+
+    # If nothing survives, return original arrays
+    if msk_keep.sum() == 0:
+        return idx_all, lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx
+
+    # Update arrays to remove obvious field stars
+    idx_all, lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx = (
+        idx_all[msk_keep],
+        lon[msk_keep],
+        lat[msk_keep],
+        pmRA[msk_keep],
+        pmDE[msk_keep],
+        plx[msk_keep],
+        e_pmRA[msk_keep],
+        e_pmDE[msk_keep],
+        e_plx[msk_keep],
+    )
+
+    # Remove more stars if required
+    if len(idx_all) > N_filter_max:
+        # Distances to the PMs+Plx center for the subset of stars
+        cents_3d = np.array([list(vpd_c) + [plx_c]])
+        data_3d = np.array([pmRA, pmDE, plx]).T
+        # Sorted indices relative to the subset
+        d_pm_plx_idxs = get_Nd_dists(cents_3d, data_3d)
+        # Indexes of the 'N_filter_max' closest subset stars to the PMs+Plx center
+        msk_keep = d_pm_plx_idxs[: int(N_filter_max)]
+        # Update arrays
+        idx_all, lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx = (
+            idx_all[msk_keep],
+            lon[msk_keep],
+            lat[msk_keep],
+            pmRA[msk_keep],
+            pmDE[msk_keep],
+            plx[msk_keep],
+            e_pmRA[msk_keep],
+            e_pmDE[msk_keep],
+            e_plx[msk_keep],
+        )
+
+    return idx_all, lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx
 
 
 def filter_pms_stars(
@@ -226,9 +365,9 @@ def filter_pms_stars(
 
 def get_pms_center(
     vpd_c: tuple[float, float] | None,
-    N_clust_min: int,
     pmRA: np.ndarray,
     pmDE: np.ndarray,
+    N_clust_min: int,
     N_bins: int = 50,
     zoom_f: int = 4,
     N_zoom: int = 10,
@@ -237,12 +376,12 @@ def get_pms_center(
 
     :param vpd_c: Center coordinates in proper motions (pmRA, pmDE).
     :type vpd_c: tuple[float, float] | None
-    :param N_clust_min: Minimum number of stars in the cluster.
-    :type N_clust_min: int
     :param pmRA: Proper motion in Right Ascension.
     :type pmRA: np.ndarray
     :param pmDE: Proper motion in Declination.
     :type pmDE: np.ndarray
+    :param N_clust_min: Minimum number of stars in the cluster.
+    :type N_clust_min: int
     :param N_bins: Number of bins for the 2D histogram, defaults to 50
     :type N_bins: int
     :param zoom_f: Zoom factor for the iterative center estimation, defaults to 4
@@ -360,14 +499,14 @@ def get_stars_close_center(
 
 
 def get_kNN_center(
-    N_clust_min: int, data: np.ndarray
+    data: np.ndarray, N_clust_min: int
 ) -> tuple[float, float, float, float, float]:
     """Estimate 5D center with kNN.
 
-    :param N_clust_min: Minimum number of stars in the cluster.
-    :type N_clust_min: int
     :param data: Array of data.
     :type data: np.ndarray
+    :param N_clust_min: Minimum number of stars in the cluster.
+    :type N_clust_min: int
 
     :return: Center coordinates in (lon, lat, pmRA, pmDE, plx).
     :rtype: tuple[float, float, float, float, float]

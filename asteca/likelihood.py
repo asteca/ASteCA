@@ -1,3 +1,5 @@
+from typing import Literal
+
 import numpy as np
 
 
@@ -23,7 +25,7 @@ class Likelihood:
         in `astropy <https://www.astropy.org/>`__ documentation for details on the
         ``knuth, blocks, scott, freedman`` methods.  The method ``fixed``
         uses (15, 10) bins in magnitude and color(s) respectively. Defaults to ``knuth``
-    :type bin_method: str
+    :type bin_method: Literal["blocks", "knuth", "scott", "freedman", "fixed"]
 
     :raises ValueError: If any of the attributes is not recognized as a valid option
     """
@@ -31,7 +33,10 @@ class Likelihood:
     from .cluster import Cluster
 
     def __init__(
-        self, my_cluster: Cluster, lkl_name: str = "plr", bin_method: str = "knuth"
+        self,
+        my_cluster: Cluster,
+        lkl_name: str = "plr",
+        bin_method: Literal["blocks", "knuth", "scott", "freedman", "fixed"] = "knuth",
     ) -> None:
         self.lkl_name = lkl_name
         self.bin_method = bin_method
@@ -42,7 +47,7 @@ class Likelihood:
                 f"'{self.lkl_name}' not recognized. Should be one of {likelihoods}"
             )
 
-        bin_methods = ("knuth", "blocks", "scott", "freedman", "fixed")
+        bin_methods = ("blocks", "knuth", "scott", "freedman", "fixed")
         if self.bin_method not in bin_methods:
             raise ValueError(
                 f"Binning '{self.bin_method}' not recognized. "
@@ -72,16 +77,19 @@ class Likelihood:
             colors += [color2]
 
         # Obtain data used by the ``likelihood.get()`` method
-        self.ranges, self.Nbins, self.cl_z_idx, self.cl_histo_f_z = lpriv.lkl_data(
-            bin_method, self.mag, colors
+        self.ranges, self.Nbins = lpriv.bin_edges_f(bin_method, self.mag, colors)
+        self.cl_z_idx, self.cl_histo_f_z = lpriv.lkl_data(
+            self.mag, colors, self.ranges, self.Nbins
         )
+        self.obs_mag_median = np.nanmedian(self.mag).astype(float)
+        self.obs_col_median = np.nanmedian(colors[0]).astype(float)
 
-        self.max_lkl = 1
+        self.max_lkl = None
         if self.lkl_name == "plr":
             # Evaluate cluster against itself to obtain the maximum likelihood.
-            # Since the initial max_lkl=1, subtracting 1 inverts it back to the
-            # original likelihood value
-            self.max_lkl = 1 - self.get(np.array([self.mag, *colors]))
+            self.max_lkl = self.get(np.array([self.mag, *colors]))
+            # This is equal to evaluating
+            # max_lkl = sum([gammaln(2*_ + 0.5) - gammaln(_ + 0.5) for _ in cl_histo_f_z])
 
         print("\nLikelihood object generated")
 
@@ -111,6 +119,8 @@ class Likelihood:
                 self.Nbins,
                 self.cl_z_idx,
                 self.cl_histo_f_z,
+                self.obs_mag_median,
+                self.obs_col_median,
                 self.max_lkl,
                 synth_clust,
             )

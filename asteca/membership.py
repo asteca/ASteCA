@@ -112,28 +112,34 @@ class Membership:
         if N_runs < 10:
             raise AttributeError("Parameter 'N_runs' should be > 10")
 
-        xc, yc = self.my_field.ra, self.my_field.dec
-        center = self.my_field.radec_c
+        xv, yv = self.my_field.ra, self.my_field.dec
+        xy_center = self.my_field.radec_c
         cent_str = "radec_c "
         # Convert (RA, DEC) to (lon, lat)
         if eq_to_gal is True:
-            if xc is None or yc is None or center is None:
+            if xv is None or yv is None or xy_center is None:
                 raise ValueError("(RA, DEC) data and center values are required")
-            xc, yc = cp.radec2lonlat(xc, yc)
-            center = cp.radec2lonlat(*center)
+            # Add center as last element
+            xv_t = np.array(list(xv) + [xy_center[0]])
+            yv_t = np.array(list(yv) + [xy_center[1]])
+            # Convert
+            xv_t, yv_t = cp.radec2lonlat(xv_t, yv_t)
+            # Extract center value
+            xv, yv = xv_t[:-1], yv_t[:-1]
+            xy_center = (xv_t[-1], yv_t[-1])
             cent_str = "lonlat_c"
 
         self._vp("\nRunning Bayesian DA")
-        self._vp("{}       : ({:.4f}, {:.4f})".format(cent_str, *center), 1)
+        self._vp("{}       : ({:.4f}, {:.4f})".format(cent_str, *xy_center), 1)
         self._vp(f"radius         : {self.my_field.radius:.4f} [deg]", 1)
         self._vp(f"N_cluster      : {self.my_field.N_cluster}", 1)
         self._vp(f"N_runs         : {N_runs}", 1)
 
         # Generate input data array
-        X = [self.my_field.ra, self.my_field.dec]
+        X = [xv, yv]
         e_X = []
-        if self.my_field.mag is not None:
-            X.append(self.my_field.mag)
+        if self.my_field.magnitude is not None:
+            X.append(self.my_field.magnitude)
             e_X.append(self.my_field.e_mag)
         if self.my_field.color is not None:
             X.append(self.my_field.color)
@@ -157,7 +163,7 @@ class Membership:
             self.my_field.N_cluster,
             X,
             e_X,
-            np.array(center),
+            xy_center,
             self.my_field.radius,
             N_runs,
             self.rng,
@@ -168,7 +174,7 @@ class Membership:
 
     def fastmp(
         self,
-        fixed_centers: bool = False,
+        fixed_centers: bool = True,
         N_runs: int = 1000,
         eq_to_gal: bool = True,
     ) -> np.ndarray:
@@ -181,7 +187,7 @@ class Membership:
 
         :param fixed_centers: If ``True`` the center values (radec_c, pms_c, plx_c)
             stored in the :py:class:`Cluster <asteca.cluster.Cluster>` object will be
-            kept fixed throughout the process, defaults to ``False``
+            kept fixed throughout the process, defaults to ``True``
         :type fixed_centers: bool
         :param N_runs: Maximum number of resamples, defaults to ``1000``
         :type N_runs: int
@@ -226,9 +232,14 @@ class Membership:
         if eq_to_gal is True:
             if xv is None or yv is None or xy_center is None:
                 raise ValueError("(RA, DEC) data and center values are required")
-            xv, yv = cp.radec2lonlat(xv, yv)
-            xc, yc = cp.radec2lonlat(*xy_center)
-            xy_center = (float(xc), float(yc))
+            # Add center as last element
+            xv_t = np.array(list(xv) + [xy_center[0]])
+            yv_t = np.array(list(yv) + [xy_center[1]])
+            # Convert
+            xv_t, yv_t = cp.radec2lonlat(xv_t, yv_t)
+            # Extract center value
+            xv, yv = xv_t[:-1], yv_t[:-1]
+            xy_center = (xv_t[-1], yv_t[-1])
             cent_str = "lonlat_c"
 
         self._vp("\nRunning fastMP")
@@ -262,8 +273,6 @@ class Membership:
             self.my_field.pms_c,
             self.my_field.plx_c,
             self.my_field.N_cluster,
-            self.my_field.N_clust_min,
-            self.my_field.N_clust_max,
             fixed_centers,
             X,
             N_runs,

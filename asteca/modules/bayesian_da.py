@@ -7,7 +7,7 @@ def bayesian_mp(
     N_cluster: int,
     frame_arr: np.ndarray,
     e_frame_arr: np.ndarray,
-    center: np.ndarray,
+    center: tuple[float, float],
     radius: float,
     bayesda_runs: int,
     rng: np.random.Generator,
@@ -27,7 +27,7 @@ def bayesian_mp(
     :param e_frame_arr: Array with the errors.
     :type e_frame_arr: np.ndarray
     :param center: Center of the cluster.
-    :type center: np.ndarray
+    :type center: tuple[float, float]
     :param radius: Radius of the cluster.
     :type radius: float
     :param bayesda_runs: Number of iterations.
@@ -123,7 +123,10 @@ def bayesian_mp(
 
 
 def get_regions(
-    frame_arr: np.ndarray, e_frame_arr2: np.ndarray, center: np.ndarray, radius: float
+    frame_arr: np.ndarray,
+    e_frame_arr2: np.ndarray,
+    center: tuple[float, float],
+    radius: float,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Identify stars inside/outside the cluster region.
 
@@ -132,7 +135,7 @@ def get_regions(
     :param e_frame_arr2: Array with the errors.
     :type e_frame_arr2: np.ndarray
     :param center: Center of the cluster.
-    :type center: np.ndarray
+    :type center: tuple[float, float]
     :param radius: Radius of the cluster.
     :type radius: float
 

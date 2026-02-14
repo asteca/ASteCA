@@ -492,6 +492,8 @@ def interp_isochrones(
     :param isochs_sorted: List of sorted isochrones as numpy arrays.
     :type isochs_sorted: list[np.ndarray]
 
+    :raises ValueError: If the isochrone dtype does not contain column names.
+
     :return: Dictionary of interpolated isochrones.
     :rtype: dict
     """
@@ -533,6 +535,8 @@ def interp_isochrones(
         isochrones.setdefault(met, {}).setdefault(age, [])
 
         isoch = isochs_sorted[i]
+        if isoch.dtype.names is None:
+            raise ValueError("No 'names' found for isoch.dtype")
 
         if eep_col is None:
             # Mass-based interpolation

@@ -1,23 +1,12 @@
-# ignore everything in root
-/*
-# except for these files
-!README.md
-!LICENSE.txt
-!uv.lock
-!pyproject.toml
-!.readthedocs.yaml
+# specific files
+WARP.md
+.python-version
 
-# and these folderers
-!/asteca
-!/docs
-
-# But ignore these files
+# general files
 *.pyc
+*.ipynb_checkpoints
 
-# and ignore these folders
+# folders
+/dist*
+/tests*
 /docs/build/*
-/docs/_build/*
-/docs/autoapi/*
-/docs/apidocs/*
-# Jupyter Notebook
-.ipynb_checkpoints

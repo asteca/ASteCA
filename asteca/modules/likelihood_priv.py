@@ -1,29 +1,78 @@
+from typing import Literal
+
 import numpy as np
 from astropy.stats import calculate_bin_edges
 from fast_histogram import histogram2d
-from scipy.special import loggamma
+from scipy.special import gammaln
+
+
+def bin_edges_f(
+    bin_method: Literal["blocks", "knuth", "scott", "freedman", "fixed"],
+    mag: np.ndarray,
+    colors: list[np.ndarray],
+) -> tuple[list, list]:
+    """Calculate bin edges for the Hess diagram.
+
+    This function calculates the bin edges for the Hess diagram, using
+    different methods.
+
+    :param bin_method: Method used for binning the data.
+    :type bin_method: Literal["blocks", "knuth", "scott", "freedman", "fixed"]
+    :param mag: Array of magnitudes.
+    :type mag: np.ndarray
+    :param colors: List of arrays of colors.
+    :type colors: list[np.ndarray]
+
+    :return: Bin ranges and number of bins.
+    :rtype: tuple[list, list]
+    """
+
+    bin_edges = []
+
+    if bin_method == "fixed":
+        N_mag, N_col = 15, 10
+        # Magnitude
+        mag_min, mag_max = np.nanmin(mag), np.nanmax(mag)
+        bin_edges.append(np.linspace(mag_min, mag_max, N_mag))
+        # Colors
+        for col in colors:
+            col_min, col_max = np.nanmin(col), np.nanmax(col)
+            bin_edges.append(np.linspace(col_min, col_max, N_col))
+    else:
+        bin_edges.append(calculate_bin_edges(mag[~np.isnan(mag)], bins=bin_method))
+        for col in colors:
+            bin_edges.append(calculate_bin_edges(col[~np.isnan(col)], bins=bin_method))
+
+    # Extract ranges and number of bins for each dimension (magnitude and colors),
+    # used by histogram2d
+    ranges, Nbins = [], []
+    for be in bin_edges:
+        ranges.append([be[0], be[-1]])
+        Nbins.append(len(be))
+
+    return ranges, Nbins
 
 
 def lkl_data(
-    bin_method: str, mag_v: np.ndarray, colors_v: list[np.ndarray]
-) -> tuple[list, list, np.ndarray, np.ndarray]:
+    mag_v: np.ndarray, colors_v: list[np.ndarray], ranges: list, Nbins: list
+) -> tuple[np.ndarray, np.ndarray]:
     """Prepare data for likelihood calculation.
 
     This function calculates the Hess diagram of the observed cluster and
     prepares the data for the likelihood calculation.
 
-    :param bin_method: Method to use for binning the data.
-    :type bin_method: str
     :param mag_v: Array of magnitudes.
     :type mag_v: np.ndarray
     :param colors_v: List of arrays of colors.
     :type colors_v: list[np.ndarray]
+    :param ranges: Per-dimension ranges.
+    :type ranges: list
+    :param Nbins: Per-dimension total number of bins.
+    :type Nbins: list
 
-    :return: Bin ranges, number of bins, indexes of bins with stars, and flattened histogram.
-    :rtype: tuple[list, list, np.ndarray, np.ndarray]
+    :return: Indexes of bins with stars and flattened histogram.
+    :rtype: tuple[np.ndarray, np.ndarray]
     """
-    # Obtain bin edges for each dimension, defining a grid.
-    ranges, Nbins = bin_edges_f(bin_method, mag_v, colors_v)
 
     # Obtain histogram for observed cluster.
     hess_diag = []
@@ -54,54 +103,7 @@ def lkl_data(
     cl_histo_f_z = cl_histo_f[cl_z_idx]
 
     # These variables are used by the likelihood functions called by the get() method
-    return ranges, Nbins, cl_z_idx, cl_histo_f_z
-
-
-def bin_edges_f(
-    bin_method: str, mag: np.ndarray, colors: list[np.ndarray]
-) -> tuple[list, list]:
-    """Calculate bin edges for the Hess diagram.
-
-    This function calculates the bin edges for the Hess diagram, using
-    different methods.
-
-    :param bin_method: Method to use for binning the data.
-    :type bin_method: str
-    :param mag: Array of magnitudes.
-    :type mag: np.ndarray
-    :param colors: List of arrays of colors.
-    :type colors: list[np.ndarray]
-
-    :return: Bin ranges and number of bins.
-    :rtype: tuple[list, list]
-    """
-
-    bin_edges = []
-
-    if bin_method == "fixed":
-        N_mag, N_col = 15, 10
-        # Magnitude
-        mag_min, mag_max = np.nanmin(mag), np.nanmax(mag)
-        bin_edges.append(np.linspace(mag_min, mag_max, N_mag))
-        # Colors
-        for col in colors:
-            col_min, col_max = np.nanmin(col), np.nanmax(col)
-            bin_edges.append(np.linspace(col_min, col_max, N_col))
-    else:
-        bin_edges.append(calculate_bin_edges(mag[~np.isnan(mag)], bins=bin_method))  # pyright: ignore
-        for col in colors:
-            bin_edges.append(
-                calculate_bin_edges(col[~np.isnan(col)], bins=bin_method)  # pyright: ignore
-            )
-
-    # Extract ranges and number of bins for each dimension (magnitude and colors),
-    # used by histogram2d
-    ranges, Nbins = [], []
-    for be in bin_edges:
-        ranges.append([be[0], be[-1]])
-        Nbins.append(len(be))
-
-    return ranges, Nbins
+    return cl_z_idx, cl_histo_f_z
 
 
 def tremmel(
@@ -109,43 +111,13 @@ def tremmel(
     Nbins: list,
     cl_z_idx: np.ndarray,
     cl_histo_f_z: np.ndarray,
-    max_lkl: float,
+    obs_mag_median: float,
+    obs_col_median: float,
+    max_lkl: None | float,
     synth_clust: np.ndarray,
 ) -> float:
     r"""Poisson likelihood ratio as defined in Tremmel et al (2013), Eq 10 with
-    v_{i,j}=1. This returns the log likelihood.
-
-    .. math::
-
-        p(d|\theta) = \prod_i^N \frac{\Gamma(n_i+m_i+\frac{1}{2})}
-        {2^{n_i+m_i+\frac{1}{2}} n_i!\Gamma(m_i+\frac{1}{2}))}
-
-    .. math::
-
-        \log(p) = \sum_i^N \left[\log\Gamma(n_i+m_i+\frac{1}{2})
-        - (m_i+n_i+\frac{1}{2})\log2 -\log n_i!
-        - \log \Gamma(m_i+\frac{1}{2}) \right]
-
-    Minus logarithm:
-
-    .. math::
-
-        \log(p) = \sum_i^N \left[\log\Gamma(n_i+m_i+\frac{1}{2})-
-        \log \Gamma(m_i+\frac{1}{2}) \right]
-        - 0.693  (M+N+\frac{1}{2}) - \sum_i^N \log n_i!
-
-    .. math::
-
-        \log(p) = SumLogGamma(n_i, m_i) -0.693 (N+\frac{1}{2}) -
-        \sum_i^N \log n_i! - 0.693\,M
-
-    .. math::
-
-        \log(p) = f(n_i) + SumLogGamma(n_i, m_i) - 0.693\,M
-
-    .. math::
-
-        \log(p)\approx SumLogGamma(n_i, m_i) - 0.693\,M
+    v_{i,j}=1 (see documentation). This returns the log likelihood.
 
     :param ranges: Per-dimension ranges.
     :type ranges: list
@@ -155,17 +127,21 @@ def tremmel(
     :type cl_z_idx: np.ndarray
     :param cl_histo_f_z: Flattened observed Hess diagram with the empty bins removed
     :type cl_histo_f_z: np.ndarray
+    :param obs_mag_median: Medina observed magnitude
+    :type obs_mag_median: float
+    :param obs_col_median: Medina observed color
+    :type obs_col_median: float
     :param max_lkl: Maximum likelihood value, used for normalization
-    :type max_lkl: float
+    :type max_lkl: None | float
     :param synth_clust: Synthetic cluster data.
     :type synth_clust: np.ndarray
 
     :return: Log likelihood value.
     :rtype: float
     """
-    # If synthetic cluster is empty, assign a small likelihood value.
+    # If synthetic cluster is empty, assign '10' indicating a large distance
     if not synth_clust.any():
-        return -1.0e09
+        return 10
 
     # Obtain histogram for the synthetic cluster.
     mag, colors = synth_clust[0], synth_clust[1:]
@@ -191,15 +167,40 @@ def tremmel(
     # Remove all bins where n_i = 0 (no observed stars).
     syn_histo_f_z = syn_histo_f[cl_z_idx]
 
+    # The 1/2 term arises from using a Jeffreys prior (Eq 8 in Tremmel et al). Using a
+    # flat prior instead, that 1/2 term becomes a 1
     tremmel_lkl = np.sum(
-        loggamma(cl_histo_f_z + syn_histo_f_z + 0.5) - loggamma(syn_histo_f_z + 0.5)
+        gammaln(cl_histo_f_z + syn_histo_f_z + 0.5) - gammaln(syn_histo_f_z + 0.5)
     )
 
-    # M = syn_histo_f_z.sum() <-- This is wrong and even more, this term should not
-    # have been present at all
-    # tremmel_lkl = SumLogGamma #- 0.693 * syn_histo_f_z.sum()  # ln(2) ~ 0.693
+    # Attempted adding some weights, did not help
+    # tremmel_lkl = gammaln(cl_histo_f_z + syn_histo_f_z + 0.5) - gammaln(syn_histo_f_z + 0.5)
+    # tremmel_lkl *= np.linspace(10, 0, cl_histo_f_z.shape[0])
+    # tremmel_lkl = np.sum(tremmel_lkl)
 
-    return 1 - tremmel_lkl / max_lkl
+    # If this is the call made to calibrate the likelihood
+    if max_lkl is None:
+        return tremmel_lkl
+
+    # Normalize and invert the likelihood so that its values are equivalent to a
+    # distance that goes from 0 (exact match) to 1 (no match).
+    dist = 1 - tremmel_lkl / max_lkl
+
+    # If m_i==0 and n_i<3, the term
+    # gammaln(cl_histo_f_z + syn_histo_f_z + 0.5) - gammaln(syn_histo_f_z + 0.5)
+    # will be negative, thus reducing the final likelihood value.
+
+    # This factor helps to "pull" the solution closer to the region where the observed
+    # cluster is located in the CMD, by adding a penalty based on the photometric
+    # distance between the synthetic cluster and the observed cluster.
+    # Only use penalty when the normalized distance is large
+    if dist > 0.5:
+        cmd_dist = (obs_mag_median - np.median(mag)) ** 2 + (
+            obs_col_median - np.median(colors[0])
+        ) ** 2
+        return dist + cmd_dist
+
+    return dist
 
 
 # def visual(cluster_dict, synth_clust):

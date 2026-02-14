@@ -1,5 +1,8 @@
+import warnings
+
 import astropy.coordinates as coord
 import numpy as np
+import numpy.typing as npt
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from scipy.spatial import KDTree
@@ -35,46 +38,87 @@ def ranModels(
     return ran_models
 
 
-def get_close_idxs(
-    m_ini_idx: int, obs_phot: np.ndarray, isoch: np.ndarray
-) -> np.ndarray:
-    """Indexes of the closest synthetic stars to observed stars
+def get_stellar_masses(
+    cluster_mag: np.ndarray,
+    cluster_colors: list,
+    m_ini_idx: int,
+    sampled_synthcls: list,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Assign primary and secondary (synthetic) masses to each observed star,
+    for each synthetic model generated.
 
+    :param cluster_mag: Observed magnitude.
+    :type cluster_mag: np.ndarray
+    :param cluster_colors: Observed colors.
+    :type cluster_colors: list
     :param m_ini_idx: Index of the initial mass column
     :type m_ini_idx: int
-    :param obs_phot: Observed photometry.
-    :type obs_phot: np.ndarray
-    :param isoch: Isochrone data.
-    :type isoch: np.ndarray
+    :param sampled_synthcls: Sampled synthetic cluster data.
+    :type sampled_synthcls: list
 
-    :return: Indexes of the closest synthetic stars.
-    :rtype: np.ndarray
+    :return: Primary and secondary masses values (median + stddev), binary
+        probability per observed star, and a mask for NaN values.
+    :rtype: tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]
     """
-    synth_photom = isoch[:m_ini_idx].T
-    tree = KDTree(synth_photom)
-    _, idxs = tree.query(obs_phot, k=1)
-    return np.array(idxs)
 
+    # Extract observed photometry
+    cl_colors = [cluster_colors[0]]
+    if cluster_colors[1] is not None:
+        cl_colors.append(cluster_colors[1])
+    obs_phot = np.array([cluster_mag] + [_ for _ in cl_colors])
+    # Replace nans in mag and colors to avoid crashing KDTree()
+    nan_msk = np.full(obs_phot.shape[1], False)
+    for ophot in obs_phot:
+        nan_msk = nan_msk | np.isnan(ophot)
+    obs_phot[:, nan_msk] = -10.0
+    obs_phot = obs_phot.T
 
-def get_m1m2(
-    m_ini_idx: int, isoch: np.ndarray, idxs: np.ndarray
-) -> tuple[np.ndarray, np.ndarray]:
-    """Assign primary and secondary (synthetic) masses to each observed star.
+    # Assign primary and secondary (synthetic) masses to each observed star,
+    # for each synthetic model generated
+    m12_obs = []
+    # weights = []
+    for isoch in sampled_synthcls:
+        # Indexes of the photometrically closest synthetic stars to the observed stars
+        tree = KDTree(isoch[:m_ini_idx].T)
+        dist, close_stars_idxs = tree.query(obs_phot, k=1)
 
-    :param m_ini_idx: Index of the initial mass column
-    :type m_ini_idx: int
-    :param isoch: Isochrone data.
-    :type isoch: np.ndarray
-    :param idxs: Indexes of the closest synthetic stars.
-    :type idxs: np.ndarray
+        # # Store inverse normalized distance used as weights
+        # inv_dist = 1 / dist
+        # inv_dist_norm = inv_dist / inv_dist.max()
+        # weights.append(inv_dist_norm)
 
-    :return: Primary and secondary masses for each observed star.
-    :rtype: tuple[np.ndarray, np.ndarray]
-    """
-    mass_1, mass_2 = isoch[m_ini_idx], isoch[-1]
-    m1_obs, m2_obs = mass_1[idxs], mass_2[idxs]
+        # The secondary mass is stored after the primary mass, hence the ':'
+        m12_obs.append(isoch[m_ini_idx:, close_stars_idxs])
 
-    return m1_obs, m2_obs
+    # Extract primary and secondary masses
+    m12_obs = np.array(m12_obs)
+    m1_obs = m12_obs[:, 0, :]
+    m2_obs = m12_obs[:, 1, :]
+
+    # Primary mass values (median + stddev)
+    m1_med = np.median(m1_obs, 0)
+    # # Weighted average is similar to median
+    # m1_med = np.average(m1_obs, 0, weights)
+    m1_std = np.std(m1_obs, 0)
+
+    # Secondary mass values (median + stddev)
+    # Hide 'All-nan slice' warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        m2_med = np.nanmedian(m2_obs, 0)
+        m2_std = np.nanstd(m2_obs, 0)
+    # m2 can not be larger than m1
+    m2_med = np.min([m1_med, m2_med], 0)
+
+    # Binary probability per observed star
+    # Count how many times the secondary mass of an observed star was assigned a
+    # value 'not np.nan', i.e.: was identified as a binary system. Dividing this
+    # value by the number of synthetic models used, results in the per observed
+    # star probability of being a binary system.
+    binar_prob = (~np.isnan(m12_obs[:, 1, :])).sum(0) / len(sampled_synthcls)
+
+    return m1_med, m1_std, m2_med, m2_std, binar_prob, nan_msk
 
 
 def galactic_coords(
@@ -203,7 +247,7 @@ def ambient_density(
     Z: np.ndarray,
     R_GC: np.ndarray,
     R_xy: np.ndarray,
-) -> np.ndarray:
+) -> npt.NDArray[np.floating]:
     """Calculate the ambient density.
 
     Source: Angelo et al. (2023); 10.1093/mnras/stad1038
@@ -232,7 +276,7 @@ def ambient_density(
     :type R_xy: np.ndarray
 
     :return: Ambient density.
-    :rtype: np.ndarray
+    :rtype: npt.NDArray[np.floating]
     """
     Phi_B_Laplacian = 2 * M_B * r_B / (R_GC * (R_GC + r_B) ** 3)
     numerator = (

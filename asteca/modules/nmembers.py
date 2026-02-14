@@ -2,6 +2,7 @@ import warnings
 
 import numpy as np
 from astropy.stats import RipleysKEstimator
+from scipy.spatial import KDTree
 
 from . import cluster_priv as cp
 
@@ -68,12 +69,15 @@ def ripley_nmembs(
     pmRA: np.ndarray,
     pmDE: np.ndarray,
     plx: np.ndarray,
+    xy_center: tuple[float, float],
     vpd_c: tuple[float, float],
     plx_c: float,
+    N_clust_min: int,
+    N_clust_max: int,
     N_clust: int = 50,
     N_extra: int = 5,
     N_step: int = 10,
-) -> int:
+) -> np.ndarray:
     """Estimate the number of cluster members using Ripley's K-function.
 
     :param x: Array of x-coordinates.
@@ -86,10 +90,16 @@ def ripley_nmembs(
     :type pmDE: np.ndarray
     :param plx: Array of parallax values.
     :type plx: np.ndarray
+    :param xy_center: Center coordinates in (x,y)
+    :type xy_center: tuple[float, float]
     :param vpd_c: Center coordinates in proper motion (pmRA, pmDE).
     :type vpd_c: tuple[float, float]
     :param plx_c: Center parallax value.
     :type plx_c: float
+    :param N_clust_min: Minimum number of stars to consider as a cluster
+    :type N_clust_min: int
+    :param N_clust_max: Maximum number of stars to consider as a cluster
+    :type N_clust_max: int
     :param N_clust: Initial number of stars to consider as a cluster, defaults to 50
     :type N_clust: int
     :param N_extra: Number of extra iterations to perform if the initial
@@ -98,15 +108,48 @@ def ripley_nmembs(
     :param N_step: Step size for increasing the number of cluster stars, defaults to 10
     :type N_step: int
 
-    :return: Estimated number of cluster members.
-    :rtype: int
+    :return: Indexes of the estimated cluster members.
+    :rtype: np.ndarray
     """
+    # Generate input data array
+    X = np.array(
+        [
+            x,
+            y,
+            pmRA,
+            pmDE,
+            plx,
+        ]
+    )
+    idx_clean, X_no_nan = cp.reject_nans(X)
+    # Unpack input data with no 'nans'
+    lon, lat, pmRA, pmDE, plx = X_no_nan
+    # These arrays are not used, fill with dummy values
+    e_pmRA, e_pmDE, e_plx = [np.empty(len(lon))] * 3
+
+    # Remove the most obvious field stars
+    N_filter_max = min(N_clust_max * 5, 10_000)  # FIXED VALUE
+    idx_clean, x, y, pmRA, pmDE, plx, _, _, _ = cp.first_filter(
+        idx_clean,
+        vpd_c,
+        plx_c,
+        lon,
+        lat,
+        pmRA,
+        pmDE,
+        plx,
+        e_pmRA,
+        e_pmDE,
+        e_plx,
+        N_filter_max,
+    )
+
+    # Initialize Ripley's K-function estimator
     rads, Kest, C_thresh_N = init_ripley(x, y)
 
     # Obtain the ordered indexes of the distances to the (pmra, pmde, plx) center
     cents_3d = np.array([list(vpd_c) + [plx_c]])
-    data_3d = np.array([pmRA, pmDE, plx]).T
-    d_pm_plx_idxs = cp.get_Nd_dists(cents_3d, data_3d)
+    d_pm_plx_idxs = cp.get_Nd_dists(cents_3d, np.array([pmRA, pmDE, plx]).T)
 
     # Select those clusters where the stars are different enough from a
     # random distribution
@@ -125,9 +168,21 @@ def ripley_nmembs(
             if len(idx_survived) > 0:
                 break
 
-    N_survived = len(idx_survived)
+    # Check number of surviving stars
+    if len(idx_survived) == 0:
+        # If no stars survived, select the 10 closest to the xy center
+        dist_to_center = np.linalg.norm(xy - xy_center, axis=1)
+        idx_survived = np.argsort(dist_to_center)[:10]
+        return idx_clean[idx_survived]
 
-    return N_survived
+    elif len(idx_survived) < N_clust_min:
+        # No need for further cleaning
+        return idx_clean[idx_survived]
+
+    # Apply local density based cleaning
+    idx_survived = local_dens_clean(xy_center, x, y, idx_survived)
+
+    return idx_clean[idx_survived]
 
 
 def init_ripley(
@@ -223,7 +278,9 @@ def ripley_core(
     return idx_survived
 
 
-def rkfunc(xy: np.ndarray, rads: np.ndarray, Kest: RipleysKEstimator) -> float:
+def rkfunc(
+    xy: np.ndarray, rads: np.ndarray, Kest: RipleysKEstimator
+) -> float | np.floating:
     """Test how similar this cluster's (x, y) distribution is compared
     to a uniform random distribution using Ripley's K.
 
@@ -236,7 +293,7 @@ def rkfunc(xy: np.ndarray, rads: np.ndarray, Kest: RipleysKEstimator) -> float:
     :param Kest: Ripley's K-estimator.
     :type Kest: RipleysKEstimator
     :return: Ripley's K-function value.
-    :rtype: float
+    :rtype: float | np.floating
     """
     # Avoid large memory consumption if the data array is too big
     # if xy.shape[0] > 5000:
@@ -256,3 +313,79 @@ def rkfunc(xy: np.ndarray, rads: np.ndarray, Kest: RipleysKEstimator) -> float:
         C_s = np.nanmax(abs(L_t - rads))
 
     return C_s
+
+
+def local_dens_clean(
+    xy_center: tuple[float, float],
+    x: np.ndarray,
+    y: np.ndarray,
+    idx_survived: list,
+    N_k: int = 5,
+) -> list:
+    """Clean the cluster members based on local density and distance to xy center."""
+
+    # 2D distance to xy center and local density
+    data = np.array([x[idx_survived], y[idx_survived]]).T
+    # Distance to center
+    dist_to_cent = np.linalg.norm(data - xy_center, axis=1)
+
+    # Local density
+    tree = KDTree(data)
+    # Query neighbors including self
+    dists, _ = tree.query(data, k=N_k + 1)
+    fifth_nn_dist = dists[:, N_k]  # Nth neighbor distance
+    local_density = 1 / fifth_nn_dist
+    local_density /= local_density.max()  # Normalize
+
+    # Estimate field density
+    p_75, p_85, p_95 = np.percentile(dist_to_cent, (75, 85, 95))
+    msk_dist = (dist_to_cent > p_75) & (dist_to_cent < p_85)
+    fdens = np.median(local_density[msk_dist])
+
+    # The values in this block are manually selected. It means that, for clusters
+    # with at least 250 identified members, if the 95th percentile field density is
+    # between 20% and 70% of the 75th field density, then the 95th percentile is used.
+    # This helps to select more members for large clusters, while also avoiding
+    # over-cleaning for the remaining clusters. The 20% lower bound is there to catch
+    # clusters with a very low number of stars at the edges.
+    fdens_95 = np.median(local_density[dist_to_cent > p_95])
+    if len(idx_survived) > 250 and (0.2 < fdens_95 / fdens < 0.7):
+        fdens = fdens_95
+
+    # Estimate the radius that intersect with the field density
+    f_low, f_high = 0.95, 1.05
+    while True:
+        # Find at least 5 stars in the band around fdens
+        msk_fdens = (local_density > fdens * f_low) & (local_density < fdens * f_high)
+        if msk_fdens.sum() > 5:
+            break
+        # If no stars where found, make the band larger
+        f_low, f_high = f_low - 0.05, f_high + 0.05
+    # The radius is the 5th percentile of the stars in the band around fdens
+    rad = np.percentile(dist_to_cent[msk_fdens], 5)
+
+    # The final mask rejects stars beyond the radius and with a local density
+    # below the field density
+    msk = (local_density > fdens) & (dist_to_cent < rad)
+    if msk.sum() == 0:
+        return idx_survived
+
+    # Update surviving indexes
+    idx_survived = list(np.array(idx_survived)[msk])
+
+    # if len(idx_survived) > 25:
+    #     import matplotlib.pyplot as plt
+
+    #     plt.subplot(121)
+    #     plt.title(f"N={data.shape[0]}")
+    #     # plt.scatter(X[0], X[1], alpha=0.1, c="grey")
+    #     plt.scatter(*data.T, alpha=0.25)
+    #     plt.scatter(x[idx_survived], y[idx_survived], alpha=0.25)
+    #     plt.scatter(xy_center[0], xy_center[1], marker="x", color="red")
+    #     plt.subplot(122)
+    #     plt.title(f"N={len(idx_survived)}")
+    #     plt.scatter(dist_to_cent, local_density, s=5, alpha=0.5)
+    #     plt.axvline(rad, ls=":", c="r")
+    #     plt.show()
+
+    return idx_survived

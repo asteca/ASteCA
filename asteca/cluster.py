@@ -63,7 +63,7 @@ class Cluster:
         pmde: np.ndarray | None = None,
         e_pmde: np.ndarray | None = None,
         N_clust_min: int = 25,
-        N_clust_max: int = 5000,
+        N_clust_max: int = 2000,
         verbose: int = 1,
     ) -> None:
         self.ra = ra
@@ -115,6 +115,8 @@ class Cluster:
                 raise ValueError("Magnitude uncertainty is required")
             self.mag = np.asarray(self.magnitude, dtype=float)
             self.e_mag = np.asarray(self.e_mag, dtype=float)
+            if (self.e_mag <= 0).any():
+                raise ValueError("Magnitude uncertainties must be > 0")
             cols_read.append("Magnitude")
             cols_read.append("e_mag")
             N_stars_lst.append(len(self.mag))
@@ -125,6 +127,8 @@ class Cluster:
                 raise ValueError("Color uncertainty is required")
             self.color = np.asarray(self.color, dtype=float)
             self.e_color = np.asarray(self.e_color, dtype=float)
+            if (self.e_color <= 0).any():
+                raise ValueError("Color uncertainties must be > 0")
             cols_read.append("Color")
             cols_read.append("e_color")
             N_stars_lst.append(len(self.color))
@@ -138,6 +142,8 @@ class Cluster:
                 raise ValueError("Color2 uncertainty is required")
             self.color2 = np.asarray(self.color2, dtype=float)
             self.e_color2 = np.asarray(self.e_color2, dtype=float)
+            if (self.e_color2 <= 0).any():
+                raise ValueError("Color2 uncertainties must be > 0")
             cols_read.append("Color2")
             cols_read.append("e_color2")
             N_stars_lst.append(len(self.color2))
@@ -148,6 +154,8 @@ class Cluster:
                 raise ValueError("Parallax uncertainty is required")
             self.plx = np.asarray(self.plx, dtype=float)
             self.e_plx = np.asarray(self.e_plx, dtype=float)
+            if (self.e_plx <= 0).any():
+                raise ValueError("Parallax uncertainties must be > 0")
             cols_read.append("Plx")
             N_stars_lst.append(len(self.plx))
             N_stars_lst.append(len(self.e_plx))
@@ -157,6 +165,8 @@ class Cluster:
                 raise ValueError("pmRA uncertainty is required")
             self.pmra = np.asarray(self.pmra, dtype=float)
             self.e_pmra = np.asarray(self.e_pmra, dtype=float)
+            if (self.e_pmra <= 0).any():
+                raise ValueError("pmRA uncertainties must be > 0")
             cols_read.append("pmRA")
             N_stars_lst.append(len(self.pmra))
             N_stars_lst.append(len(self.e_pmra))
@@ -166,6 +176,8 @@ class Cluster:
                 raise ValueError("pmDE uncertainty is required")
             self.pmde = np.asarray(self.pmde, dtype=float)
             self.e_pmde = np.asarray(self.e_pmde, dtype=float)
+            if (self.e_pmde <= 0).any():
+                raise ValueError("pmDE uncertainties must be > 0")
             cols_read.append("pmDE")
             N_stars_lst.append(len(self.pmde))
             N_stars_lst.append(len(self.e_pmde))
@@ -237,23 +249,15 @@ class Cluster:
                 lon, lat = cp.radec2lonlat(radec_c[0], radec_c[1])
                 lonlat_c = (lon, lat)
 
-            # Remove nans
-            X = np.array([glon, glat, self.pmra, self.pmde, self.plx])
-            # Reject nan values and extract clean data
-            _, X_no_nan = cp.reject_nans(X)
-            lon, lat, pmRA, pmDE, plx = X_no_nan
-
             x_c, y_c, pmra_c, pmde_c, plx_c = cp.get_knn_5D_center(
-                lon,
-                lat,
-                pmRA,
-                pmDE,
-                plx,
+                glon,
+                glat,
+                self.pmra,
+                self.pmde,
+                self.plx,
                 xy_c=lonlat_c,
                 vpd_c=pms_c,
                 plx_c=plx_c,
-                N_clust_min=self.N_clust_min,
-                N_clust_max=self.N_clust_max,
             )
             ra_c, dec_c = cp.lonlat2radec(x_c, y_c)
 
@@ -383,11 +387,24 @@ class Cluster:
                 "The arguments (ra, dec) must be present as a 'cluster' attribute"
             )
 
+        if hasattr(self, "radec_c") is False:
+            raise AttributeError(
+                "The argument 'radec_c' must be present as a 'cluster' attribute"
+            )
+
         # (x, y) coordinates
         xv, yv = self.ra, self.dec
+        xy_center = (self.radec_c[0], self.radec_c[1])
         # Convert (RA, DEC) to (lon, lat)
         if eq_to_gal is True:
-            xv, yv = cp.radec2lonlat(xv, yv)
+            # Add center as last element
+            xv_t = np.array(list(xv) + [xy_center[0]])
+            yv_t = np.array(list(yv) + [xy_center[1]])
+            # Convert
+            xv_t, yv_t = cp.radec2lonlat(xv_t, yv_t)
+            # Extract center value
+            xv, yv = xv_t[:-1], yv_t[:-1]
+            xy_center = (xv_t[-1], yv_t[-1])
 
         if algo == "ripley":
             if (
@@ -398,29 +415,30 @@ class Cluster:
                 or hasattr(self, "plx_c") is False
             ):
                 raise AttributeError(
-                    "The arguments (pmra, pmdec, plx, pms_c, plx_c) must be present as a 'cluster' attribute"
+                    "The arguments (pmra, pmde, plx, pms_c, plx_c) must be present as a 'cluster' attribute"
                 )
-            N_cluster = nm.ripley_nmembs(
+            idx_selected = nm.ripley_nmembs(
                 xv,
                 yv,
                 self.pmra,
                 self.pmde,
                 self.plx,
+                xy_center,
                 self.pms_c,
                 self.plx_c,
+                self.N_clust_min,
+                self.N_clust_max,
             )
+            # Stored for eventual use
+            self.ripley_idx_selected = idx_selected
+            # This is the value expected from this method
+            N_cluster = len(idx_selected)
+
         elif algo == "density":
-            if hasattr(self, "radec_c") is False or hasattr(self, "radius") is False:
+            if hasattr(self, "radius") is False:
                 raise AttributeError(
-                    "The arguments (radec_c, radius) must be present as a 'cluster' attribute"
+                    "The argument 'radius' must be present as a 'cluster' attribute"
                 )
-
-            ra_c, dec_c = self.radec_c
-            xy_center = (ra_c, dec_c)
-            if eq_to_gal is True:
-                lon, lat = cp.radec2lonlat(*xy_center)
-                xy_center = (lon, lat)
-
             N_cluster = nm.density_nmembs(xv, yv, xy_center, self.radius)
 
         if N_cluster < self.N_clust_min:

@@ -177,11 +177,29 @@ class Synthetic:
 
         # Check that the ranges are respected
         for par in ("met", "loga"):
-            pmin, pmax = min(self.met_age_dict[par]), max(self.met_age_dict[par])
-            if self.def_params[par] < pmin or self.def_params[par] > pmax:
-                warnings.warn(
-                    f"Parameter {par}={self.def_params[par]} is out of range: [{pmin} - {pmax}]"
-                )
+            if par in def_params:
+                pmin, pmax = min(self.met_age_dict[par]), max(self.met_age_dict[par])
+                if self.def_params[par] < pmin or self.def_params[par] > pmax:
+                    warnings.warn(
+                        f"Parameter {par}={self.def_params[par]} is out of range: [{pmin} - {pmax}]"
+                    )
+
+        required = {
+            "met",
+            "loga",
+            "alpha",
+            "beta",
+            "Rv",
+            "DR",
+            "Av",
+            "dm",
+        }
+        if not required.issubset(def_params.keys()):
+            missing = required - set(def_params.keys())
+            warnings.warn(
+                f"Missing required keys in 'def_params': {missing}.\nThese must be all "
+                "present in 'params' when calling 'synthcl.generate(params)'"
+            )
 
         self._vp(f"Default params : {self.def_params}", 1)
         self._vp(f"Extinction law : {self.ext_law}", 1)
@@ -217,7 +235,7 @@ class Synthetic:
         """
         from .modules import synth_cluster_priv as scp
 
-        for attr in ("mag", "color", "ra", "dec"):
+        for attr in ("mag", "color"):  # , "ra", "dec"):
             if getattr(cluster, attr) is None:
                 raise ValueError(
                     f"Attribute '{attr}' is required to calibrate 'Cluster' object."
@@ -270,9 +288,9 @@ class Synthetic:
         self.cluster_mag = cluster.mag
         self.cluster_colors = [cluster.color, cluster.color2]
 
-        # Used by the `cluster_masses()` method
-        self.cluster_ra = cluster.ra
-        self.cluster_dec = cluster.dec
+        # # Used by the `cluster_masses()` method
+        # self.cluster_ra = cluster.ra
+        # self.cluster_dec = cluster.dec
 
     def generate(self, params: dict, N_stars: int = 100) -> np.ndarray:
         """Generate a synthetic cluster.
@@ -507,46 +525,9 @@ class Synthetic:
 
         from .modules import mass_binary as mb
 
-        # Observed photometry
-        cluster_colors = [self.cluster_colors[0]]
-        if self.cluster_colors[1] is not None:
-            cluster_colors.append(self.cluster_colors[1])
-        obs_phot = np.array([self.cluster_mag] + [_ for _ in cluster_colors])
-        # Replace nans in mag and colors to avoid crashing KDTree()
-        nan_msk = np.full(obs_phot.shape[1], False)
-        for ophot in obs_phot:
-            nan_msk = nan_msk | np.isnan(ophot)
-        obs_phot[:, nan_msk] = -10.0
-        obs_phot = obs_phot.T
-
-        #
-        close_stars_idxs = []
-        for isoch in self.sampled_synthcls:
-            close_stars_idxs.append(mb.get_close_idxs(self.m_ini_idx, obs_phot, isoch))
-
-        #
-        m12_masses = []
-        for i, isoch in enumerate(self.sampled_synthcls):
-            m1_obs, m2_obs = mb.get_m1m2(self.m_ini_idx, isoch, close_stars_idxs[i])
-            m12_masses.append([m1_obs, m2_obs])
-        m12_masses = np.array(m12_masses)
-
-        # Primary masses (median + stddev)
-        m1_med = np.median(m12_masses[:, 0, :], 0)
-        m1_std = np.std(m12_masses[:, 0, :], 0)
-        # Secondary masses  (median + stddev). Hide 'All-nan slice' warnings
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            m2_med = np.nanmedian(m12_masses[:, 1, :], 0)
-            # m2 can not be larger than m1
-            m2_med = np.min([m1_med, m2_med], 0)
-            m2_std = np.nanstd(m12_masses[:, 1, :], 0)
-
-        # Binary probability per observed star. Check how many times the secondary mass
-        # of an observed star was assigned a value 'not np.nan', i.e.: was identified
-        # as a binary system. Dividing this value by the number of synthetic models
-        # used, results in the per observed star probability of being a binary system.
-        binar_prob = (~np.isnan(m12_masses[:, 1, :])).sum(0) / m12_masses.shape[0]
+        m1_med, m1_std, m2_med, m2_std, binar_prob, nan_msk = mb.get_stellar_masses(
+            self.cluster_mag, self.cluster_colors, self.m_ini_idx, self.sampled_synthcls
+        )
 
         # Store as dictionary
         data = {
@@ -598,7 +579,8 @@ class Synthetic:
         N_stars = len(binar_prob)
         # Observe systems (Nsamples) and store how many are single/binaries
         b_fr_vals = self.rng.random((Nsamples, N_stars)) < binar_prob
-        # Average the binary fraction for each observation
+        # Average the binary fraction for each observation. This results in a
+        # distribution for the total binary fraction
         b_fr_sum = np.sum(b_fr_vals, axis=1) / N_stars
         # Return the median and STDDEV values
         bfr_med, bfr_std = np.median(b_fr_sum), np.std(b_fr_sum)
@@ -608,6 +590,7 @@ class Synthetic:
 
     def cluster_masses(
         self,
+        radec_c: tuple | None = None,
         rho_amb: float | None = None,
         M_B: float = 2.5e10,
         r_B: float = 0.5e3,
@@ -620,7 +603,7 @@ class Synthetic:
         gamma: float = 0.62,
         epsilon: float = 0.08,
     ) -> dict:
-        """Estimate the different total masses for the observed cluster.
+        r"""Estimate the different total masses for the observed cluster.
 
         The returned dictionary contains distributions for
         ``M_init, M_actual, M_obs, M_phot, M_evol, M_dyn``, where:
@@ -638,43 +621,46 @@ class Synthetic:
         - ``M_actual = M_obs + M_phot``
         - ``M_init = M_actual + M_evol + M_dyn``
 
-        :param rho_amb: Ambient density. If ``None``, it is estimated using the
-            cluster's position and a model for the Galaxy's potential; defaults to
-            ``None``.
+        :param radec_c: Center coordinates in ``(RA, DEC)``. If ``None``, the ``rho_amb``
+            parameter must be given; defaults to ``None``.
+        :type radec_c: tuple | None
+        :param rho_amb: Ambient density [:math:`M_{\odot}\,pc^{-3}`]. If ``None``, it
+            is estimated using the cluster's position (``radec_c``) and a model for the
+            Galaxy's potential; defaults to ``None``.
         :type rho_amb: float | None
-        :param M_B: Bulge mass (in solar masses); defaults to ``2.5e10`` (from
+        :param M_B: Bulge mass; defaults to ``2.5e10`` [:math:`M_{\odot}`] (from
             `Haghi et al. 2015 <https://doi.org/10.1093/mnras/stv827>`__, Table 1)
         :type M_B: float
-        :param r_B: Characteristic radius of the bulge (in pc); defaults to ``0.5e3``
+        :param r_B: Characteristic radius of the bulge; defaults to ``0.5e3`` [pc]
             (from `Haghi et al. 2015 <https://doi.org/10.1093/mnras/stv827>`__,
             Table 1)
         :type r_B: float
-        :param M_D: Disc mass (in solar masses); defaults to ``7.5e10`` (from
+        :param M_D: Disc mass; defaults to ``7.5e10`` [:math:`M_{\odot}`] (from
             `Haghi et al. 2015 <https://doi.org/10.1093/mnras/stv827>`__, Table 1)
         :type M_D: float
-        :param a: Disc scale radius (in pc); defaults to ``5.4e3`` (from
+        :param a: Disc scale radius; defaults to ``5400`` [pc] (from
             `Haghi et al. 2015 <https://doi.org/10.1093/mnras/stv827>`__, Table 1)
         :type a: float
-        :param b: Disc scaleheight (in pc); defaults to ``0.3e3`` (from
+        :param b: Disc scaleheight; defaults to ``300`` [pc] (from
             `Haghi et al. 2015 <https://doi.org/10.1093/mnras/stv827>`__, Table 1)
         :type b: float
-        :param M_s: Dark matter halo mass (in solar masses); defaults to ``1.87e11``
+        :param M_s: Dark matter halo mass; defaults to ``1.87e11`` [:math:`M_{\odot}`]
             (from `Sanderson et al. 2017
             <https://iopscience.iop.org/article/10.3847/1538-4357/aa5eb4>`__, Table 1)
         :type M_s: float
-        :param r_s: Dark matter halo scale radius (in pc); defaults to ``15.19e3`` (from
+        :param r_s: Dark matter halo scale radius; defaults to ``15.19e3`` [pc] (from
             `Sanderson et al. 2017
             <https://iopscience.iop.org/article/10.3847/1538-4357/aa5eb4>`__, Table 1)
         :type r_s: float
-        :param C_env: Constant related to the disruption time (in Myr); defaults to
-            ``810e6`` (from `Lamers, Gieles & Zwart 2005
+        :param C_env: Constant related to the disruption time; defaults to
+            ``810e6`` [Myr] (from `Lamers, Gieles & Zwart 2005
             <https://www.aanda.org/articles/aa/abs/2005/01/aa1476/aa1476.html>`__)
         :type C_env: float
         :param gamma: Constant related to the disruption time (no units); defaults to
             ``0.62`` (from `Lamers, Gieles & Zwart 2005
             <https://www.aanda.org/articles/aa/abs/2005/01/aa1476/aa1476.html>`__)
         :type gamma: float
-        :param epsilon: Eccentricity of the orbit; defaults to ``0.08`` (from
+        :param epsilon: Eccentricity of the orbit (no units); defaults to ``0.08`` (from
             `Angelo et al. (2023) <https://doi.org/10.1093/mnras/stad1038>`__)
         :type epsilon: float
 
@@ -704,17 +690,18 @@ class Synthetic:
                 + "argument for a more accurate mass estimation"
             )
 
-        # Estimate the center coordinates from the cluster's median values
-        radec_c = (np.median(self.cluster_ra), np.median(self.cluster_dec))  # pyright: ignore
-
         if rho_amb is not None:
             # Input float to array
             rho_amb_arr = np.ones(len(self.sampled_models)) * rho_amb
-        else:
+        elif radec_c is not None:
             # Obtain galactic vertical distance and distance to center
             Z, R_GC, R_xy = mb.galactic_coords(self.sampled_models, radec_c)
             rho_amb_arr = mb.ambient_density(
                 M_B, r_B, M_D, a, b, r_s, M_s, Z, R_GC, R_xy
+            )
+        else:
+            raise ValueError(
+                "This method requires either 'radec_c' or 'rho_amb' values"
             )
 
         masses_all = []

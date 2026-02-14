@@ -1,4 +1,5 @@
 import numpy as np
+import numpy.typing as npt
 from scipy import stats
 
 from .imfs import invTrnsfSmpl, sampleInv
@@ -70,7 +71,9 @@ def error_distribution(
 
     def filnans(data):
         msk = np.isnan(data)
-        data[msk] = np.interp(np.flatnonzero(msk), np.flatnonzero(~msk), data[~msk])
+        if msk.any() and (~msk).any():
+            data = np.array(data, copy=True)
+            data[msk] = np.interp(np.flatnonzero(msk), np.flatnonzero(~msk), data[~msk])
         return data
 
     # Replace nan values with interpolated values
@@ -496,16 +499,18 @@ def qDistribution(
     return mass_ratios
 
 
-def mag_combine(m1: np.ndarray, m2: np.ndarray) -> np.ndarray:
+def mag_combine(
+    m1: npt.NDArray[np.floating], m2: npt.NDArray[np.floating]
+) -> np.ndarray:
     """Combine two magnitudes.
 
     This is a faster re-ordering of the standard formula:
     -2.5 * np.log10(10 ** (-0.4 * m1) + 10 ** (-0.4 * m2))
 
     :param m1: Array of magnitudes.
-    :type m1: np.ndarray
+    :type m1: npt.NDArray[np.floating]
     :param m2: Array of magnitudes.
-    :type m2: np.ndarray
+    :type m2: npt.NDArray[np.floating]
 
     :returns: Array of combined magnitudes.
     :rtype: np.ndarray
@@ -555,18 +560,18 @@ def properModel(
         al = ah - 1
 
     return (
-        fit_params["met"],
-        fit_params["loga"],
-        fit_params["alpha"],
-        fit_params["beta"],
-        fit_params["Av"],
-        fit_params["DR"],
-        fit_params["Rv"],
-        fit_params["dm"],
-        ml,
-        mh,
-        al,
-        ah,
+        float(fit_params["met"]),
+        float(fit_params["loga"]),
+        float(fit_params["alpha"]),
+        float(fit_params["beta"]),
+        float(fit_params["Av"]),
+        float(fit_params["DR"]),
+        float(fit_params["Rv"]),
+        float(fit_params["dm"]),
+        int(ml),
+        int(mh),
+        int(al),
+        int(ah),
     )
 
 
