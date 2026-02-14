@@ -533,6 +533,8 @@ def interp_isochrones(
         isochrones.setdefault(met, {}).setdefault(age, [])
 
         isoch = isochs_sorted[i]
+        if isoch.dtype.names is None:
+            raise ValueError("No 'names' found for isoch.dtype")
 
         if eep_col is None:
             # Mass-based interpolation

@@ -1,4 +1,5 @@
 import numpy as np
+import numpy.typing as npt
 from scipy import stats
 
 from .imfs import invTrnsfSmpl, sampleInv
@@ -498,7 +499,9 @@ def qDistribution(
     return mass_ratios
 
 
-def mag_combine(m1: np.ndarray, m2: np.ndarray) -> np.ndarray:
+def mag_combine(
+    m1: npt.NDArray[np.floating], m2: npt.NDArray[np.floating]
+) -> np.ndarray:
     """Combine two magnitudes.
 
     This is a faster re-ordering of the standard formula:
@@ -557,18 +560,18 @@ def properModel(
         al = ah - 1
 
     return (
-        fit_params["met"],
-        fit_params["loga"],
-        fit_params["alpha"],
-        fit_params["beta"],
-        fit_params["Av"],
-        fit_params["DR"],
-        fit_params["Rv"],
-        fit_params["dm"],
-        ml,
-        mh,
-        al,
-        ah,
+        float(fit_params["met"]),
+        float(fit_params["loga"]),
+        float(fit_params["alpha"]),
+        float(fit_params["beta"]),
+        float(fit_params["Av"]),
+        float(fit_params["DR"]),
+        float(fit_params["Rv"]),
+        float(fit_params["dm"]),
+        int(ml),
+        int(mh),
+        int(al),
+        int(ah),
     )
 
 

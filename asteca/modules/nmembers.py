@@ -278,7 +278,9 @@ def ripley_core(
     return idx_survived
 
 
-def rkfunc(xy: np.ndarray, rads: np.ndarray, Kest: RipleysKEstimator) -> float:
+def rkfunc(
+    xy: np.ndarray, rads: np.ndarray, Kest: RipleysKEstimator
+) -> float | np.floating:
     """Test how similar this cluster's (x, y) distribution is compared
     to a uniform random distribution using Ripley's K.
 

@@ -2,6 +2,7 @@ import warnings
 
 import astropy.coordinates as coord
 import numpy as np
+import numpy.typing as npt
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from scipy.spatial import KDTree
@@ -75,10 +76,10 @@ def get_stellar_masses(
 
     # Assign primary and secondary (synthetic) masses to each observed star,
     # for each synthetic model generated
-    m12_obs, weights = [], []
+    m12_obs = []
+    # weights = []
     for isoch in sampled_synthcls:
-        # Indexes of the closest (photometrically) synthetic stars to the observed
-        # stars
+        # Indexes of the photometrically closest synthetic stars to the observed stars
         tree = KDTree(isoch[:m_ini_idx].T)
         dist, close_stars_idxs = tree.query(obs_phot, k=1)
 
@@ -97,7 +98,7 @@ def get_stellar_masses(
 
     # Primary mass values (median + stddev)
     m1_med = np.median(m1_obs, 0)
-    # # Weighted average is simlar to median
+    # # Weighted average is similar to median
     # m1_med = np.average(m1_obs, 0, weights)
     m1_std = np.std(m1_obs, 0)
 
@@ -246,7 +247,7 @@ def ambient_density(
     Z: np.ndarray,
     R_GC: np.ndarray,
     R_xy: np.ndarray,
-) -> np.ndarray:
+) -> npt.NDArray[np.floating]:
     """Calculate the ambient density.
 
     Source: Angelo et al. (2023); 10.1093/mnras/stad1038
