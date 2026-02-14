@@ -508,9 +508,9 @@ def mag_combine(
     -2.5 * np.log10(10 ** (-0.4 * m1) + 10 ** (-0.4 * m2))
 
     :param m1: Array of magnitudes.
-    :type m1: np.ndarray
+    :type m1: npt.NDArray[np.floating]
     :param m2: Array of magnitudes.
-    :type m2: np.ndarray
+    :type m2: npt.NDArray[np.floating]
 
     :returns: Array of combined magnitudes.
     :rtype: np.ndarray

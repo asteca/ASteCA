@@ -293,7 +293,7 @@ def rkfunc(
     :param Kest: Ripley's K-estimator.
     :type Kest: RipleysKEstimator
     :return: Ripley's K-function value.
-    :rtype: float
+    :rtype: float | np.floating
     """
     # Avoid large memory consumption if the data array is too big
     # if xy.shape[0] > 5000:

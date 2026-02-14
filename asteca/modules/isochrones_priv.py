@@ -492,6 +492,8 @@ def interp_isochrones(
     :param isochs_sorted: List of sorted isochrones as numpy arrays.
     :type isochs_sorted: list[np.ndarray]
 
+    :raises ValueError: If the isochrone dtype does not contain column names.
+
     :return: Dictionary of interpolated isochrones.
     :rtype: dict
     """

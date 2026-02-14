@@ -276,7 +276,7 @@ def ambient_density(
     :type R_xy: np.ndarray
 
     :return: Ambient density.
-    :rtype: np.ndarray
+    :rtype: npt.NDArray[np.floating]
     """
     Phi_B_Laplacian = 2 * M_B * r_B / (R_GC * (R_GC + r_B) ** 3)
     numerator = (

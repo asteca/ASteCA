@@ -65,6 +65,10 @@ def lkl_data(
     :type mag_v: np.ndarray
     :param colors_v: List of arrays of colors.
     :type colors_v: list[np.ndarray]
+    :param ranges: Per-dimension ranges.
+    :type ranges: list
+    :param Nbins: Per-dimension total number of bins.
+    :type Nbins: list
 
     :return: Indexes of bins with stars and flattened histogram.
     :rtype: tuple[np.ndarray, np.ndarray]
