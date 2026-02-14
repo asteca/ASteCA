@@ -177,11 +177,29 @@ class Synthetic:
 
         # Check that the ranges are respected
         for par in ("met", "loga"):
-            pmin, pmax = min(self.met_age_dict[par]), max(self.met_age_dict[par])
-            if self.def_params[par] < pmin or self.def_params[par] > pmax:
-                warnings.warn(
-                    f"Parameter {par}={self.def_params[par]} is out of range: [{pmin} - {pmax}]"
-                )
+            if par in def_params:
+                pmin, pmax = min(self.met_age_dict[par]), max(self.met_age_dict[par])
+                if self.def_params[par] < pmin or self.def_params[par] > pmax:
+                    warnings.warn(
+                        f"Parameter {par}={self.def_params[par]} is out of range: [{pmin} - {pmax}]"
+                    )
+
+        required = {
+            "met",
+            "loga",
+            "alpha",
+            "beta",
+            "Rv",
+            "DR",
+            "Av",
+            "dm",
+        }
+        if not required.issubset(def_params.keys()):
+            missing = required - set(def_params.keys())
+            warnings.warn(
+                f"Missing required keys in 'def_params': {missing}.\nThese must be all "
+                "present in 'params' when calling 'synthcl.generate(params)'"
+            )
 
         self._vp(f"Default params : {self.def_params}", 1)
         self._vp(f"Extinction law : {self.ext_law}", 1)
