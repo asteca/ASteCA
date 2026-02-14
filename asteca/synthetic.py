@@ -585,7 +585,7 @@ class Synthetic:
         gamma: float = 0.62,
         epsilon: float = 0.08,
     ) -> dict:
-        """Estimate the different total masses for the observed cluster.
+        r"""Estimate the different total masses for the observed cluster.
 
         The returned dictionary contains distributions for
         ``M_init, M_actual, M_obs, M_phot, M_evol, M_dyn``, where:
