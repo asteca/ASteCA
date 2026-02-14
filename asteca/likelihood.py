@@ -88,6 +88,8 @@ class Likelihood:
         if self.lkl_name == "plr":
             # Evaluate cluster against itself to obtain the maximum likelihood.
             self.max_lkl = self.get(np.array([self.mag, *colors]))
+            # This is equal to evaluating
+            # max_lkl = sum([gammaln(2*_ + 0.5) - gammaln(_ + 0.5) for _ in cl_histo_f_z])
 
         print("\nLikelihood object generated")
 
