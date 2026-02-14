@@ -163,9 +163,16 @@ def tremmel(
     # Remove all bins where n_i = 0 (no observed stars).
     syn_histo_f_z = syn_histo_f[cl_z_idx]
 
+    # The 1/2 term arises from using a Jeffreys prior (Eq 8 in Tremmel et al). Using a
+    # flat prior instead, that 1/2 term becomes a 1
     tremmel_lkl = np.sum(
         gammaln(cl_histo_f_z + syn_histo_f_z + 0.5) - gammaln(syn_histo_f_z + 0.5)
     )
+
+    # Attempted adding some weights, did not help
+    # tremmel_lkl = gammaln(cl_histo_f_z + syn_histo_f_z + 0.5) - gammaln(syn_histo_f_z + 0.5)
+    # tremmel_lkl *= np.linspace(10, 0, cl_histo_f_z.shape[0])
+    # tremmel_lkl = np.sum(tremmel_lkl)
 
     # If this is the call made to calibrate the likelihood
     if max_lkl is None:
@@ -175,11 +182,15 @@ def tremmel(
     # distance that goes from 0 (exact match) to 1 (no match).
     dist = 1 - tremmel_lkl / max_lkl
 
+    # If m_i==0 and n_i<3, the term
+    # gammaln(cl_histo_f_z + syn_histo_f_z + 0.5) - gammaln(syn_histo_f_z + 0.5)
+    # will be negative, thus reducing the final likelihood value.
+
     # This factor helps to "pull" the solution closer to the region where the observed
     # cluster is located in the CMD, by adding a penalty based on the photometric
     # distance between the synthetic cluster and the observed cluster.
     # Only use penalty when the normalized distance is large
-    if dist > .5:
+    if dist > 0.5:
         cmd_dist = (obs_mag_median - np.median(mag)) ** 2 + (
             obs_col_median - np.median(colors[0])
         ) ** 2
