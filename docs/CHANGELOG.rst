@@ -19,7 +19,7 @@ Changelog
    - Moved `first_filter()` out of `fastMP` to be used also by the Ripley members
      estimator
    - Changed default value for `fixed_centers` in `fastMP()` to `True`
-   - Removed iterative IQR normalization in `fastMP()`. It caused issues for some OCs
+   - Removed iterative IQR normalization in `fastMP()`; it caused issues for some OCs
      that ended up looking stretched out in the LON/LAT axis
 
 - Cluster module:
