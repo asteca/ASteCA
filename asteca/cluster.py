@@ -9,45 +9,56 @@ class Cluster:
     This object contains the basic data required to load a group of observed stars
     that could represent a cluster or an entire field.
 
-    :param ra: Array that contains the right ascension (RA), defaults to ``None``
+    :param cluster_name: Name of the cluster, only required if the data is to be
+        loaded from the UCC members file. If provided, the ``UCC_file_path`` argument
+        must also be provided
+    :type cluster_name: str | None
+    :param UCC_file_path: Path to the UCC members file containing the cluster data. If
+        ``cluster_name`` is provided this argument must also be provided
+    :type UCC_file_path: str | None
+    :param ra: Array that contains the right ascension (RA)
     :type ra: np.ndarray | None
-    :param dec: Array that contains the declination (DEC), defaults to ``None``
+    :param dec: Array that contains the declination (DEC)
     :type dec: np.ndarray | None
-    :param magnitude: Array that contains the magnitude, defaults to ``None``
+    :param magnitude: Array that contains the magnitude
     :type magnitude: np.ndarray | None
-    :param e_mag: Array that contains the magnitude's uncertainty, defaults to ``None``
+    :param e_mag: Array that contains the magnitude's uncertainty
     :type e_mag: np.ndarray | None
-    :param color: Array that contains the color, defaults to ``None``
+    :param color: Array that contains the color
     :type color: np.ndarray | None
-    :param e_color: Array that contains the color's uncertainty, defaults to ``None``
+    :param e_color: Array that contains the color's uncertainty
     :type e_color: np.ndarray | None
-    :param color2: Array that contains the second color, defaults to ``None``
+    :param color2: Array that contains the second color
     :type color2: np.ndarray | None
-    :param e_color2: Array that contains the second color's uncertainty, defaults to ``None``
+    :param e_color2: Array that contains the second color's uncertainty
     :type e_color2: np.ndarray | None
-    :param plx: Array that contains the parallax, defaults to ``None``
+    :param plx: Array that contains the parallax
     :type plx: np.ndarray | None
-    :param e_plx: Array that contains the parallax uncertainty, defaults to ``None``
+    :param e_plx: Array that contains the parallax uncertainty
     :type e_plx: np.ndarray | None
-    :param pmra: Array that contains the RA proper motion, defaults to ``None``
+    :param pmra: Array that contains the RA proper motion
     :type pmra: np.ndarray | None
-    :param e_pmra: Array that contains the RA proper motion's uncertainty, defaults to ``None``
+    :param e_pmra: Array that contains the RA proper motion's uncertainty
     :type e_pmra: np.ndarray | None
-    :param pmde: Array that contains the DEC proper motion, defaults to ``None``
+    :param pmde: Array that contains the DEC proper motion
     :type pmde: np.ndarray | None
-    :param e_pmde: Array that contains the DEC proper motion's uncertainty, defaults to ``None``
+    :param e_pmde: Array that contains the DEC proper motion's uncertainty
     :type e_pmde: np.ndarray | None
-    :param N_clust_min: Minimum number of cluster members, defaults to ``25``
+    :param N_clust_min: Minimum number of cluster members
     :type N_clust_min: int
-    :param N_clust_max: Maximum number of cluster members, defaults to ``5000``
+    :param N_clust_max: Maximum number of cluster members
     :type N_clust_max: int
-    :param verbose: Verbose level. A value of ``0`` hides all output, defaults to ``1``
+    :param verbose: Verbose level. A value of ``0`` hides all output
     :type verbose: int
+
+    :raises ValueError: If ``cluster_name`` is provided but ``UCC_file_path`` is not provided
 
     """
 
     def __init__(
         self,
+        cluster_name: str | None = None,
+        UCC_file_path: str | None = None,
         ra: np.ndarray | None = None,
         dec: np.ndarray | None = None,
         magnitude: np.ndarray | None = None,
@@ -66,6 +77,8 @@ class Cluster:
         N_clust_max: int = 2000,
         verbose: int = 1,
     ) -> None:
+        self.cluster_name = cluster_name
+        self.UCC_file_path = UCC_file_path
         self.ra = ra
         self.dec = dec
         self.magnitude = magnitude
@@ -84,8 +97,19 @@ class Cluster:
         self.N_clust_max = N_clust_max
         self.verbose = verbose
 
-        self._vp("\nInstantiating cluster")
-        self._load_column_data()
+        if self.cluster_name is not None and self.UCC_file_path is None:
+            raise ValueError(
+                "If a cluster name is provided, the 'UCC_file_path' must also be provided"
+            )
+
+        if self.cluster_name is not None and self.UCC_file_path is not None:
+            self._vp(f"\nInstantiating cluster '{self.cluster_name}'")
+            self._vp(f"Loading data from '{self.UCC_file_path}'")
+            self._load_UCC_data(self.cluster_name, self.UCC_file_path)
+        else:
+            self._vp("\nInstantiating cluster")
+            self._load_column_data()
+
         self._vp(f"N_stars        : {self.N_stars}", 1)
         self._vp(f"N_clust_min    : {self.N_clust_min}", 1)
         self._vp(f"N_clust_max    : {self.N_clust_max}", 1)
@@ -95,6 +119,60 @@ class Cluster:
         """Verbose print method"""
         if self.verbose > level:
             print(mssg)
+
+    def _load_UCC_data(self, cluster_name: str, UCC_file_path: str):
+        import pandas as pd
+
+        df = pd.read_parquet(UCC_file_path)
+
+        cluster_fname = (
+            cluster_name.lower()
+            .replace(" ", "")
+            .replace("_", "")
+            .replace("-", "")
+            .replace(".", "")
+            .replace("+", "p")
+        )
+
+        if cluster_fname not in df["name"].values:
+            raise ValueError(
+                f"Cluster name '{self.cluster_name}' not found in UCC file"
+            )
+
+        cluster_df = df[df["name"] == cluster_fname]
+        if len(cluster_df) == 0:
+            raise ValueError(
+                f"No data found for cluster name '{self.cluster_name}' in UCC file"
+            )
+
+        self.ra = np.asarray(cluster_df["RA_ICRS"], dtype=float)
+        self.dec = np.asarray(cluster_df["DE_ICRS"], dtype=float)
+        self.mag = np.asarray(cluster_df["Gmag"], dtype=float)
+        self.e_mag = np.asarray(cluster_df["e_Gmag"], dtype=float)
+        self.color = np.asarray(cluster_df["BP-RP"], dtype=float)
+        self.e_color = np.asarray(cluster_df["e_BP-RP"], dtype=float)
+        self.plx = np.asarray(cluster_df["Plx"], dtype=float)
+        self.e_plx = np.asarray(cluster_df["e_Plx"], dtype=float)
+        self.pmra = np.asarray(cluster_df["pmRA"], dtype=float)
+        self.e_pmra = np.asarray(cluster_df["e_pmRA"], dtype=float)
+        self.pmde = np.asarray(cluster_df["pmDE"], dtype=float)
+        self.e_pmde = np.asarray(cluster_df["e_pmDE"], dtype=float)
+        cols_read = (
+            "RA",
+            "DEC",
+            "Gmag",
+            "e_Gmag",
+            "BP-RP",
+            "e_BP-RP",
+            "Plx",
+            "e_Plx",
+            "pmRA",
+            "e_pmRA",
+            "pmDE",
+            "e_pmDE",
+        )
+        self._vp(f"Columns read   : {', '.join(cols_read)}", 1)
+        self.N_stars = len(cluster_df)
 
     def _load_column_data(self):
         cols_read = []
@@ -213,16 +291,16 @@ class Cluster:
           Kernel Density Estimator (KDE).
 
         :param algo: Algorithm used to estimate center values, one of
-            (``knn_5d``, ``kde_2d``), defaults to ``knn_5d``
+            (``knn_5d``, ``kde_2d``)
         :type algo: str
         :param data_2d: String indicating the data to be used to estimate
-            the center value, either: ``radec`` or ``pms``, defaults to ``radec``
+            the center value, either: ``radec`` or ``pms``
         :type data_2d: str
-        :param radec_c: Estimated value for the (RA, DEC) center, defaults to ``None``
+        :param radec_c: Estimated value for the (RA, DEC) center
         :type radec_c: tuple[float, float] | None
-        :param pms_c: Estimated value for the (pmRA, pmDE) center, defaults to ``None``
+        :param pms_c: Estimated value for the (pmRA, pmDE) center
         :type pms_c: tuple[float, float] | None
-        :param plx_c: Estimated value for the plx center, defaults to ``None``
+        :param plx_c: Estimated value for the plx center
         :type plx_c: float | None
 
         :raises ValueError: If required data is missing from the
@@ -308,8 +386,7 @@ class Cluster:
         - ``field_dens``: xxx
         - ``king``: xxx
 
-        :param algo: Algorithm used to estimate the radius, one of
-            (``field_dens, king``); defaults to ``field_dens``
+        :param algo: Algorithm used to estimate the radius, one of (``field_dens, king``)
         :type algo: str
 
         :raises ValueError: If required attributes are  missing from the
@@ -363,12 +440,10 @@ class Cluster:
           stars within that region. Requires the ``(ra, dec)`` center and the radius of
           the cluster to be defined.
 
-        :param algo: Algorithm used to estimate center values, one of
-            (``ripley, density``); defaults to ``ripley``
+        :param algo: Algorithm used to estimate center values, one of (``ripley, density``)
         :type algo: str
         :param eq_to_gal: Convert ``(ra, dec)`` to ``(lon, lat)``. Useful for clusters
-            with large ``dec`` values to reduce the frame's distortion,
-            defaults to ``False``
+            with large ``dec`` values to reduce the frame's distortion
         :type eq_to_gal: bool
 
         :raises ValueError: If ``algo`` argument is not recognized
