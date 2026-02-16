@@ -84,6 +84,14 @@ class Likelihood:
         self.obs_mag_median = np.nanmedian(self.mag).astype(float)
         self.obs_col_median = np.nanmedian(colors[0]).astype(float)
 
+        # Pre-compute 'tremmel' parameters
+        n_colors = len(colors)
+        self.bin_sizes = [self.Nbins[0] * self.Nbins[i + 1] for i in range(n_colors)]
+        self.offsets = np.array(
+            [0] + list(np.cumsum(self.bin_sizes[:-1])), dtype=np.int32
+        )
+        self.total_bins = sum(self.bin_sizes)
+
         self.max_lkl = None
         if self.lkl_name == "plr":
             # Evaluate cluster against itself to obtain the maximum likelihood.
@@ -121,6 +129,9 @@ class Likelihood:
                 self.cl_histo_f_z,
                 self.obs_mag_median,
                 self.obs_col_median,
+                self.offsets,
+                self.bin_sizes,
+                self.total_bins,
                 self.max_lkl,
                 synth_clust,
             )
