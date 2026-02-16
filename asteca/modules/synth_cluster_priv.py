@@ -543,7 +543,7 @@ def properModel(
     # duplicated values with those in `fit_params`
     fit_params = def_params | fit_params
 
-    ml, mh = 0, 0
+    ml = mh = 0
     if len(met_age_dict["met"]) > 1:
         mh = min(
             len(met_age_dict["met"]) - 1,
@@ -551,7 +551,7 @@ def properModel(
         )
         ml = mh - 1
 
-    al, ah = 0, 0
+    al = ah = 0
     if len(met_age_dict["loga"]) > 1:
         ah = min(
             len(met_age_dict["loga"]) - 1,
@@ -636,11 +636,27 @@ def zaWAverage(
     z2 = met_age_dict["met"][mh]
     a1 = met_age_dict["loga"][al]
     a2 = met_age_dict["loga"][ah]
-    pts = np.array([(z1, a1), (z1, a2), (z2, a1), (z2, a2)])
-    a_min_b = np.array([(z_model, a_model)]) - pts
 
-    # Don't take the square root, it's not necessary
-    dist = np.einsum("ij,ij->i", a_min_b, a_min_b)
+    # OLD Feb 2026
+    # pts = np.array([(z1, a1), (z1, a2), (z2, a1), (z2, a2)])
+    # a_min_b = np.array([(z_model, a_model)]) - pts
+    # # Don't take the square root, it's not necessary
+    # dist = np.einsum("ij,ij->i", a_min_b, a_min_b)
+
+    # Use direct arithmetic instead of array operations
+    # Calculate squared distances (skip sqrt since we only need relative values)
+    dz1 = z_model - z1
+    dz2 = z_model - z2
+    da1 = a_model - a1
+    da2 = a_model - a2
+    dist = np.array(
+        [
+            dz1 * dz1 + da1 * da1,  # (z1, a1)
+            dz1 * dz1 + da2 * da2,  # (z1, a2)
+            dz2 * dz2 + da1 * da1,  # (z2, a1)
+            dz2 * dz2 + da2 * da2,  # (z2, a2)
+        ]
+    )
 
     # Index to the minimum dist value
     idx_dist_min = np.argmin(dist)
@@ -652,16 +668,26 @@ def zaWAverage(
     if dist[idx_dist_min] == 0.0:
         return np.array(theor_tracks[m0][a0])
 
-    # Weighted average by the (inverse) distance to the four (z, a) grid
-    # points. This way is faster than using 'np.average()' with weights.
-    inv_d = 1.0 / dist  # Inverse of the distance.
-    weights = inv_d / sum(inv_d)  # Weights
-    isochrone = (
-        theor_tracks[ml][al] * weights[0]
-        + theor_tracks[ml][ah] * weights[1]
-        + theor_tracks[mh][al] * weights[2]
-        + theor_tracks[mh][ah] * weights[3]
+    # Weighted average by the (inverse) distance to the four (z, a) grid points
+    inv_d = 1.0 / dist
+    weights = inv_d / inv_d.sum()
+    # Stack the four isochrones
+    isoch_stack = np.array(
+        [
+            theor_tracks[ml][al],
+            theor_tracks[ml][ah],
+            theor_tracks[mh][al],
+            theor_tracks[mh][ah],
+        ]
     )
+    # Weighted average: einsum is faster than manual weight * array operations
+    # isochrone = (
+    #     theor_tracks[ml][al] * weights[0]
+    #     + theor_tracks[ml][ah] * weights[1]
+    #     + theor_tracks[mh][al] * weights[2]
+    #     + theor_tracks[mh][ah] * weights[3]
+    # )
+    isochrone = np.einsum("i,i...->...", weights, isoch_stack)
 
     # DO NOT average the masses or their distribution will be lost. We use the
     # mass values from the closest isochrone.
@@ -684,7 +710,7 @@ def zaWAverage(
     #     weights,
     # )
 
-    return isochrone
+    return np.ascontiguousarray(isochrone)
 
 
 def temp_plot(
@@ -867,6 +893,7 @@ def move_isochrone(
     :returns: Modified isochrone array.
     :rtype: np.ndarray
     """
+    isochrone = np.ascontiguousarray(isochrone)
     # Move magnitude
     isochrone[0] += dm
     # Move binary magnitude if required
@@ -952,25 +979,27 @@ def extinction(
     :returns: Modified isochrone array.
     :rtype: np.ndarray
     """
+    isochrone = np.ascontiguousarray(isochrone)
 
     Av_dr = Av
     if dr > 0.0:
         Ns = isochrone.shape[-1]
 
-        dr_arr = 0
         if DR_distribution == "uniform":
             # Av_dr = rand_unif[:Ns] * dr
-            dr_arr = (2 * rand_unif[:Ns] - 1) * dr
+            dr_arr = (2.0 * rand_unif[:Ns] - 1.0) * dr
         elif DR_distribution == "normal":
             # Av_dr = abs(rand_norm[:Ns]) * dr
             dr_arr = rand_norm[:Ns] * dr
+        else:
+            dr_arr = 0
 
         # In place in case I ever want to implement the percentage of stars affected.
         # Without this, all stars are affected by the DR.
         # dr_arr[rand_unif[:Ns] > DR_percentage] = 0.0
 
         # Clip at 0
-        Av_dr = np.clip(Av + dr_arr, a_min=0, a_max=np.inf)
+        Av_dr = np.clip(Av + dr_arr, a_min=0, a_max=None)
 
     if ext_law == "CCMO":
         # Magnitude
@@ -1067,26 +1096,41 @@ def dustapprox(
         ),
     }
 
-    X_2 = X_**2
-    X_3 = X_**3
-    Av_2 = Av_dr**2
-    Av_3 = Av_dr**3
+    X_2 = X_ * X_
+    X_3 = X_2 * X_
+    Av_2 = Av_dr * Av_dr
+    Av_3 = Av_2 * Av_dr
 
     def ext_coeff(k):
         """
         https://www.cosmos.esa.int/web/gaia/edr3-extinction-law
         """
         # X   X2  X3  A   A2  A3  XA  AX2 XA2
-        ay = coeffs[k][0]
-        for i, Xk in enumerate([X_, X_2, X_3]):
-            ay += coeffs[k][1 + i] * Xk
-        for i, Ak in enumerate([Av_dr, Av_2, Av_3]):
-            ay += coeffs[k][4 + i] * Ak
 
-        ay += (
-            coeffs[k][7] * X_ * Av_dr
-            + coeffs[k][9] * X_ * Av_2  # This index not a mistake
-            + coeffs[k][8] * X_2 * Av_dr
+        # OLD Feb 2026
+        # ay = coeffs[k][0]
+        # for i, Xk in enumerate([X_, X_2, X_3]):
+        #     ay += coeffs[k][1 + i] * Xk
+        # for i, Ak in enumerate([Av_dr, Av_2, Av_3]):
+        #     ay += coeffs[k][4 + i] * Ak
+        # ay += (
+        #     coeffs[k][7] * X_ * Av_dr
+        #     + coeffs[k][9] * X_ * Av_2  # This index not a mistake
+        #     + coeffs[k][8] * X_2 * Av_dr
+        # )
+
+        c = coeffs[k]
+        ay = (
+            c[0]
+            + c[1] * X_
+            + c[2] * X_2
+            + c[3] * X_3
+            + c[4] * Av_dr
+            + c[5] * Av_2
+            + c[6] * Av_3
+            + c[7] * X_ * Av_dr
+            + c[8] * X_2 * Av_dr
+            + c[9] * X_ * Av_2  # This index not a mistake
         )
         return ay
 
@@ -1109,8 +1153,7 @@ def cut_max_mag(isoch_moved: np.ndarray, max_mag_syn: float) -> np.ndarray:
     :rtype: np.ndarray
     """
     # Discard stars in isochrone beyond max_mag_syn limit.
-    msk = isoch_moved[0] < max_mag_syn
-    return isoch_moved[:, msk]
+    return isoch_moved[:, isoch_moved[0] < max_mag_syn]
 
 
 def mass_interp(
@@ -1140,23 +1183,29 @@ def mass_interp(
     :returns: Interpolated isochrone array.
     :rtype: np.ndarray
     """
+    isoch_cut = np.ascontiguousarray(isoch_cut)
     # Assumes `mass_ini=isoch_cut[m_ini_idx]` is sorted min to max <-- IMPORTANT
-    mass_ini = isoch_cut[m_ini_idx]
+    mass_ini = np.ascontiguousarray(isoch_cut[m_ini_idx])
 
     # Filter masses in the IMF sampling that are outside of the mass
     # range given by 'isoch_cut' (st_dist_mass[0]: sampled masses from IMF)
-    # msk_min = (st_dist_mass[0] >= mass_ini.min())
-    # msk_max = (st_dist_mass[0] <= mass_ini.max())
-    # (~msk_min).sum(): stars lost below the minimum mass (photometric)
-    # (~msk_max).sum(): stars lost above the maximum mass (evolutionary)
-    msk_m = (st_dist_mass >= mass_ini.min()) & (st_dist_mass <= mass_ini.max())
 
+    # # msk_min = (st_dist_mass[0] >= mass_ini.min())
+    # # msk_max = (st_dist_mass[0] <= mass_ini.max())
+    # # (~msk_min).sum(): stars lost below the minimum mass (photometric)
+    # # (~msk_max).sum(): stars lost above the maximum mass (evolutionary)
+    # msk_m = (st_dist_mass >= mass_ini.min()) & (st_dist_mass <= mass_ini.max())
+
+    # Use direct indexing instead of min/max calls
+    # Combined boolean mask in single operation
+    msk_m = (st_dist_mass >= mass_ini[0]) & (st_dist_mass <= mass_ini[-1])
     # Extract up to 'N_synth_stars' masses sampled from an IMF, within the mass range
     mass_dist = st_dist_mass[msk_m][:N_synth_stars]
 
-    if not mass_dist.any():
+    if mass_dist.size == 0:
         return np.array([])
 
+    mass_dist = np.ascontiguousarray(mass_dist, dtype=mass_ini.dtype)
     # Interpolate the sampled stars (masses) into the isochrone
     isoch_mass = interp_mass_isoch(
         isoch_cut, mass_ini, mass_dist, m_ini_idx, binar_flag
@@ -1205,14 +1254,16 @@ def interp_mass_isoch(
     lo = x_new_indices - 1
     x_lo = mass_ini[lo]
     x_hi = mass_ini[x_new_indices]
-    y_lo = isoch_cut[:, lo]
-    y_hi = isoch_cut[:, x_new_indices]
-    slope = (y_hi - y_lo) / (x_hi - x_lo)
-    #
+    # y_lo = isoch_cut[:, lo]
+    # y_hi = isoch_cut[:, x_new_indices]
+    y_lo = np.take(isoch_cut, lo, axis=1)
+    y_hi = np.take(isoch_cut, x_new_indices, axis=1)
+
+    # Compute slope and result in fewer steps
     x_diff = mass_dist - x_lo
-    y_diff = slope * x_diff
     # Calculate the actual value for each entry in x_new.
-    isoch_mass = y_diff + y_lo
+    # slope = (y_hi - y_lo) / (x_hi - x_lo)
+    isoch_mass = y_lo + (y_hi - y_lo) * (x_diff / (x_hi - x_lo))
     # *****************************************************************************
 
     # *****************************************************************************
@@ -1305,9 +1356,7 @@ def binarity(
     # Offner et al. (2022); Fig 1 (left), Table 1
     # b_p = np.clip(alpha + beta * np.log(mass), a_min=0, a_max=1)
     # b_p = np.clip(alpha + beta * np.arctan(mass), a_min=0, a_max=1)
-    b_p = np.clip(
-        alpha + beta * (1 / (1 + 1.4 / isoch_mass[m_ini_idx])), a_min=0, a_max=1
-    )
+    b_p = np.clip(alpha + beta / (1.0 + 1.4 / isoch_mass[m_ini_idx]), 0.0, 1.0)
 
     # Stars (masses) with the largest binary probabilities are selected
     # proportional to their probability
@@ -1319,11 +1368,13 @@ def binarity(
     # color(s).
     if bin_indxs.any():
         for i in range(m_ini_idx):
-            isoch_mass[i][bin_indxs] = isoch_mass[m_ini_idx + 2 + i][bin_indxs]
+            # isoch_mass[i][bin_indxs] = isoch_mass[m_ini_idx + 2 + i][bin_indxs]
+            # Use np.copyto with where parameter (faster than boolean indexing)
+            np.copyto(isoch_mass[i], isoch_mass[m_ini_idx + 2 + i], where=bin_indxs)
 
     # Update the binary systems' masses so that the secondary masses for
     # SINGLE systems are identified with a 'nan' value.
-    isoch_mass[m_ini_idx + 1][~bin_indxs] = np.nan
+    isoch_mass[m_ini_idx + 1, ~bin_indxs] = np.nan
 
     # Return [mag, c1, (c2), mass, mass_b]
     return isoch_mass[: m_ini_idx + 2]
@@ -1340,11 +1391,13 @@ def add_errors(isoch_binar: np.ndarray, err_dist: list[np.ndarray]) -> np.ndarra
     :returns: Isochrone array with added errors.
     :rtype: np.ndarray
     """
+    if not err_dist:
+        return isoch_binar
 
-    N = len(isoch_binar[0])
+    N = isoch_binar.shape[1]
     mag_sort = np.argsort(-isoch_binar[0])
     for i, sigma in enumerate(err_dist):
-        isoch_binar[i][mag_sort] += sigma[:N]
+        isoch_binar[i, mag_sort] += sigma[:N]
 
     return isoch_binar
 

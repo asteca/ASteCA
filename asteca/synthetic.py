@@ -380,7 +380,7 @@ class Synthetic:
 
         # Remove isochrone stars beyond the maximum magnitude
         isoch_cut = scp.cut_max_mag(isoch_extin, max_mag_syn)
-        if not isoch_cut.any():
+        if isoch_cut.size == 0:
             return np.array([])
 
         # This is an internal trick to return the array at this point. It is used
@@ -396,7 +396,7 @@ class Synthetic:
             N_synth_stars,
             binar_flag,
         )
-        if not isoch_mass.any():
+        if isoch_mass.size == 0:
             return np.array([])
 
         # import matplotlib.pyplot as plt
