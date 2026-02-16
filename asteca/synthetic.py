@@ -28,26 +28,23 @@ class Synthetic:
         color defined in the :py:class:`Isochrones <asteca.isochrones.Isochrones>` and
         :py:class:`Cluster <asteca.cluster.Cluster>` objects are assumed to be Gaia's
         (E)DR3 **G** and **(BP-RP)** respectively. The second color (if defined) will
-        always be affected by the ``CCMO`` model, defaults to ``CCMO``
+        always be affected by the ``CCMO`` model
     :type ext_law: str
     :param DR_distribution: Distribution function for the differential reddening,
-        one of ``uniform, normal``; defaults to ``uniform``
+        one of ``uniform, normal``
     :type DR_distribution: str
     :param IMF_name: Name of the initial mass function used to populate the isochrones,
-        one of ``salpeter_1955, kroupa_2001, chabrier_2014``;
-        defaults to ``chabrier_2014``
+        one of ``salpeter_1955, kroupa_2001, chabrier_2014``
     :type IMF_name: str
     :param max_mass: Maximum total initial mass. Should be large enough to allow
-        generating as many synthetic stars as observed stars, defaults to ``100_000``
+        generating as many synthetic stars as observed stars
     :type max_mass: int
     :param gamma: Distribution function for the mass ratio of the binary systems,
-        float or one of ``D&K, fisher_stepped, fisher_peaked, raghavan``;
-        defaults to ``D&K``
+        float or one of ``D&K, fisher_stepped, fisher_peaked, raghavan``
     :type gamma: float | str
-    :param seed: Random seed. If ``None`` a random integer will be generated and used,
-        defaults to ``None``
+    :param seed: Random seed. If ``None`` a random integer will be generated and used
     :type seed: int | None
-    :param verbose: Verbose level. A value of ``0`` hides all output, defaults to ``1``
+    :param verbose: Verbose level. A value of ``0`` hides all output
     :type verbose: int
 
     :raises ValueError: If any of the attributes is not recognized as a valid option
@@ -303,7 +300,7 @@ class Synthetic:
             The dictionary must include values for all the parameters, e.g.:
             ``params = {met: 0.0152, loga: 8.1, alpha: 0.1, beta: 1, Av: 0.2, DR: 0., Rv: 3.1, dm: 9.7}``
         :type params: dict
-        :param N_stars: Number of synthetic stars to generate; defaults to ``100``
+        :param N_stars: Number of synthetic stars to generate
         :type N_stars: int
 
         :return: Returns a ``np.array`` containing a synthetic cluster
@@ -436,7 +433,7 @@ class Synthetic:
         :param model_std: Dictionary with the standard deviations for the fundamental
             parameters in the ``model`` argument
         :type model_std: dict[str, float]
-        :param N_models: Number of sampled models, defaults to ``200``
+        :param N_models: Number of sampled models
         :type N_models: int
 
         :raises ValueError: If any of the (met, age) parameters are out of range or
@@ -563,8 +560,7 @@ class Synthetic:
 
         :param binar_prob: Per-star binary system probabilities
         :type binar_prob: np.ndarray
-        :param Nsamples: Number of samples generated to produce the final values;
-            defaults to ``10_000``.
+        :param Nsamples: Number of samples generated to produce the final values
         :type Nsamples: int
 
         :return: Median and STDDEV values for the total binary fraction
@@ -622,11 +618,11 @@ class Synthetic:
         - ``M_init = M_actual + M_evol + M_dyn``
 
         :param radec_c: Center coordinates in ``(RA, DEC)``. If ``None``, the ``rho_amb``
-            parameter must be given; defaults to ``None``.
+            parameter must be given
         :type radec_c: tuple | None
         :param rho_amb: Ambient density [:math:`M_{\odot}\,pc^{-3}`]. If ``None``, it
             is estimated using the cluster's position (``radec_c``) and a model for the
-            Galaxy's potential; defaults to ``None``.
+            Galaxy's potential
         :type rho_amb: float | None
         :param M_B: Bulge mass; defaults to ``2.5e10`` [:math:`M_{\odot}`] (from
             `Haghi et al. 2015 <https://doi.org/10.1093/mnras/stv827>`__, Table 1)
@@ -771,7 +767,7 @@ class Synthetic:
             :py:class:`Synthetic` object was calibrated (:py:meth:`calibrate` method).
         :type fit_params: dict
         :param color_idx: Index of the color to plot. If ``0`` (default), plot the
-            first color. If ``1`` plot the second color. Defaults to ``0``
+            first color. If ``1`` plot the second color
         :type color_idx: int
 
         :raises ValueError: If either parameter (met, age) is outside of allowed range

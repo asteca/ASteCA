@@ -16,7 +16,7 @@ class Likelihood:
     :param lkl_name: Currently only the Poisson likelihood ratio (``plr``) defined in
         `Tremmel et al. (2013)
         <https://ui.adsabs.harvard.edu/abs/2013ApJ...766...19T/abstract>`__
-        is accepted, defaults to ``plr``
+        is accepted
     :type lkl_name: str
     :param bin_method: Bin method used to split the color-magnitude diagram into cells
         (`Hess diagram <https://en.wikipedia.org/wiki/Hess_diagram>`__); one of:
@@ -24,7 +24,7 @@ class Likelihood:
         `Choosing Histogram Bins <https://docs.astropy.org/en/stable/visualization/histogram.html>`__
         in `astropy <https://www.astropy.org/>`__ documentation for details on the
         ``knuth, blocks, scott, freedman`` methods.  The method ``fixed``
-        uses (15, 10) bins in magnitude and color(s) respectively. Defaults to ``knuth``
+        uses (15, 10) bins in magnitude and color(s) respectively
     :type bin_method: Literal["blocks", "knuth", "scott", "freedman", "fixed"]
 
     :raises ValueError: If any of the attributes is not recognized as a valid option
