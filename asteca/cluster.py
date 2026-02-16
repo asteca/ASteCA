@@ -105,9 +105,9 @@ class Cluster:
         if self.cluster_name is not None and self.UCC_file_path is not None:
             self._vp(f"\nInstantiating cluster '{self.cluster_name}'")
             self._vp(f"Loading data from '{self.UCC_file_path}'")
-            self._load_UCC_data(self.cluster_name, self.UCC_file_path)
+            self._load_UCC_data()
         else:
-            self._vp("\nInstantiating cluster")
+            self._vp("\nInstantiating cluster from data")
             self._load_column_data()
 
         self._vp(f"N_stars        : {self.N_stars}", 1)
@@ -120,13 +120,20 @@ class Cluster:
         if self.verbose > level:
             print(mssg)
 
-    def _load_UCC_data(self, cluster_name: str, UCC_file_path: str):
+    def _load_UCC_data(self):
+
+        if not isinstance(self.cluster_name, str):
+            raise TypeError("'cluster_name' must be a string")
+
+        if not isinstance(self.UCC_file_path, str):
+            raise TypeError("'UCC_file_path' must be a string")
+
         import pandas as pd
 
-        df = pd.read_parquet(UCC_file_path)
+        df = pd.read_parquet(self.UCC_file_path)
 
         cluster_fname = (
-            cluster_name.lower()
+            self.cluster_name.lower()
             .replace(" ", "")
             .replace("_", "")
             .replace("-", "")
