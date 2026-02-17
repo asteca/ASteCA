@@ -37,7 +37,7 @@ of the :py:class:`asteca.Isochrones` class as follows:
     isochs = asteca.Isochrones(
         model="PARSEC",
         isochs_path="isochrones/",
-        magnitude="Gmag",
+        mag="Gmag",
         color=("G_BPmag", "G_RPmag"),
         magnitude_effl=6390.7,
         color_effl=(5182.58, 7825.08),
@@ -97,7 +97,7 @@ you would load your isochrones as:
     isochs = asteca.Isochrones(
         model="PARSEC",
         isochs_path="isochrones/",
-        magnitude="Gmag",
+        mag="Gmag",
         color=("G_BPmag", "G_RPmag"),
         magnitude_effl=6390.7,
         color_effl=(5182.58, 7825.08),
