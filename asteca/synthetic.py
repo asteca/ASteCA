@@ -22,7 +22,7 @@ class Synthetic:
         the loaded files for the theoretical isochrones
     :type isochs: Isochrones
     :param def_params: Default values for all the required fundamental parameters
-    :type def_params: dict
+    :type def_params: dict[str, float]
     :param ext_law: Extinction law, one of ``CCMO, GAIADR3``.
         If ``GAIADR3`` is selected, the magnitude and first
         color defined in the :py:class:`Isochrones <asteca.isochrones.Isochrones>` and
@@ -53,7 +53,7 @@ class Synthetic:
     def __init__(
         self,
         isochs: Isochrones,
-        def_params: dict = {
+        def_params: dict[str, float] = {
             "met": 0.0152,
             "loga": 8.0,
             "alpha": 0.09,
