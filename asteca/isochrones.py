@@ -16,9 +16,9 @@ class Isochrones:
     :param isochs_path: Path to the file or folder that contains the files for the
         theoretical isochrones
     :type isochs_path: str
-    :param magnitude: Magnitude's filter name as defined in the theoretical isochrones.
+    :param mag: Magnitude's filter name as defined in the theoretical isochrones.
         Example for Gaia's ``G`` magnitude: ``"Gmag"``
-    :type magnitude: str
+    :type mag: str
     :param color: Tuple containing the filter names that generate the first color
         defined. The correct format is: ``("filter1", "filter2")``, where ``filter1``
         and ``filter2`` are the names of the filters that are combined to generate
@@ -71,7 +71,7 @@ class Isochrones:
         self,
         model: str,
         isochs_path: str,
-        magnitude: str,
+        mag: str,
         color: tuple,
         color2: tuple | None = None,
         magnitude_effl: float | None = None,
@@ -85,7 +85,7 @@ class Isochrones:
     ) -> None:
         self.model = model
         self.isochs_path = isochs_path
-        self.magnitude = magnitude
+        self.mag = mag
         self.color = color
         self.color2 = color2
         self.magnitude_effl = magnitude_effl
@@ -123,7 +123,7 @@ class Isochrones:
             isochrones_priv.load(
                 self.model,
                 self.isochs_path,
-                self.magnitude,
+                self.mag,
                 self.color,
                 self.color2,
                 self.column_names,
@@ -152,7 +152,7 @@ class Isochrones:
         self._vp(f"N_isochs       : {N_isoch}", 1)
         self._vp(f"{met_n}  range     : [{self.zmin}, {self.zmax}]", 1)
         self._vp(f"loga range     : [{self.amin}, {self.amax}]", 1)
-        self._vp(f"Magnitude      : {self.magnitude}", 1)
+        self._vp(f"Magnitude      : {self.mag}", 1)
         self._vp(f"Color          : {self.color[0]}-{self.color[1]}", 1)
         if self.color2 is not None:
             self._vp(f"Color2         : {self.color2[0]}-{self.color2[1]}", 1)

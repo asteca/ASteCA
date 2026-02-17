@@ -136,8 +136,8 @@ class Membership:
         # Generate input data array
         X = [xv, yv]
         e_X = []
-        if self.my_field.magnitude is not None:
-            X.append(self.my_field.magnitude)
+        if self.my_field.mag is not None:
+            X.append(self.my_field.mag)
             e_X.append(self.my_field.e_mag)
         if self.my_field.color is not None:
             X.append(self.my_field.color)

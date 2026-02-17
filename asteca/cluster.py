@@ -20,8 +20,10 @@ class Cluster:
     :type ra: np.ndarray | None
     :param dec: Array that contains the declination (DEC)
     :type dec: np.ndarray | None
-    :param magnitude: Array that contains the magnitude
-    :type magnitude: np.ndarray | None
+    :param mag: Array that contains the magnitude
+    :type mag: np.ndarray | None
+    :param max_mag: Maximum magnitude to be considered for the cluster
+    :type max_mag: float | None
     :param e_mag: Array that contains the magnitude's uncertainty
     :type e_mag: np.ndarray | None
     :param color: Array that contains the color
@@ -61,7 +63,8 @@ class Cluster:
         UCC_file_path: str | None = None,
         ra: np.ndarray | None = None,
         dec: np.ndarray | None = None,
-        magnitude: np.ndarray | None = None,
+        mag: np.ndarray | None = None,
+        max_mag: float | None = None,
         e_mag: np.ndarray | None = None,
         color: np.ndarray | None = None,
         e_color: np.ndarray | None = None,
@@ -81,7 +84,8 @@ class Cluster:
         self.UCC_file_path = UCC_file_path
         self.ra = ra
         self.dec = dec
-        self.magnitude = magnitude
+        self.mag = mag
+        self.max_mag = max_mag
         self.e_mag = e_mag
         self.color = color
         self.e_color = e_color
@@ -152,6 +156,13 @@ class Cluster:
                 f"No data found for cluster name '{self.cluster_name}' in UCC file"
             )
 
+        if self.max_mag is not None:
+            cluster_df = cluster_df[cluster_df["Gmag"] <= self.max_mag]
+            if len(cluster_df) == 0:
+                raise ValueError(
+                    f"No stars with magnitude <= {self.max_mag} found for cluster '{self.cluster_name}'"
+                )
+
         self.ra = np.asarray(cluster_df["RA_ICRS"], dtype=float)
         self.dec = np.asarray(cluster_df["DE_ICRS"], dtype=float)
         self.mag = np.asarray(cluster_df["Gmag"], dtype=float)
@@ -181,97 +192,110 @@ class Cluster:
         self._vp(f"Columns read   : {', '.join(cols_read)}", 1)
         self.N_stars = len(cluster_df)
 
+    def _process_array(
+        self, name, err_name=None, positive_err=False, cols_read=None, N_stars_lst=None
+    ):
+        """
+        Convert attribute to float array and validate its uncertainty (if any).
+        """
+        value = getattr(self, name)
+        if value is None:
+            return
+
+        arr = np.asarray(value, dtype=float)
+        setattr(self, name, arr)
+
+        if cols_read is not None:
+            cols_read.append(name)
+        if N_stars_lst is not None:
+            N_stars_lst.append(len(arr))
+
+        if err_name is not None:
+            err = getattr(self, err_name)
+            if err is None:
+                raise ValueError(f"{name} uncertainty is required")
+
+            err_arr = np.asarray(err, dtype=float)
+            if positive_err and (err_arr <= 0).any():
+                raise ValueError(f"{name} uncertainties must be > 0")
+
+            setattr(self, err_name, err_arr)
+
+            if cols_read is not None:
+                cols_read.append(err_name)
+            if N_stars_lst is not None:
+                N_stars_lst.append(len(err_arr))
+
     def _load_column_data(self):
         cols_read = []
         N_stars_lst = []
 
-        if self.ra is not None:
-            self.ra = np.asarray(self.ra, dtype=float)
-            cols_read.append("RA")
-            N_stars_lst.append(len(self.ra))
+        # Single arrays
+        self._process_array("ra", cols_read=cols_read, N_stars_lst=N_stars_lst)
+        self._process_array("dec", cols_read=cols_read, N_stars_lst=N_stars_lst)
 
-        if self.dec is not None:
-            self.dec = np.asarray(self.dec, dtype=float)
-            cols_read.append("DEC")
-            N_stars_lst.append(len(self.dec))
+        # Value + uncertainty pairs
+        pairs = [
+            ("mag", "e_mag"),
+            ("color", "e_color"),
+            ("color2", "e_color2"),
+            ("plx", "e_plx"),
+            ("pmra", "e_pmra"),
+            ("pmde", "e_pmde"),
+        ]
 
-        if self.magnitude is not None:
-            if self.e_mag is None:
-                raise ValueError("Magnitude uncertainty is required")
-            self.mag = np.asarray(self.magnitude, dtype=float)
-            self.e_mag = np.asarray(self.e_mag, dtype=float)
-            if (self.e_mag <= 0).any():
-                raise ValueError("Magnitude uncertainties must be > 0")
-            cols_read.append("Magnitude")
-            cols_read.append("e_mag")
-            N_stars_lst.append(len(self.mag))
-            N_stars_lst.append(len(self.e_mag))
+        for name, err in pairs:
+            self._process_array(
+                name,
+                err_name=err,
+                positive_err=True,
+                cols_read=cols_read,
+                N_stars_lst=N_stars_lst,
+            )
 
-        if self.color is not None:
-            if self.e_color is None:
-                raise ValueError("Color uncertainty is required")
-            self.color = np.asarray(self.color, dtype=float)
-            self.e_color = np.asarray(self.e_color, dtype=float)
-            if (self.e_color <= 0).any():
-                raise ValueError("Color uncertainties must be > 0")
-            cols_read.append("Color")
-            cols_read.append("e_color")
-            N_stars_lst.append(len(self.color))
-            N_stars_lst.append(len(self.e_color))
-
+        # Logical dependency
         if self.color is None and self.color2 is not None:
             raise ValueError("Argument 'color' must be defined if 'color2' is defined")
 
-        if self.color2 is not None:
-            if self.e_color2 is None:
-                raise ValueError("Color2 uncertainty is required")
-            self.color2 = np.asarray(self.color2, dtype=float)
-            self.e_color2 = np.asarray(self.e_color2, dtype=float)
-            if (self.e_color2 <= 0).any():
-                raise ValueError("Color2 uncertainties must be > 0")
-            cols_read.append("Color2")
-            cols_read.append("e_color2")
-            N_stars_lst.append(len(self.color2))
-            N_stars_lst.append(len(self.e_color2))
-
-        if self.plx is not None:
-            if self.e_plx is None:
-                raise ValueError("Parallax uncertainty is required")
-            self.plx = np.asarray(self.plx, dtype=float)
-            self.e_plx = np.asarray(self.e_plx, dtype=float)
-            if (self.e_plx <= 0).any():
-                raise ValueError("Parallax uncertainties must be > 0")
-            cols_read.append("Plx")
-            N_stars_lst.append(len(self.plx))
-            N_stars_lst.append(len(self.e_plx))
-
-        if self.pmra is not None:
-            if self.e_pmra is None:
-                raise ValueError("pmRA uncertainty is required")
-            self.pmra = np.asarray(self.pmra, dtype=float)
-            self.e_pmra = np.asarray(self.e_pmra, dtype=float)
-            if (self.e_pmra <= 0).any():
-                raise ValueError("pmRA uncertainties must be > 0")
-            cols_read.append("pmRA")
-            N_stars_lst.append(len(self.pmra))
-            N_stars_lst.append(len(self.e_pmra))
-
-        if self.pmde is not None:
-            if self.e_pmde is None:
-                raise ValueError("pmDE uncertainty is required")
-            self.pmde = np.asarray(self.pmde, dtype=float)
-            self.e_pmde = np.asarray(self.e_pmde, dtype=float)
-            if (self.e_pmde <= 0).any():
-                raise ValueError("pmDE uncertainties must be > 0")
-            cols_read.append("pmDE")
-            N_stars_lst.append(len(self.pmde))
-            N_stars_lst.append(len(self.e_pmde))
-
-        if len(cols_read) == 0:
+        if not cols_read:
             raise ValueError("No column names defined for cluster")
+
         self._vp(f"Columns read   : {', '.join(cols_read)}", 1)
-        if not np.all(N_stars_lst):
+
+        if len(set(N_stars_lst)) > 1:
             raise ValueError("Data arrays have different lengths")
+
+        # Apply magnitude cut generically
+        if self.max_mag is not None:
+            if self.mag is None:
+                raise ValueError("Magnitude data is required to apply 'max_mag' filter")
+
+            mask = self.mag <= self.max_mag
+            if not mask.any():
+                raise ValueError(
+                    f"No stars with magnitude <= {self.max_mag} found in provided data"
+                )
+
+            for name in [
+                "ra",
+                "dec",
+                "mag",
+                "e_mag",
+                "color",
+                "e_color",
+                "color2",
+                "e_color2",
+                "plx",
+                "e_plx",
+                "pmra",
+                "e_pmra",
+                "pmde",
+                "e_pmde",
+            ]:
+                arr = getattr(self, name)
+                if arr is not None:
+                    setattr(self, name, arr[mask])
+
         self.N_stars = N_stars_lst[0]
         if self.N_stars == 0:
             raise ValueError("Arrays are empty")
