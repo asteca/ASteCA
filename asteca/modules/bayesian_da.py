@@ -35,12 +35,20 @@ def bayesian_mp(
     :param rng: Random number generator.
     :type rng: np.random.Generator
 
+    :raises ValueError: If no field region stars are found.
+
     :return: Message and array with the membership probabilities.
     :rtype: tuple[str, np.ndarray]
     """
     cl_region, e_cl_region, fl_region_all, e_fl_region_all, cl_reg_idxs = get_regions(
         frame_arr, e_frame_arr, center, radius
     )
+    if fl_region_all.size == 0:
+        raise ValueError(
+            "No field region stars found. Consider reducing the radius or increasing"
+            " the frame size."
+        )
+
     N_cl_region = cl_region.shape[1]
     n_field = max(5, N_cl_region - N_cluster)
 
