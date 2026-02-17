@@ -232,14 +232,17 @@ class Synthetic:
         """
         from .modules import synth_cluster_priv as scp
 
-        for attr in ("mag", "color"):  # , "ra", "dec"):
-            if getattr(cluster, attr) is None:
-                raise ValueError(
-                    f"Attribute '{attr}' is required to calibrate 'Cluster' object."
-                )
+        if cluster.mag is None:
+            raise ValueError(
+                "Attribute 'mag' is required to calibrate 'Cluster' object."
+            )
         if cluster.e_mag is None:
             raise ValueError(
                 "Attribute 'e_mag' is required to calibrate 'Cluster' object."
+            )
+        if cluster.color is None:
+            raise ValueError(
+                "Attribute 'color' is required to calibrate 'Cluster' object."
             )
         if cluster.e_color is None:
             raise ValueError(
@@ -257,9 +260,9 @@ class Synthetic:
                 "Two colors were defined in 'cluster' but a single color\n"
                 + "was defined in 'synthetic'."
             )
-        if len(cluster.mag) > cluster.N_clust_max:
+        if cluster.mag.size > cluster.N_clust_max:
             raise ValueError(
-                f"The number of stars in this `Cluster` object ({len(cluster.mag)})\n"
+                f"The number of stars in this `Cluster` object ({cluster.mag.size})\n"
                 + f"is larger than the 'N_clust_max={cluster.N_clust_max}' parameter.\n"
                 + "Either define a `Cluster` object with fewer members or increase "
                 + "the 'N_clust_max' value."
