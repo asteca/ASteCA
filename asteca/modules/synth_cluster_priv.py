@@ -387,7 +387,7 @@ def qDistribution(
                 """
                 pk /= pk.sum()
                 # pyright error: https://github.com/scipy/scipy/issues/22327
-                fq = stats.rv_discrete(a=0.0, b=1.0, values=(xk, pk))  # pyright: ignore
+                fq = stats.rv_discrete(a=0.0, b=1.0, values=(xk, pk))
                 return fq
 
             # Fisher's distribution

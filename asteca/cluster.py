@@ -13,8 +13,7 @@ class Cluster:
         loaded from the UCC members file. If provided, the ``UCC_file_path`` argument
         must also be provided
     :type cluster_name: str | None
-    :param UCC_file_path: Path to the UCC members file containing the cluster data. If
-        ``cluster_name`` is provided this argument must also be provided
+    :param UCC_file_path: Path to the UCC members .parquet file containing the cluster data
     :type UCC_file_path: str | None
     :param ra: Array that contains the right ascension (RA)
     :type ra: np.ndarray | None

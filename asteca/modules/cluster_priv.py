@@ -19,7 +19,7 @@ def radec2lonlat(ra: float | np.ndarray, dec: float | np.ndarray) -> np.ndarray:
     :return: Galactic longitude and latitude.
     :rtype: np.ndarray
     """
-    gc = SkyCoord(ra=ra * u.degree, dec=dec * u.degree)  # pyright: ignore
+    gc = SkyCoord(ra=ra * u.degree, dec=dec * u.degree)
     lb = gc.transform_to("galactic")
 
     lon_v = lb.l.value  # pyright: ignore
@@ -640,9 +640,11 @@ def king_radius(x, y, cent) -> tuple[float, float, float, float]:
     min_rc, max_rc = x0[0], x0[-1]
     min_rt, max_rt = x0[0], 2 * x0[-1]
     min_fd, max_fd = fd0 * 0.1, max(y0)
-    bounds = np.array(
-        [(min_cd, max_cd), (min_rc, max_rc), (min_rt, max_rt), (min_fd, max_fd)]
-    ).T
+    bounds = tuple(
+        np.array(
+            [(min_cd, max_cd), (min_rc, max_rc), (min_rt, max_rt), (min_fd, max_fd)]
+        ).T
+    )
 
     # try:
     res = least_squares(lnlike, p_init, bounds=bounds)

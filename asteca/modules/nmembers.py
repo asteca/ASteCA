@@ -333,7 +333,7 @@ def local_dens_clean(
     tree = KDTree(data)
     # Query neighbors including self
     dists, _ = tree.query(data, k=N_k + 1)
-    fifth_nn_dist = dists[:, N_k]  # Nth neighbor distance
+    fifth_nn_dist = np.asarray(dists)[:, N_k]  # Nth neighbor distance
     local_density = 1 / fifth_nn_dist
     local_density /= local_density.max()  # Normalize
 
