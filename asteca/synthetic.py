@@ -260,12 +260,20 @@ class Synthetic:
                 "Two colors were defined in 'cluster' but a single color\n"
                 + "was defined in 'synthetic'."
             )
-        if cluster.mag.size > cluster.N_clust_max:
-            raise ValueError(
-                f"The number of stars in this `Cluster` object ({cluster.mag.size})\n"
-                + f"is larger than the 'N_clust_max={cluster.N_clust_max}' parameter.\n"
-                + "Either define a `Cluster` object with fewer members or increase "
-                + "the 'N_clust_max' value."
+
+        # Warning with hardcoded values
+        f_stars_mass = 7
+        if cluster.mag.size * f_stars_mass > self.max_mass:
+            warnings.warn(
+                (
+                    f"\nThe number of stars in this `Cluster` object ({cluster.mag.size}) is large.\n"
+                    "This may lead to synthetic clusters with insufficient stars to\n"
+                    "properly reproduce the observations.\n"
+                    f"Consider increasing the 'max_mass' parameter (current value: {self.max_mass}).\n"
+                    f"As a rule of thumb, set 'max_mass' to at least {f_stars_mass} times\n"
+                    "the number of observed stars."
+                ),
+                UserWarning,
             )
 
         # Calibrate parameters using the observed cluster
@@ -684,9 +692,10 @@ class Synthetic:
         # Compare the number of observed vs generated synthetic stars
         if N_stars_isoch < self.N_stars_obs:
             warnings.warn(
-                f"\nNumber of synthetic stars ({N_stars_isoch}) is smaller than "
-                + f"observed stars ({self.N_stars_obs}). Increase the 'max_mass' "
-                + "argument for a more accurate mass estimation"
+                f"\nThe number of synthetic stars ({N_stars_isoch}) is smaller than "
+                + f"the number of\nobserved stars ({self.N_stars_obs}). Increase "
+                + "the 'max_mass' argument in `asteca.Synthetic()`\nfor a more "
+                + "accurate mass estimation"
             )
 
         if rho_amb is not None:
@@ -793,7 +802,7 @@ class Synthetic:
                 pass
 
         # Generate physical synthetic cluster to extract the max mass
-        max_mass = self.generate(fit_params_copy)[self.m_ini_idx].max()
+        max_mass_isoch = self.generate(fit_params_copy)[self.m_ini_idx].max()
 
         # Generate displaced isochrone, The 'N_stars=-1' indicates to return the
         # array right after the magnitude cut
@@ -801,7 +810,7 @@ class Synthetic:
         isochrone = self.generate(fit_params_copy, N_stars=-1)
 
         # Apply max mass filter to isochrone
-        msk = isochrone[self.m_ini_idx] < max_mass
+        msk = isochrone[self.m_ini_idx] < max_mass_isoch
 
         # Generate proper array for plotting
         isochrone = np.array([isochrone[0], isochrone[color_idx + 1]])[:, msk]
