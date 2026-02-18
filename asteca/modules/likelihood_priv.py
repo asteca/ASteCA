@@ -113,6 +113,9 @@ def tremmel(
     cl_histo_f_z: np.ndarray,
     obs_mag_median: float,
     obs_col_median: float,
+    offsets: np.ndarray,
+    bin_sizes: list,
+    total_bins: int,
     max_lkl: None | float,
     synth_clust: np.ndarray,
 ) -> float:
@@ -131,6 +134,12 @@ def tremmel(
     :type obs_mag_median: float
     :param obs_col_median: Medina observed color
     :type obs_col_median: float
+    :param offsets: Offsets for direct array assignment
+    :type offsets: np.ndarray
+    :param bin_sizes: Sizes of the bins for direct array assignment
+    :type bin_sizes: list
+    :param total_bins: Total number of bins in the Hess diagram, used for normalization
+    :type total_bins: int
     :param max_lkl: Maximum likelihood value, used for normalization
     :type max_lkl: None | float
     :param synth_clust: Synthetic cluster data.
@@ -145,11 +154,9 @@ def tremmel(
 
     # Obtain histogram for the synthetic cluster.
     mag, colors = synth_clust[0], synth_clust[1:]
-    syn_histo_f = []
+
+    syn_histo_f = np.empty(total_bins, dtype=np.float64)
     for i, col in enumerate(colors):
-        # hess_diag = np.histogram2d(
-        #     mag, col, bins=[
-        #         self.bin_edges[0]] + [self.bin_edges[i + 1]])[0]
         hess_diag = histogram2d(
             mag,
             col,
@@ -159,10 +166,10 @@ def tremmel(
             ],
             bins=[Nbins[0], Nbins[i + 1]],
         )
-
-        # Flatten array
-        syn_histo_f += list(hess_diag.ravel())
-    syn_histo_f = np.array(syn_histo_f)
+        # Direct array assignment using pre-computed offset and size
+        offset = offsets[i]
+        # Flatten array and assign to the correct position in syn_histo_f
+        syn_histo_f[offset : offset + bin_sizes[i]] = hess_diag.ravel()
 
     # Remove all bins where n_i = 0 (no observed stars).
     syn_histo_f_z = syn_histo_f[cl_z_idx]

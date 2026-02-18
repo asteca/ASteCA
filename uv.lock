@@ -1,10 +1,10 @@
 version = 1
 revision = 3
-requires-python = ">=3.12.12"
+requires-python = ">=3.12"
 
 [[package]]
 name = "asteca"
-version = "0.6.2.dev0"
+version = "0.6.3.dev0"
 source = { editable = "." }
 dependencies = [
     { name = "astropy" },
@@ -18,7 +18,7 @@ requires-dist = [
     { name = "astropy", specifier = ">=7.2.0" },
     { name = "fast-histogram", specifier = ">=0.14" },
     { name = "numpy", specifier = ">=2.4.0" },
-    { name = "scipy", specifier = ">=1.15.2" },
+    { name = "scipy", specifier = ">=1.17.0" },
 ]
 
 [[package]]

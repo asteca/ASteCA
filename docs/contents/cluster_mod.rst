@@ -8,9 +8,8 @@ data for either an observed cluster (i.e.: a data file that contains only true
 cluster members) or an observed field (i.e.: a data file that contains not just the
 cluster members but also the surrounding field stars).
 
-Given a data file containing either a cluster or field data, the user can generate
-a :py:class:`asteca.Cluster` object as follows:
-
+Given a data file *my_data_file.csv* containing either a cluster or field data, the user
+can generate a :py:class:`asteca.Cluster` object as follows:
 
 .. code-block:: python
 
@@ -44,9 +43,33 @@ The :py:class:`asteca.Cluster` class also contains methods to obtain the estimat
 number of members (see :ref:`nmembers`), as well as their membership probabilities
 (see :ref:`membership_module`).
 
+Alternatively, the user can also generate a :py:class:`asteca.Cluster` object directly
+from the `UCC's members data file`_. This is done by passing the cluster's name along
+with the path to the *.parquet* file to the class, as follows:
+
+.. code-block:: python
+
+    # Define the cluster's name
+    cl_name = "blanco 1"
+
+    # Path to the UCC's members data file
+    UCC_file_path = "UCC_members.parquet"
+
+    # Create a Cluster object from the UCC's members data file
+    my_field = asteca.Cluster(
+        cluster_name=cl_name,
+        UCC_file_path=UCC_file_path
+    )
+
+
+.. note::
+    The UCC is the `Unified Cluster Catalog`_, the largest open clusters catalogue in
+    the literature.
+
 
 .. _pandas.DataFrame: https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html
-
+.. _UCC's members data file : https://doi.org/10.5281/zenodo.8250523
+.. _Unified Cluster Catalog: https://ucc.ar
 
 
 .. _structure:

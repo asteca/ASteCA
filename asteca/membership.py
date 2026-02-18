@@ -26,10 +26,9 @@ class Membership:
     :param my_field: :py:class:`Cluster <asteca.cluster.Cluster>` object with the
         loaded data for the observed field
     :type my_field: Cluster
-    :param seed: Random seed. If ``None`` a random integer will be generated and used,
-        defaults to ``None``
+    :param seed: Random seed. If ``None`` a random integer will be generated and used
     :type seed: int | None
-    :param verbose: Verbose level. A value of ``0`` hides all output, defaults to ``1``
+    :param verbose: Verbose level. A value of ``0`` hides all output
     :type verbose: int
 
     :raises ValueError: If there are missing required attributes in the
@@ -86,11 +85,10 @@ class Membership:
         are required to be present in the
         :py:class:`Cluster <asteca.cluster.Cluster>` object.
 
-        :param N_runs: Maximum number of runs, defaults to ``1000``
+        :param N_runs: Maximum number of runs
         :type N_runs: int
         :param eq_to_gal: Convert ``(RA, DEC)`` to ``(lon, lat)``. Useful for clusters
-            with large ``DEC`` values to reduce the frame's distortion,
-            defaults to ``False``
+            with large ``DEC`` values to reduce the frame's distortion
         :type eq_to_gal: bool
 
         :raises AttributeError: If either the ``radec_c`` or ``radius`` attributes
@@ -138,8 +136,8 @@ class Membership:
         # Generate input data array
         X = [xv, yv]
         e_X = []
-        if self.my_field.magnitude is not None:
-            X.append(self.my_field.magnitude)
+        if self.my_field.mag is not None:
+            X.append(self.my_field.mag)
             e_X.append(self.my_field.e_mag)
         if self.my_field.color is not None:
             X.append(self.my_field.color)
@@ -187,13 +185,12 @@ class Membership:
 
         :param fixed_centers: If ``True`` the center values (radec_c, pms_c, plx_c)
             stored in the :py:class:`Cluster <asteca.cluster.Cluster>` object will be
-            kept fixed throughout the process, defaults to ``True``
+            kept fixed throughout the process
         :type fixed_centers: bool
-        :param N_runs: Maximum number of resamples, defaults to ``1000``
+        :param N_runs: Maximum number of resamples
         :type N_runs: int
         :param eq_to_gal: Convert ``(RA, DEC)`` to ``(lon, lat)``. Useful for clusters
-            with large ``DEC`` values to reduce the frame's distortion,
-            defaults to ``True``
+            with large ``DEC`` values to reduce the frame's distortion
         :type eq_to_gal: bool
 
         :raises AttributeError: If the :py:class:`Cluster <asteca.cluster.Cluster>`

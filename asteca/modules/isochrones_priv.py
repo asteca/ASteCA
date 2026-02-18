@@ -497,13 +497,21 @@ def interp_isochrones(
     :return: Dictionary of interpolated isochrones.
     :rtype: dict
     """
+    # Dummy values (avoid typing errors)
+    b1 = b2 = b3 = b4 = b5 = 0
+    mass_percs = np.array([0.25, 0.5, 0.75, 0.9])
+    eep_dist = []
+
+    isochrones: dict = {}
+    # Define interpolation grid (independent of per-isochrone operations)
     if eep_col is None:
-        # Define mass distribution parameters
-        percs = np.array([0.5, 1, 1.5, 2, 5]) / np.sum([0.5, 1, 1.5, 2, 5])
+        # Mass-based distribution parameters
+        weights = np.array([0.5, 1, 1.5, 2, 5], dtype=float)
+        percs = weights / weights.sum()
         b1, b2, b3, b4 = [int(N_interp * p) for p in percs[:4]]
         b5 = N_interp - (b1 + b2 + b3 + b4)
         # Per isochrone mass based distribution
-        mass_percs = np.array([0.25, 0.5, 0.75, 0.9])
+        mass_percs = np.array([0.25, 0.5, 0.75, 0.9], dtype=float)
 
         # General distribution, isochrone independent. The above works a bit better
         # mp = np.array([0.0, 0.25, 0.5, 0.75, 0.9, 1.])
@@ -513,56 +521,50 @@ def interp_isochrones(
         # m4 = np.linspace(mp[3], mp[4], b4, endpoint=False)
         # m5 = np.linspace(mp[4], mp[5], b5)
         # mass_dist = np.concatenate([m1, m2, m3, m4, m5])
+
     else:
-        # Define EEP distribution
-        eep_min = int(min([min(isoch[eep_col]) for isoch in isochs_sorted]))
-        eep_max = int(max([max(isoch[eep_col]) for isoch in isochs_sorted]))
+        # EEP-based global distribution
+        if not isochs_sorted:
+            raise ValueError("Empty 'isochs_sorted'")
+
+        eep_min = int(min(np.min(isoch[eep_col]) for isoch in isochs_sorted))
+        eep_max = int(max(np.max(isoch[eep_col]) for isoch in isochs_sorted))
         eep_dist = np.arange(eep_min, eep_max + 1)
 
-    isochrones = {}
-    for i, (met, age) in enumerate(met_age_sorted):
-        # # Generate entry in dictionary
-        # try:
-        #     isochrones[met]
-        # except KeyError:
-        #     isochrones[met] = {}
-        # try:
-        #     isochrones[met][age]
-        # except KeyError:
-        #     isochrones[met][age] = []
-
-        # Create nested dictionary structure (equivalent to the block above)
-        isochrones.setdefault(met, {}).setdefault(age, [])
-
-        isoch = isochs_sorted[i]
+    for (met, age), isoch in zip(met_age_sorted, isochs_sorted):
         if isoch.dtype.names is None:
             raise ValueError("No 'names' found for isoch.dtype")
 
-        if eep_col is None:
-            # Mass-based interpolation
-            mmin, mmax = isoch[mass_col].min(), isoch[mass_col].max()
-            mstep1, mstep2, mstep3, mstep4 = mmax * mass_percs  # pyright: ignore
-            m1 = np.linspace(mmin, mstep1, b1, endpoint=False)  # pyright: ignore
-            m2 = np.linspace(mstep1, mstep2, b2, endpoint=False)  # pyright: ignore
-            m3 = np.linspace(mstep2, mstep3, b3, endpoint=False)  # pyright: ignore
-            m4 = np.linspace(mstep3, mstep4, b4, endpoint=False)  # pyright: ignore
-            m5 = np.linspace(mstep4, mmax, b5)  # pyright: ignore
-            mass_dist = np.concatenate([m1, m2, m3, m4, m5])
-            interp_dist, interp_col = mass_dist, isoch[mass_col]
-            # # General distribution, isochrone independent
-            # interp_dist, interp_col = mass_dist, np.linspace(0.0, 1.0, len(isoch))
-            # Keep all columns
-            cols_keep = isoch.dtype.names
-        else:
-            # EEP-based interpolation
-            interp_dist, interp_col = eep_dist, isoch[eep_col]  # pyright: ignore
-            # Remove EEP column
-            cols_keep = [_ for _ in isoch.dtype.names if _ != eep_col]
+        isochrones.setdefault(met, {}).setdefault(age, [])
 
-        # Interpolate all columns
-        isoch_interp = {}
-        for col in cols_keep:
-            isoch_interp[col] = np.interp(interp_dist, interp_col, isoch[col])
+        if eep_col is None:
+            # ---- Mass-based interpolation ----
+            mmin = np.min(isoch[mass_col])
+            mmax = np.max(isoch[mass_col])
+
+            mstep1, mstep2, mstep3, mstep4 = mmax * mass_percs
+            m1 = np.linspace(mmin, mstep1, b1, endpoint=False)
+            m2 = np.linspace(mstep1, mstep2, b2, endpoint=False)
+            m3 = np.linspace(mstep2, mstep3, b3, endpoint=False)
+            m4 = np.linspace(mstep3, mstep4, b4, endpoint=False)
+            m5 = np.linspace(mstep4, mmax, b5)
+
+            # General distribution, isochrone independent
+            interp_dist = np.concatenate((m1, m2, m3, m4, m5))
+            interp_col = isoch[mass_col]
+            cols_keep = isoch.dtype.names
+
+        else:
+            # ---- EEP-based interpolation ----
+            interp_dist = eep_dist
+            interp_col = isoch[eep_col]
+            cols_keep = tuple(c for c in isoch.dtype.names if c != eep_col)
+
+        # ---- Interpolate columns ----
+        isoch_interp = {
+            col: np.interp(interp_dist, interp_col, isoch[col]) for col in cols_keep
+        }
+
         isochrones[met][age].append(isoch_interp)
 
     return isochrones

@@ -7,10 +7,25 @@ Changelog
 #########
 
 
+`[v0.6.3] <https://github.com/asteca/asteca/releases/tag/v0.6.3>`__ - 2026-02-18
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+- Improved performance by ~22%
+   - Synthetic module: improved `generate()` performance by ~20%
+   - Likelihood module: improved `tremmel()` performance by ~30%
+
+- Cluster module:
+   - Added arguments to allow loading a cluster's data from the `UCC members file <https://doi.org/10.5281/zenodo.8250523>`__ (.parquet)
+   - Added `max_mag` attribute to apply a maximum magnitude cut
+
+- Changed `magnitude` attribute to `mag` (Cluster, Isochrone, Synthetic classes)
+
+
+
 `[v0.6.2] <https://github.com/asteca/asteca/releases/tag/v0.6.2>`__ - 2026-02-14
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-- Likelihood module:
+- Likelihood module:make -C docs clean && sphinx-build -M html docs docs/build
    - Better `tremmel` likelihood, now it zooms in to the solution faster
    - Replaced `loggamma` with `gammaln` from `scipy.special` since values are always
      real (no change in performance)
@@ -19,7 +34,7 @@ Changelog
    - Moved `first_filter()` out of `fastMP` to be used also by the Ripley members
      estimator
    - Changed default value for `fixed_centers` in `fastMP()` to `True`
-   - Removed iterative IQR normalization in `fastMP()`. It caused issues for some OCs
+   - Removed iterative IQR normalization in `fastMP()`; it caused issues for some OCs
      that ended up looking stretched out in the LON/LAT axis
 
 - Cluster module:
@@ -28,7 +43,6 @@ Changelog
    - New `N_clust_max=2000` (down from `5000`)
    - Added a `local_dens_clean()` function to the Ripley estimator of members for better
      performance
-
 
 
 

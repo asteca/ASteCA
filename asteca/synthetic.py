@@ -22,32 +22,29 @@ class Synthetic:
         the loaded files for the theoretical isochrones
     :type isochs: Isochrones
     :param def_params: Default values for all the required fundamental parameters
-    :type def_params: dict
+    :type def_params: dict[str, float]
     :param ext_law: Extinction law, one of ``CCMO, GAIADR3``.
         If ``GAIADR3`` is selected, the magnitude and first
         color defined in the :py:class:`Isochrones <asteca.isochrones.Isochrones>` and
         :py:class:`Cluster <asteca.cluster.Cluster>` objects are assumed to be Gaia's
         (E)DR3 **G** and **(BP-RP)** respectively. The second color (if defined) will
-        always be affected by the ``CCMO`` model, defaults to ``CCMO``
+        always be affected by the ``CCMO`` model
     :type ext_law: str
     :param DR_distribution: Distribution function for the differential reddening,
-        one of ``uniform, normal``; defaults to ``uniform``
+        one of ``uniform, normal``
     :type DR_distribution: str
     :param IMF_name: Name of the initial mass function used to populate the isochrones,
-        one of ``salpeter_1955, kroupa_2001, chabrier_2014``;
-        defaults to ``chabrier_2014``
+        one of ``salpeter_1955, kroupa_2001, chabrier_2014``
     :type IMF_name: str
     :param max_mass: Maximum total initial mass. Should be large enough to allow
-        generating as many synthetic stars as observed stars, defaults to ``100_000``
+        generating as many synthetic stars as observed stars
     :type max_mass: int
     :param gamma: Distribution function for the mass ratio of the binary systems,
-        float or one of ``D&K, fisher_stepped, fisher_peaked, raghavan``;
-        defaults to ``D&K``
+        float or one of ``D&K, fisher_stepped, fisher_peaked, raghavan``
     :type gamma: float | str
-    :param seed: Random seed. If ``None`` a random integer will be generated and used,
-        defaults to ``None``
+    :param seed: Random seed. If ``None`` a random integer will be generated and used
     :type seed: int | None
-    :param verbose: Verbose level. A value of ``0`` hides all output, defaults to ``1``
+    :param verbose: Verbose level. A value of ``0`` hides all output
     :type verbose: int
 
     :raises ValueError: If any of the attributes is not recognized as a valid option
@@ -56,7 +53,7 @@ class Synthetic:
     def __init__(
         self,
         isochs: Isochrones,
-        def_params: dict = {
+        def_params: dict[str, float] = {
             "met": 0.0152,
             "loga": 8.0,
             "alpha": 0.09,
@@ -235,14 +232,17 @@ class Synthetic:
         """
         from .modules import synth_cluster_priv as scp
 
-        for attr in ("mag", "color"):  # , "ra", "dec"):
-            if getattr(cluster, attr) is None:
-                raise ValueError(
-                    f"Attribute '{attr}' is required to calibrate 'Cluster' object."
-                )
+        if cluster.mag is None:
+            raise ValueError(
+                "Attribute 'mag' is required to calibrate 'Cluster' object."
+            )
         if cluster.e_mag is None:
             raise ValueError(
                 "Attribute 'e_mag' is required to calibrate 'Cluster' object."
+            )
+        if cluster.color is None:
+            raise ValueError(
+                "Attribute 'color' is required to calibrate 'Cluster' object."
             )
         if cluster.e_color is None:
             raise ValueError(
@@ -260,12 +260,20 @@ class Synthetic:
                 "Two colors were defined in 'cluster' but a single color\n"
                 + "was defined in 'synthetic'."
             )
-        if len(cluster.mag) > cluster.N_clust_max:
-            raise ValueError(
-                f"The number of stars in this `Cluster` object ({len(cluster.mag)})\n"
-                + f"is larger than the 'N_clust_max={cluster.N_clust_max}' parameter.\n"
-                + "Either define a `Cluster` object with fewer members or increase "
-                + "the 'N_clust_max' value."
+
+        # Warning with hardcoded values
+        f_stars_mass = 7
+        if cluster.mag.size * f_stars_mass > self.max_mass:
+            warnings.warn(
+                (
+                    f"\nThe number of stars in this `Cluster` object ({cluster.mag.size}) is large.\n"
+                    "This may lead to synthetic clusters with insufficient stars to\n"
+                    "properly reproduce the observations.\n"
+                    f"Consider increasing the 'max_mass' parameter (current value: {self.max_mass}).\n"
+                    f"As a rule of thumb, set 'max_mass' to at least {f_stars_mass} times\n"
+                    "the number of observed stars."
+                ),
+                UserWarning,
             )
 
         # Calibrate parameters using the observed cluster
@@ -303,7 +311,7 @@ class Synthetic:
             The dictionary must include values for all the parameters, e.g.:
             ``params = {met: 0.0152, loga: 8.1, alpha: 0.1, beta: 1, Av: 0.2, DR: 0., Rv: 3.1, dm: 9.7}``
         :type params: dict
-        :param N_stars: Number of synthetic stars to generate; defaults to ``100``
+        :param N_stars: Number of synthetic stars to generate
         :type N_stars: int
 
         :return: Returns a ``np.array`` containing a synthetic cluster
@@ -380,7 +388,7 @@ class Synthetic:
 
         # Remove isochrone stars beyond the maximum magnitude
         isoch_cut = scp.cut_max_mag(isoch_extin, max_mag_syn)
-        if not isoch_cut.any():
+        if isoch_cut.size == 0:
             return np.array([])
 
         # This is an internal trick to return the array at this point. It is used
@@ -396,7 +404,7 @@ class Synthetic:
             N_synth_stars,
             binar_flag,
         )
-        if not isoch_mass.any():
+        if isoch_mass.size == 0:
             return np.array([])
 
         # import matplotlib.pyplot as plt
@@ -436,7 +444,7 @@ class Synthetic:
         :param model_std: Dictionary with the standard deviations for the fundamental
             parameters in the ``model`` argument
         :type model_std: dict[str, float]
-        :param N_models: Number of sampled models, defaults to ``200``
+        :param N_models: Number of sampled models
         :type N_models: int
 
         :raises ValueError: If any of the (met, age) parameters are out of range or
@@ -563,8 +571,7 @@ class Synthetic:
 
         :param binar_prob: Per-star binary system probabilities
         :type binar_prob: np.ndarray
-        :param Nsamples: Number of samples generated to produce the final values;
-            defaults to ``10_000``.
+        :param Nsamples: Number of samples generated to produce the final values
         :type Nsamples: int
 
         :return: Median and STDDEV values for the total binary fraction
@@ -622,11 +629,11 @@ class Synthetic:
         - ``M_init = M_actual + M_evol + M_dyn``
 
         :param radec_c: Center coordinates in ``(RA, DEC)``. If ``None``, the ``rho_amb``
-            parameter must be given; defaults to ``None``.
+            parameter must be given
         :type radec_c: tuple | None
         :param rho_amb: Ambient density [:math:`M_{\odot}\,pc^{-3}`]. If ``None``, it
             is estimated using the cluster's position (``radec_c``) and a model for the
-            Galaxy's potential; defaults to ``None``.
+            Galaxy's potential
         :type rho_amb: float | None
         :param M_B: Bulge mass; defaults to ``2.5e10`` [:math:`M_{\odot}`] (from
             `Haghi et al. 2015 <https://doi.org/10.1093/mnras/stv827>`__, Table 1)
@@ -685,9 +692,10 @@ class Synthetic:
         # Compare the number of observed vs generated synthetic stars
         if N_stars_isoch < self.N_stars_obs:
             warnings.warn(
-                f"\nNumber of synthetic stars ({N_stars_isoch}) is smaller than "
-                + f"observed stars ({self.N_stars_obs}). Increase the 'max_mass' "
-                + "argument for a more accurate mass estimation"
+                f"\nThe number of synthetic stars ({N_stars_isoch}) is smaller than "
+                + f"the number of\nobserved stars ({self.N_stars_obs}). Increase "
+                + "the 'max_mass' argument in `asteca.Synthetic()`\nfor a more "
+                + "accurate mass estimation"
             )
 
         if rho_amb is not None:
@@ -771,7 +779,7 @@ class Synthetic:
             :py:class:`Synthetic` object was calibrated (:py:meth:`calibrate` method).
         :type fit_params: dict
         :param color_idx: Index of the color to plot. If ``0`` (default), plot the
-            first color. If ``1`` plot the second color. Defaults to ``0``
+            first color. If ``1`` plot the second color
         :type color_idx: int
 
         :raises ValueError: If either parameter (met, age) is outside of allowed range
@@ -794,7 +802,7 @@ class Synthetic:
                 pass
 
         # Generate physical synthetic cluster to extract the max mass
-        max_mass = self.generate(fit_params_copy)[self.m_ini_idx].max()
+        max_mass_isoch = self.generate(fit_params_copy)[self.m_ini_idx].max()
 
         # Generate displaced isochrone, The 'N_stars=-1' indicates to return the
         # array right after the magnitude cut
@@ -802,7 +810,7 @@ class Synthetic:
         isochrone = self.generate(fit_params_copy, N_stars=-1)
 
         # Apply max mass filter to isochrone
-        msk = isochrone[self.m_ini_idx] < max_mass
+        msk = isochrone[self.m_ini_idx] < max_mass_isoch
 
         # Generate proper array for plotting
         isochrone = np.array([isochrone[0], isochrone[color_idx + 1]])[:, msk]

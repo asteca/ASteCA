@@ -16,7 +16,7 @@ class Likelihood:
     :param lkl_name: Currently only the Poisson likelihood ratio (``plr``) defined in
         `Tremmel et al. (2013)
         <https://ui.adsabs.harvard.edu/abs/2013ApJ...766...19T/abstract>`__
-        is accepted, defaults to ``plr``
+        is accepted
     :type lkl_name: str
     :param bin_method: Bin method used to split the color-magnitude diagram into cells
         (`Hess diagram <https://en.wikipedia.org/wiki/Hess_diagram>`__); one of:
@@ -24,7 +24,7 @@ class Likelihood:
         `Choosing Histogram Bins <https://docs.astropy.org/en/stable/visualization/histogram.html>`__
         in `astropy <https://www.astropy.org/>`__ documentation for details on the
         ``knuth, blocks, scott, freedman`` methods.  The method ``fixed``
-        uses (15, 10) bins in magnitude and color(s) respectively. Defaults to ``knuth``
+        uses (15, 10) bins in magnitude and color(s) respectively
     :type bin_method: Literal["blocks", "knuth", "scott", "freedman", "fixed"]
 
     :raises ValueError: If any of the attributes is not recognized as a valid option
@@ -84,6 +84,14 @@ class Likelihood:
         self.obs_mag_median = np.nanmedian(self.mag).astype(float)
         self.obs_col_median = np.nanmedian(colors[0]).astype(float)
 
+        # Pre-compute 'tremmel' parameters
+        n_colors = len(colors)
+        self.bin_sizes = [self.Nbins[0] * self.Nbins[i + 1] for i in range(n_colors)]
+        self.offsets = np.array(
+            [0] + list(np.cumsum(self.bin_sizes[:-1])), dtype=np.int32
+        )
+        self.total_bins = sum(self.bin_sizes)
+
         self.max_lkl = None
         if self.lkl_name == "plr":
             # Evaluate cluster against itself to obtain the maximum likelihood.
@@ -121,6 +129,9 @@ class Likelihood:
                 self.cl_histo_f_z,
                 self.obs_mag_median,
                 self.obs_col_median,
+                self.offsets,
+                self.bin_sizes,
+                self.total_bins,
                 self.max_lkl,
                 synth_clust,
             )

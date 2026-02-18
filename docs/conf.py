@@ -1,15 +1,30 @@
+import subprocess
+
 # -- Project information -----------------------------------------------------
 project = "ASteCA"
 copyright = "2024, Gabriel I Perren"
 author = "Gabriel I Perren"
 
-# Read version from pyproject.toml
-with open("../pyproject.toml", encoding="utf-8") as pyproject_toml:
+try:
+    # Extract latest tag version
     __version__ = (
-        next(line for line in pyproject_toml if line.startswith("version"))
-        .split("=")[1]
-        .strip("'\"\n ")
+        subprocess.check_output(
+            ["git", "tag", "--sort=-creatordate"],
+            stderr=subprocess.DEVNULL,
+        )
+        .decode("utf-8")
+        .split("\n")[0]
+        .replace("v", "")
+        .strip()
     )
+except subprocess.CalledProcessError:
+    # Read version from pyproject.toml
+    with open("../pyproject.toml", encoding="utf-8") as pyproject_toml:
+        __version__ = (
+            next(line for line in pyproject_toml if line.startswith("version"))
+            .split("=")[1]
+            .strip("'\"\n ")
+        )
 
 # The full version, including alpha/beta/rc tags
 version = __version__

@@ -16,9 +16,9 @@ class Isochrones:
     :param isochs_path: Path to the file or folder that contains the files for the
         theoretical isochrones
     :type isochs_path: str
-    :param magnitude: Magnitude's filter name as defined in the theoretical isochrones.
+    :param mag: Magnitude's filter name as defined in the theoretical isochrones.
         Example for Gaia's ``G`` magnitude: ``"Gmag"``
-    :type magnitude: str
+    :type mag: str
     :param color: Tuple containing the filter names that generate the first color
         defined. The correct format is: ``("filter1", "filter2")``, where ``filter1``
         and ``filter2`` are the names of the filters that are combined to generate
@@ -27,10 +27,9 @@ class Isochrones:
         ``("G_BPmag", "G_RPmag")``
     :type color: tuple
     :param color2: Second color to use in the analysis. Same format as that
-        used by the ``color`` parameter, defaults to ``None``
+        used by the ``color`` parameter
     :type color2: tuple | None
-    :param magnitude_effl: Effective lambda (in Angstrom) for the magnitude filter,
-        defaults to ``None``
+    :param magnitude_effl: Effective lambda (in Angstrom) for the magnitude filter
     :type magnitude_effl: float | None
     :param color_effl: Effective lambdas for the filters that make up the ``color``
         defined in the :py:class:`Isochrones` object. E.g.:
@@ -38,17 +37,16 @@ class Isochrones:
         lambdas (in Angstrom) for each filter, in the same order as ``color``, defaults
         to ``None``
     :type color_effl: tuple | None
-    :param color2_effl: Same as ``color_effl`` but for a second (optional) color
-        defined, defaults to ``None``
+    :param color2_effl: Same as ``color_effl`` but for a second (optional) color defined
     :type color2_effl: tuple | None
     :param z_to_FeH: If ``None``, the default ``z`` values in the isochrones will be
         used to generate the synthetic clusters. If ``float``, it must represent the
         solar metallicity for these isochrones. The metallicity values will then be
         converted to ``[FeH]`` values, to be used by the
-        :py:meth:`Synthetic.generate` method, defaults to ``None``
+        :py:meth:`Synthetic.generate` method
     :type z_to_FeH: float | None
     :param N_interp: Number of interpolation points used to ensure that all isochrones
-        are the same shape, defaults to ``2000``
+        are the same shape
     :type N_interp: int
     :param parsec_rm_stage_9: If the isochrones are PARSEC, this argument set to
         ``True`` will remove the *post_AGB* stage (label=9) which are still
@@ -60,9 +58,9 @@ class Isochrones:
         ``{"mass_col": "Mini", "met_col": "Zini", "age_col": "logAge"}``.
         This dictionary is defined internally in **ASteCA** and should only be given
         by the user if the isochrone service changes its format and the `isochrones`
-        class fails to load the files, defaults to ``None``
+        class fails to load the files
     :type column_names: dict | None
-    :param verbose: Verbose level. A value of ``0`` hides all output, defaults to ``1``
+    :param verbose: Verbose level. A value of ``0`` hides all output
     :type verbose: int
 
     :raises ValueError: If any of the attributes is not recognized as a valid option,
@@ -73,7 +71,7 @@ class Isochrones:
         self,
         model: str,
         isochs_path: str,
-        magnitude: str,
+        mag: str,
         color: tuple,
         color2: tuple | None = None,
         magnitude_effl: float | None = None,
@@ -87,7 +85,7 @@ class Isochrones:
     ) -> None:
         self.model = model
         self.isochs_path = isochs_path
-        self.magnitude = magnitude
+        self.mag = mag
         self.color = color
         self.color2 = color2
         self.magnitude_effl = magnitude_effl
@@ -125,7 +123,7 @@ class Isochrones:
             isochrones_priv.load(
                 self.model,
                 self.isochs_path,
-                self.magnitude,
+                self.mag,
                 self.color,
                 self.color2,
                 self.column_names,
@@ -154,7 +152,7 @@ class Isochrones:
         self._vp(f"N_isochs       : {N_isoch}", 1)
         self._vp(f"{met_n}  range     : [{self.zmin}, {self.zmax}]", 1)
         self._vp(f"loga range     : [{self.amin}, {self.amax}]", 1)
-        self._vp(f"Magnitude      : {self.magnitude}", 1)
+        self._vp(f"Magnitude      : {self.mag}", 1)
         self._vp(f"Color          : {self.color[0]}-{self.color[1]}", 1)
         if self.color2 is not None:
             self._vp(f"Color2         : {self.color2[0]}-{self.color2[1]}", 1)
