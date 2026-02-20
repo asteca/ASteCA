@@ -2,9 +2,7 @@ import numpy as np
 from scipy.interpolate import make_interp_spline, BSpline
 
 
-def invTrnsfSmpl(
-    IMF_name: str, m_low: float = 0.08, m_high: float = 100
-) -> BSpline:
+def invTrnsfSmpl(IMF_name: str, m_low: float = 0.08, m_high: float = 100) -> BSpline:
     """IMF inverse transform sampling.
 
     :param IMF_name: Name of the IMF to use.
