@@ -1184,8 +1184,12 @@ def mass_interp(
     :rtype: np.ndarray
     """
     isoch_cut = np.ascontiguousarray(isoch_cut)
-    # Assumes `mass_ini=isoch_cut[m_ini_idx]` is sorted min to max <-- IMPORTANT
-    mass_ini = np.ascontiguousarray(isoch_cut[m_ini_idx])
+
+    # ==IMPORTANT==
+    # Assumes `mass_ini=isoch_cut[m_ini_idx]` is sorted min to max. This is checked
+    # when loading the isochrones in isochrones_priv.interp_isochrones()
+    # ==IMPORTANT==
+    mass_ini = isoch_cut[m_ini_idx]
 
     # Filter masses in the IMF sampling that are outside of the mass
     # range given by 'isoch_cut' (st_dist_mass[0]: sampled masses from IMF)
