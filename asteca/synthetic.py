@@ -330,6 +330,8 @@ class Synthetic:
             N_synth_stars = self.N_stars_obs
             err_dist_synth = self.err_dist_obs
         except AttributeError:
+            # If no calibration was done, use the provided 'N_stars' value (or the
+            # default value if not given)
             max_mag_syn = np.inf
             N_synth_stars = int(N_stars)
             err_dist_synth = []
