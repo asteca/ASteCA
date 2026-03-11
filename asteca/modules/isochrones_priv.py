@@ -575,6 +575,7 @@ def merge_ps_massini_check(mass_col: str, isochrones: dict) -> tuple[list, list]
 
     1. Combine photometric systems if more than one was used.
     2. Check that initial masses are equal across all systems
+    3. Check that all isochrones have the same number of values
 
     The isochrone parameter 'mass_col' is assumed to be equal across
     photometric systems, for a given metallicity and age. We check here that
