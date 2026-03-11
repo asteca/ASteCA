@@ -561,9 +561,13 @@ def interp_isochrones(
             cols_keep = tuple(c for c in isoch.dtype.names if c != eep_col)
 
         # ---- Interpolate columns ----
-        isoch_interp = {
+        isoch_interp: dict = {
             col: np.interp(interp_dist, interp_col, isoch[col]) for col in cols_keep
         }
+
+        # Check for strict min-max mass sorting
+        if np.any(isoch_interp[mass_col][1:] < isoch_interp[mass_col][:-1]):
+            raise ValueError("Masses are not min-max sorted in loaded isochrones.")
 
         isochrones[met][age].append(isoch_interp)
 
@@ -621,22 +625,24 @@ def merge_ps_massini_check(mass_col: str, isochrones: dict) -> tuple[list, list]
         for age in met:
             for k, arr in age.items():
                 Nvals.append(arr.shape[0])
-                if k == mass_col:
-                    # Use a mass tolerance instead of the 'sort_flag':
-                    #
-                    # sort_flag = all(arr[i] <= arr[i + 1] for i in range(len(arr) - 1))
-                    #
-                    # which checks if all masses are perfectly sorted, because the
-                    # PARSEC isochrones contain some rounding errors of the order
-                    # 10**-7, 10**-8 for large masses, which would always set the flag
-                    # to False
-                    max_mass_diff = max(
-                        (arr[i] - arr[i + 1]) for i in range(len(arr) - 1)
-                    )
-                    if max_mass_diff > 0.01:
-                        raise ValueError(
-                            "Masses are not min-max sorted in loaded isochrones."
-                        )
+                # if k == mass_col:
+                #     # Use a mass tolerance instead of the 'sort_flag':
+                #     #
+                #     # sort_flag = all(arr[i] <= arr[i + 1] for i in range(len(arr) - 1))
+                #     #
+                #     # which checks if all masses are perfectly sorted, because the
+                #     # PARSEC isochrones contain some rounding errors of the order
+                #     # 10**-7, 10**-8 for large masses, which would always set the flag
+                #     # to False
+                #     max_mass_diff = max(
+                #         (arr[i] - arr[i + 1]) for i in range(len(arr) - 1)
+                #     )
+                #     if max_mass_diff > 0.01:
+                #         raise ValueError(
+                #             "Masses are not min-max sorted in loaded isochrones."
+                #         )
+                #     if np.any(np.diff(arr) < -0.01):
+                #         raise ValueError("Masses are not min-max sorted in loaded isochrones.")
 
     if not np.all(Nvals):
         raise ValueError(
