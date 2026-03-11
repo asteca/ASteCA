@@ -144,12 +144,12 @@ class Isochrones:
         self.amin = self.met_age_dict["loga"].min()
         self.amax = self.met_age_dict["loga"].max()
 
-        N_met, N_age, _, N_isoch = self.theor_tracks.shape
+        N_met, N_age, _, N_points = self.theor_tracks.shape
         self._vp(f"Model          : {self.model}", 1)
         self._vp(f"N_files        : {N_isoch_files}", 1)
         self._vp(f"N_mets         : {N_met}", 1)
         self._vp(f"N_ages         : {N_age}", 1)
-        self._vp(f"N_isochs       : {N_isoch}", 1)
+        self._vp(f"N_points       : {N_points}", 1)
         self._vp(f"{met_n}  range     : [{self.zmin}, {self.zmax}]", 1)
         self._vp(f"loga range     : [{self.amin}, {self.amax}]", 1)
         self._vp(f"Magnitude      : {self.mag}", 1)
