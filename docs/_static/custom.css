@@ -4,3 +4,10 @@ a {
 a:hover {
     color: #005F99; /* Customize hover color */
 }
+
+/* Remove vertical scroll bar from 'Flyout menu' in Chrome (not visible in Firefox)*/
+/* Source: *https://github.com/executablebooks/sphinx-book-theme/issues/732 */
+#rtd-footer-container {
+    margin-top: 0px !important;
+    margin-bottom: 0px !important;
+}
