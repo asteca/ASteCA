@@ -1,6 +1,7 @@
 import warnings
 
 import numpy as np
+import pandas as pd
 
 
 class Cluster:
@@ -59,7 +60,7 @@ class Cluster:
     def __init__(
         self,
         cluster_name: str | None = None,
-        UCC_file_path: str | None = None,
+        UCC_members_file: pd.DataFrame | None = None,
         ra: np.ndarray | None = None,
         dec: np.ndarray | None = None,
         mag: np.ndarray | None = None,
@@ -80,7 +81,7 @@ class Cluster:
         verbose: int = 1,
     ) -> None:
         self.cluster_name = cluster_name
-        self.UCC_file_path = UCC_file_path
+        self.UCC_members_file = UCC_members_file
         self.ra = ra
         self.dec = dec
         self.mag = mag
@@ -100,14 +101,14 @@ class Cluster:
         self.N_clust_max = N_clust_max
         self.verbose = verbose
 
-        if self.cluster_name is not None and self.UCC_file_path is None:
+        if self.cluster_name is not None and self.UCC_members_file is None:
             raise ValueError(
-                "If a cluster name is provided, the 'UCC_file_path' must also be provided"
+                "If a cluster name is provided, the 'UCC_members_file' must also be provided"
             )
 
-        if self.cluster_name is not None and self.UCC_file_path is not None:
+        if self.cluster_name is not None and self.UCC_members_file is not None:
             self._vp(f"\nInstantiating cluster '{self.cluster_name}'")
-            self._vp(f"Loading data from '{self.UCC_file_path}'")
+            self._vp("Loading data from 'UCC_members_file'")
             self._load_UCC_data()
         else:
             self._vp("\nInstantiating cluster from data")
@@ -128,12 +129,8 @@ class Cluster:
         if not isinstance(self.cluster_name, str):
             raise TypeError("'cluster_name' must be a string")
 
-        if not isinstance(self.UCC_file_path, str):
-            raise TypeError("'UCC_file_path' must be a string")
-
-        import pandas as pd
-
-        df = pd.read_parquet(self.UCC_file_path)
+        if not isinstance(self.UCC_members_file, pd.DataFrame):
+            raise TypeError("'UCC_members_file' must be a Pandas DataFrame")
 
         cluster_fname = (
             self.cluster_name.lower()
@@ -144,12 +141,12 @@ class Cluster:
             .replace("+", "p")
         )
 
-        if cluster_fname not in df["name"].values:
+        if cluster_fname not in self.UCC_members_file["name"].values:
             raise ValueError(
                 f"Cluster name '{self.cluster_name}' not found in UCC file"
             )
 
-        cluster_df = df[df["name"] == cluster_fname]
+        cluster_df = self.UCC_members_file[self.UCC_members_file["name"] == cluster_fname]
         if len(cluster_df) == 0:
             raise ValueError(
                 f"No data found for cluster name '{self.cluster_name}' in UCC file"
