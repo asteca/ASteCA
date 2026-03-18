@@ -539,7 +539,7 @@ individual stellar masses of many synthetic clusters, sampled with parameters
 matching those of the observed cluster. The photometric mass :math:`M_{phot}` is inferred
 by summing the mass that exists below the mass value associated to the maximum observed
 magnitude in the cluster. This requires sampling an IMF with a very large mass, and
-obtaining the ratio of :math:`M_{obs}` to total mass; this ratio is the applied to the
+obtaining the ratio of :math:`M_{obs}` to total mass; this ratio is then applied to the
 sum of masses below the mass cut in the IMF to estimate :math:`M_{phot}`.
 As stated above, the sum of these two masses is equivalent to :math:`M_{a}`.
 
@@ -560,7 +560,8 @@ loss mechanism*", :math:`{\gamma}` is a constant, and :math:`t_{0}` is "*a const
 depends on the tidal field of the particular galaxy in which the cluster moves and on
 the ellipticity of its orbit*".
 
-The :math:`\gamma` constant is usually set to 0.62 and the
+The :math:`\gamma` constant is usually set to 0.62 (`Boutloukos & Lamers 2002
+<https://academic.oup.com/mnras/article/338/3/717/1458721>`_) and the
 :math:`\mu_{\text{evol}}(Z, t)` parameter can be estimated using a 3rd degree polynomial
 as shown in 
 `Lamers, Baumgardt & Gieles (2010) <http://adsabs.harvard.edu/abs/2010MNRAS.409..305L>`_,
@@ -608,8 +609,8 @@ With this value we can then obtain :math:`M_{evol}` through the
 
     M_{evol} = M_{i}  \times [1 - \mu_{\text{evol}}(Z, t)]
 
-Finally, the last remaining mass is the dynamical mass which we estimate simply
-using Eq :eq:`eq_Mi1` as:
+Finally, the last remaining mass is the dynamical mass (mass lost via dynamical
+effects) which we estimate simply using Eq :eq:`eq_Mi1` as:
 
 .. math::
 

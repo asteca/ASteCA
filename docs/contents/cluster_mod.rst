@@ -45,20 +45,20 @@ number of members (see :ref:`nmembers`), as well as their membership probabiliti
 
 Alternatively, the user can also generate a :py:class:`asteca.Cluster` object directly
 from the `UCC's members data file`_. This is done by passing the cluster's name along
-with the path to the *.parquet* file to the class, as follows:
+with the loaded ``UCC_members.parquet`` file to the class, as follows:
 
 .. code-block:: python
 
     # Define the cluster's name
     cl_name = "blanco 1"
 
-    # Path to the UCC's members data file
-    UCC_file_path = "UCC_members.parquet"
+    # Load the UCC's members data file
+    UCC_members = pd.read_parquet("UCC_members.parquet")
 
     # Create a Cluster object from the UCC's members data file
     my_field = asteca.Cluster(
         cluster_name=cl_name,
-        UCC_file_path=UCC_file_path
+        UCC_members_file=UCC_members
     )
 
 
