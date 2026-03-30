@@ -1,4 +1,5 @@
 import warnings
+from typing import Literal
 
 import numpy as np
 from astropy.stats import RipleysKEstimator
@@ -77,6 +78,9 @@ def ripley_nmembs(
     N_clust: int = 50,
     N_extra: int = 5,
     N_step: int = 10,
+    N_close: int = 10,
+    X_stars_max: float = 5,
+    N_stars_max: int = 10_000,
 ) -> np.ndarray:
     """Estimate the number of cluster members using Ripley's K-function.
 
@@ -107,6 +111,13 @@ def ripley_nmembs(
     :type N_extra: int
     :param N_step: Step size for increasing the number of cluster stars, defaults to 10
     :type N_step: int
+    :param N_close: Number of stars to select if no star survives the Ripley cleaning
+    :type N_close: int
+    :param X_stars_max: Multiplicative term to determine the maximum number of stars
+        that should pass the first filter
+    :type X_stars_max: float
+    :param N_stars_max: Absolute maximum number of stars that should pass the first filter
+    :type N_stars_max: int
 
     :return: Indexes of the estimated cluster members.
     :rtype: np.ndarray
@@ -128,7 +139,7 @@ def ripley_nmembs(
     e_pmRA, e_pmDE, e_plx = [np.empty(len(lon))] * 3
 
     # Remove the most obvious field stars
-    N_filter_max = min(N_clust_max * 5, 10_000)  # FIXED VALUE
+    N_filter_max = int(min(N_clust_max * X_stars_max, N_stars_max))
     idx_clean, x, y, pmRA, pmDE, plx, _, _, _ = cp.first_filter(
         idx_clean,
         vpd_c,
@@ -170,9 +181,9 @@ def ripley_nmembs(
 
     # Check number of surviving stars
     if len(idx_survived) == 0:
-        # If no stars survived, select the 10 closest to the xy center
+        # If no stars survived, select the N_close closest to the xy center
         dist_to_center = np.linalg.norm(xy - xy_center, axis=1)
-        idx_survived = np.argsort(dist_to_center)[:10]
+        idx_survived = np.argsort(dist_to_center)[:N_close]
         return idx_clean[idx_survived]
 
     elif len(idx_survived) < N_clust_min:
@@ -180,7 +191,10 @@ def ripley_nmembs(
         return idx_clean[idx_survived]
 
     # Apply local density based cleaning
-    idx_survived = local_dens_clean(xy_center, x, y, idx_survived)
+    dist_to_cent, local_density, fdens = estimate_field_density(
+        xy_center, x, y, idx_survived
+    )
+    idx_survived = apply_density_clean(idx_survived, dist_to_cent, local_density, fdens)
 
     return idx_clean[idx_survived]
 
@@ -217,7 +231,8 @@ def init_ripley(
     lmin = min(thumb, large)
     rads = np.linspace(lmin * 0.01, lmin, 100)  # HARDCODED
 
-    C_thresh_N = 1.68 * np.sqrt(area)  # HARDCODED
+    # See 'Tests of randomness for spatial point patterns', Ripley (1979)
+    C_thresh_N = 1.68 * np.sqrt(area)
 
     return rads, Kest, C_thresh_N
 
@@ -279,10 +294,16 @@ def ripley_core(
 
 
 def rkfunc(
-    xy: np.ndarray, rads: np.ndarray, Kest: RipleysKEstimator
+    xy: np.ndarray,
+    rads: np.ndarray,
+    Kest: RipleysKEstimator,
+    mode: Literal["none", "translation", "ohser", "ripley"] = "translation",
 ) -> float | np.floating:
     """Test how similar this cluster's (x, y) distribution is compared
     to a uniform random distribution using Ripley's K.
+
+    To avoid large memory consumption if the data array is too big, use:
+    mode = "none"
 
     https://stats.stackexchange.com/a/122816/10416
 
@@ -292,19 +313,17 @@ def rkfunc(
     :type rads: np.ndarray
     :param Kest: Ripley's K-estimator.
     :type Kest: RipleysKEstimator
+    :param mode: Mode for Ripley's K-estimator.
+    :type mode: str
+
     :return: Ripley's K-function value.
     :rtype: float | np.floating
     """
-    # Avoid large memory consumption if the data array is too big
-    # if xy.shape[0] > 5000:
-    #     mode = "none"
-    # else:
-    #     mode = 'translation'
 
     # Hide RunTimeWarning
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        L_t = Kest.Lfunction(xy, rads, mode="translation")
+        L_t = Kest.Lfunction(xy, rads, mode=mode)
 
     # Catch all-nans. Avoid 'RuntimeWarning: All-NaN slice encountered'
     if np.isnan(L_t).all():
@@ -315,77 +334,141 @@ def rkfunc(
     return C_s
 
 
-def local_dens_clean(
+def estimate_field_density(
     xy_center: tuple[float, float],
     x: np.ndarray,
     y: np.ndarray,
-    idx_survived: list,
+    idx: list[int],
     N_k: int = 5,
-) -> list:
-    """Clean the cluster members based on local density and distance to xy center."""
+    p_bounds: tuple[float, float, float] = (75, 85, 95),
+    large_cluster_N: int = 250,
+    fdens_ratio_bounds: tuple[float, float] = (0.2, 0.7),
+) -> tuple[np.ndarray, np.ndarray, float]:
+    """
+    Estimate local stellar density and field density level.
 
-    # 2D distance to xy center and local density
-    data = np.array([x[idx_survived], y[idx_survived]]).T
-    # Distance to center
+    Local stellar density is estimated from the distance to the ``N_k``-th nearest
+    neighbor. A field density level is inferred from outer regions of the cluster,
+    and stars with lower densities or large distances from the center are rejected.
+
+    The 'large_cluster_N' and 'fdens_ratio_bounds' values are selected so that for
+    clusters with at least 250 identified members, if the 95th percentile field density
+    is between 20% and 70% of the 75th field density, then the 95th percentile is used.
+    This helps to select more members for large clusters, while also avoiding
+    over-cleaning for the remaining clusters. The 20% lower bound is there to catch
+    clusters with a very low number of stars at the edges.
+
+    :param xy_center: Cartesian coordinates of the cluster center ``(x_c, y_c)``.
+    :type xy_center: tuple(float, float)
+    :param x: X coordinates of all stars.
+    :type x: ndarray
+    :param y: Y coordinates of all stars.
+    :type y: ndarray
+    :param idx: Indices of stars used in the density estimation.
+    :type idx: list(int)
+    :param N_k: Neighbor order used to estimate local density.
+    :type N_k: int
+    :param p_bounds: Percentiles of the distance distribution used to estimate
+        the field density region ``(p_low, p_mid, p_high)``.
+    :type p_bounds: tuple(float, float, float)
+    :param large_cluster_N: Minimum number of members required to apply the
+        alternative field density estimate.
+    :type large_cluster_N: int
+    :param fdens_ratio_bounds: Accepted ratio range between outer and inner
+        field densities that triggers the alternative estimate.
+    :type fdens_ratio_bounds: tuple(float, float)
+
+    :return:
+        dist_to_cent : distances to cluster center
+        local_density : normalized local densities
+        fdens : estimated field density level
+    :rtype: tuple(ndarray, ndarray, float)
+    """
+
+    data = np.array([x[idx], y[idx]]).T
+
     dist_to_cent = np.linalg.norm(data - xy_center, axis=1)
 
-    # Local density
+    # Local density from N_k nearest neighbors
     tree = KDTree(data)
-    # Query neighbors including self
     dists, _ = tree.query(data, k=N_k + 1)
-    fifth_nn_dist = np.asarray(dists)[:, N_k]  # Nth neighbor distance
-    local_density = 1 / fifth_nn_dist
-    local_density /= local_density.max()  # Normalize
+    kth_nn_dist = np.asarray(dists)[:, N_k]
+    local_density = 1 / kth_nn_dist
+    local_density /= local_density.max()
 
-    # Estimate field density
-    p_75, p_85, p_95 = np.percentile(dist_to_cent, (75, 85, 95))
-    msk_dist = (dist_to_cent > p_75) & (dist_to_cent < p_85)
-    fdens = np.median(local_density[msk_dist])
+    # Field density estimate from outer region
+    p_low, p_mid, p_high = np.percentile(dist_to_cent, p_bounds)
+    msk_mid = (dist_to_cent > p_low) & (dist_to_cent < p_mid)
+    fdens = np.median(local_density[msk_mid])
 
-    # The values in this block are manually selected. It means that, for clusters
-    # with at least 250 identified members, if the 95th percentile field density is
-    # between 20% and 70% of the 75th field density, then the 95th percentile is used.
-    # This helps to select more members for large clusters, while also avoiding
-    # over-cleaning for the remaining clusters. The 20% lower bound is there to catch
-    # clusters with a very low number of stars at the edges.
-    fdens_95 = np.median(local_density[dist_to_cent > p_95])
-    if len(idx_survived) > 250 and (0.2 < fdens_95 / fdens < 0.7):
-        fdens = fdens_95
+    # Alternative estimate for large clusters
+    fdens_outer = np.median(local_density[dist_to_cent > p_high])
+    if fdens > 0:
+        ratio = fdens_outer / fdens
+    else:
+        ratio = np.inf
+    if len(idx) > large_cluster_N:
+        if fdens_ratio_bounds[0] < ratio < fdens_ratio_bounds[1]:
+            fdens = fdens_outer
 
-    # Estimate the radius that intersect with the field density
-    f_low, f_high = 0.95, 1.05
+    return dist_to_cent, local_density, fdens
+
+
+def apply_density_clean(
+    idx: list[int],
+    dist_to_cent: np.ndarray,
+    local_density: np.ndarray,
+    fdens: float,
+    band_init: tuple[float, float] = (0.95, 1.05),
+    band_step: float = 0.05,
+    band_min_count: int = 5,
+    rad_percentile: float = 5,
+) -> list[int]:
+    """
+    Reject stars with low density or large distance from the center.
+
+    The method attempts to identify the radius at which the cluster density
+    becomes indistinguishable from the field density. Stars beyond this radius
+    or with densities below the estimated field level are rejected.
+
+    :param idx: Indices of stars to clean.
+    :type idx: list(int)
+    :param dist_to_cent: Distance of each star to the cluster center.
+    :type dist_to_cent: ndarray
+    :param local_density: Normalized local stellar density.
+    :type local_density: ndarray
+    :param fdens: Estimated field density level.
+    :type fdens: float
+    :param band_init: Initial multiplicative bounds around the field density.
+    :type band_init: tuple(float, float)
+    :param band_step: Increment applied to widen the density band if needed.
+    :type band_step: float
+    :param band_min_count: Minimum number of stars required in the density band.
+    :type band_min_count: int
+    :param rad_percentile: Percentile used to estimate limiting radius.
+    :type rad_percentile: float
+
+    :return: Updated indices of surviving stars.
+    :rtype: list(int)
+    """
+    # Determine radius where density ~ field density
+    f_low, f_high = band_init
     while True:
-        # Find at least 5 stars in the band around fdens
         msk_fdens = (local_density > fdens * f_low) & (local_density < fdens * f_high)
-        if msk_fdens.sum() > 5:
+
+        if msk_fdens.sum() >= band_min_count:
             break
         # If no stars where found, make the band larger
-        f_low, f_high = f_low - 0.05, f_high + 0.05
-    # The radius is the 5th percentile of the stars in the band around fdens
-    rad = np.percentile(dist_to_cent[msk_fdens], 5)
+        f_low -= band_step
+        f_high += band_step
+
+    # The radius is the rad_percentile of the stars in the band around fdens
+    rad = np.percentile(dist_to_cent[msk_fdens], rad_percentile)
 
     # The final mask rejects stars beyond the radius and with a local density
     # below the field density
     msk = (local_density > fdens) & (dist_to_cent < rad)
     if msk.sum() == 0:
-        return idx_survived
+        return idx
 
-    # Update surviving indexes
-    idx_survived = list(np.array(idx_survived)[msk])
-
-    # if len(idx_survived) > 25:
-    #     import matplotlib.pyplot as plt
-
-    #     plt.subplot(121)
-    #     plt.title(f"N={data.shape[0]}")
-    #     # plt.scatter(X[0], X[1], alpha=0.1, c="grey")
-    #     plt.scatter(*data.T, alpha=0.25)
-    #     plt.scatter(x[idx_survived], y[idx_survived], alpha=0.25)
-    #     plt.scatter(xy_center[0], xy_center[1], marker="x", color="red")
-    #     plt.subplot(122)
-    #     plt.title(f"N={len(idx_survived)}")
-    #     plt.scatter(dist_to_cent, local_density, s=5, alpha=0.5)
-    #     plt.axvline(rad, ls=":", c="r")
-    #     plt.show()
-
-    return idx_survived
+    return list(np.array(idx)[msk])
