@@ -620,3 +620,28 @@ The distributions for these masses are obtained through a bootstrap process that
 takes the uncertainties in the fundamental parameters into account.
 
 
+
+
+
+
+.. _blue_stragglers:
+
+Blue stragglers
+***************
+
+**ASteCA** can estimate the probability that an observed star is a blue straggler
+using the :py:meth:`asteca.Synthetic.bss_probabilities` method, which takes a
+:py:class:`asteca.Synthetic` object as input. The algorithm proceeds as follows:
+
+1. Select an observed cluster.
+2. For each observed star, determine whether it lies in the blue-straggler region
+   of the CMD (i.e. brighter and bluer than the cluster turn-off point).
+3. Repeat the classification for ``N_models`` synthetic clusters generated with the
+   :py:meth:`asteca.Synthetic.get_models` method.
+
+The blue-straggler probability assigned to each observed star is the fraction of
+synthetic realizations in which the star is classified as a blue straggler,
+i.e. the number of positive identifications divided by ``N_models``.
+
+See the :ref:`blue_stragglers_ntbk` tutorial for a full example on how this analysis is
+performed for an observed cluster.

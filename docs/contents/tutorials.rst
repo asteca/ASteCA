@@ -16,6 +16,7 @@ and estimating a cluster's fundamental parameters.
    synthetic
    paramfit
    masses_bfr
+   blue_stragglers
 
 
 The :ref:`structure_ntbk` notebook serves as a guide to the initial structural
@@ -45,8 +46,7 @@ the results, including the final parameter estimates (medians and standard devia
 along with ``pyABC``  visualizations and a comparison Color-Magnitude Diagram (CMD).
 
 
-Given an observed cluster the :ref:`masses_bfr_ntbk` notebook shows how to apply
-the following methods:
+The :ref:`masses_bfr_ntbk` notebook shows how to apply the following methods:
 
 - :meth:`asteca.Synthetic.get_models`: sample a set of synthetic clusters
   with the same parameters as the observed cluster (previously calibrated and fitted)
@@ -56,6 +56,12 @@ the following methods:
   the cluster
 - :meth:`asteca.Synthetic.cluster_masses`: determine various associated cluster masses
   (initial, actual, observed, etc.)
+
+
+The :ref:`blue_stragglers` notebook shows how to apply the
+:meth:`asteca.Synthetic.bss_probabilities` method to estimate the probabilities
+of stars being blue stragglers, based on their positions in the CMD and the parameters
+of the best-fitting model.
 
 
 

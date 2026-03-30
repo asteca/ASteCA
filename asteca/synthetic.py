@@ -269,9 +269,9 @@ class Synthetic:
                     f"\nThe number of stars in this `Cluster` object ({cluster.mag.size}) is large.\n"
                     "This may lead to synthetic clusters with insufficient stars to\n"
                     "properly reproduce the observations.\n"
-                    f"Consider increasing the 'max_mass' parameter (current value: {self.max_mass}).\n"
-                    f"As a rule of thumb, set 'max_mass' to at least {f_stars_mass} times\n"
-                    "the number of observed stars."
+                    "Consider increasing the 'max_mass' parameter in the Synthetic cluster \n"
+                    f"object (current value: {self.max_mass}). As a rule of thumb, set 'max_mass' \n"
+                    f"to at least {f_stars_mass} times the number of observed stars."
                 ),
                 UserWarning,
             )
@@ -300,7 +300,9 @@ class Synthetic:
         # self.cluster_ra = cluster.ra
         # self.cluster_dec = cluster.dec
 
-    def generate(self, params: dict, N_stars: int = 100) -> np.ndarray:
+    def generate(
+        self, params: dict, N_stars: int = 100
+    ) -> np.ndarray | tuple[np.ndarray, np.ndarray]:
         """Generate a synthetic cluster.
 
         The synthetic cluster is generated according to the parameters given in
@@ -327,116 +329,37 @@ class Synthetic:
         try:
             # Extract from calibrated observed cluster
             max_mag_syn = self.max_mag_syn_obs
-            N_synth_stars = self.N_stars_obs
             err_dist_synth = self.err_dist_obs
+            N_synth_stars = self.N_stars_obs
         except AttributeError:
             # If no calibration was done, use the provided 'N_stars' value (or the
             # default value if not given)
             max_mag_syn = np.inf
-            N_synth_stars = int(N_stars)
             err_dist_synth = []
+            N_synth_stars = int(N_stars)
 
-        # Return proper values for fixed parameters and parameters required
-        # for the (z, log(age)) isochrone averaging.
-        met, loga, alpha, beta, av, dr, rv, dm, ml, mh, al, ah = scp.properModel(
-            self.met_age_dict, self.def_params, params
-        )
-
-        # If (z, a) are both fixed, use the single processed isochrone
-        if ml == al == mh == ah == 0:
-            # The np.array() is important to avoid overwriting 'theor_tracks'
-            isochrone = np.array(self.theor_tracks[0][0])
-        else:
-            # Generate a weighted average isochrone from the (z, log(age)) values in
-            # the 'model'.
-            isochrone = scp.zaWAverage(
-                self.theor_tracks,
-                self.met_age_dict,
-                self.m_ini_idx,
-                met,
-                loga,
-                ml,
-                mh,
-                al,
-                ah,
-            )
-
-        binar_flag = True
-        if alpha == 0.0 and beta == 0.0:
-            binar_flag = False
-
-            # # TODO: this was not tested thoroughly (April 2025)
-            # # Remove binary photometry
-            # isochrone = isochrone[: self.m_ini_idx + 2]
-            # # TODO: this was not tested thoroughly
-
-        # Move theoretical isochrone using the distance modulus
-        isoch_moved = scp.move_isochrone(isochrone, binar_flag, self.m_ini_idx, dm)
-
-        # Apply extinction correction
-        isoch_extin = scp.extinction(
+        return scp.generate_synth_arr(
+            params,
+            self.met_age_dict,
+            self.def_params,
+            self.m_ini_idx,
+            self.theor_tracks,
             self.ext_law,
             self.ext_coefs,
-            self.rand_floats["norm"][0],
-            self.rand_floats["unif"][0],
+            self.rand_floats,
             self.DR_distribution,
-            self.m_ini_idx,
-            binar_flag,
-            av,
-            dr,
-            rv,
-            isoch_moved,
-        )
-
-        # Remove isochrone stars beyond the maximum magnitude
-        isoch_cut = scp.cut_max_mag(isoch_extin, max_mag_syn)
-        if isoch_cut.size == 0:
-            return np.array([])
-
-        # This is an internal trick to return the array at this point. It is used
-        # to generate an isochrone to plot
-        if N_stars == -1:
-            return isoch_cut
-
-        # Interpolate IMF's sampled masses into the isochrone.
-        isoch_mass = scp.mass_interp(
-            isoch_cut,
-            self.m_ini_idx,
-            self.st_dist_mass[ml][al],
+            self.st_dist_mass,
+            max_mag_syn,
+            err_dist_synth,
             N_synth_stars,
-            binar_flag,
         )
-        if isoch_mass.size == 0:
-            return np.array([])
-
-        # import matplotlib.pyplot as plt
-        # # plt.title('2000, steps 1')
-        # plt.title('2000, steps 2')
-        # plt.scatter(isoch_mass[1], isoch_mass[0], alpha=.25)
-        # plt.scatter(isoch_mass[5], isoch_mass[4], alpha=.25)
-        # plt.gca().invert_yaxis()
-        # plt.show()
-
-        # Assignment of binarity.
-        isoch_binar = scp.binarity(
-            alpha,
-            beta,
-            binar_flag,
-            self.m_ini_idx,
-            self.rand_floats["unif"][1],
-            isoch_mass,
-        )
-
-        # Assign errors according to errors distribution.
-        synth_clust = scp.add_errors(isoch_binar, err_dist_synth)
-
-        return synth_clust
 
     def get_models(
         self,
         model: dict[str, float],
         model_std: dict[str, float],
         N_models: int = 200,
+        color_idx: int = 0,
     ) -> None:
         """Generate random sampled models from the selected solution. Use these models
         to generate full synthetic clusters.
@@ -448,11 +371,16 @@ class Synthetic:
         :type model_std: dict[str, float]
         :param N_models: Number of sampled models
         :type N_models: int
+        :param color_idx: Index of the color used to define the CMD. If only one color is
+            defined, set to ``0``. If two colors are defined, set to ``0`` to use the
+            first color, or ``1`` to use the second color. Defaults to ``0``.
+        :type color_idx: int
 
         :raises ValueError: If any of the (met, age) parameters are out of range or
             if all the synthetic arrays generated are empty
         """
         from .modules import mass_binary as mb
+        from .modules import synth_cluster_priv as scp
 
         # Update dictionaries with default values, if required
         model = self.def_params | model
@@ -485,13 +413,58 @@ class Synthetic:
 
         # Generate the synthetic arrays using the above models
         sampled_models_no_empty, sampled_synthcls = [], []
-        for i, smodel in enumerate(sampled_models):
-            isoch = self.generate(smodel)
+        turn_off_points = {
+            "color_idx": color_idx,
+            "to_col_1": [],
+            "to_col_2": [],
+            "to_mag_1": [],
+            "to_mag_2": [],
+        }
+        for smodel in sampled_models:
+            # Get both the isochrone and the synthetic cluster
+            isoch_arr, synth_arr = scp.generate_synth_arr(
+                smodel,
+                self.met_age_dict,
+                self.def_params,
+                self.m_ini_idx,
+                self.theor_tracks,
+                self.ext_law,
+                self.ext_coefs,
+                self.rand_floats,
+                self.DR_distribution,
+                self.st_dist_mass,
+                self.max_mag_syn_obs,
+                self.err_dist_obs,
+                self.N_stars_obs,
+                return_flag="isoch+array",
+            )
+
             # Do not store models that result in empty arrays
-            if not isoch.any():
+            if not synth_arr.any():
                 continue
+
             sampled_models_no_empty.append(smodel)
-            sampled_synthcls.append(isoch)
+            sampled_synthcls.append(synth_arr)
+
+            # Estimate turn-off point(s)
+            # Extract maximum mass
+            max_mass_isoch = synth_arr[self.m_ini_idx].max()
+            # Apply max mass filter to isochrone
+            msk = isoch_arr[self.m_ini_idx] < max_mass_isoch
+            # Extract isochrone up to the max mass
+            mag, color = np.array([isoch_arr[0], isoch_arr[color_idx + 1]])[:, msk]
+            # Find turn-off point
+            to_col_1, to_col_2, to_mag_1, to_mag_2 = scp.to_point_find(
+                color,
+                mag,
+                self.cluster_mag,
+                self.cluster_colors[color_idx],
+                self.isochs.model,
+            )
+            turn_off_points["to_col_1"].append(to_col_1)
+            turn_off_points["to_col_2"].append(to_col_2)
+            turn_off_points["to_mag_1"].append(to_mag_1)
+            turn_off_points["to_mag_2"].append(to_mag_2)
 
         N_models_non_empty = len(sampled_models_no_empty)
         if N_models_non_empty == 0:
@@ -501,10 +474,12 @@ class Synthetic:
                 f"Empty synthetic arrays generated: {N_models - N_models_non_empty}"
             )
 
-        # cluster_masses
+        # Used by: cluster_masses
         self.sampled_models = sampled_models_no_empty
-        # stellar_masses, cluster_masses
+        # Used by: stellar_masses, cluster_masses
         self.sampled_synthcls = sampled_synthcls
+        # Used by: bss_probabilities
+        self.turn_off_points = turn_off_points
 
         self._vp(f"N_models       : {len(sampled_models_no_empty)}", 1)
         self._vp("Attributes stored in Synthetic object", 1)
@@ -596,6 +571,50 @@ class Synthetic:
         self._vp(f"Binary fraction: {bfr_med:.3f} +/- {bfr_std:.3f}", 1)
 
         return float(bfr_med), float(bfr_std)
+
+    def bss_probabilities(self) -> np.ndarray:
+        """Estimate the probability of each observed star being a blue straggler star
+        (BSS) based on the turn-off point of the isochrones generated from the sampled
+        models.
+
+        :return: Array with the BSS probability for each observed star
+        :rtype: np.ndarray
+        """
+        if (
+            hasattr(self, "cluster_mag") is False
+            or hasattr(self, "cluster_colors") is False
+        ):
+            raise ValueError(
+                "This method requires running the 'calibrate()' method first\n"
+                + "with an observed 'Cluster' object"
+            )
+
+        if hasattr(self, "sampled_synthcls") is False:
+            raise ValueError(
+                "This method requires running the 'get_models()' method first"
+            )
+
+        color_idx = self.turn_off_points["color_idx"]
+        to_col_1 = np.array(self.turn_off_points["to_col_1"])
+        to_col_2 = np.array(self.turn_off_points["to_col_2"])
+        to_mag_1 = np.array(self.turn_off_points["to_mag_1"])
+        to_mag_2 = np.array(self.turn_off_points["to_mag_2"])
+
+        color = self.cluster_colors[color_idx]
+        mag = self.cluster_mag
+
+        # Assign BSS probabilities
+        bss_probs = np.zeros_like(mag)
+        for c1, c2, m1, m2 in zip(to_col_1, to_col_2, to_mag_1, to_mag_2):
+            msk = ((color < c1) & (mag < m1)) | ((color < c2) & (mag < m2))
+            bss_probs[msk] += 1
+
+        # Normalize probability
+        bss_probs /= len(self.sampled_synthcls)
+
+        self._vp("\nBlue straggler probabilities estimated", 1)
+
+        return bss_probs
 
     def cluster_masses(
         self,
@@ -767,9 +786,7 @@ class Synthetic:
         }
 
     def get_isochrone(
-        self,
-        fit_params: dict,
-        color_idx: int = 0,
+        self, fit_params: dict, color_idx: int = 0, full_track: bool = False
     ) -> np.ndarray:
         """Generate an isochrone for plotting.
 
@@ -783,6 +800,9 @@ class Synthetic:
         :param color_idx: Index of the color to plot. If ``0`` (default), plot the
             first color. If ``1`` plot the second color
         :type color_idx: int
+        :param full_track: If ``True``, return the full isochrone (ie: do not apply
+            the max mass filter)
+        :type full_track: bool
 
         :raises ValueError: If either parameter (met, age) is outside of allowed range
 
@@ -803,18 +823,74 @@ class Synthetic:
             except KeyError:
                 pass
 
-        # Generate physical synthetic cluster to extract the max mass
-        max_mass_isoch = self.generate(fit_params_copy)[self.m_ini_idx].max()
+        from .modules import synth_cluster_priv as scp
 
-        # Generate displaced isochrone, The 'N_stars=-1' indicates to return the
-        # array right after the magnitude cut
-        fit_params_copy["DR"] = 0.0
-        isochrone = self.generate(fit_params_copy, N_stars=-1)
+        # Generate displaced isochrone, The 'N_stars=-99' indicates to return the
+        # isochrone only
+        fit_params_isoch = dict(fit_params)
+        fit_params_isoch["DR"] = 0.0
+        isochrone = scp.generate_synth_arr(
+            fit_params_isoch,
+            self.met_age_dict,
+            self.def_params,
+            self.m_ini_idx,
+            self.theor_tracks,
+            self.ext_law,
+            self.ext_coefs,
+            self.rand_floats,
+            self.DR_distribution,
+            self.st_dist_mass,
+            self.max_mag_syn_obs,
+            self.err_dist_obs,
+            self.N_stars_obs,
+            return_flag="isoch",
+        )
+
+        if full_track:
+            # Return the full track without applying the max mass filter
+            return np.array(isochrone)[[0, color_idx + 1]]
+
+        # Extract magnitude and mass from the isochrone and the full synthetic cluster
+        isoch_mag, isoch_mass = isochrone[0], isochrone[self.m_ini_idx]
+        # Generate physical synthetic cluster to extract the max mass
+        full_arr = scp.generate_synth_arr(
+            fit_params_copy,
+            self.met_age_dict,
+            self.def_params,
+            self.m_ini_idx,
+            self.theor_tracks,
+            self.ext_law,
+            self.ext_coefs,
+            self.rand_floats,
+            self.DR_distribution,
+            self.st_dist_mass,
+            self.max_mag_syn_obs,
+            self.err_dist_obs,
+            self.N_stars_obs,
+        )
+
+        mag_full, mass_full = full_arr[0], full_arr[self.m_ini_idx]
+        full_mag_min = mag_full.min()
+
+        # Select the max mass for the isochrone that results in a minimum difference
+        # between the minimum magnitude of the isochrone and the minimum magnitude of
+        # the full synthetic cluster
+        best_diff = np.inf
+        best_max_mass_isoch = None
+        for p in np.arange(95, 100.5, 0.5):
+            max_mass_isoch = np.percentile(mass_full, p)
+            msk = isoch_mass < max_mass_isoch
+            if not np.any(msk):
+                continue
+            isoch_mag_min = isoch_mag[msk].min()
+            diff = abs(isoch_mag_min - full_mag_min)
+            if diff < best_diff:
+                best_diff = diff
+                best_max_mass_isoch = max_mass_isoch
 
         # Apply max mass filter to isochrone
-        msk = isochrone[self.m_ini_idx] < max_mass_isoch
-
+        msk = isoch_mass < best_max_mass_isoch
         # Generate proper array for plotting
-        isochrone = np.array([isochrone[0], isochrone[color_idx + 1]])[:, msk]
+        isochrone = np.array([isoch_mag, isochrone[color_idx + 1]])[:, msk]
 
         return isochrone

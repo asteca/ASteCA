@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.typing as npt
 from scipy import stats
+from scipy.signal import savgol_filter
 
 from .imfs import invTrnsfSmpl, sampleInv
 
@@ -1161,7 +1162,7 @@ def mass_interp(
     m_ini_idx: int,
     st_dist_mass: np.ndarray,
     N_synth_stars: int,
-    binar_flag: bool,
+    # binar_flag: bool,
 ) -> np.ndarray:
     """For each mass in the sampled IMF mass distribution, interpolate its value
     (and those of all the sub-arrays in 'isoch_cut') into the isochrone.
@@ -1211,9 +1212,7 @@ def mass_interp(
 
     mass_dist = np.ascontiguousarray(mass_dist, dtype=mass_ini.dtype)
     # Interpolate the sampled stars (masses) into the isochrone
-    isoch_mass = interp_mass_isoch(
-        isoch_cut, mass_ini, mass_dist, m_ini_idx, binar_flag
-    )
+    isoch_mass = interp_mass_isoch(isoch_cut, mass_ini, mass_dist)
 
     return isoch_mass
 
@@ -1222,8 +1221,8 @@ def interp_mass_isoch(
     isoch_cut: np.ndarray,
     mass_ini: np.ndarray,
     mass_dist: np.ndarray,
-    m_ini_idx: int,
-    binar_flag: bool,
+    # m_ini_idx: int,
+    # binar_flag: bool,
 ) -> np.ndarray:
     """Find where in the original data, the values to interpolate would be inserted.
 
@@ -1404,6 +1403,280 @@ def add_errors(isoch_binar: np.ndarray, err_dist: list[np.ndarray]) -> np.ndarra
         isoch_binar[i, mag_sort] += sigma[:N]
 
     return isoch_binar
+
+
+def generate_synth_arr(
+    params: dict,
+    met_age_dict: dict,
+    def_params: dict,
+    m_ini_idx: int,
+    theor_tracks: np.ndarray,
+    ext_law,
+    ext_coefs,
+    rand_floats,
+    DR_distribution,
+    st_dist_mass,
+    max_mag_syn,
+    err_dist_synth,
+    N_synth_stars,
+    return_flag: str = "array",
+) -> np.ndarray | tuple[np.ndarray, np.ndarray]:
+    """Generate a synthetic cluster.
+
+    The synthetic cluster is generated according to the parameters given in
+    the ``params`` dictionary and the already calibrated
+    :py:class:`Synthetic` object.
+
+    :param params: Dictionary containing the values for the fundamental parameters.
+        The dictionary must include values for all the parameters, e.g.:
+        ``params = {met: 0.0152, loga: 8.1, alpha: 0.1, beta: 1, Av: 0.2, DR: 0., Rv: 3.1, dm: 9.7}``
+    :type params: dict
+    :param N_stars: Number of synthetic stars to generate
+    :type N_stars: int
+
+    :return: Returns a ``np.array`` containing a synthetic cluster
+        with the data ``[mag, c1, (c2), mass, mass_b]``, where ``mag`` is
+        the magnitude, ``c1`` is the color, ``c2`` is the optional second color,
+        and ``mass, mass_b`` are the masses of the single and secondary components
+        of the binary systems, respectively (if generated). If the system is a
+        single star, then ``mass_b==np.nan``.
+    :rtype: np.ndarray
+    """
+
+    # Return proper values for fixed parameters and parameters required
+    # for the (z, log(age)) isochrone averaging.
+    met, loga, alpha, beta, av, dr, rv, dm, ml, mh, al, ah = properModel(
+        met_age_dict, def_params, params
+    )
+
+    # If (z, a) are both fixed, use the single processed isochrone
+    if ml == al == mh == ah == 0:
+        # The np.array() is important to avoid overwriting 'theor_tracks'
+        isochrone = np.array(theor_tracks[0][0])
+    else:
+        # Generate a weighted average isochrone from the (z, log(age)) values in
+        # the 'model'.
+        isochrone = zaWAverage(
+            theor_tracks,
+            met_age_dict,
+            m_ini_idx,
+            met,
+            loga,
+            ml,
+            mh,
+            al,
+            ah,
+        )
+
+    binar_flag = True
+    if alpha == 0.0 and beta == 0.0:
+        binar_flag = False
+
+        # # TODO: this was not tested thoroughly (April 2025)
+        # # Remove binary photometry
+        # isochrone = isochrone[: self.m_ini_idx + 2]
+        # # TODO: this was not tested thoroughly
+
+    # Move theoretical isochrone using the distance modulus
+    isoch_moved = move_isochrone(isochrone, binar_flag, m_ini_idx, dm)
+
+    # Apply extinction correction
+    isoch_extin = extinction(
+        ext_law,
+        ext_coefs,
+        rand_floats["norm"][0],
+        rand_floats["unif"][0],
+        DR_distribution,
+        m_ini_idx,
+        binar_flag,
+        av,
+        dr,
+        rv,
+        isoch_moved,
+    )
+
+    # Remove isochrone stars beyond the maximum magnitude
+    isoch_cut = cut_max_mag(isoch_extin, max_mag_syn)
+    if isoch_cut.size == 0:
+        return np.array([])
+
+    # Return the isochrone only
+    if return_flag == "isoch":
+        return isoch_cut
+
+    # Interpolate IMF's sampled masses into the isochrone.
+    isoch_mass = mass_interp(
+        isoch_cut,
+        m_ini_idx,
+        st_dist_mass[ml][al],
+        N_synth_stars,
+        # binar_flag,
+    )
+    if isoch_mass.size == 0:
+        return np.array([])
+
+    # import matplotlib.pyplot as plt
+    # # plt.title('2000, steps 1')
+    # plt.title('2000, steps 2')
+    # plt.scatter(isoch_mass[1], isoch_mass[0], alpha=.25)
+    # plt.scatter(isoch_mass[5], isoch_mass[4], alpha=.25)
+    # plt.gca().invert_yaxis()
+    # plt.show()
+
+    # Assignment of binarity.
+    isoch_binar = binarity(
+        alpha,
+        beta,
+        binar_flag,
+        m_ini_idx,
+        rand_floats["unif"][1],
+        isoch_mass,
+    )
+
+    # Assign errors according to errors distribution.
+    synth_clust = add_errors(isoch_binar, err_dist_synth)
+
+    # Return both the isochrone and the full synthetic cluster
+    if return_flag == "isoch+array":
+        return isoch_cut, synth_clust
+
+    return synth_clust
+
+
+def to_point_find(
+    x: np.ndarray,
+    y: np.ndarray,
+    cluster_mag: np.ndarray,
+    cluster_color: np.ndarray,
+    isochs_model: str,
+    window: int = 21,
+    polyorder: int = 3,
+    deriv: int = 1,
+    dmag_init: float = 0.25,
+    dmag_step: float = 0.05,
+    min_stars: int = 5,
+    eps_default: float = 1e-6,
+    eps_mist: float = 1e-3,
+    confirm_min: int = 3,
+    confirm_frac: float = 1 / 3,
+    fallback_min_idx: int = 10,
+    mag_offset: float = 0.5,
+    col_offset_1: float = 0.1,
+    col_offset_2: float = 0.05,
+    percentile: float = 5,
+) -> tuple[float, float, float, float]:
+    """
+    Identifies the first index where a signal begins a sustained monotonic increase.
+    In this case, it identifies the color value where it begins to increase,
+    i.e. the turn-off point.
+
+    The function applies a Savitzky-Golay filter to estimate the first derivative
+    of the input signal. It then searches for the first sequence of length `confirm`
+    where all estimated derivatives are strictly positive.
+
+    Args:
+        x (np.ndarray): 1D array of isochrone color values (independent variable).
+        y (np.ndarray): 1D array of isochrone magnitudes corresponding to `x`.
+        cluster_mag (np.ndarray): Observed cluster magnitudes used to refine the
+            turn-off region selection.
+        cluster_color (np.ndarray): Observed cluster colors corresponding to
+            `cluster_mag`.
+        isochs_model (str): Name of the isochrone model. Used to adjust the
+            derivative threshold for specific models (e.g. "mist").
+
+        window (int, optional): Window length for the Savitzky-Golay filter.
+            Must be a positive odd integer. If even, it is incremented by 1.
+        polyorder (int, optional): Polynomial order used by the Savitzky-Golay filter.
+            Must be smaller than `window`.
+        deriv (int, optional): Order of the derivative computed by the
+            Savitzky-Golay filter.
+        dmag_init (float, optional): Initial half-width of the magnitude interval
+            around the detected turn-off magnitude used to select cluster stars.
+        dmag_step (float, optional): Increment applied to the magnitude interval
+            half-width until at least `min_stars` are enclosed.
+        min_stars (int, optional): Minimum number of observed cluster stars required
+            within the magnitude interval around the turn-off point.
+        eps_default (float, optional): Default minimum derivative value required to
+            consider the signal locally increasing.
+        eps_mist (float, optional): Derivative threshold used when the isochrone
+            model is "mist".
+        confirm_min (int, optional): Minimum number of consecutive derivative values
+            required to confirm a sustained positive trend.
+        confirm_frac (float, optional): Fraction of `window` used to determine the
+            number of consecutive derivative values required to confirm the trend.
+        fallback_min_idx (int, optional): Minimum acceptable index for the detected
+            turn-off. If the detected index is smaller than this value, a fallback
+            based on the magnitude midpoint is used.
+        mag_offset (float, optional): Offset applied to the detected magnitude to
+            define the upper and lower magnitude limits returned.
+        col_offset_1 (float, optional): Offset applied to the detected color to
+            define the first returned color limit.
+        col_offset_2 (float, optional): Offset applied to the detected color to
+            define the second returned color limit.
+        percentile (float, optional): Percentile of the observed cluster colors
+            within the magnitude interval used to estimate the turn-off color.
+
+    Returns:
+        tuple[float, float, float, float]:
+            to_col_1 : Lower color bound for the turn-off region.
+            to_col_2 : Upper color bound for the turn-off region.
+            to_mag_1 : Upper magnitude bound for the turn-off region.
+            to_mag_2 : Lower magnitude bound for the turn-off region.
+    """
+    n = len(x)
+
+    eps = eps_default
+
+    # The MIST isochrones require a much larger epsilon value to identify the turn-off
+    if isochs_model.lower() == "mist":
+        eps = eps_mist
+
+    if n < window:
+        to_idx = n - 1
+    else:
+        if window % 2 == 0:
+            window += 1
+        dx = savgol_filter(x, window_length=window, polyorder=polyorder, deriv=deriv)
+        confirm = max(confirm_min, int(window * confirm_frac))
+        to_idx = n - 1
+        for i in range(n - confirm):
+            if np.all(dx[i : i + confirm] > eps):
+                to_idx = i
+                break
+
+    # If no sustained positive trend is found, assign to the index that corresponds to
+    # the middle point in magnitude. This is a fallback mechanism to ensure that a
+    # reasonable turn-off point is assigned when the found value is too close to the
+    # bottom of the isochrone
+    if to_idx < fallback_min_idx:
+        # Assign to the index that corresponds to the middle point in magnitude
+        y_mid_point = 0.5 * (max(y) + min(y))
+        to_idx = np.argmin(np.abs(y - y_mid_point))
+
+    # Extract the color and magnitude values at the detected turn-off index
+    to_col, to_mag = x[to_idx], y[to_idx]
+
+    # Define magnitude limits around the detected turn-off magnitude
+    to_mag_1 = to_mag + mag_offset
+    to_mag_2 = to_mag - mag_offset
+
+    # Define a magnitude range around the identified turn-off magnitude.
+    # Iteratively increase the magnitude range until at least `min_stars` are found
+    # within it.
+    dmag = dmag_init
+    while True:
+        mag_range = (cluster_mag > (to_mag - dmag)) & (cluster_mag < (to_mag + dmag))
+        if mag_range.sum() >= min_stars:
+            break
+        dmag += dmag_step
+
+    # This approach is more robust to incorrect parameter values assigned to
+    # the observed cluster
+    to_col_cl = np.nanpercentile(cluster_color[mag_range], percentile)
+    to_col_1 = min(to_col_cl, to_col - col_offset_1)
+    to_col_2 = min(to_col_cl, to_col - col_offset_2)
+
+    return to_col_1, to_col_2, to_mag_1, to_mag_2
 
 
 # def _rm_low_masses(self, dm_min):
