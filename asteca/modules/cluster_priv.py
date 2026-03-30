@@ -617,97 +617,127 @@ def get_KDE_cent(values: np.ndarray, gd: int) -> tuple[float, float]:
     return x_c, y_c
 
 
-def fdens_radius(x, y, cent):
-    return np.nan
+def king_radius_LS(
+    x, y, cent, rc_bounds, rt_bounds, fd
+) -> tuple[float, float, float, float]:
+    """
+    Residuals for least-squares optimization.
+    """
+    x0, y0, sigma = RDPCurve(x, y, cent)
 
+    y0 -= fd
+    y0 /= y0.max()
 
-def king_radius(x, y, cent) -> tuple[float, float, float, float]:
-    """ """
-    x0, y0, _ = RDPCurve(x, y, cent)
 
     kp = KingProjectedAnalytic1D()
 
     def lnlike(theta):
         """Returns a value from np.inf to 0 for an exact match"""
-        cd, rc, rt, fd = theta
-        return y0 - (kp.evaluate(x0, cd, rc, rt) + fd)
+        rc, rt = theta
+        if rt <= rc:
+            return np.inf * np.ones_like(y0)
 
-    rc0, rt0, fd0 = 0.25 * max(x0), np.median(x0), max(0, np.median(y0[-10:]))
-    cd0 = (max(y0) - fd0) / (1 - 1.0 / np.sqrt(1.0 + (rt0 / rc0) ** 2)) ** 2
-    p_init = np.array([cd0, rc0, rt0, fd0])
+        model = kp.evaluate(x0, amplitude=1, r_core=rc, r_tide=rt)
+        res = (y0 - model)/sigma
+        return res
 
-    min_cd, max_cd = fd0, 10 * max(y0)
-    min_rc, max_rc = x0[0], x0[-1]
-    min_rt, max_rt = x0[0], 2 * x0[-1]
-    min_fd, max_fd = fd0 * 0.1, max(y0)
-    bounds = tuple(
-        np.array(
-            [(min_cd, max_cd), (min_rc, max_rc), (min_rt, max_rt), (min_fd, max_fd)]
-        ).T
+
+    # if A_bounds is None:
+    #     min_A, max_A = max(0, 0.5 * min(y0)), 5 * max(y0)
+    # else:
+    #     min_A, max_A = A_bounds
+    if rc_bounds is None:
+        min_rc, max_rc = max(x0[0], 1e-3), x0[-1]
+    else:
+        min_rc, max_rc = rc_bounds
+    if rt_bounds is None:
+        min_rt, max_rt = x0[0], 5 * x0[-1]
+    else:
+        min_rt, max_rt = rt_bounds
+    # if fd_bounds is None:
+    #     min_fd, max_fd = max(0, 0.5 * min(y0)), max(y0)
+    # else:
+    #     min_fd, max_fd = fd_bounds
+    bounds = (
+        # [min_A, min_rc, min_rt, min_fd],
+        # [max_A, max_rc, max_rt, max_fd],
+        [min_rc, min_rt],
+        [max_rc, max_rt],
     )
 
-    # try:
+    # Initial values set to midpoints of the bounds
+    rc0, rt0 = 0.5 * (min_rc + max_rc), 0.5 * (min_rt + max_rt)
+    # A0, fd0 = max(y0) - min(y0), 0.5 * (min_fd + max_fd)
+    # p_init = np.array([A0, rc0, rt0, fd0])
+    p_init = np.array([rc0, rt0])
+
     res = least_squares(lnlike, p_init, bounds=bounds)
-    cd0, rc0, rt0, fd0 = res.x
-    #     lkl = res.cost * 2
-    # except ValueError:
-    #     lkl = np.inf
+    # A0, rc0, rt0, fd0 = res.x
+    rc0, rt0 = res.x
 
-    # import matplotlib.pyplot as plt
-
-    # plt.scatter(x0, y0)
-    # plt.show()
-    # breakpoint()
-
-    return cd0, rc0, rt0, fd0
+    return rc0, rt0
 
 
-def RDPCurve(x, y, cent, RDP_rings=50, rings_rm=0.1, Nmin=10, **kwargs):
+def RDPCurve(x, y, cent, RDP_rings=50, Nmin=10):
     """
-    Obtain the RDP using the concentric rings method.
+    Radial Density Profile (RDP) using concentric rings.
 
-    HARDCODED:
-    RDP_rings: number of rings to (initially) try to define
-    rings_rm: remove the more conflicting last X% of radii values.
-    Nmin: minimum number of stars that a ring should contain. Else, expand it.
+    Parameters
+    ----------
+    x, y : array_like
+        Coordinates of the stars.
+    cent : tuple
+        (x0, y0) cluster center.
+    RDP_rings : int, optional
+        Initial number of radial bins.
+    Nmin : int, optional
+        Minimum number of stars required per ring.
+
+    Returns
+    -------
+    rdp_radii : ndarray
+        Radius assigned to each ring.
+    rdp_density : ndarray
+        Stellar surface density in each ring.
     """
 
+    x = np.asarray(x)
+    y = np.asarray(y)
+
+    # Maximum usable radius within frame
     xmax = min(abs(x.max() - cent[0]), abs(x.min() - cent[0]))
     ymax = min(abs(y.max() - cent[1]), abs(y.min() - cent[1]))
-    rdp_max = min(xmax, ymax) * 0.95
+    rdp_max = 0.95 * min(xmax, ymax)
 
-    # Frame limits
-    xy_cent_dist = spatial.distance.cdist([cent], np.array([x, y]).T)[0]
+    # Distances to center
+    r = np.sqrt((x - cent[0]) ** 2 + (y - cent[1]) ** 2)
 
-    # Handle the case where int()==0
-    # max_i = max(1, int(rings_rm * RDP_rings))
-    # The +1 adds a ring accounting for the initial 0. in the array
-    radii = np.linspace(0.0, rdp_max, RDP_rings + 1)  # + max_i)[:-max_i]
+    # Initial radial grid
+    radii = np.linspace(0.0, rdp_max, RDP_rings + 1)
 
-    # Areas and #stars for all rad values.
-    rdp_radii, rdp_points, rdp_stddev = [], [], []
-    l_prev, N_in_prev = np.inf, 0.0
-    for lw, h in zip(*[radii[:-1], radii[1:]]):
-        N_in = ((xy_cent_dist >= lw) & (xy_cent_dist < h)).sum() + N_in_prev
+    # Histogram counts per ring
+    counts, _ = np.histogram(r, bins=radii)
 
-        # If N_in < Nmin take the next ellipse-ring (discard this lw).
-        l_now = min(lw, l_prev)
+    rdp_radii = []
+    rdp_density = []
+    rdp_sigma = []
 
-        # Require that at least 'Nmin' stars are within the ellipse-ring.
-        if N_in > Nmin:
-            ring_area = np.pi * (h**2 - l_now**2)
-            # Store RDP parameters.
-            rad_med = h if l_now == 0.0 else 0.5 * (l_now + h)
-            rdp_radii.append(rad_med)
-            rdp_points.append(N_in / ring_area)
-            rdp_stddev.append(np.sqrt(N_in) / ring_area)
+    acc_N = 0
+    r_inner = radii[0]
 
-            # Reset
-            l_prev, N_in_prev = np.inf, 0.0
+    for i in range(len(counts)):
+        acc_N += counts[i]
+        r_outer = radii[i + 1]
 
-        else:
-            l_prev = l_now
-            N_in_prev += N_in
+        if acc_N >= Nmin:
+            area = np.pi * (r_outer**2 - r_inner**2)
+            r_mid = 0.5 * (r_inner + r_outer)
 
-    rdp_points = np.array(rdp_points) / np.max(rdp_points)
-    return np.array(rdp_radii), rdp_points, rdp_stddev
+            rdp_radii.append(r_mid)
+            rdp_density.append(acc_N / area)
+            rdp_sigma.append(np.sqrt(acc_N))
+
+            acc_N = 0
+            r_inner = r_outer
+
+    return np.array(rdp_radii), np.array(rdp_density), np.array(rdp_sigma)

@@ -146,7 +146,9 @@ class Cluster:
                 f"Cluster name '{self.cluster_name}' not found in UCC file"
             )
 
-        cluster_df = self.UCC_members_file[self.UCC_members_file["name"] == cluster_fname]
+        cluster_df = self.UCC_members_file[
+            self.UCC_members_file["name"] == cluster_fname
+        ]
         if len(cluster_df) == 0:
             raise ValueError(
                 f"No data found for cluster name '{self.cluster_name}' in UCC file"
@@ -323,11 +325,14 @@ class Cluster:
         :param data_2d: String indicating the data to be used to estimate
             the center value, either: ``radec`` or ``pms``
         :type data_2d: str
-        :param radec_c: Estimated value for the (RA, DEC) center
+        :param radec_c: Estimated initial value for the (RA, DEC) center, used by the
+            ``knn_5d`` method
         :type radec_c: tuple[float, float] | None
-        :param pms_c: Estimated value for the (pmRA, pmDE) center
+        :param pms_c: Estimated initial value for the (pmRA, pmDE) center, used by the
+            ``knn_5d`` method
         :type pms_c: tuple[float, float] | None
-        :param plx_c: Estimated value for the plx center
+        :param plx_c: Estimated initial value for the plx center, used by the
+            ``knn_5d`` method
         :type plx_c: float | None
 
         :raises ValueError: If required data is missing from the
@@ -407,53 +412,88 @@ class Cluster:
         self._vp("\nCenter coordinates found")
         self._vp(mssg, 1)
 
-    def _get_radius(self, algo: str = "king") -> None:
-        """Estimate the cluster radius
+    def _get_structure_params(
+        self,
+        algo: str = "members",
+        fd: float = 0.0,
+        # A_bounds=None,
+        rc_bounds=None,
+        rt_bounds=None,
+        # fd_bounds=None,
+    ) -> None:
+        """Estimate the cluster's field density and radius
 
-        - ``field_dens``: xxx
-        - ``king``: xxx
-
-        :param algo: Algorithm used to estimate the radius, one of (``field_dens, king``)
+        :param algo: Algorithm used to estimate the radius, one of (``members, king``)
         :type algo: str
 
         :raises ValueError: If required attributes are  missing from the
             :py:class:`Cluster <asteca.cluster.Cluster>` object
         """
+        for k in ("ra", "dec", "radec_c"):
+            if hasattr(self, "radec_c") is False:
+                raise ValueError(f"'{k}' must be present as a 'cluster' attribute")
+        if self.ra is None or self.dec is None:
+            raise AttributeError("Arrays '(ra, dec)' must be not None")
 
-        if algo == "field_dens":
-            for k in ("ra", "dec", "radec_c"):
-                if hasattr(self, k) is False:
-                    raise ValueError(f"'{k}' must be present as a 'cluster' attribute")
-        elif algo == "king":
-            for k in ("ra", "dec", "radec_c"):
-                if hasattr(self, k) is False:
-                    raise ValueError(f"'{k}' must be present as a 'cluster' attribute")
-        else:
+        if algo not in ("members", "king"):
             raise ValueError(f"Unrecognized method '{algo}")
 
         from .modules import cluster_priv as cp
 
+        # (x, y) coordinates
         xv, yv = self.ra, self.dec
-        xy_center = self.radec_c
+        xy_center = (self.radec_c[0], self.radec_c[1])
 
-        if algo == "field_dens":
-            radius = cp.fdens_radius(xv, yv, list(xy_center))
-            self._vp("\nRadius estimated")
-            self._vp(f"Radius         : {radius:.3f}", 1)
+        # Convert (RA, DEC) to (lon, lat)
+        xv_t = np.array(list(xv) + [xy_center[0]])
+        yv_t = np.array(list(yv) + [xy_center[1]])
+        xv_t, yv_t = cp.radec2lonlat(xv_t, yv_t)
+        # Extract center value
+        xv, yv = xv_t[:-1], yv_t[:-1]
+        xy_center = (xv_t[-1], yv_t[-1])
+
+        if algo == "members":
+            if hasattr(self, "ripley_idx_selected"):
+                pass
+            else:
+                self.get_nmembers()
+
+            dist_to_cent = np.linalg.norm(np.array([xv, yv]).T - xy_center, axis=1)
+            radius = np.percentile(dist_to_cent[self.ripley_idx_selected], 95)
+            max_r = 0.5 * max((xv.max() - xv.min()), (yv.max() - yv.min()))
+            if radius > max_r * 0.95:
+                self._vp(
+                    "\nWARNING: Estimated radius is too large compared to the field "
+                    + "size. Adjusting it to half of the field's maximum dimension.",
+                    -1,
+                )
+                radius = max_r * 0.5
+            rad_large = radius * 1.05
+            msk = (dist_to_cent > radius) & (dist_to_cent < rad_large)
+            fdens_final = msk.sum() / (np.pi * (rad_large**2 - radius**2))
+
+            self._vp(f"Radius         : {radius:.2f} [deg]", 1)
+            self._vp(f"Field density  : {fdens_final:.0f} [N/deg^2]", 1)
             self.radius = radius
+            self.field_density = fdens_final
+
         elif algo == "king":
-            amplitude, radius_core, radius, field_dens = cp.king_radius(
-                xv, yv, xy_center
+            # amplitude_k, r_core_k, r_tidal_k, field_density_k = cp.king_radius_LS(
+            #     xv, yv, xy_center, A_bounds, rc_bounds, rt_bounds, fd
+            # )
+            r_core_k, r_tidal_k = cp.king_radius_LS(
+                xv, yv, xy_center, rc_bounds, rt_bounds, fd
             )
+
             self._vp("\nKing parameters density estimated")
-            self._vp(f"Field density  : {field_dens:.3f}", 1)
-            self._vp(f"Amplitude      : {amplitude:.3f}", 1)
-            self._vp(f"Radius (core)  : {radius_core:.3f}", 1)
-            self._vp(f"Radius (tidal) : {radius:.3f}", 1)
-            self.field_density = field_dens
-            self.amplitude = amplitude
-            self.radius_core = radius_core
-            self.radius = radius
+            # self._vp(f"Amplitude      : {amplitude_k:.0f}", 1)
+            self._vp(f"Radius (core)  : {r_core_k:.2f} [deg]", 1)
+            self._vp(f"Radius (tidal) : {r_tidal_k:.2f} [deg]", 1)
+            # self._vp(f"Field density  : {field_density_k:.0f} [N/deg^2]", 1)
+            # self.amplitude_k = amplitude_k
+            self.r_core_k = r_core_k
+            self.r_tidal_k = r_tidal_k
+            # self.field_density_k = field_density_k
 
     def get_nmembers(self, algo: str = "ripley", eq_to_gal: bool = True) -> None:
         """Estimate the number of members for the cluster. Algorithms:
