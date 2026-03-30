@@ -229,8 +229,9 @@ def stellar_evol_mass_loss(z_met: float, loga: float) -> float:
     a2 = mu_coeffs["a2"][i]
     a3 = mu_coeffs["a3"][i]
 
-    t_Myr = 10**loga
-    x = np.log10(t_Myr / 1e6)
+    # x = log(t/Myr)
+    # x = log10(10**loga / 1e6) = log10(10**loga) - log10(1e6) = loga - 6
+    x = loga - 6
     mu_ev = a0 + a1 * x + a2 * x**2 + a3 * x**3
 
     return mu_ev
@@ -349,7 +350,7 @@ def dissolution_param(
     :param rho_amb: Ambient density.
     :type rho_amb: float
 
-    :return: Dissolution parameter.
+    :return: Dissolution parameter [yr].
     :rtype: float
     """
     t0 = C_env * (1 - epsilon) * 10 ** (-4 * gamma) * rho_amb ** (-0.5)
@@ -370,7 +371,7 @@ def minit_LGB05(
     :type M_actual: float
     :param gamma: Parameter related to the mass-loss rate.
     :type gamma: float
-    :param t0: Dissolution parameter.
+    :param t0: Dissolution parameter [yr].
     :type t0: float
     :param mu_ev: Fraction of mass lost by stellar evolution.
     :type mu_ev: float
@@ -378,7 +379,7 @@ def minit_LGB05(
     :return: Initial mass.
     :rtype: float
     """
-    t = 10**loga
+    t = 10**loga  # to [yr]
     M_init = ((M_actual**gamma + gamma * (t / t0)) ** (1 / gamma)) / mu_ev
 
     return M_init
