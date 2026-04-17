@@ -46,9 +46,9 @@ class Cluster:
     :type pmde: np.ndarray | None
     :param e_pmde: Array that contains the DEC proper motion's uncertainty
     :type e_pmde: np.ndarray | None
-    :param N_clust_min: Minimum number of cluster members
+    :param N_clust_min: Lower limit on cluster size assumed by the membership estimation algorithm
     :type N_clust_min: int
-    :param N_clust_max: Maximum number of cluster members
+    :param N_clust_max: Upper limit on cluster size assumed by the membership estimation algorithm
     :type N_clust_max: int
     :param verbose: Verbose level. A value of ``0`` hides all output
     :type verbose: int
