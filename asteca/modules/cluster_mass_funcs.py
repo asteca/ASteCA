@@ -122,6 +122,8 @@ def stellar_evol_mass_loss(z_met: float, loga: float) -> float:
 
 
 def ambient_density(
+    sampled_models: list[dict],
+    radec_c: tuple[float, float],
     M_B: float,
     r_B: float,
     M_D: float,
@@ -129,9 +131,9 @@ def ambient_density(
     b: float,
     r_s: float,
     M_s: float,
-    Z: np.ndarray,
-    R_GC: np.ndarray,
-    R_xy: np.ndarray,
+    # Z: np.ndarray,
+    # R_GC: np.ndarray,
+    # R_xy: np.ndarray,
 ) -> npt.NDArray[np.floating]:
     """Calculate the ambient density.
 
@@ -153,16 +155,14 @@ def ambient_density(
     :type r_s: float
     :param M_s: Dark matter halo mass.
     :type M_s: float
-    :param Z: Vertical distance.
-    :type Z: np.ndarray
-    :param R_GC: Galactocentric distance.
-    :type R_GC: np.ndarray
-    :param R_xy: Projected galactocentric distance.
-    :type R_xy: np.ndarray
 
     :return: Ambient density.
     :rtype: npt.NDArray[np.floating]
     """
+
+    # Obtain galactic vertical distance and distance to center
+    Z, R_GC, R_xy = galactic_coords(sampled_models, radec_c)
+
     Phi_B_Laplacian = 2 * M_B * r_B / (R_GC * (R_GC + r_B) ** 3)
     numerator = (
         M_D

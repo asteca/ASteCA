@@ -295,13 +295,13 @@ class Synthetic:
         self._vp(f"Max magnitude  : {self.max_mag_syn_obs:.2f}", 1)
         self._vp("Error distribution loaded", 1)
 
-        # Used by the `stellar_masses()` method
+        # Used by the `get_models()` and `stellar_stats()` methods
         self.cluster_mag = cluster.mag
         self.cluster_colors = [cluster.color, cluster.color2]
 
-        # # Used by the `cluster_masses()` method
-        # self.cluster_ra = cluster.ra
-        # self.cluster_dec = cluster.dec
+        # Used by the `cluster_masses()` method
+        self.cluster_ra = cluster.ra
+        self.cluster_dec = cluster.dec
 
     def generate(
         self, params: dict, N_stars: int = 100
@@ -408,9 +408,7 @@ class Synthetic:
             val = model[par]
             new_val = min(max(val, pmin), pmax)
             if new_val != val:
-                self._vp(
-                    f"Warning: parameter '{par}' out of range: {val} -> {new_val}", 0
-                )
+                warnings.warn(f"Parameter '{par}' out of range: {val} -> {new_val}")
                 model[par] = new_val
 
         # Generate the 'N_models' models via sampling a Gaussian centered on
@@ -676,18 +674,32 @@ class Synthetic:
                 + "accurate mass estimation"
             )
 
+        # Resolve radec_c if not explicitly provided
+        msg = None
+        if rho_amb is None:
+            if radec_c is None:
+                if (
+                    hasattr(self, "cluster_ra")
+                    and hasattr(self, "cluster_dec")
+                    and self.cluster_ra is not None
+                    and self.cluster_dec is not None
+                ):
+                    radec_c = (np.median(self.cluster_ra), np.median(self.cluster_dec))
+                    msg = "\nUsing ambient density estimated from observed cluster (ra, dec)"
+
+        # Compute rho_amb_arr
         if rho_amb is not None:
-            # Input float to array
-            rho_amb_arr = np.ones(len(self.sampled_models)) * rho_amb
+            rho_amb_arr = np.full(len(self.sampled_models), rho_amb)
         elif radec_c is not None:
-            # Obtain galactic vertical distance and distance to center
-            Z, R_GC, R_xy = cmf.galactic_coords(self.sampled_models, radec_c)
             rho_amb_arr = cmf.ambient_density(
-                M_B, r_B, M_D, a, b, r_s, M_s, Z, R_GC, R_xy
+                self.sampled_models, radec_c, M_B, r_B, M_D, a, b, r_s, M_s
             )
+            if msg is not None:
+                self._vp(msg, 1)
         else:
             raise ValueError(
-                "This method requires either 'radec_c' or 'rho_amb' values"
+                "This method requires 'rho_amb', 'radec_c', or a previous calibration "
+                "with valid 'ra' and 'dec' values defined in the Cluster() object"
             )
 
         masses_all = []
