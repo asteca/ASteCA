@@ -181,153 +181,6 @@ def add_binarity(
     return theor_tracks
 
 
-def ccmo_ext_coeffs(
-    magnitude_effl: float,
-    color_effl: tuple,
-    color2_effl: tuple | None,
-) -> list:
-    """Obtain extinction coefficients for all the observed filters and colors,
-    in the order in which they are stored in theor_tracks.
-
-    ext_coefs = [ec_mag, ec_col1, ...]
-
-    :param magnitude_effl: Effective lambda (in Angstrom) for the magnitude filter
-    :type magnitude_effl: float
-    :param color_effl: Effective lambdas for the filters that make up the first color
-    :type color_effl: tuple
-    :param color2_effl: Effective lambdas for the filters that make up the second color
-    :type color2_effl: tuple | None
-
-    :returns: List of extinction coefficients.
-    :rtype: list
-
-    """
-    # Effective wavelength in Armstrong.
-    eff_wave = magnitude_effl
-    eff_wave1, eff_wave2 = color_effl
-    # Effective wavelength in inverse microns.
-    ext_coefs = [
-        ccmo_model(10000.0 / eff_wave),
-        [
-            ccmo_model(10000.0 / eff_wave1),
-            ccmo_model(10000.0 / eff_wave2),
-        ],
-    ]
-
-    if color2_effl is not None:
-        eff_wave1, eff_wave2 = color2_effl
-        ext_coefs += [
-            [ccmo_model(10000.0 / eff_wave1), ccmo_model(10000.0 / eff_wave2)]
-        ]
-
-    return ext_coefs
-
-
-def ccmo_model(mw: float) -> tuple[float, float]:
-    """Cardelli, Clayton, and Mathis (1989 ApJ. 345, 245) model for extinction
-    coefficients with updated coefficients for near-UV from O'Donnell
-    (1994, ApJ, 422, 158).
-
-    ccm_coef = a + b / Rv
-
-    Implementation taken from:
-
-    http://idlastro.gsfc.nasa.gov/ftp/pro/astro/ccm_unred.pro
-
-    There appears to be an error in the Far-UV range in the original IDL
-    routine where the maximum inverse wavelength is 11 and it should be 10
-    according to Cardelli et al. 1989 (pag 251, Eq (5,a,b)).
-
-    :param mw: Wavelength in inverse microns.
-    :type mw: float
-
-    :raises ValueError: If the effective wavelength is beyond the CCM model limit
-
-    :returns: Extinction coefficients a and b.
-    :rtype: tuple[float, float]
-    """
-
-    if 0.3 <= mw < 1.1:
-        # Infrared.
-        a, b = 0.574 * (mw**1.61), -0.527 * (mw**1.61)
-
-    elif 1.1 <= mw < 3.3:
-        # Optical/NIR.
-        # Original coefficients from CCM89
-        # c1 = [1., 0.17699, -0.50447, -0.02427, 0.72085, 0.01979, -0.77530,
-        #       0.32999]
-        # c2 = [0., 1.41338, 2.28305, 1.07233, -5.38434, -0.62251, 5.30260,
-        #       -2.09002]
-        # New coefficients from O'Donnell (1994)
-        c1 = [1.0, 0.104, -0.609, 0.701, 1.137, -1.718, -0.827, 1.647, -0.505]
-        c2 = [0.0, 1.952, 2.908, -3.989, -7.985, 11.102, 5.491, -10.805, 3.347]
-        y = mw - 1.82
-        # Reverse because polyval starts from the highest degree.
-        c1.reverse()
-        c2.reverse()
-        a, b = np.polyval(c1, y), np.polyval(c2, y)
-
-    elif 3.3 <= mw < 8.0:
-        # Mid-UV
-        F_a, F_b = 0.0, 0.0
-        if mw >= 5.9:
-            y = mw - 5.9
-            F_a = -0.04473 * y**2 - 0.009779 * y**3
-            F_b = 0.2130 * y**2 + 0.1207 * y**3
-        a = 1.752 - 0.316 * mw - (0.104 / ((mw - 4.67) ** 2 + 0.341)) + F_a
-        b = -3.090 + 1.825 * mw + (1.206 / ((mw - 4.62) ** 2 + 0.263)) + F_b
-
-    elif 8.0 <= mw <= 10.0:
-        # Far-UV
-        c1 = [-1.073, -0.628, 0.137, -0.070]
-        c2 = [13.670, 4.257, -0.420, 0.374]
-        y = mw - 8.0
-        c1.reverse()
-        c2.reverse()
-        a, b = np.polyval(c1, y), np.polyval(c2, y)
-    else:
-        raise ValueError(
-            "The effective wavelength is {} [1/micron], beyond "
-            "the CCM model limit (10 [1/micron]).".format(mw)
-        )
-
-    return float(a), float(b)
-
-
-def randVals(
-    rng: np.random.Generator, theor_tracks: np.ndarray, st_dist_mass: list
-) -> dict:
-    """Generate lists of random values used by the synthetic cluster generating
-    function.
-
-    :param rng: Random number generator.
-    :type rng: np.random.Generator
-    :param theor_tracks: Array of theoretical isochrones.
-    :type theor_tracks: np.ndarray
-    :param st_dist_mass: List of sampled masses.
-    :type st_dist_mass: list
-
-    :returns: Dictionary of random values.
-    :rtype: dict
-    """
-    # This is the maximum number of stars that will ever be interpolated into
-    # an isochrone
-    N_isoch, N_mass = theor_tracks.shape[-1], 0
-    for sdm in st_dist_mass:
-        N_mass = max(len(sdm[0]), N_mass, N_isoch)
-
-    # Used by `move_isochrone()` and `add_errors`
-    # rand_norm_vals = np.random.normal(0.0, 1.0, (2, N_mass))
-    rand_norm_vals = rng.normal(0.0, 1.0, (2, N_mass))
-
-    # Used by `move_isochrone()`, `binarity()`
-    # rand_unif_vals = np.random.uniform(0.0, 1.0, (2, N_mass))
-    rand_unif_vals = rng.uniform(0.0, 1.0, (2, N_mass))
-
-    rand_floats = {"norm": rand_norm_vals, "unif": rand_unif_vals}
-    return rand_floats
-
-
 def qDistribution(
     M1: np.ndarray, gamma: float | str, rng: np.random.Generator
 ) -> np.ndarray:
@@ -518,6 +371,153 @@ def mag_combine(
     c = 10**-0.4
     mbin = -2.5 * (-0.4 * m1 + np.log10(1.0 + c ** (m2 - m1)))
     return mbin
+
+
+def ccmo_ext_coeffs(
+    magnitude_effl: float,
+    color_effl: tuple,
+    color2_effl: tuple | None,
+) -> list:
+    """Obtain extinction coefficients for all the observed filters and colors,
+    in the order in which they are stored in theor_tracks.
+
+    ext_coefs = [ec_mag, ec_col1, ...]
+
+    :param magnitude_effl: Effective lambda (in Angstrom) for the magnitude filter
+    :type magnitude_effl: float
+    :param color_effl: Effective lambdas for the filters that make up the first color
+    :type color_effl: tuple
+    :param color2_effl: Effective lambdas for the filters that make up the second color
+    :type color2_effl: tuple | None
+
+    :returns: List of extinction coefficients.
+    :rtype: list
+
+    """
+    # Effective wavelength in Armstrong.
+    eff_wave = magnitude_effl
+    eff_wave1, eff_wave2 = color_effl
+    # Effective wavelength in inverse microns.
+    ext_coefs = [
+        ccmo_model(10000.0 / eff_wave),
+        [
+            ccmo_model(10000.0 / eff_wave1),
+            ccmo_model(10000.0 / eff_wave2),
+        ],
+    ]
+
+    if color2_effl is not None:
+        eff_wave1, eff_wave2 = color2_effl
+        ext_coefs += [
+            [ccmo_model(10000.0 / eff_wave1), ccmo_model(10000.0 / eff_wave2)]
+        ]
+
+    return ext_coefs
+
+
+def ccmo_model(mw: float) -> tuple[float, float]:
+    """Cardelli, Clayton, and Mathis (1989 ApJ. 345, 245) model for extinction
+    coefficients with updated coefficients for near-UV from O'Donnell
+    (1994, ApJ, 422, 158).
+
+    ccm_coef = a + b / Rv
+
+    Implementation taken from:
+
+    http://idlastro.gsfc.nasa.gov/ftp/pro/astro/ccm_unred.pro
+
+    There appears to be an error in the Far-UV range in the original IDL
+    routine where the maximum inverse wavelength is 11 and it should be 10
+    according to Cardelli et al. 1989 (pag 251, Eq (5,a,b)).
+
+    :param mw: Wavelength in inverse microns.
+    :type mw: float
+
+    :raises ValueError: If the effective wavelength is beyond the CCM model limit
+
+    :returns: Extinction coefficients a and b.
+    :rtype: tuple[float, float]
+    """
+
+    if 0.3 <= mw < 1.1:
+        # Infrared.
+        a, b = 0.574 * (mw**1.61), -0.527 * (mw**1.61)
+
+    elif 1.1 <= mw < 3.3:
+        # Optical/NIR.
+        # Original coefficients from CCM89
+        # c1 = [1., 0.17699, -0.50447, -0.02427, 0.72085, 0.01979, -0.77530,
+        #       0.32999]
+        # c2 = [0., 1.41338, 2.28305, 1.07233, -5.38434, -0.62251, 5.30260,
+        #       -2.09002]
+        # New coefficients from O'Donnell (1994)
+        c1 = [1.0, 0.104, -0.609, 0.701, 1.137, -1.718, -0.827, 1.647, -0.505]
+        c2 = [0.0, 1.952, 2.908, -3.989, -7.985, 11.102, 5.491, -10.805, 3.347]
+        y = mw - 1.82
+        # Reverse because polyval starts from the highest degree.
+        c1.reverse()
+        c2.reverse()
+        a, b = np.polyval(c1, y), np.polyval(c2, y)
+
+    elif 3.3 <= mw < 8.0:
+        # Mid-UV
+        F_a, F_b = 0.0, 0.0
+        if mw >= 5.9:
+            y = mw - 5.9
+            F_a = -0.04473 * y**2 - 0.009779 * y**3
+            F_b = 0.2130 * y**2 + 0.1207 * y**3
+        a = 1.752 - 0.316 * mw - (0.104 / ((mw - 4.67) ** 2 + 0.341)) + F_a
+        b = -3.090 + 1.825 * mw + (1.206 / ((mw - 4.62) ** 2 + 0.263)) + F_b
+
+    elif 8.0 <= mw <= 10.0:
+        # Far-UV
+        c1 = [-1.073, -0.628, 0.137, -0.070]
+        c2 = [13.670, 4.257, -0.420, 0.374]
+        y = mw - 8.0
+        c1.reverse()
+        c2.reverse()
+        a, b = np.polyval(c1, y), np.polyval(c2, y)
+    else:
+        raise ValueError(
+            "The effective wavelength is {} [1/micron], beyond "
+            "the CCM model limit (10 [1/micron]).".format(mw)
+        )
+
+    return float(a), float(b)
+
+
+def randVals(
+    rng: np.random.Generator, theor_tracks: np.ndarray, st_dist_mass: list
+) -> dict:
+    """Generate lists of random values used by the synthetic cluster generating
+    function.
+
+    :param rng: Random number generator.
+    :type rng: np.random.Generator
+    :param theor_tracks: Array of theoretical isochrones.
+    :type theor_tracks: np.ndarray
+    :param st_dist_mass: List of sampled masses.
+    :type st_dist_mass: list
+
+    :returns: Dictionary of random values.
+    :rtype: dict
+    """
+    # This is the maximum number of stars that will ever be interpolated into
+    # an isochrone
+    N_isoch, N_mass = theor_tracks.shape[-1], 0
+    for sdm in st_dist_mass:
+        N_mass = max(len(sdm[0]), N_mass, N_isoch)
+
+    # Used by `move_isochrone()` and `add_errors`
+    # rand_norm_vals = np.random.normal(0.0, 1.0, (2, N_mass))
+    rand_norm_vals = rng.normal(0.0, 1.0, (2, N_mass))
+
+    # Used by `move_isochrone()`, `binarity()`
+    # rand_unif_vals = np.random.uniform(0.0, 1.0, (2, N_mass))
+    rand_unif_vals = rng.uniform(0.0, 1.0, (2, N_mass))
+
+    rand_floats = {"norm": rand_norm_vals, "unif": rand_unif_vals}
+    return rand_floats
 
 
 def properModel(

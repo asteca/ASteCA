@@ -361,6 +361,10 @@ class Synthetic:
         self,
         model: dict[str, float],
         model_std: dict[str, float],
+        mag_offset_1: float = 0.5,
+        col_offset_1: float = -0.1,
+        mag_offset_2: float = -0.5,
+        col_offset_2: float = -0.05,
         N_models: int = 200,
         color_idx: int = 0,
     ) -> None:
@@ -372,6 +376,18 @@ class Synthetic:
         :param model_std: Dictionary with the standard deviations for the fundamental
             parameters in the ``model`` argument
         :type model_std: dict[str, float]
+        :param mag_offset_1: Offset applied to the turn-off magnitude to define the
+            first BSS region
+        :type mag_offset_1: float
+        :param col_offset_1: Offset applied to the turn-off color to define the
+            first BSS region
+        :type col_offset_1: float
+        :param mag_offset_2: Offset applied to the turn-off magnitude to define the
+            second BSS region
+        :type mag_offset_2: float
+        :param col_offset_2: Offset applied to the turn-off color to define the
+            second BSS region
+        :type col_offset_2: float
         :param N_models: Number of sampled models
         :type N_models: int
         :param color_idx: Index of the color used to define the CMD. If only one color is
@@ -379,9 +395,20 @@ class Synthetic:
             first color, or ``1`` to use the second color. Defaults to ``0``.
         :type color_idx: int
 
-        :raises ValueError: If any of the (met, age) parameters are out of range or
-            if all the synthetic arrays generated are empty
+        :raises ValueError:
+            - If the `calibrate()` method was not previously called
+            - If all the synthetic arrays generated are empty
         """
+        if (
+            hasattr(self, "max_mag_syn_obs") is False
+            or hasattr(self, "err_dist_obs") is False
+            or hasattr(self, "N_stars_obs") is False
+        ):
+            raise ValueError(
+                "This method requires running the 'calibrate()' method first\n"
+                + "with an observed 'Cluster' object"
+            )
+
         from .modules import stellar_stats_funcs as ssf
         from .modules import synth_cluster_priv as scp
 
@@ -470,6 +497,10 @@ class Synthetic:
                 self.cluster_mag,
                 self.cluster_colors[color_idx],
                 self.isochs.model,
+                mag_offset_1,
+                mag_offset_2,
+                col_offset_1,
+                col_offset_2,
             )
             turn_off_points["to_col_1"].append(to_col_1)
             turn_off_points["to_col_2"].append(to_col_2)
@@ -494,7 +525,7 @@ class Synthetic:
         self._vp(f"N_models       : {len(sampled_models_no_empty)}", 1)
         self._vp("Attributes stored in Synthetic object", 1)
 
-    def stellar_stats(self) -> dict:
+    def stellar_parameters(self) -> dict:
         """Estimate parameters for the observed stars:
         - Mass of single system
         - Mass of binary system; if binarity was estimated
@@ -506,18 +537,8 @@ class Synthetic:
             blue straggler star (BSS)
         :rtype: dict
 
-        :raises ValueError: If the `calibrate()` or get_models()` methods were not
-            previously called
+        :raises ValueError: If the `get_models()` method was not previously called
         """
-        if (
-            hasattr(self, "cluster_mag") is False
-            or hasattr(self, "cluster_colors") is False
-        ):
-            raise ValueError(
-                "This method requires running the 'calibrate()' method first\n"
-                + "with an observed 'Cluster' object"
-            )
-
         if hasattr(self, "sampled_synthcls") is False:
             raise ValueError(
                 "This method requires running the 'get_models()' method first"
@@ -647,13 +668,12 @@ class Synthetic:
         :param return_arrays: If ``True``, return arrays with the mass values for
             each model instead of the median and STDDEV values
 
-        :raises ValueError:
-            If no synthetic models were generated via the get_models() method.
-
         :return: Dictionary with the mass distributions for the initial, actual,
             observed, photometric, evolutionary, and dynamical masses:
             ``M_init, M_actual, M_obs, M_phot, M_evol, M_dyn``
         :rtype: dict
+
+        :raises ValueError: If the `get_models()` method was not previously called
         """
         if hasattr(self, "sampled_synthcls") is False:
             raise ValueError(
@@ -765,7 +785,11 @@ class Synthetic:
         }
 
     def get_isochrone(
-        self, fit_params: dict, color_idx: int = 0, full_track: bool = False
+        self,
+        fit_params: dict,
+        color_idx: int = 0,
+        full_track: bool = False,
+        N_stars: int = 100,
     ) -> np.ndarray:
         """Generate an isochrone for plotting.
 
@@ -782,6 +806,8 @@ class Synthetic:
         :param full_track: If ``True``, return the full isochrone (ie: do not apply
             the max mass filter)
         :type full_track: bool
+        :param N_stars: Number of synthetic stars to generate
+        :type N_stars: int
 
         :raises ValueError: If either parameter (met, age) is outside of allowed range
 
@@ -804,6 +830,16 @@ class Synthetic:
 
         from .modules import synth_cluster_priv as scp
 
+        try:
+            # Extract from calibrated observed cluster
+            max_mag_syn = self.max_mag_syn_obs
+            err_dist_synth = self.err_dist_obs
+            N_synth_stars = self.N_stars_obs
+        except AttributeError:
+            max_mag_syn = np.inf
+            err_dist_synth = []
+            N_synth_stars = int(N_stars)
+
         # Generate displaced isochrone, The 'N_stars=-99' indicates to return the
         # isochrone only
         fit_params_isoch = dict(fit_params)
@@ -819,9 +855,9 @@ class Synthetic:
             self.rand_floats,
             self.DR_distribution,
             self.st_dist_mass,
-            self.max_mag_syn_obs,
-            self.err_dist_obs,
-            self.N_stars_obs,
+            max_mag_syn,
+            err_dist_synth,
+            N_synth_stars,
             return_flag="isoch",
         )
 
@@ -843,9 +879,9 @@ class Synthetic:
             self.rand_floats,
             self.DR_distribution,
             self.st_dist_mass,
-            self.max_mag_syn_obs,
-            self.err_dist_obs,
-            self.N_stars_obs,
+            max_mag_syn,
+            err_dist_synth,
+            N_synth_stars,
         )
 
         mag_full, mass_full = full_arr[0], full_arr[self.m_ini_idx]

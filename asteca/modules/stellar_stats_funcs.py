@@ -11,6 +11,11 @@ def to_point_find(
     cluster_mag: np.ndarray,
     cluster_color: np.ndarray,
     isochs_model: str,
+    mag_offset_1: float,
+    mag_offset_2: float,
+    col_offset_1: float,
+    col_offset_2: float,
+    percentile: float = 5,
     window: int = 21,
     polyorder: int = 3,
     deriv: int = 1,
@@ -22,10 +27,6 @@ def to_point_find(
     confirm_min: int = 3,
     confirm_frac: float = 1 / 3,
     fallback_min_idx: int = 10,
-    mag_offset: float = 0.5,
-    col_offset_1: float = 0.1,
-    col_offset_2: float = 0.05,
-    percentile: float = 5,
 ) -> tuple[float, float, float, float]:
     """
     Identifies the first index where a signal begins a sustained monotonic increase.
@@ -45,7 +46,17 @@ def to_point_find(
             `cluster_mag`.
         isochs_model (str): Name of the isochrone model. Used to adjust the
             derivative threshold for specific models (e.g. "mist").
+        mag_offset_1 (float, optional): Offset applied to the detected magnitude to
+            define the first magnitude limit.
+        mag_offset_2 (float, optional): Offset applied to the detected magnitude to
+            define the first magnitude limit.
+        col_offset_1 (float, optional): Offset applied to the detected color to
+            define the first returned color limit.
+        col_offset_2 (float, optional): Offset applied to the detected color to
+            define the second returned color limit.
 
+        percentile (float, optional): Percentile of the observed cluster colors
+            within the magnitude interval used to estimate the turn-off color.
         window (int, optional): Window length for the Savitzky-Golay filter.
             Must be a positive odd integer. If even, it is incremented by 1.
         polyorder (int, optional): Polynomial order used by the Savitzky-Golay filter.
@@ -69,14 +80,6 @@ def to_point_find(
         fallback_min_idx (int, optional): Minimum acceptable index for the detected
             turn-off. If the detected index is smaller than this value, a fallback
             based on the magnitude midpoint is used.
-        mag_offset (float, optional): Offset applied to the detected magnitude to
-            define the upper and lower magnitude limits returned.
-        col_offset_1 (float, optional): Offset applied to the detected color to
-            define the first returned color limit.
-        col_offset_2 (float, optional): Offset applied to the detected color to
-            define the second returned color limit.
-        percentile (float, optional): Percentile of the observed cluster colors
-            within the magnitude interval used to estimate the turn-off color.
 
     Returns:
         tuple[float, float, float, float]:
@@ -119,8 +122,8 @@ def to_point_find(
     to_col, to_mag = x[to_idx], y[to_idx]
 
     # Define magnitude limits around the detected turn-off magnitude
-    to_mag_1 = to_mag + mag_offset
-    to_mag_2 = to_mag - mag_offset
+    to_mag_1 = to_mag + mag_offset_1
+    to_mag_2 = to_mag + mag_offset_2
 
     # Define a magnitude range around the identified turn-off magnitude.
     # Iteratively increase the magnitude range until at least `min_stars` are found
@@ -135,8 +138,8 @@ def to_point_find(
     # This approach is more robust to incorrect parameter values assigned to
     # the observed cluster
     to_col_cl = np.nanpercentile(cluster_color[mag_range], percentile)
-    to_col_1 = min(to_col_cl, to_col - col_offset_1)
-    to_col_2 = min(to_col_cl, to_col - col_offset_2)
+    to_col_1 = min(to_col_cl, to_col + col_offset_1)
+    to_col_2 = min(to_col_cl, to_col + col_offset_2)
 
     return to_col_1, to_col_2, to_mag_1, to_mag_2
 
