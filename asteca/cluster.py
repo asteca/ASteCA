@@ -14,8 +14,8 @@ class Cluster:
         loaded from the UCC members file. If provided, the ``UCC_file_path`` argument
         must also be provided
     :type cluster_name: str | None
-    :param UCC_file_path: Path to the UCC members .parquet file containing the cluster data
-    :type UCC_file_path: str | None
+    :param UCC_members_file: Loaded UCC members .parquet file
+    :type UCC_members_file: pd.DataFrame | None
     :param ra: Array that contains the right ascension (RA)
     :type ra: np.ndarray | None
     :param dec: Array that contains the declination (DEC)
@@ -416,18 +416,27 @@ class Cluster:
         self,
         algo: str = "members",
         fd: float = 0.0,
-        # A_bounds=None,
-        rc_bounds=None,
-        rt_bounds=None,
-        # fd_bounds=None,
+        rc_bounds: tuple[float, float] | None = None,
+        rt_bounds: tuple[float, float] | None = None,
     ) -> None:
         """Estimate the cluster's field density and radius
 
         :param algo: Algorithm used to estimate the radius, one of (``members, king``)
         :type algo: str
+        :param fd: Field density in number of stars per square degree, used by the
+            ``king`` method
+        :type fd: float
+        :param rc_bounds: Tuple with the lower and upper bounds for the core radius
+            in degrees, used by the ``king`` method
+        :type rc_bounds: tuple[float, float] | None
+        :param rt_bounds: Tuple with the lower and upper bounds for the tidal radius
+            in degrees, used by the ``king`` method
+        :type rt_bounds: tuple[float, float] | None
 
-        :raises ValueError: If required attributes are  missing from the
+        :raises AttributeError: If required attributes are  missing from the
             :py:class:`Cluster <asteca.cluster.Cluster>` object
+        :raises ValueError: If required attributes are missing or if ``algo``
+            argument is not recognized
         """
         for k in ("ra", "dec", "radec_c"):
             if hasattr(self, "radec_c") is False:

@@ -314,7 +314,7 @@ def rkfunc(
     :param Kest: Ripley's K-estimator.
     :type Kest: RipleysKEstimator
     :param mode: Mode for Ripley's K-estimator.
-    :type mode: str
+    :type mode: Literal["none", "translation", "ohser", "ripley"]
 
     :return: Ripley's K-function value.
     :rtype: float | np.floating
@@ -359,30 +359,30 @@ def estimate_field_density(
     clusters with a very low number of stars at the edges.
 
     :param xy_center: Cartesian coordinates of the cluster center ``(x_c, y_c)``.
-    :type xy_center: tuple(float, float)
+    :type xy_center: tuple[float, float]
     :param x: X coordinates of all stars.
-    :type x: ndarray
+    :type x: np.ndarray
     :param y: Y coordinates of all stars.
-    :type y: ndarray
+    :type y: np.ndarray
     :param idx: Indices of stars used in the density estimation.
-    :type idx: list(int)
+    :type idx: list[int]
     :param N_k: Neighbor order used to estimate local density.
     :type N_k: int
     :param p_bounds: Percentiles of the distance distribution used to estimate
         the field density region ``(p_low, p_mid, p_high)``.
-    :type p_bounds: tuple(float, float, float)
+    :type p_bounds: tuple[float, float, float]
     :param large_cluster_N: Minimum number of members required to apply the
         alternative field density estimate.
     :type large_cluster_N: int
     :param fdens_ratio_bounds: Accepted ratio range between outer and inner
         field densities that triggers the alternative estimate.
-    :type fdens_ratio_bounds: tuple(float, float)
+    :type fdens_ratio_bounds: tuple[float, float]
 
     :return:
         dist_to_cent : distances to cluster center
         local_density : normalized local densities
         fdens : estimated field density level
-    :rtype: tuple(ndarray, ndarray, float)
+    :rtype: tuple[np.ndarray, np.ndarray, float]
     """
 
     data = np.array([x[idx], y[idx]]).T
@@ -432,15 +432,15 @@ def apply_density_clean(
     or with densities below the estimated field level are rejected.
 
     :param idx: Indices of stars to clean.
-    :type idx: list(int)
+    :type idx: list[int]
     :param dist_to_cent: Distance of each star to the cluster center.
-    :type dist_to_cent: ndarray
+    :type dist_to_cent: np.ndarray
     :param local_density: Normalized local stellar density.
-    :type local_density: ndarray
+    :type local_density: np.ndarray
     :param fdens: Estimated field density level.
     :type fdens: float
     :param band_init: Initial multiplicative bounds around the field density.
-    :type band_init: tuple(float, float)
+    :type band_init: tuple[float, float]
     :param band_step: Increment applied to widen the density band if needed.
     :type band_step: float
     :param band_min_count: Minimum number of stars required in the density band.
@@ -449,7 +449,7 @@ def apply_density_clean(
     :type rad_percentile: float
 
     :return: Updated indices of surviving stars.
-    :rtype: list(int)
+    :rtype: list[int]
     """
     # Determine radius where density ~ field density
     f_low, f_high = band_init

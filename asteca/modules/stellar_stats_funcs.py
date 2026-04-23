@@ -28,65 +28,60 @@ def to_point_find(
     confirm_frac: float = 1 / 3,
     fallback_min_idx: int = 10,
 ) -> tuple[float, float, float, float]:
-    """
-    Identifies the first index where a signal begins a sustained monotonic increase.
-    In this case, it identifies the color value where it begins to increase,
-    i.e. the turn-off point.
+    """Estimate turn-off region limits from an isochrone and observed cluster data.
 
-    The function applies a Savitzky-Golay filter to estimate the first derivative
-    of the input signal. It then searches for the first sequence of length `confirm`
-    where all estimated derivatives are strictly positive.
+    The function applies a Savitzky-Golay filter to estimate the first derivative of
+    the isochrone and identifies the first sustained increasing region.
 
-    Args:
-        x (np.ndarray): 1D array of isochrone color values (independent variable).
-        y (np.ndarray): 1D array of isochrone magnitudes corresponding to `x`.
-        cluster_mag (np.ndarray): Observed cluster magnitudes used to refine the
-            turn-off region selection.
-        cluster_color (np.ndarray): Observed cluster colors corresponding to
-            `cluster_mag`.
-        isochs_model (str): Name of the isochrone model. Used to adjust the
-            derivative threshold for specific models (e.g. "mist").
-        mag_offset_1 (float, optional): Offset applied to the detected magnitude to
-            define the first magnitude limit.
-        mag_offset_2 (float, optional): Offset applied to the detected magnitude to
-            define the first magnitude limit.
-        col_offset_1 (float, optional): Offset applied to the detected color to
-            define the first returned color limit.
-        col_offset_2 (float, optional): Offset applied to the detected color to
-            define the second returned color limit.
+    :param x: One-dimensional array of isochrone color values.
+    :type x: np.ndarray
+    :param y: One-dimensional array of isochrone magnitudes corresponding to ``x``.
+    :type y: np.ndarray
+    :param cluster_mag: Observed cluster magnitudes used to refine the turn-off region.
+    :type cluster_mag: np.ndarray
+    :param cluster_color: Observed cluster colors corresponding to ``cluster_mag``.
+    :type cluster_color: np.ndarray
+    :param isochs_model: Name of the isochrone model.
+    :type isochs_model: str
+    :param mag_offset_1: Offset applied to define the first magnitude limit.
+    :type mag_offset_1: float
+    :param mag_offset_2: Offset applied to define the second magnitude limit.
+    :type mag_offset_2: float
+    :param col_offset_1: Offset applied to define the first color limit.
+    :type col_offset_1: float
+    :param col_offset_2: Offset applied to define the second color limit.
+    :type col_offset_2: float
+    :param percentile: Percentile used to estimate the turn-off color from observed
+        stars.
+    :type percentile: float
+    :param window: Window length for the Savitzky-Golay filter.
+    :type window: int
+    :param polyorder: Polynomial order for the Savitzky-Golay filter.
+    :type polyorder: int
+    :param deriv: Derivative order for the Savitzky-Golay filter.
+    :type deriv: int
+    :param dmag_init: Initial half-width of the magnitude interval around the
+        detected turn-off magnitude.
+    :type dmag_init: float
+    :param dmag_step: Increment applied to the magnitude interval half-width.
+    :type dmag_step: float
+    :param min_stars: Minimum number of stars required in the magnitude interval.
+    :type min_stars: int
+    :param eps_default: Default derivative threshold for an increasing trend.
+    :type eps_default: float
+    :param eps_mist: Derivative threshold used for the ``mist`` model.
+    :type eps_mist: float
+    :param confirm_min: Minimum number of consecutive derivative values required.
+    :type confirm_min: int
+    :param confirm_frac: Fraction of ``window`` used to define consecutive values
+        required to confirm the trend.
+    :type confirm_frac: float
+    :param fallback_min_idx: Minimum acceptable index for the detected turn-off.
+    :type fallback_min_idx: int
 
-        percentile (float, optional): Percentile of the observed cluster colors
-            within the magnitude interval used to estimate the turn-off color.
-        window (int, optional): Window length for the Savitzky-Golay filter.
-            Must be a positive odd integer. If even, it is incremented by 1.
-        polyorder (int, optional): Polynomial order used by the Savitzky-Golay filter.
-            Must be smaller than `window`.
-        deriv (int, optional): Order of the derivative computed by the
-            Savitzky-Golay filter.
-        dmag_init (float, optional): Initial half-width of the magnitude interval
-            around the detected turn-off magnitude used to select cluster stars.
-        dmag_step (float, optional): Increment applied to the magnitude interval
-            half-width until at least `min_stars` are enclosed.
-        min_stars (int, optional): Minimum number of observed cluster stars required
-            within the magnitude interval around the turn-off point.
-        eps_default (float, optional): Default minimum derivative value required to
-            consider the signal locally increasing.
-        eps_mist (float, optional): Derivative threshold used when the isochrone
-            model is "mist".
-        confirm_min (int, optional): Minimum number of consecutive derivative values
-            required to confirm a sustained positive trend.
-        confirm_frac (float, optional): Fraction of `window` used to determine the
-            number of consecutive derivative values required to confirm the trend.
-        fallback_min_idx (int, optional): Minimum acceptable index for the detected
-            turn-off. If the detected index is smaller than this value, a fallback
-            based on the magnitude midpoint is used.
-
-    Returns:
-        tuple[float, float, float, float]:
-            to_col_1 : Lower color bound for the turn-off region.
-            to_col_2 : Upper color bound for the turn-off region.
-            to_mag_1 : Upper magnitude bound for the turn-off region.
-            to_mag_2 : Lower magnitude bound for the turn-off region.
+    :return: Lower and upper color bounds and upper and lower magnitude bounds for
+        the turn-off region.
+    :rtype: tuple[float, float, float, float]
     """
     n = len(x)
 
@@ -221,7 +216,9 @@ def get_stellar_masses(
     return m1_med, m1_std, m2_med, m2_std, nan_msk, m2_obs
 
 
-def get_binar_probabilities(m2_obs, N_sampled_synthcls) -> np.ndarray:
+def get_binar_probabilities(
+    m2_obs: np.ndarray, N_sampled_synthcls: int
+) -> np.ndarray:
     """Binary probability per observed star
 
     Count how many times the secondary mass of an observed star was assigned a
@@ -229,6 +226,10 @@ def get_binar_probabilities(m2_obs, N_sampled_synthcls) -> np.ndarray:
     value by the number of synthetic models used, results in the per observed
     star probability of being a binary system.
 
+    :param m2_obs: Secondary masses assigned to observed stars across sampled models.
+    :type m2_obs: np.ndarray
+    :param N_sampled_synthcls: Number of sampled synthetic clusters.
+    :type N_sampled_synthcls: int
     :return: Array with the binary probability for each observed star
     :rtype: np.ndarray
     """
@@ -238,12 +239,23 @@ def get_binar_probabilities(m2_obs, N_sampled_synthcls) -> np.ndarray:
 
 
 def get_bss_probabilities(
-    cluster_mag, cluster_colors, turn_off_points, N_sampled_synthcls
+    cluster_mag: np.ndarray,
+    cluster_colors: list[np.ndarray | None],
+    turn_off_points: dict,
+    N_sampled_synthcls: int,
 ) -> np.ndarray:
     """Estimate the probability of each observed star being a blue straggler star
     (BSS) based on the turn-off point of the isochrones generated from the sampled
     models.
 
+    :param cluster_mag: Observed cluster magnitudes.
+    :type cluster_mag: np.ndarray
+    :param cluster_colors: Observed cluster colors.
+    :type cluster_colors: list[np.ndarray | None]
+    :param turn_off_points: Turn-off region limits estimated for sampled models.
+    :type turn_off_points: dict
+    :param N_sampled_synthcls: Number of sampled synthetic clusters.
+    :type N_sampled_synthcls: int
     :return: Array with the BSS probability for each observed star
     :rtype: np.ndarray
     """

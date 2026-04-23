@@ -678,27 +678,29 @@ def king_radius_LS(
     return rc0, rt0
 
 
-def RDPCurve(x, y, cent, RDP_rings=50, Nmin=10):
-    """
-    Radial Density Profile (RDP) using concentric rings.
+def RDPCurve(
+    x: np.ndarray,
+    y: np.ndarray,
+    cent: tuple[float, float],
+    RDP_rings: int = 50,
+    Nmin: int = 10,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Radial Density Profile (RDP) using concentric rings.
 
-    Parameters
-    ----------
-    x, y : array_like
-        Coordinates of the stars.
-    cent : tuple
-        (x0, y0) cluster center.
-    RDP_rings : int, optional
-        Initial number of radial bins.
-    Nmin : int, optional
-        Minimum number of stars required per ring.
+    :param x: X coordinates of the stars.
+    :type x: np.ndarray
+    :param y: Y coordinates of the stars.
+    :type y: np.ndarray
+    :param cent: Cluster center coordinates ``(x0, y0)``.
+    :type cent: tuple[float, float]
+    :param RDP_rings: Initial number of radial bins.
+    :type RDP_rings: int
+    :param Nmin: Minimum number of stars required per ring.
+    :type Nmin: int
 
-    Returns
-    -------
-    rdp_radii : ndarray
-        Radius assigned to each ring.
-    rdp_density : ndarray
-        Stellar surface density in each ring.
+    :return: Radius assigned to each ring, stellar surface density in each ring, and
+        Poisson uncertainty for each ring.
+    :rtype: tuple[np.ndarray, np.ndarray, np.ndarray]
     """
 
     x = np.asarray(x)

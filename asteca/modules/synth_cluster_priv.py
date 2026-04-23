@@ -1177,8 +1177,6 @@ def mass_interp(
     :type st_dist_mass: np.ndarray
     :param N_synth_stars: Number of observed stars.
     :type N_synth_stars: int
-    :param binar_flag: Binary system flag
-    :type binar_flag: bool
 
     :returns: Interpolated isochrone array.
     :rtype: np.ndarray
@@ -1234,10 +1232,6 @@ def interp_mass_isoch(
     :type mass_ini: np.ndarray
     :param mass_dist: Array of sampled masses.
     :type mass_dist: np.ndarray
-    :param m_ini_idx: Index of primary mass
-    :type m_ini_idx: int
-    :param binar_flag: Binarity flag
-    :type binar_flag: bool
 
     :returns: Interpolated isochrone array.
     :rtype: np.ndarray
@@ -1410,14 +1404,14 @@ def generate_synth_arr(
     def_params: dict,
     m_ini_idx: int,
     theor_tracks: np.ndarray,
-    ext_law,
-    ext_coefs,
-    rand_floats,
-    DR_distribution,
-    st_dist_mass,
-    max_mag_syn,
-    err_dist_synth,
-    N_synth_stars,
+    ext_law: str,
+    ext_coefs: list | np.ndarray,
+    rand_floats: dict[str, np.ndarray],
+    DR_distribution: str,
+    st_dist_mass: list,
+    max_mag_syn: float,
+    err_dist_synth: list[np.ndarray],
+    N_synth_stars: int,
     return_flag: str = "array",
 ) -> np.ndarray | tuple[np.ndarray, np.ndarray]:
     """Generate a synthetic cluster.
@@ -1430,16 +1424,41 @@ def generate_synth_arr(
         The dictionary must include values for all the parameters, e.g.:
         ``params = {met: 0.0152, loga: 8.1, alpha: 0.1, beta: 1, Av: 0.2, DR: 0., Rv: 3.1, dm: 9.7}``
     :type params: dict
-    :param N_stars: Number of synthetic stars to generate
-    :type N_stars: int
+    :param met_age_dict: Metallicity and age grid metadata.
+    :type met_age_dict: dict
+    :param def_params: Dictionary of default model parameters.
+    :type def_params: dict
+    :param m_ini_idx: Index of the initial mass.
+    :type m_ini_idx: int
+    :param theor_tracks: Processed theoretical tracks.
+    :type theor_tracks: np.ndarray
+    :param ext_law: Extinction law.
+    :type ext_law: str
+    :param ext_coefs: Extinction coefficients.
+    :type ext_coefs: list | np.ndarray
+    :param rand_floats: Pre-generated random values used during synthesis.
+    :type rand_floats: dict[str, np.ndarray]
+    :param DR_distribution: Differential reddening distribution.
+    :type DR_distribution: str
+    :param st_dist_mass: Sampled IMF mass distributions.
+    :type st_dist_mass: list
+    :param max_mag_syn: Maximum synthetic magnitude allowed.
+    :type max_mag_syn: float
+    :param err_dist_synth: Error distributions used to perturb synthetic photometry.
+    :type err_dist_synth: list[np.ndarray]
+    :param N_synth_stars: Number of synthetic stars to generate.
+    :type N_synth_stars: int
+    :param return_flag: Return mode: ``array``, ``isoch``, or ``isoch+array``.
+    :type return_flag: str
 
-    :return: Returns a ``np.array`` containing a synthetic cluster
-        with the data ``[mag, c1, (c2), mass, mass_b]``, where ``mag`` is
-        the magnitude, ``c1`` is the color, ``c2`` is the optional second color,
-        and ``mass, mass_b`` are the masses of the single and secondary components
-        of the binary systems, respectively (if generated). If the system is a
-        single star, then ``mass_b==np.nan``.
-    :rtype: np.ndarray
+    :return: Synthetic array for ``return_flag='array'`` or ``'isoch'``; tuple
+        ``(isochrone, synthetic_array)`` for ``return_flag='isoch+array'``.
+        The synthetic cluster contains the data ``[mag, c1, (c2), mass, mass_b]``,
+        where ``mag`` is the magnitude, ``c1`` is the color, ``c2`` is the
+        optional second color, and ``mass, mass_b`` are the masses of the single
+        and secondary components of the binary systems, respectively
+        (if generated). If the system is a single star, then ``mass_b==np.nan``.
+    :rtype: np.ndarray | tuple[np.ndarray, np.ndarray]
     """
 
     # Return proper values for fixed parameters and parameters required

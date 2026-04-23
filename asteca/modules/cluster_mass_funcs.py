@@ -141,6 +141,10 @@ def ambient_density(
 
     The 4*pi constant is left for the final evaluation
 
+    :param sampled_models: List of sampled cluster models.
+    :type sampled_models: list[dict]
+    :param radec_c: Cluster center coordinates in equatorial system ``(ra, dec)``.
+    :type radec_c: tuple[float, float]
     :param M_B: Bulge mass.
     :type M_B: float
     :param r_B: Bulge radius.

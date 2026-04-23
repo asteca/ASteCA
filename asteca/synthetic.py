@@ -325,7 +325,7 @@ class Synthetic:
             and ``mass, mass_b`` are the masses of the single and secondary components
             of the binary systems, respectively (if generated). If the system is a
             single star, then ``mass_b==np.nan``.
-        :rtype: np.ndarray
+        :rtype: np.ndarray | tuple[np.ndarray, np.ndarray]
         """
         from .modules import synth_cluster_priv as scp
 
@@ -667,6 +667,7 @@ class Synthetic:
         :type epsilon: float
         :param return_arrays: If ``True``, return arrays with the mass values for
             each model instead of the median and STDDEV values
+        :type return_arrays: bool
 
         :return: Dictionary with the mass distributions for the initial, actual,
             observed, photometric, evolutionary, and dynamical masses:
