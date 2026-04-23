@@ -908,7 +908,7 @@ def move_isochrone(
 
 def extinction(
     ext_law: str,
-    ext_coefs: list,
+    ext_coefs: list | np.ndarray,
     rand_norm: np.ndarray,
     rand_unif: np.ndarray,
     DR_distribution: str,

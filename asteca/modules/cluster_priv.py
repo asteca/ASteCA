@@ -617,9 +617,7 @@ def get_KDE_cent(values: np.ndarray, gd: int) -> tuple[float, float]:
     return x_c, y_c
 
 
-def king_radius_LS(
-    x, y, cent, rc_bounds, rt_bounds, fd
-) -> tuple[float, float, float, float]:
+def king_radius_LS(x, y, cent, rc_bounds, rt_bounds, fd) -> tuple[float, float]:
     """
     Residuals for least-squares optimization.
     """
@@ -627,7 +625,6 @@ def king_radius_LS(
 
     y0 -= fd
     y0 /= y0.max()
-
 
     kp = KingProjectedAnalytic1D()
 
@@ -638,9 +635,8 @@ def king_radius_LS(
             return np.inf * np.ones_like(y0)
 
         model = kp.evaluate(x0, amplitude=1, r_core=rc, r_tide=rt)
-        res = (y0 - model)/sigma
+        res = (y0 - model) / sigma
         return res
-
 
     # if A_bounds is None:
     #     min_A, max_A = max(0, 0.5 * min(y0)), 5 * max(y0)
