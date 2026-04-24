@@ -181,153 +181,6 @@ def add_binarity(
     return theor_tracks
 
 
-def ccmo_ext_coeffs(
-    magnitude_effl: float,
-    color_effl: tuple,
-    color2_effl: tuple | None,
-) -> list:
-    """Obtain extinction coefficients for all the observed filters and colors,
-    in the order in which they are stored in theor_tracks.
-
-    ext_coefs = [ec_mag, ec_col1, ...]
-
-    :param magnitude_effl: Effective lambda (in Angstrom) for the magnitude filter
-    :type magnitude_effl: float
-    :param color_effl: Effective lambdas for the filters that make up the first color
-    :type color_effl: tuple
-    :param color2_effl: Effective lambdas for the filters that make up the second color
-    :type color2_effl: tuple | None
-
-    :returns: List of extinction coefficients.
-    :rtype: list
-
-    """
-    # Effective wavelength in Armstrong.
-    eff_wave = magnitude_effl
-    eff_wave1, eff_wave2 = color_effl
-    # Effective wavelength in inverse microns.
-    ext_coefs = [
-        ccmo_model(10000.0 / eff_wave),
-        [
-            ccmo_model(10000.0 / eff_wave1),
-            ccmo_model(10000.0 / eff_wave2),
-        ],
-    ]
-
-    if color2_effl is not None:
-        eff_wave1, eff_wave2 = color2_effl
-        ext_coefs += [
-            [ccmo_model(10000.0 / eff_wave1), ccmo_model(10000.0 / eff_wave2)]
-        ]
-
-    return ext_coefs
-
-
-def ccmo_model(mw: float) -> tuple[float, float]:
-    """Cardelli, Clayton, and Mathis (1989 ApJ. 345, 245) model for extinction
-    coefficients with updated coefficients for near-UV from O'Donnell
-    (1994, ApJ, 422, 158).
-
-    ccm_coef = a + b / Rv
-
-    Implementation taken from:
-
-    http://idlastro.gsfc.nasa.gov/ftp/pro/astro/ccm_unred.pro
-
-    There appears to be an error in the Far-UV range in the original IDL
-    routine where the maximum inverse wavelength is 11 and it should be 10
-    according to Cardelli et al. 1989 (pag 251, Eq (5,a,b)).
-
-    :param mw: Wavelength in inverse microns.
-    :type mw: float
-
-    :raises ValueError: If the effective wavelength is beyond the CCM model limit
-
-    :returns: Extinction coefficients a and b.
-    :rtype: tuple[float, float]
-    """
-
-    if 0.3 <= mw < 1.1:
-        # Infrared.
-        a, b = 0.574 * (mw**1.61), -0.527 * (mw**1.61)
-
-    elif 1.1 <= mw < 3.3:
-        # Optical/NIR.
-        # Original coefficients from CCM89
-        # c1 = [1., 0.17699, -0.50447, -0.02427, 0.72085, 0.01979, -0.77530,
-        #       0.32999]
-        # c2 = [0., 1.41338, 2.28305, 1.07233, -5.38434, -0.62251, 5.30260,
-        #       -2.09002]
-        # New coefficients from O'Donnell (1994)
-        c1 = [1.0, 0.104, -0.609, 0.701, 1.137, -1.718, -0.827, 1.647, -0.505]
-        c2 = [0.0, 1.952, 2.908, -3.989, -7.985, 11.102, 5.491, -10.805, 3.347]
-        y = mw - 1.82
-        # Reverse because polyval starts from the highest degree.
-        c1.reverse()
-        c2.reverse()
-        a, b = np.polyval(c1, y), np.polyval(c2, y)
-
-    elif 3.3 <= mw < 8.0:
-        # Mid-UV
-        F_a, F_b = 0.0, 0.0
-        if mw >= 5.9:
-            y = mw - 5.9
-            F_a = -0.04473 * y**2 - 0.009779 * y**3
-            F_b = 0.2130 * y**2 + 0.1207 * y**3
-        a = 1.752 - 0.316 * mw - (0.104 / ((mw - 4.67) ** 2 + 0.341)) + F_a
-        b = -3.090 + 1.825 * mw + (1.206 / ((mw - 4.62) ** 2 + 0.263)) + F_b
-
-    elif 8.0 <= mw <= 10.0:
-        # Far-UV
-        c1 = [-1.073, -0.628, 0.137, -0.070]
-        c2 = [13.670, 4.257, -0.420, 0.374]
-        y = mw - 8.0
-        c1.reverse()
-        c2.reverse()
-        a, b = np.polyval(c1, y), np.polyval(c2, y)
-    else:
-        raise ValueError(
-            "The effective wavelength is {} [1/micron], beyond "
-            "the CCM model limit (10 [1/micron]).".format(mw)
-        )
-
-    return float(a), float(b)
-
-
-def randVals(
-    rng: np.random.Generator, theor_tracks: np.ndarray, st_dist_mass: list
-) -> dict:
-    """Generate lists of random values used by the synthetic cluster generating
-    function.
-
-    :param rng: Random number generator.
-    :type rng: np.random.Generator
-    :param theor_tracks: Array of theoretical isochrones.
-    :type theor_tracks: np.ndarray
-    :param st_dist_mass: List of sampled masses.
-    :type st_dist_mass: list
-
-    :returns: Dictionary of random values.
-    :rtype: dict
-    """
-    # This is the maximum number of stars that will ever be interpolated into
-    # an isochrone
-    N_isoch, N_mass = theor_tracks.shape[-1], 0
-    for sdm in st_dist_mass:
-        N_mass = max(len(sdm[0]), N_mass, N_isoch)
-
-    # Used by `move_isochrone()` and `add_errors`
-    # rand_norm_vals = np.random.normal(0.0, 1.0, (2, N_mass))
-    rand_norm_vals = rng.normal(0.0, 1.0, (2, N_mass))
-
-    # Used by `move_isochrone()`, `binarity()`
-    # rand_unif_vals = np.random.uniform(0.0, 1.0, (2, N_mass))
-    rand_unif_vals = rng.uniform(0.0, 1.0, (2, N_mass))
-
-    rand_floats = {"norm": rand_norm_vals, "unif": rand_unif_vals}
-    return rand_floats
-
-
 def qDistribution(
     M1: np.ndarray, gamma: float | str, rng: np.random.Generator
 ) -> np.ndarray:
@@ -518,6 +371,153 @@ def mag_combine(
     c = 10**-0.4
     mbin = -2.5 * (-0.4 * m1 + np.log10(1.0 + c ** (m2 - m1)))
     return mbin
+
+
+def ccmo_ext_coeffs(
+    magnitude_effl: float,
+    color_effl: tuple,
+    color2_effl: tuple | None,
+) -> list:
+    """Obtain extinction coefficients for all the observed filters and colors,
+    in the order in which they are stored in theor_tracks.
+
+    ext_coefs = [ec_mag, ec_col1, ...]
+
+    :param magnitude_effl: Effective lambda (in Angstrom) for the magnitude filter
+    :type magnitude_effl: float
+    :param color_effl: Effective lambdas for the filters that make up the first color
+    :type color_effl: tuple
+    :param color2_effl: Effective lambdas for the filters that make up the second color
+    :type color2_effl: tuple | None
+
+    :returns: List of extinction coefficients.
+    :rtype: list
+
+    """
+    # Effective wavelength in Armstrong.
+    eff_wave = magnitude_effl
+    eff_wave1, eff_wave2 = color_effl
+    # Effective wavelength in inverse microns.
+    ext_coefs = [
+        ccmo_model(10000.0 / eff_wave),
+        [
+            ccmo_model(10000.0 / eff_wave1),
+            ccmo_model(10000.0 / eff_wave2),
+        ],
+    ]
+
+    if color2_effl is not None:
+        eff_wave1, eff_wave2 = color2_effl
+        ext_coefs += [
+            [ccmo_model(10000.0 / eff_wave1), ccmo_model(10000.0 / eff_wave2)]
+        ]
+
+    return ext_coefs
+
+
+def ccmo_model(mw: float) -> tuple[float, float]:
+    """Cardelli, Clayton, and Mathis (1989 ApJ. 345, 245) model for extinction
+    coefficients with updated coefficients for near-UV from O'Donnell
+    (1994, ApJ, 422, 158).
+
+    ccm_coef = a + b / Rv
+
+    Implementation taken from:
+
+    http://idlastro.gsfc.nasa.gov/ftp/pro/astro/ccm_unred.pro
+
+    There appears to be an error in the Far-UV range in the original IDL
+    routine where the maximum inverse wavelength is 11 and it should be 10
+    according to Cardelli et al. 1989 (pag 251, Eq (5,a,b)).
+
+    :param mw: Wavelength in inverse microns.
+    :type mw: float
+
+    :raises ValueError: If the effective wavelength is beyond the CCM model limit
+
+    :returns: Extinction coefficients a and b.
+    :rtype: tuple[float, float]
+    """
+
+    if 0.3 <= mw < 1.1:
+        # Infrared.
+        a, b = 0.574 * (mw**1.61), -0.527 * (mw**1.61)
+
+    elif 1.1 <= mw < 3.3:
+        # Optical/NIR.
+        # Original coefficients from CCM89
+        # c1 = [1., 0.17699, -0.50447, -0.02427, 0.72085, 0.01979, -0.77530,
+        #       0.32999]
+        # c2 = [0., 1.41338, 2.28305, 1.07233, -5.38434, -0.62251, 5.30260,
+        #       -2.09002]
+        # New coefficients from O'Donnell (1994)
+        c1 = [1.0, 0.104, -0.609, 0.701, 1.137, -1.718, -0.827, 1.647, -0.505]
+        c2 = [0.0, 1.952, 2.908, -3.989, -7.985, 11.102, 5.491, -10.805, 3.347]
+        y = mw - 1.82
+        # Reverse because polyval starts from the highest degree.
+        c1.reverse()
+        c2.reverse()
+        a, b = np.polyval(c1, y), np.polyval(c2, y)
+
+    elif 3.3 <= mw < 8.0:
+        # Mid-UV
+        F_a, F_b = 0.0, 0.0
+        if mw >= 5.9:
+            y = mw - 5.9
+            F_a = -0.04473 * y**2 - 0.009779 * y**3
+            F_b = 0.2130 * y**2 + 0.1207 * y**3
+        a = 1.752 - 0.316 * mw - (0.104 / ((mw - 4.67) ** 2 + 0.341)) + F_a
+        b = -3.090 + 1.825 * mw + (1.206 / ((mw - 4.62) ** 2 + 0.263)) + F_b
+
+    elif 8.0 <= mw <= 10.0:
+        # Far-UV
+        c1 = [-1.073, -0.628, 0.137, -0.070]
+        c2 = [13.670, 4.257, -0.420, 0.374]
+        y = mw - 8.0
+        c1.reverse()
+        c2.reverse()
+        a, b = np.polyval(c1, y), np.polyval(c2, y)
+    else:
+        raise ValueError(
+            "The effective wavelength is {} [1/micron], beyond "
+            "the CCM model limit (10 [1/micron]).".format(mw)
+        )
+
+    return float(a), float(b)
+
+
+def randVals(
+    rng: np.random.Generator, theor_tracks: np.ndarray, st_dist_mass: list
+) -> dict:
+    """Generate lists of random values used by the synthetic cluster generating
+    function.
+
+    :param rng: Random number generator.
+    :type rng: np.random.Generator
+    :param theor_tracks: Array of theoretical isochrones.
+    :type theor_tracks: np.ndarray
+    :param st_dist_mass: List of sampled masses.
+    :type st_dist_mass: list
+
+    :returns: Dictionary of random values.
+    :rtype: dict
+    """
+    # This is the maximum number of stars that will ever be interpolated into
+    # an isochrone
+    N_isoch, N_mass = theor_tracks.shape[-1], 0
+    for sdm in st_dist_mass:
+        N_mass = max(len(sdm[0]), N_mass, N_isoch)
+
+    # Used by `move_isochrone()` and `add_errors`
+    # rand_norm_vals = np.random.normal(0.0, 1.0, (2, N_mass))
+    rand_norm_vals = rng.normal(0.0, 1.0, (2, N_mass))
+
+    # Used by `move_isochrone()`, `binarity()`
+    # rand_unif_vals = np.random.uniform(0.0, 1.0, (2, N_mass))
+    rand_unif_vals = rng.uniform(0.0, 1.0, (2, N_mass))
+
+    rand_floats = {"norm": rand_norm_vals, "unif": rand_unif_vals}
+    return rand_floats
 
 
 def properModel(
@@ -908,7 +908,7 @@ def move_isochrone(
 
 def extinction(
     ext_law: str,
-    ext_coefs: list,
+    ext_coefs: list | np.ndarray,
     rand_norm: np.ndarray,
     rand_unif: np.ndarray,
     DR_distribution: str,
@@ -954,7 +954,7 @@ def extinction(
     :param ext_law: Extinction law to be used.
     :type ext_law: str
     :param ext_coefs: List of extinction coefficients.
-    :type ext_coefs: list
+    :type ext_coefs: list | np.ndarray
     :param rand_norm: Array of random normal values.
     :type rand_norm: np.ndarray
     :param rand_unif: Array of random uniform values.
@@ -1161,7 +1161,7 @@ def mass_interp(
     m_ini_idx: int,
     st_dist_mass: np.ndarray,
     N_synth_stars: int,
-    binar_flag: bool,
+    # binar_flag: bool,
 ) -> np.ndarray:
     """For each mass in the sampled IMF mass distribution, interpolate its value
     (and those of all the sub-arrays in 'isoch_cut') into the isochrone.
@@ -1177,15 +1177,17 @@ def mass_interp(
     :type st_dist_mass: np.ndarray
     :param N_synth_stars: Number of observed stars.
     :type N_synth_stars: int
-    :param binar_flag: Binary system flag
-    :type binar_flag: bool
 
     :returns: Interpolated isochrone array.
     :rtype: np.ndarray
     """
     isoch_cut = np.ascontiguousarray(isoch_cut)
-    # Assumes `mass_ini=isoch_cut[m_ini_idx]` is sorted min to max <-- IMPORTANT
-    mass_ini = np.ascontiguousarray(isoch_cut[m_ini_idx])
+
+    # ==IMPORTANT==
+    # Assumes `mass_ini=isoch_cut[m_ini_idx]` is sorted min to max. This is checked
+    # when loading the isochrones in isochrones_priv.interp_isochrones()
+    # ==IMPORTANT==
+    mass_ini = isoch_cut[m_ini_idx]
 
     # Filter masses in the IMF sampling that are outside of the mass
     # range given by 'isoch_cut' (st_dist_mass[0]: sampled masses from IMF)
@@ -1207,9 +1209,7 @@ def mass_interp(
 
     mass_dist = np.ascontiguousarray(mass_dist, dtype=mass_ini.dtype)
     # Interpolate the sampled stars (masses) into the isochrone
-    isoch_mass = interp_mass_isoch(
-        isoch_cut, mass_ini, mass_dist, m_ini_idx, binar_flag
-    )
+    isoch_mass = interp_mass_isoch(isoch_cut, mass_ini, mass_dist)
 
     return isoch_mass
 
@@ -1218,8 +1218,8 @@ def interp_mass_isoch(
     isoch_cut: np.ndarray,
     mass_ini: np.ndarray,
     mass_dist: np.ndarray,
-    m_ini_idx: int,
-    binar_flag: bool,
+    # m_ini_idx: int,
+    # binar_flag: bool,
 ) -> np.ndarray:
     """Find where in the original data, the values to interpolate would be inserted.
 
@@ -1232,10 +1232,6 @@ def interp_mass_isoch(
     :type mass_ini: np.ndarray
     :param mass_dist: Array of sampled masses.
     :type mass_dist: np.ndarray
-    :param m_ini_idx: Index of primary mass
-    :type m_ini_idx: int
-    :param binar_flag: Binarity flag
-    :type binar_flag: bool
 
     :returns: Interpolated isochrone array.
     :rtype: np.ndarray
@@ -1400,6 +1396,173 @@ def add_errors(isoch_binar: np.ndarray, err_dist: list[np.ndarray]) -> np.ndarra
         isoch_binar[i, mag_sort] += sigma[:N]
 
     return isoch_binar
+
+
+def generate_synth_arr(
+    params: dict,
+    met_age_dict: dict,
+    def_params: dict,
+    m_ini_idx: int,
+    theor_tracks: np.ndarray,
+    ext_law: str,
+    ext_coefs: list | np.ndarray,
+    rand_floats: dict[str, np.ndarray],
+    DR_distribution: str,
+    st_dist_mass: list,
+    max_mag_syn: float,
+    err_dist_synth: list[np.ndarray],
+    N_synth_stars: int,
+    return_flag: str = "array",
+) -> np.ndarray | tuple[np.ndarray, np.ndarray]:
+    """Generate a synthetic cluster.
+
+    The synthetic cluster is generated according to the parameters given in
+    the ``params`` dictionary and the already calibrated
+    :py:class:`Synthetic` object.
+
+    :param params: Dictionary containing the values for the fundamental parameters.
+        The dictionary must include values for all the parameters, e.g.:
+        ``params = {met: 0.0152, loga: 8.1, alpha: 0.1, beta: 1, Av: 0.2, DR: 0., Rv: 3.1, dm: 9.7}``
+    :type params: dict
+    :param met_age_dict: Metallicity and age grid metadata.
+    :type met_age_dict: dict
+    :param def_params: Dictionary of default model parameters.
+    :type def_params: dict
+    :param m_ini_idx: Index of the initial mass.
+    :type m_ini_idx: int
+    :param theor_tracks: Processed theoretical tracks.
+    :type theor_tracks: np.ndarray
+    :param ext_law: Extinction law.
+    :type ext_law: str
+    :param ext_coefs: Extinction coefficients.
+    :type ext_coefs: list | np.ndarray
+    :param rand_floats: Pre-generated random values used during synthesis.
+    :type rand_floats: dict[str, np.ndarray]
+    :param DR_distribution: Differential reddening distribution.
+    :type DR_distribution: str
+    :param st_dist_mass: Sampled IMF mass distributions.
+    :type st_dist_mass: list
+    :param max_mag_syn: Maximum synthetic magnitude allowed.
+    :type max_mag_syn: float
+    :param err_dist_synth: Error distributions used to perturb synthetic photometry.
+    :type err_dist_synth: list[np.ndarray]
+    :param N_synth_stars: Number of synthetic stars to generate.
+    :type N_synth_stars: int
+    :param return_flag: Return mode: ``array``, ``isoch``, or ``isoch+array``.
+    :type return_flag: str
+
+    :return: Synthetic array for ``return_flag='array'`` or ``'isoch'``; tuple
+        ``(isochrone, synthetic_array)`` for ``return_flag='isoch+array'``.
+        The synthetic cluster contains the data ``[mag, c1, (c2), mass, mass_b]``,
+        where ``mag`` is the magnitude, ``c1`` is the color, ``c2`` is the
+        optional second color, and ``mass, mass_b`` are the masses of the single
+        and secondary components of the binary systems, respectively
+        (if generated). If the system is a single star, then ``mass_b==np.nan``.
+    :rtype: np.ndarray | tuple[np.ndarray, np.ndarray]
+    """
+
+    # Return proper values for fixed parameters and parameters required
+    # for the (z, log(age)) isochrone averaging.
+    met, loga, alpha, beta, av, dr, rv, dm, ml, mh, al, ah = properModel(
+        met_age_dict, def_params, params
+    )
+
+    # If (z, a) are both fixed, use the single processed isochrone
+    if ml == al == mh == ah == 0:
+        # The np.array() is important to avoid overwriting 'theor_tracks'
+        isochrone = np.array(theor_tracks[0][0])
+    else:
+        # Generate a weighted average isochrone from the (z, log(age)) values in
+        # the 'model'.
+        isochrone = zaWAverage(
+            theor_tracks,
+            met_age_dict,
+            m_ini_idx,
+            met,
+            loga,
+            ml,
+            mh,
+            al,
+            ah,
+        )
+
+    binar_flag = True
+    if alpha == 0.0 and beta == 0.0:
+        binar_flag = False
+
+        # # TODO: this was not tested thoroughly (April 2025)
+        # # Remove binary photometry
+        # isochrone = isochrone[: self.m_ini_idx + 2]
+        # # TODO: this was not tested thoroughly
+
+    # Move theoretical isochrone using the distance modulus
+    isoch_moved = move_isochrone(isochrone, binar_flag, m_ini_idx, dm)
+
+    # Apply extinction correction
+    isoch_extin = extinction(
+        ext_law,
+        ext_coefs,
+        rand_floats["norm"][0],
+        rand_floats["unif"][0],
+        DR_distribution,
+        m_ini_idx,
+        binar_flag,
+        av,
+        dr,
+        rv,
+        isoch_moved,
+    )
+
+    # Remove isochrone stars beyond the maximum magnitude
+    isoch_cut = cut_max_mag(isoch_extin, max_mag_syn)
+    if isoch_cut.size == 0:
+        if return_flag == "isoch+array":
+            return np.array([]), np.array([])
+        return np.array([])
+
+    # Return the isochrone only
+    if return_flag == "isoch":
+        return isoch_cut
+
+    # Interpolate IMF's sampled masses into the isochrone.
+    isoch_mass = mass_interp(
+        isoch_cut,
+        m_ini_idx,
+        st_dist_mass[ml][al],
+        N_synth_stars,
+        # binar_flag,
+    )
+    if isoch_mass.size == 0:
+        if return_flag == "isoch+array":
+            return np.array([]), np.array([])
+        return np.array([])
+
+    # import matplotlib.pyplot as plt
+    # # plt.title('2000, steps 1')
+    # plt.title('2000, steps 2')
+    # plt.scatter(isoch_mass[1], isoch_mass[0], alpha=.25)
+    # plt.scatter(isoch_mass[5], isoch_mass[4], alpha=.25)
+    # plt.gca().invert_yaxis()
+    # plt.show()
+
+    # Assignment of binarity.
+    isoch_binar = binarity(
+        alpha,
+        beta,
+        binar_flag,
+        m_ini_idx,
+        rand_floats["unif"][1],
+        isoch_mass,
+    )
+
+    # Assign errors according to errors distribution.
+    synth_clust = add_errors(isoch_binar, err_dist_synth)
+
+    # Return both the isochrone and the full synthetic cluster
+    if return_flag == "isoch+array":
+        return isoch_cut, synth_clust
+
+    return synth_clust
 
 
 # def _rm_low_masses(self, dm_min):

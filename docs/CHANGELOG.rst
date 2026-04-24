@@ -6,6 +6,14 @@
 Changelog
 #########
 
+`[v0.6.4] <https://github.com/asteca/asteca/releases/tag/v0.6.4>`__ - 2026-04-24
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+- Method `stellar_masses()` is now `stellar_parameters()`
+- Added blue straggler probability estimation to `stellar_parameters()`
+- Removed `binary_fraction()` Monte Carlo method, not required
+
+
 
 `[v0.6.3] <https://github.com/asteca/asteca/releases/tag/v0.6.3>`__ - 2026-02-18
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -25,7 +33,7 @@ Changelog
 `[v0.6.2] <https://github.com/asteca/asteca/releases/tag/v0.6.2>`__ - 2026-02-14
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-- Likelihood module:make -C docs clean && sphinx-build -M html docs docs/build
+- Likelihood module:
    - Better `tremmel` likelihood, now it zooms in to the solution faster
    - Replaced `loggamma` with `gammaln` from `scipy.special` since values are always
      real (no change in performance)

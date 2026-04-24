@@ -10,3 +10,5 @@ WARP.md
 /dist*
 /tests*
 /docs/build/*
+/helpers/*
+TODO.md

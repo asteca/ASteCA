@@ -11,11 +11,11 @@ and estimating a cluster's fundamental parameters.
 .. toctree::
    :titlesonly:
 
-   structure
-   membership
-   synthetic
-   paramfit
-   masses_bfr
+   notebooks/structure
+   notebooks/membership
+   notebooks/synthetic
+   notebooks/paramfit
+   notebooks/post_process
 
 
 The :ref:`structure_ntbk` notebook serves as a guide to the initial structural
@@ -45,17 +45,14 @@ the results, including the final parameter estimates (medians and standard devia
 along with ``pyABC``  visualizations and a comparison Color-Magnitude Diagram (CMD).
 
 
-Given an observed cluster the :ref:`masses_bfr_ntbk` notebook shows how to apply
-the following methods:
+The :ref:`post_process_ntbk` notebook shows how to apply the following methods:
 
 - :meth:`asteca.Synthetic.get_models`: sample a set of synthetic clusters
   with the same parameters as the observed cluster (previously calibrated and fitted)
-- :meth:`asteca.Synthetic.stellar_masses`: estimate its individual stellar masses and
-  their probabilities of being binary systems 
-- :meth:`asteca.Synthetic.binary_fraction`: calculate the overall binary fraction of
-  the cluster
 - :meth:`asteca.Synthetic.cluster_masses`: determine various associated cluster masses
-  (initial, actual, observed, etc.)
+  (initial, actual, dynamical, etc.)
+- :meth:`asteca.Synthetic.stellar_parameters`: estimate per-star masses and
+  probabilities of being binary systems and blue straggler star
 
 
 

@@ -1,124 +1,8 @@
-import warnings
-
 import astropy.coordinates as coord
 import numpy as np
 import numpy.typing as npt
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from scipy.spatial import KDTree
-
-
-def ranModels(
-    fit_params: dict,
-    model_std: dict,
-    N_models: int,
-    rng: np.random.Generator,
-) -> list[dict]:
-    """Generate the 'N_models' models via sampling a Gaussian centered on
-    'fit_params', with standard deviation given by 'model_std'.
-
-    :param fit_params: Dictionary of parameters to fit.
-    :type fit_params: dict
-    :param model_std: Dictionary of standard deviations for each parameter.
-    :type model_std: dict
-    :param N_models: Number of models to generate.
-    :type N_models: int
-    :param rng: Random number generator.
-    :type rng: np.random.Generator
-
-    :return: List of dictionaries, each containing a set of sampled parameters.
-    :rtype: list[dict]
-    """
-    models_ran = {}
-    for k, f_val in fit_params.items():
-        std = model_std[k]
-        models_ran[k] = rng.normal(f_val, std, N_models)
-    ran_models = [dict(zip(models_ran, t)) for t in zip(*models_ran.values())]
-
-    return ran_models
-
-
-def get_stellar_masses(
-    cluster_mag: np.ndarray,
-    cluster_colors: list,
-    m_ini_idx: int,
-    sampled_synthcls: list,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """
-    Assign primary and secondary (synthetic) masses to each observed star,
-    for each synthetic model generated.
-
-    :param cluster_mag: Observed magnitude.
-    :type cluster_mag: np.ndarray
-    :param cluster_colors: Observed colors.
-    :type cluster_colors: list
-    :param m_ini_idx: Index of the initial mass column
-    :type m_ini_idx: int
-    :param sampled_synthcls: Sampled synthetic cluster data.
-    :type sampled_synthcls: list
-
-    :return: Primary and secondary masses values (median + stddev), binary
-        probability per observed star, and a mask for NaN values.
-    :rtype: tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]
-    """
-
-    # Extract observed photometry
-    cl_colors = [cluster_colors[0]]
-    if cluster_colors[1] is not None:
-        cl_colors.append(cluster_colors[1])
-    obs_phot = np.array([cluster_mag] + [_ for _ in cl_colors])
-    # Replace nans in mag and colors to avoid crashing KDTree()
-    nan_msk = np.full(obs_phot.shape[1], False)
-    for ophot in obs_phot:
-        nan_msk = nan_msk | np.isnan(ophot)
-    obs_phot[:, nan_msk] = -10.0
-    obs_phot = obs_phot.T
-
-    # Assign primary and secondary (synthetic) masses to each observed star,
-    # for each synthetic model generated
-    m12_obs = []
-    # weights = []
-    for isoch in sampled_synthcls:
-        # Indexes of the photometrically closest synthetic stars to the observed stars
-        tree = KDTree(isoch[:m_ini_idx].T)
-        dist, close_stars_idxs = tree.query(obs_phot, k=1)
-
-        # # Store inverse normalized distance used as weights
-        # inv_dist = 1 / dist
-        # inv_dist_norm = inv_dist / inv_dist.max()
-        # weights.append(inv_dist_norm)
-
-        # The secondary mass is stored after the primary mass, hence the ':'
-        m12_obs.append(isoch[m_ini_idx:, close_stars_idxs])
-
-    # Extract primary and secondary masses
-    m12_obs = np.array(m12_obs)
-    m1_obs = m12_obs[:, 0, :]
-    m2_obs = m12_obs[:, 1, :]
-
-    # Primary mass values (median + stddev)
-    m1_med = np.median(m1_obs, 0)
-    # # Weighted average is similar to median
-    # m1_med = np.average(m1_obs, 0, weights)
-    m1_std = np.std(m1_obs, 0)
-
-    # Secondary mass values (median + stddev)
-    # Hide 'All-nan slice' warnings
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        m2_med = np.nanmedian(m2_obs, 0)
-        m2_std = np.nanstd(m2_obs, 0)
-    # m2 can not be larger than m1
-    m2_med = np.min([m1_med, m2_med], 0)
-
-    # Binary probability per observed star
-    # Count how many times the secondary mass of an observed star was assigned a
-    # value 'not np.nan', i.e.: was identified as a binary system. Dividing this
-    # value by the number of synthetic models used, results in the per observed
-    # star probability of being a binary system.
-    binar_prob = (~np.isnan(m12_obs[:, 1, :])).sum(0) / len(sampled_synthcls)
-
-    return m1_med, m1_std, m2_med, m2_std, binar_prob, nan_msk
 
 
 def galactic_coords(
@@ -229,14 +113,17 @@ def stellar_evol_mass_loss(z_met: float, loga: float) -> float:
     a2 = mu_coeffs["a2"][i]
     a3 = mu_coeffs["a3"][i]
 
-    t_Myr = 10**loga
-    x = np.log10(t_Myr / 1e6)
+    # x = log(t/Myr)
+    # x = log10(10**loga / 1e6) = log10(10**loga) - log10(1e6) = loga - 6
+    x = loga - 6
     mu_ev = a0 + a1 * x + a2 * x**2 + a3 * x**3
 
     return mu_ev
 
 
 def ambient_density(
+    sampled_models: list[dict],
+    radec_c: tuple[float, float],
     M_B: float,
     r_B: float,
     M_D: float,
@@ -244,9 +131,9 @@ def ambient_density(
     b: float,
     r_s: float,
     M_s: float,
-    Z: np.ndarray,
-    R_GC: np.ndarray,
-    R_xy: np.ndarray,
+    # Z: np.ndarray,
+    # R_GC: np.ndarray,
+    # R_xy: np.ndarray,
 ) -> npt.NDArray[np.floating]:
     """Calculate the ambient density.
 
@@ -254,6 +141,10 @@ def ambient_density(
 
     The 4*pi constant is left for the final evaluation
 
+    :param sampled_models: List of sampled cluster models.
+    :type sampled_models: list[dict]
+    :param radec_c: Cluster center coordinates in equatorial system ``(ra, dec)``.
+    :type radec_c: tuple[float, float]
     :param M_B: Bulge mass.
     :type M_B: float
     :param r_B: Bulge radius.
@@ -268,16 +159,14 @@ def ambient_density(
     :type r_s: float
     :param M_s: Dark matter halo mass.
     :type M_s: float
-    :param Z: Vertical distance.
-    :type Z: np.ndarray
-    :param R_GC: Galactocentric distance.
-    :type R_GC: np.ndarray
-    :param R_xy: Projected galactocentric distance.
-    :type R_xy: np.ndarray
 
     :return: Ambient density.
     :rtype: npt.NDArray[np.floating]
     """
+
+    # Obtain galactic vertical distance and distance to center
+    Z, R_GC, R_xy = galactic_coords(sampled_models, radec_c)
+
     Phi_B_Laplacian = 2 * M_B * r_B / (R_GC * (R_GC + r_B) ** 3)
     numerator = (
         M_D
@@ -349,7 +238,7 @@ def dissolution_param(
     :param rho_amb: Ambient density.
     :type rho_amb: float
 
-    :return: Dissolution parameter.
+    :return: Dissolution parameter [yr].
     :rtype: float
     """
     t0 = C_env * (1 - epsilon) * 10 ** (-4 * gamma) * rho_amb ** (-0.5)
@@ -370,7 +259,7 @@ def minit_LGB05(
     :type M_actual: float
     :param gamma: Parameter related to the mass-loss rate.
     :type gamma: float
-    :param t0: Dissolution parameter.
+    :param t0: Dissolution parameter [yr].
     :type t0: float
     :param mu_ev: Fraction of mass lost by stellar evolution.
     :type mu_ev: float
@@ -378,7 +267,7 @@ def minit_LGB05(
     :return: Initial mass.
     :rtype: float
     """
-    t = 10**loga
+    t = 10**loga  # to [yr]
     M_init = ((M_actual**gamma + gamma * (t / t0)) ** (1 / gamma)) / mu_ev
 
     return M_init
