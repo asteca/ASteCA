@@ -361,10 +361,6 @@ class Synthetic:
         self,
         model: dict[str, float],
         model_std: dict[str, float],
-        mag_offset_1: float = 0.5,
-        col_offset_1: float = -0.1,
-        mag_offset_2: float = -0.5,
-        col_offset_2: float = -0.05,
         N_models: int = 200,
         color_idx: int = 0,
     ) -> None:
@@ -376,18 +372,6 @@ class Synthetic:
         :param model_std: Dictionary with the standard deviations for the fundamental
             parameters in the ``model`` argument
         :type model_std: dict[str, float]
-        :param mag_offset_1: Offset applied to the turn-off magnitude to define the
-            first BSS region
-        :type mag_offset_1: float
-        :param col_offset_1: Offset applied to the turn-off color to define the
-            first BSS region
-        :type col_offset_1: float
-        :param mag_offset_2: Offset applied to the turn-off magnitude to define the
-            second BSS region
-        :type mag_offset_2: float
-        :param col_offset_2: Offset applied to the turn-off color to define the
-            second BSS region
-        :type col_offset_2: float
         :param N_models: Number of sampled models
         :type N_models: int
         :param color_idx: Index of the color used to define the CMD. If only one color is
@@ -452,10 +436,8 @@ class Synthetic:
         sampled_models_no_empty, sampled_synthcls = [], []
         turn_off_points = {
             "color_idx": color_idx,
-            "to_col_1": [],
-            "to_col_2": [],
-            "to_mag_1": [],
-            "to_mag_2": [],
+            "to_col": [],
+            "to_mag": [],
         }
         for smodel in sampled_models:
             # Get both the isochrone and the synthetic cluster
@@ -490,22 +472,10 @@ class Synthetic:
             msk = isoch_arr[self.m_ini_idx] < max_mass_isoch
             # Extract isochrone up to the max mass
             mag, color = np.array([isoch_arr[0], isoch_arr[color_idx + 1]])[:, msk]
-            # Find turn-off point
-            to_col_1, to_col_2, to_mag_1, to_mag_2 = ssf.to_point_find(
-                color,
-                mag,
-                self.cluster_mag,
-                self.cluster_colors[color_idx],
-                self.isochs.model,
-                mag_offset_1,
-                mag_offset_2,
-                col_offset_1,
-                col_offset_2,
-            )
-            turn_off_points["to_col_1"].append(to_col_1)
-            turn_off_points["to_col_2"].append(to_col_2)
-            turn_off_points["to_mag_1"].append(to_mag_1)
-            turn_off_points["to_mag_2"].append(to_mag_2)
+            # Find turn-off point for the isochrone
+            to_col, to_mag = ssf.to_point_find(color, mag, self.isochs.model)
+            turn_off_points["to_col"].append(to_col)
+            turn_off_points["to_mag"].append(to_mag)
 
         N_models_non_empty = len(sampled_models_no_empty)
         if N_models_non_empty == 0:
@@ -525,12 +495,31 @@ class Synthetic:
         self._vp(f"N_models       : {len(sampled_models_no_empty)}", 1)
         self._vp("Attributes stored in Synthetic object", 1)
 
-    def stellar_parameters(self) -> dict:
+    def stellar_parameters(
+        self,
+        mag_offset_1: float = 0.5,
+        col_offset_1: float = -0.1,
+        mag_offset_2: float = -0.5,
+        col_offset_2: float = -0.05,
+    ) -> dict:
         """Estimate parameters for the observed stars:
         - Mass of single system
         - Mass of binary system; if binarity was estimated
         - Binary probabilities; if binarity was estimated
         - Blue straggler probabilities
+
+        :param mag_offset_1: Offset applied to the turn-off magnitude to define the
+            first BSS region
+        :type mag_offset_1: float
+        :param col_offset_1: Offset applied to the turn-off color to define the
+            first BSS region
+        :type col_offset_1: float
+        :param mag_offset_2: Offset applied to the turn-off magnitude to define the
+            second BSS region
+        :type mag_offset_2: float
+        :param col_offset_2: Offset applied to the turn-off color to define the
+            second BSS region
+        :type col_offset_2: float
 
         :return: Data frame containing per-star primary and secondary masses along with
             their uncertainties, and their probability of being a binary system and/or a
@@ -562,6 +551,10 @@ class Synthetic:
             self.cluster_colors,
             self.turn_off_points,
             N_sampled_synthcls,
+            mag_offset_1,
+            mag_offset_2,
+            col_offset_1,
+            col_offset_2,
         )
 
         # Store as dictionary

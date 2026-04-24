@@ -359,12 +359,11 @@ the observed cluster (however obtained), and a ``model_std`` dictionary, which c
 the uncertainties (standard deviations) associated to each parameter in ``model``. 
 This method will store in the :class:`asteca.Synthetic` object a number of synthetic
 clusters, sampled from a normal distribution centered on the ``model`` values with
-STDDEVs taken from the ``model_std`` values. By default `200` models are generated but
-this can be changed via the ``N_models`` argument of the method.
+STDDEVs taken from the ``model_std`` values.
 
-After calling these methods, we can estimate:
+After calling these methods, we a<re ready to estimate:
 
-1. The initial, actual, and lost mass associated to the cluster
+1. The initial, actual, and lost masses associated to the cluster
 2. The per-star masses (for both single and binary systems)
 3. The per-star probability of being part of a binary system
 4. The per-star probability of being a blue straggler (BSS)
@@ -694,12 +693,12 @@ make them look bluer than they actually are, thus mimicking the BSS region.
 
 The values for the offsets ``(col_offset_1, mag_offset_1, col_offset_2, mag_offset_2)``
 can be modified by the user via the arguments of the
-:py:meth:`asteca.Synthetic.get_models` method.
+:py:meth:`asteca.Synthetic.stellar_parameters` method.
 
 
 .. important::
 
-    The current implementation assigns masses and binary probabilities to all the
+    The current implementation assigns masses and binary probabilities to all
     observed stars, including those identified as probable BSSs. **These values are
     not expected to be accurate**, since the BSSs follow a younger isochrone than that
     used for the remaining cluster stars.

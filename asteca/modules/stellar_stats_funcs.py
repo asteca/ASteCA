@@ -8,27 +8,17 @@ from scipy.spatial import KDTree
 def to_point_find(
     x: np.ndarray,
     y: np.ndarray,
-    cluster_mag: np.ndarray,
-    cluster_color: np.ndarray,
     isochs_model: str,
-    mag_offset_1: float,
-    mag_offset_2: float,
-    col_offset_1: float,
-    col_offset_2: float,
-    percentile: float = 5,
     window: int = 21,
     polyorder: int = 3,
     deriv: int = 1,
-    dmag_init: float = 0.25,
-    dmag_step: float = 0.05,
-    min_stars: int = 5,
     eps_default: float = 1e-6,
     eps_mist: float = 1e-3,
     confirm_min: int = 3,
     confirm_frac: float = 1 / 3,
     fallback_min_idx: int = 10,
-) -> tuple[float, float, float, float]:
-    """Estimate turn-off region limits from an isochrone and observed cluster data.
+) -> tuple[float, float]:
+    """Estimate turn-off point for an isochrone.
 
     The function applies a Savitzky-Golay filter to estimate the first derivative of
     the isochrone and identifies the first sustained increasing region.
@@ -37,36 +27,14 @@ def to_point_find(
     :type x: np.ndarray
     :param y: One-dimensional array of isochrone magnitudes corresponding to ``x``.
     :type y: np.ndarray
-    :param cluster_mag: Observed cluster magnitudes used to refine the turn-off region.
-    :type cluster_mag: np.ndarray
-    :param cluster_color: Observed cluster colors corresponding to ``cluster_mag``.
-    :type cluster_color: np.ndarray
     :param isochs_model: Name of the isochrone model.
     :type isochs_model: str
-    :param mag_offset_1: Offset applied to define the first magnitude limit.
-    :type mag_offset_1: float
-    :param mag_offset_2: Offset applied to define the second magnitude limit.
-    :type mag_offset_2: float
-    :param col_offset_1: Offset applied to define the first color limit.
-    :type col_offset_1: float
-    :param col_offset_2: Offset applied to define the second color limit.
-    :type col_offset_2: float
-    :param percentile: Percentile used to estimate the turn-off color from observed
-        stars.
-    :type percentile: float
     :param window: Window length for the Savitzky-Golay filter.
     :type window: int
     :param polyorder: Polynomial order for the Savitzky-Golay filter.
     :type polyorder: int
     :param deriv: Derivative order for the Savitzky-Golay filter.
     :type deriv: int
-    :param dmag_init: Initial half-width of the magnitude interval around the
-        detected turn-off magnitude.
-    :type dmag_init: float
-    :param dmag_step: Increment applied to the magnitude interval half-width.
-    :type dmag_step: float
-    :param min_stars: Minimum number of stars required in the magnitude interval.
-    :type min_stars: int
     :param eps_default: Default derivative threshold for an increasing trend.
     :type eps_default: float
     :param eps_mist: Derivative threshold used for the ``mist`` model.
@@ -79,9 +47,8 @@ def to_point_find(
     :param fallback_min_idx: Minimum acceptable index for the detected turn-off.
     :type fallback_min_idx: int
 
-    :return: Lower and upper color bounds and upper and lower magnitude bounds for
-        the turn-off region.
-    :rtype: tuple[float, float, float, float]
+    :return: Color and magnitude for the turn-off point.
+    :rtype: tuple[float, float]
     """
     n = len(x)
 
@@ -114,29 +81,9 @@ def to_point_find(
         to_idx = np.argmin(np.abs(y - y_mid_point))
 
     # Extract the color and magnitude values at the detected turn-off index
-    to_col, to_mag = x[to_idx], y[to_idx]
+    to_col, to_mag = float(x[to_idx]), float(y[to_idx])
 
-    # Define magnitude limits around the detected turn-off magnitude
-    to_mag_1 = to_mag + mag_offset_1
-    to_mag_2 = to_mag + mag_offset_2
-
-    # Define a magnitude range around the identified turn-off magnitude.
-    # Iteratively increase the magnitude range until at least `min_stars` are found
-    # within it.
-    dmag = dmag_init
-    while True:
-        mag_range = (cluster_mag > (to_mag - dmag)) & (cluster_mag < (to_mag + dmag))
-        if mag_range.sum() >= min_stars:
-            break
-        dmag += dmag_step
-
-    # This approach is more robust to incorrect parameter values assigned to
-    # the observed cluster
-    to_col_cl = np.nanpercentile(cluster_color[mag_range], percentile)
-    to_col_1 = min(to_col_cl, to_col + col_offset_1)
-    to_col_2 = min(to_col_cl, to_col + col_offset_2)
-
-    return to_col_1, to_col_2, to_mag_1, to_mag_2
+    return to_col, to_mag
 
 
 def get_stellar_masses(
@@ -216,9 +163,7 @@ def get_stellar_masses(
     return m1_med, m1_std, m2_med, m2_std, nan_msk, m2_obs
 
 
-def get_binar_probabilities(
-    m2_obs: np.ndarray, N_sampled_synthcls: int
-) -> np.ndarray:
+def get_binar_probabilities(m2_obs: np.ndarray, N_sampled_synthcls: int) -> np.ndarray:
     """Binary probability per observed star
 
     Count how many times the secondary mass of an observed star was assigned a
@@ -243,6 +188,14 @@ def get_bss_probabilities(
     cluster_colors: list[np.ndarray | None],
     turn_off_points: dict,
     N_sampled_synthcls: int,
+    mag_offset_1: float,
+    mag_offset_2: float,
+    col_offset_1: float,
+    col_offset_2: float,
+    percentile: float = 5,
+    dmag_init: float = 0.25,
+    dmag_step: float = 0.05,
+    min_stars: int = 5,
 ) -> np.ndarray:
     """Estimate the probability of each observed star being a blue straggler star
     (BSS) based on the turn-off point of the isochrones generated from the sampled
@@ -256,22 +209,62 @@ def get_bss_probabilities(
     :type turn_off_points: dict
     :param N_sampled_synthcls: Number of sampled synthetic clusters.
     :type N_sampled_synthcls: int
+    :param mag_offset_1: Offset applied to the turn-off magnitude to define the
+        first BSS region
+    :type mag_offset_1: float
+    :param mag_offset_2: Offset applied to the turn-off magnitude to define the
+        second BSS region
+    :type mag_offset_2: float
+    :param col_offset_1: Offset applied to the turn-off color to define the
+        first BSS region
+    :type col_offset_1: float
+    :param col_offset_2: Offset applied to the turn-off color to define the
+        second BSS region
+    :type col_offset_2: float
+    :param percentile: Percentile used to estimate the turn-off color from observed
+        stars.
+    :type percentile: float
+    :param dmag_init: Initial half-width of the magnitude interval around the
+        detected turn-off magnitude.
+    :type dmag_init: float
+    :param dmag_step: Increment applied to the magnitude interval half-width.
+    :type dmag_step: float
+    :param min_stars: Minimum number of stars required in the magnitude interval.
+    :type min_stars: int
+
     :return: Array with the BSS probability for each observed star
     :rtype: np.ndarray
     """
-    color_idx = turn_off_points["color_idx"]
-    to_col_1 = np.array(turn_off_points["to_col_1"])
-    to_col_2 = np.array(turn_off_points["to_col_2"])
-    to_mag_1 = np.array(turn_off_points["to_mag_1"])
-    to_mag_2 = np.array(turn_off_points["to_mag_2"])
+    to_col = np.array(turn_off_points["to_col"])
+    to_mag = np.array(turn_off_points["to_mag"])
+    cl_color = cluster_colors[turn_off_points["color_idx"]]
 
-    color = cluster_colors[color_idx]
-    mag = cluster_mag
+    # Define magnitude limits around the detected turn-off magnitude
+    to_mag_1 = to_mag + mag_offset_1
+    to_mag_2 = to_mag + mag_offset_2
 
-    # Assign BSS probabilities
-    bss_probs = np.zeros_like(mag)
-    for c1, c2, m1, m2 in zip(to_col_1, to_col_2, to_mag_1, to_mag_2):
-        msk = ((color < c1) & (mag < m1)) | ((color < c2) & (mag < m2))
+    bss_probs = np.zeros_like(cluster_mag)
+    for to_c, to_m, to_m1, to_m2 in zip(to_col, to_mag, to_mag_1, to_mag_2):
+        # Define a magnitude range around the identified turn-off magnitude.
+        # Iteratively increase the magnitude range until at least `min_stars` are found
+        # within it.
+        dmag = dmag_init
+        while True:
+            mag_range = (cluster_mag > (to_m - dmag)) & (cluster_mag < (to_m + dmag))
+            if mag_range.sum() >= min_stars:
+                break
+            dmag += dmag_step
+
+        # This approach is more robust to incorrect parameter values assigned to
+        # the observed cluster
+        to_col_cl = np.nanpercentile(cl_color[mag_range], percentile)
+        to_c1 = min(to_col_cl, to_c + col_offset_1)
+        to_c2 = min(to_col_cl, to_c + col_offset_2)
+
+        # Assign BSS probabilities
+        msk = ((cl_color < to_c1) & (cluster_mag < to_m1)) | (
+            (cl_color < to_c2) & (cluster_mag < to_m2)
+        )
         bss_probs[msk] += 1
 
     # Normalize probability

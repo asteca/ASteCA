@@ -954,7 +954,7 @@ def extinction(
     :param ext_law: Extinction law to be used.
     :type ext_law: str
     :param ext_coefs: List of extinction coefficients.
-    :type ext_coefs: list
+    :type ext_coefs: list | np.ndarray
     :param rand_norm: Array of random normal values.
     :type rand_norm: np.ndarray
     :param rand_unif: Array of random uniform values.
