@@ -17,6 +17,7 @@ dependencies = [
     "fast-histogram>=0.14",
     "numpy>=2.4.0",
     "scipy>=1.17.0",
+    "pandas>=3.0.0",
 ]
 
 [build-system]

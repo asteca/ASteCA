@@ -6,12 +6,19 @@
 Changelog
 #########
 
-`[v0.6.4] <https://github.com/asteca/asteca/releases/tag/v0.6.4>`__ - 2026-04-24
+
+`[v0.6.5] <https://github.com/asteca/asteca/releases/tag/v0.6.5>`__ - 2026-04-24
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 - Method `stellar_masses()` is now `stellar_parameters()`
 - Added blue straggler probability estimation to `stellar_parameters()`
 - Removed `binary_fraction()` Monte Carlo method, not required
+
+
+[v0.6.4] - 2026-04-24
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Bad build (missing `pandas` dependency)
 
 
 
