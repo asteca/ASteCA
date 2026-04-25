@@ -15,10 +15,8 @@ clusters`_. It is designed to determine their structural parameters, membership
 probabilities, and both intrinsic and extrinsic fundamental properties, including
 extinction, distance, metallicity, age, binarity, and mass.
 
-
-.. important::
-   The latest version is |ProjectVersion|. See the :ref:`changelog` for a detailed
-   list of the changes implemented.
+The latest version is |ProjectVersion|. See the :ref:`changelog` for a detailed
+list of the changes implemented.
 
 If you have any questions about this package and how to use it in your research
 please `contact me`_ or `open a new issue`_ in the code's repository.
