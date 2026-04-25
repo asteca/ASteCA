@@ -49,11 +49,11 @@ with the loaded ``UCC_members.parquet`` file to the class, as follows:
 
 .. code-block:: python
 
-    # Define the cluster's name
-    cl_name = "blanco 1"
-
     # Load the UCC's members data file
     UCC_members = pd.read_parquet("UCC_members.parquet")
+
+    # Define the cluster's name (case insensitive; spaces, dashes, etc are ignored)
+    cl_name = "blanco 1"
 
     # Create a Cluster object from the UCC's members data file
     my_field = asteca.Cluster(
