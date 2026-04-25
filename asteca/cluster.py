@@ -1,7 +1,12 @@
-import warnings
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import numpy as np
-import pandas as pd
+
+if TYPE_CHECKING:
+    import pandas as pd
+import warnings
 
 
 class Cluster:
@@ -11,7 +16,7 @@ class Cluster:
     that could represent a cluster or an entire field.
 
     :param cluster_name: Name of the cluster, only required if the data is to be
-        loaded from the UCC members file. If provided, the ``UCC_file_path`` argument
+        loaded from the UCC members file. If provided, the ``UCC_members_file`` argument
         must also be provided
     :type cluster_name: str | None
     :param UCC_members_file: Loaded UCC members .parquet file
@@ -126,11 +131,14 @@ class Cluster:
 
     def _load_UCC_data(self):
 
+        if (
+            self.UCC_members_file is None
+            or type(self.UCC_members_file).__module__.startswith("pandas") is False
+        ):
+            raise TypeError("'UCC_members_file' must be a Pandas DataFrame")
+
         if not isinstance(self.cluster_name, str):
             raise TypeError("'cluster_name' must be a string")
-
-        if not isinstance(self.UCC_members_file, pd.DataFrame):
-            raise TypeError("'UCC_members_file' must be a Pandas DataFrame")
 
         cluster_fname = (
             self.cluster_name.lower()

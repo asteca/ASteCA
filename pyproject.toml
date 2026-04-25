@@ -1,6 +1,6 @@
 [project]
 name = "asteca"
-version = "0.6.5"
+version = "0.6.5-dev"
 description = "Stellar cluster analysis package"
 authors = [
     {name = "Gabriel I Perren", email = "gabrielperren@gmail.com"}
@@ -16,8 +16,7 @@ dependencies = [
     "astropy>=7.2.0",
     "fast-histogram>=0.14",
     "numpy>=2.4.0",
-    "scipy>=1.17.0",
-    "pandas>=3.0.0",
+    "scipy>=1.17.0"
 ]
 
 [build-system]
