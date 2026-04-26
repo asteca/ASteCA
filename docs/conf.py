@@ -25,6 +25,22 @@ except subprocess.CalledProcessError:
             .split("=")[1]
             .strip("'\"\n ")
         )
+    # remove "-dev"
+    __version__ = __version__.replace("-dev", "")
+    major, minor, patch = map(int, __version__.split("."))
+    if patch > 0:
+        patch -= 1
+    else:
+        patch = 9
+        if minor > 0:
+            minor -= 1
+        else:
+            minor = 9
+            if major > 0:
+                major -= 1
+            else:
+                raise ValueError("Cannot decrement version below 0.0.0")
+    __version__ = f"{major}.{minor}.{patch}"
 
 # The full version, including alpha/beta/rc tags
 version = __version__
