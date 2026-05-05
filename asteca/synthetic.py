@@ -327,7 +327,7 @@ class Synthetic:
             single star, then ``mass_b==np.nan``.
         :rtype: np.ndarray | tuple[np.ndarray, np.ndarray]
         """
-        from .modules import synth_cluster_priv as scp
+        from .modules import synth_model as sm
 
         try:
             # Extract from calibrated observed cluster
@@ -341,7 +341,7 @@ class Synthetic:
             err_dist_synth = []
             N_synth_stars = int(N_stars)
 
-        return scp.generate_synth_arr(
+        return sm.generate(
             params,
             self.met_age_dict,
             self.def_params,
@@ -394,7 +394,7 @@ class Synthetic:
             )
 
         from .modules import stellar_stats_funcs as ssf
-        from .modules import synth_cluster_priv as scp
+        from .modules import synth_model as sm
 
         # Update dictionaries with default values, if required
         model = self.def_params | model
@@ -441,7 +441,7 @@ class Synthetic:
         }
         for smodel in sampled_models:
             # Get both the isochrone and the synthetic cluster
-            isoch_arr, synth_arr = scp.generate_synth_arr(
+            isoch_arr, synth_arr = sm.generate(
                 smodel,
                 self.met_age_dict,
                 self.def_params,
@@ -822,7 +822,7 @@ class Synthetic:
             except KeyError:
                 pass
 
-        from .modules import synth_cluster_priv as scp
+        from .modules import synth_model as sm
 
         try:
             # Extract from calibrated observed cluster
@@ -838,7 +838,7 @@ class Synthetic:
         # isochrone only
         fit_params_isoch = dict(fit_params)
         fit_params_isoch["DR"] = 0.0
-        isochrone = scp.generate_synth_arr(
+        isochrone = sm.generate(
             fit_params_isoch,
             self.met_age_dict,
             self.def_params,
@@ -862,7 +862,7 @@ class Synthetic:
         # Extract magnitude and mass from the isochrone and the full synthetic cluster
         isoch_mag, isoch_mass = isochrone[0], isochrone[self.m_ini_idx]
         # Generate physical synthetic cluster to extract the max mass
-        full_arr = scp.generate_synth_arr(
+        full_arr = sm.generate(
             fit_params_copy,
             self.met_age_dict,
             self.def_params,
