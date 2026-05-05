@@ -49,7 +49,7 @@ of the :py:class:`asteca.Isochrones` class as follows:
     N_files        : 1
     N_mets         : 3
     N_ages         : 36
-    N_isochs       : 2000
+    N_points       : 2000
     z    range     : [0.01, 0.02]
     loga range     : [6.6, 10.10001]
     Magnitude      : Gmag
@@ -82,7 +82,7 @@ Extra arguments
 ===============
 
 There are a few more arguments that can be modified when loading the isochrones. These
-are: ``z_to_FeH, N_interp, parsec_rm_stage_9, column_names``.
+are: ``z_to_FeH, N_points, parsec_rm_stage_9, column_names``.
 
 The ``z_to_FeH`` argument is used to transform metallicity values from the default ``z``
 to the logarithmic version ``FeH``. If you want to generate your synthetic cluster
@@ -107,7 +107,7 @@ you would load your isochrones as:
 If this argument is not changed from its default then the ``z`` parameter will be used
 to generate synthetic clusters, as shown in the section :ref:`ref_generating`.
 
-The ``N_interp`` argument controls the resolution of the isochrones interpolation, set
+The ``N_points`` argument controls the resolution of the isochrones interpolation, set
 to ``2000`` by default. A smaller value con be used to lower the amount of memory
 used by this class, but it comes at the expense of more coarse synthetic clusters being
 generated later on (since the isochrones will be interpolated with fewer points and will

@@ -45,9 +45,9 @@ class Isochrones:
         converted to ``[FeH]`` values, to be used by the
         :py:meth:`Synthetic.generate` method
     :type z_to_FeH: float | None
-    :param N_interp: Number of interpolation points used to ensure that all isochrones
+    :param N_points: Number of interpolation points used to ensure that all isochrones
         are the same shape
-    :type N_interp: int
+    :type N_points: int
     :param parsec_rm_stage_9: If the isochrones are PARSEC, this argument set to
         ``True`` will remove the *post_AGB* stage (label=9) which are still
         "`in preparation <http://stev.oapd.inaf.it/cmd/faq.html>`__", defaults
@@ -78,7 +78,7 @@ class Isochrones:
         color_effl: tuple | None = None,
         color2_effl: tuple | None = None,
         z_to_FeH: float | None = None,
-        N_interp: int = 2000,
+        N_points: int = 2000,
         parsec_rm_stage_9: bool = True,
         column_names: dict | None = None,
         verbose: int = 1,
@@ -93,7 +93,7 @@ class Isochrones:
         self.color2_effl = color2_effl
         self.z_to_FeH = z_to_FeH
         self.column_names = column_names
-        self.N_interp = N_interp
+        self.N_points = N_points
         self.parsec_rm_stage_9 = parsec_rm_stage_9
         self.verbose = verbose
 
@@ -127,7 +127,7 @@ class Isochrones:
                 self.color,
                 self.color2,
                 self.column_names,
-                self.N_interp,
+                self.N_points,
                 self.parsec_rm_stage_9,
             )
         )
@@ -144,7 +144,7 @@ class Isochrones:
         self.amin = self.met_age_dict["loga"].min()
         self.amax = self.met_age_dict["loga"].max()
 
-        N_met, N_age, _, N_points = self.theor_tracks.shape
+        N_met, N_age, _, _ = self.theor_tracks.shape
         self._vp(f"Model          : {self.model}", 1)
         self._vp(f"N_files        : {N_isoch_files}", 1)
         self._vp(f"N_mets         : {N_met}", 1)
