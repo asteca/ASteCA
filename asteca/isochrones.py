@@ -189,7 +189,7 @@ class Isochrones:
             age_i = np.where(age_msk)[0][0]
             isoch = self.theor_tracks[met_i][age_i]
         except IndexError:
-            from .modules import synth_cluster_priv as scp
+            from .modules import synth_model as sm
 
             params = {
                 "met": met,
@@ -201,13 +201,13 @@ class Isochrones:
                 "Rv": 0,
                 "dm": 0,
             }
-            ml, mh, al, ah = scp.properModel(self.met_age_dict, {}, params)[-4:]
+            ml, mh, al, ah = sm.properModel(self.met_age_dict, {}, params)[-4:]
             # Add dimension of zeroes to array
             padded_arr = np.pad(self.theor_tracks, ((0, 0), (0, 0), (0, 2), (0, 0)))
 
             m_ini_idx = self.theor_tracks.shape[2]
 
-            isoch = scp.zaWAverage(
+            isoch = sm.zaWAverage(
                 padded_arr,
                 self.met_age_dict,
                 m_ini_idx,

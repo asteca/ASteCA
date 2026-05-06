@@ -264,7 +264,7 @@ class Synthetic:
                 + "was defined in 'synthetic'."
             )
 
-        # Warning with hardcoded values
+        # Warning with hard coded values
         f_stars_mass = 7
         if cluster.mag.size * f_stars_mass > self.max_mass:
             warnings.warn(
