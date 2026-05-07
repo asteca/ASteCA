@@ -1,6 +1,70 @@
 import numpy as np
 
 
+def main(N_repeat=10_000):
+    """ """
+    import asteca
+
+    print(asteca.__version__)
+    import pandas as pd
+    from pyinstrument import Profiler
+
+    # Isochrones parameters
+    isochs = asteca.Isochrones(
+        model="parsec",
+        isochs_path="../../docs/_static/parsec/gaia",
+        mag="Gmag",
+        color=("G_BPmag", "G_RPmag"),
+        verbose=3,
+    )
+
+    # Synthetic clusters parameters
+    synthcl = asteca.Synthetic(
+        isochs,
+        ext_law="GAIADR3",
+        max_mass=40000,
+        seed=42519,
+        verbose=3,
+    )
+    ""
+    obs_df = pd.read_csv("../../docs/_static/cluster.csv")
+    my_cluster = asteca.Cluster(
+        ra=obs_df["RA_ICRS"],
+        dec=obs_df["DE_ICRS"],
+        mag=obs_df["Gmag"],
+        e_mag=obs_df["e_Gmag"],
+        color=obs_df["BP-RP"],
+        e_color=obs_df["e_BP-RP"],
+        verbose=2,
+    )
+    synthcl.calibrate(my_cluster)
+    params = {}
+
+    # Start profiler
+    profiler = Profiler()
+    profiler.start()
+    for _ in range(N_repeat):
+        synth_arr = generate(
+            params,
+            synthcl.met_age_dict,
+            synthcl.def_params,
+            synthcl.m_ini_idx,
+            synthcl.theor_tracks,
+            synthcl.ext_law,
+            synthcl.ext_coefs,
+            synthcl.rand_floats,
+            synthcl.DR_distribution,
+            synthcl.st_dist_mass,
+            synthcl.max_mag_syn_obs,
+            synthcl.err_dist_obs,
+            synthcl.N_stars_obs,
+        )
+    profiler.stop()
+    profiler.open_in_browser()
+
+    breakpoint()
+
+
 def generate(
     params: dict,
     met_age_dict: dict,
@@ -869,7 +933,8 @@ def interp_mass_isoch(
 
     # *****************************************************************************
     # This is a stripped down version of scipy.inter1d (kind='linear') which
-    # is now legacy code (https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.interp1d.html)
+    # is now legacy code
+    # (https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.interp1d.html)
     # Scipy now recommends using np.interp for simple linear interpolation but it
     # is quite slower.
     #
@@ -1026,3 +1091,7 @@ def add_errors(isoch_binar: np.ndarray, err_dist: list[np.ndarray]) -> np.ndarra
         isoch_binar[i, mag_sort] += sigma[:N]
 
     return isoch_binar
+
+
+if __name__ == "__main__":
+    main()
