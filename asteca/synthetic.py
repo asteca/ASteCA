@@ -23,6 +23,15 @@ class Synthetic:
     :type isochs: Isochrones
     :param def_params: Default values for all the required fundamental parameters
     :type def_params: dict[str, float]
+    :param IMF_name: Name of the initial mass function used to populate the isochrones,
+        one of ``salpeter_1955, kroupa_2001, chabrier_2014``
+    :type IMF_name: str
+    :param max_mass: Maximum total initial mass. Should be large enough to allow
+        generating as many synthetic stars as observed stars
+    :type max_mass: int
+    :param gamma: Distribution function for the mass ratio of the binary systems,
+        float or one of ``D&K, fisher_stepped, fisher_peaked, raghavan``
+    :type gamma: float | str
     :param ext_law: Extinction law, one of ``CCMO, GAIADR3``.
         If ``GAIADR3`` is selected, the magnitude and first
         color defined in the :py:class:`Isochrones <asteca.isochrones.Isochrones>` and
@@ -33,15 +42,6 @@ class Synthetic:
     :param DR_distribution: Distribution function for the differential reddening,
         one of ``uniform, normal``
     :type DR_distribution: str
-    :param IMF_name: Name of the initial mass function used to populate the isochrones,
-        one of ``salpeter_1955, kroupa_2001, chabrier_2014``
-    :type IMF_name: str
-    :param max_mass: Maximum total initial mass. Should be large enough to allow
-        generating as many synthetic stars as observed stars
-    :type max_mass: int
-    :param gamma: Distribution function for the mass ratio of the binary systems,
-        float or one of ``D&K, fisher_stepped, fisher_peaked, raghavan``
-    :type gamma: float | str
     :param seed: Random seed. If ``None`` a random integer will be generated and used
     :type seed: int | None
     :param verbose: Verbose level. A value of ``0`` hides all output
@@ -63,21 +63,21 @@ class Synthetic:
             "Av": 0.2,
             "dm": 9.0,
         },
-        ext_law: str = "CCMO",
-        DR_distribution: str = "uniform",
         IMF_name: str = "chabrier_2014",
         max_mass: int = 10_000,
         gamma: float | str = "D&K",
+        ext_law: str = "CCMO",
+        DR_distribution: str = "uniform",
         seed: int | None = None,
         verbose: int = 1,
     ) -> None:
         self.isochs = isochs
         self.def_params = def_params
-        self.ext_law = ext_law
-        self.DR_distribution = DR_distribution
         self.IMF_name = IMF_name
         self.max_mass = max_mass
         self.gamma = gamma
+        self.ext_law = ext_law
+        self.DR_distribution = DR_distribution
         self.seed = seed
         self.verbose = verbose
 
