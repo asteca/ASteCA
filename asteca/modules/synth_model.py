@@ -634,10 +634,9 @@ def extinction(
         Ns = isochrone.shape[-1]
 
         if DR_distribution == "uniform":
-            # Av_dr = rand_unif[:Ns] * dr
+            # Transform uniform random values from [0, 1] to [-1, 1], then scale by dr
             dr_arr = (2.0 * rand_unif[:Ns] - 1.0) * dr
         elif DR_distribution == "normal":
-            # Av_dr = abs(rand_norm[:Ns]) * dr
             dr_arr = rand_norm[:Ns] * dr
         else:
             dr_arr = 0
