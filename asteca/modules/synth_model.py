@@ -1,8 +1,42 @@
 import numpy as np
 
+# The 'coeffs' values are the main sequence values taken from:
+# https://www.cosmos.esa.int/web/gaia/edr3-extinction-law
+_G_COEFFS = (
+    0.995969721536602,
+    -0.159726460302015,
+    0.0122380738156057,
+    0.00090726555099859,
+    -0.0377160263914123,
+    0.00151347495244888,
+    -2.52364537395142e-05,
+    0.0114522658102451,
+    -0.000936914989014318,
+    -0.000260296774134201,
+)
+# "BP" minus "RP" coefficients
+_BPRP_COEFFS = (
+    0.49042409542357,
+    -0.0634165826723407,
+    -0.036506793426665456,
+    0.02189430261385411,
+    -0.01588332677592224,
+    0.0008075446901998552,
+    -1.468074307777017e-05,
+    0.006681041701047307,
+    -0.001137927314099498,
+    -0.0001222634137884233,
+)
 
-def main(N_repeat=10_000):
-    """ """
+
+def main(N_repeat=25_000):
+    """
+    Main function used to test the performance of the `generate` function. It
+    generates a synthetic cluster N_repeat times, and profiles the execution time
+    of the function.
+
+    :param N_repeat: Number of times to repeat the generation of the synthetic cluster.
+    """
     import asteca
 
     print(asteca.__version__)
@@ -38,13 +72,13 @@ def main(N_repeat=10_000):
         verbose=2,
     )
     synthcl.calibrate(my_cluster)
-    params = {}
+    params = {"DR": 0.5}
 
     # Start profiler
     profiler = Profiler()
     profiler.start()
     for _ in range(N_repeat):
-        synth_arr = generate(
+        _ = generate(
             params,
             synthcl.met_age_dict,
             synthcl.def_params,
@@ -754,11 +788,10 @@ def gaiadr3_extlaw(
     X_: np.ndarray, Av_dr: float | np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
     """
+    Gaia DR3 extinction law for main sequence stars.
+
     The 'coeffs' values are the main sequence values taken from:
     https://www.cosmos.esa.int/web/gaia/edr3-extinction-law
-
-    The order of the coefficients is:
-    Intercept   X   X2  X3  A   A2  A3  XA  AX2 XA2
 
     :param X_: Array of BP-RP colors.
     :type X_: np.ndarray
@@ -768,68 +801,39 @@ def gaiadr3_extlaw(
     :returns: Extinction coefficients for G and BP-RP.
     :rtype: tuple[np.ndarray, np.ndarray]
     """
-    coeffs = {
-        "G": (
-            0.995969721536602,
-            -0.159726460302015,
-            0.0122380738156057,
-            0.00090726555099859,
-            -0.0377160263914123,
-            0.00151347495244888,
-            -2.52364537395142e-05,
-            0.0114522658102451,
-            -0.000936914989014318,
-            -0.000260296774134201,
-        ),
-        "BP": (
-            1.15363197483424,
-            -0.0814012991657388,
-            -0.036013023976704,
-            0.0192143585568966,
-            -0.022397548243016,
-            0.000840562680547171,
-            -1.31018008013549e-05,
-            0.00660124080271006,
-            -0.000882247501989453,
-            -0.000111215755291684,
-        ),
-        "RP": (
-            0.66320787941067,
-            -0.0179847164933981,
-            0.000493769449961458,
-            -0.00267994405695751,
-            -0.00651422146709376,
-            3.30179903473159e-05,
-            1.57894227641527e-06,
-            -7.9800898337247e-05,
-            0.000255679812110045,
-            1.10476584967393e-05,
-        ),
-    }
+    X = X_
+    A = Av_dr
 
-    X_2 = X_ * X_
-    X_3 = X_2 * X_
-    Av_2 = Av_dr * Av_dr
-    Av_3 = Av_2 * Av_dr
+    X2 = X * X
+    X3 = X2 * X
+    A2 = A * A
+    A3 = A2 * A
 
-    def ext_coeff(k):
-        c = coeffs[k]
-        ay = (
-            c[0]  # a1
-            + c[1] * X_  # a2*X
-            + c[2] * X_2  # a3*X^2
-            + c[3] * X_3  # a4*X^3
-            + c[4] * Av_dr  # a5*A0
-            + c[5] * Av_2  # a6*A0^2
-            + c[6] * Av_3  # a7*A0^3
-            + c[7] * X_ * Av_dr  # a8*A0*X
-            + c[8] * X_2 * Av_dr  # a9*A0*X^2
-            + c[9] * X_ * Av_2  # a10*X*A0^2
-        )
-        return ay
+    ec_G = (
+        _G_COEFFS[0]
+        + _G_COEFFS[1] * X
+        + _G_COEFFS[2] * X2
+        + _G_COEFFS[3] * X3
+        + _G_COEFFS[4] * A
+        + _G_COEFFS[5] * A2
+        + _G_COEFFS[6] * A3
+        + _G_COEFFS[7] * X * A
+        + _G_COEFFS[8] * X2 * A
+        + _G_COEFFS[9] * X * A2
+    )
 
-    ec_G = ext_coeff("G")
-    ec_BPRP = ext_coeff("BP") - ext_coeff("RP")
+    ec_BPRP = (
+        _BPRP_COEFFS[0]
+        + _BPRP_COEFFS[1] * X
+        + _BPRP_COEFFS[2] * X2
+        + _BPRP_COEFFS[3] * X3
+        + _BPRP_COEFFS[4] * A
+        + _BPRP_COEFFS[5] * A2
+        + _BPRP_COEFFS[6] * A3
+        + _BPRP_COEFFS[7] * X * A
+        + _BPRP_COEFFS[8] * X2 * A
+        + _BPRP_COEFFS[9] * X * A2
+    )
 
     return ec_G, ec_BPRP
 
@@ -895,8 +899,12 @@ def mass_interp(
     # Use direct indexing instead of min/max calls
     # Combined boolean mask in single operation
     msk_m = (st_dist_mass >= mass_ini[0]) & (st_dist_mass <= mass_ini[-1])
+
     # Extract up to 'N_synth_stars' masses sampled from an IMF, within the mass range
-    mass_dist = st_dist_mass[msk_m][:N_synth_stars]
+    idx = np.nonzero(msk_m)[0][:N_synth_stars]
+    mass_dist = st_dist_mass[idx]
+    # # The above is faster than:
+    # mass_dist = st_dist_mass[msk_m][:N_synth_stars]
 
     if mass_dist.size == 0:
         return np.array([])
@@ -1087,8 +1095,19 @@ def add_errors(isoch_binar: np.ndarray, err_dist: list[np.ndarray]) -> np.ndarra
 
     N = isoch_binar.shape[1]
     mag_sort = np.argsort(-isoch_binar[0])
+
     for i, sigma in enumerate(err_dist):
         isoch_binar[i, mag_sort] += sigma[:N]
+
+    # # This approach is slower
+    # stacked = np.array([s[:N] for s in err_dist])
+    # isoch_binar[:len(err_dist), mag_sort] += stacked
+
+    # # This approach is also slower
+    # ncols = isoch_binar.shape[1]
+    # nrows = min(len(err_dist), isoch_binar.shape[0])
+    # errs = np.stack([sigma[:ncols] for sigma in err_dist[:nrows]], axis=0)
+    # isoch_binar[:nrows, mag_sort] += errs
 
     return isoch_binar
 
