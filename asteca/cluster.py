@@ -181,6 +181,10 @@ class Cluster:
         self.e_pmra = np.asarray(cluster_df["e_pmRA"], dtype=float)
         self.pmde = np.asarray(cluster_df["pmDE"], dtype=float)
         self.e_pmde = np.asarray(cluster_df["e_pmDE"], dtype=float)
+        #
+        self.Rv = np.asarray(cluster_df["RV"], dtype=float)
+        self.e_Rv = np.asarray(cluster_df["e_RV"], dtype=float)
+        self.probs = np.asarray(cluster_df["probs"], dtype=float)
         cols_read = (
             "RA",
             "DEC",
@@ -194,6 +198,9 @@ class Cluster:
             "e_pmRA",
             "pmDE",
             "e_pmDE",
+            "RV",
+            "e_RV",
+            "probs",
         )
         self._vp(f"Columns read   : {', '.join(cols_read)}", 1)
         self.N_stars = len(cluster_df)
