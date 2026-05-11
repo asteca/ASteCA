@@ -201,7 +201,12 @@ class Isochrones:
                 "Rv": 0,
                 "dm": 0,
             }
-            ml, mh, al, ah = sm.properModel(self.met_age_dict, {}, params)[-4:]
+            ml, mh, al, ah = sm.properModel(
+                self.met_age_dict,
+                def_params={},
+                fit_params=params,
+                check_isoch_range=True,
+            )[-4:]
             # Add dimension of zeroes to array
             padded_arr = np.pad(self.theor_tracks, ((0, 0), (0, 0), (0, 2), (0, 0)))
 
