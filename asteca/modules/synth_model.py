@@ -82,6 +82,8 @@ def main(N_repeat: int = 25_000):
         _ = get_model(
             params,
             synthcl.met_age_dict,
+            synthcl.met_tol,
+            synthcl.age_tol,
             synthcl.def_params,
             synthcl.m_ini_idx,
             synthcl.theor_tracks,
@@ -93,7 +95,6 @@ def main(N_repeat: int = 25_000):
             synthcl.max_mag_syn_obs,
             synthcl.err_dist_obs,
             synthcl.N_stars_obs,
-            True,
         )
     profiler.stop()
     profiler.open_in_browser()
@@ -102,6 +103,8 @@ def main(N_repeat: int = 25_000):
 def get_model(
     params: dict,
     met_age_dict: dict,
+    met_tol: float,
+    age_tol: float,
     def_params: dict,
     m_ini_idx: int,
     theor_tracks: np.ndarray,
@@ -125,6 +128,10 @@ def get_model(
     :type params: dict
     :param met_age_dict: Metallicity and age grid metadata.
     :type met_age_dict: dict
+    :param met_tol: Tolerance for metallicity values matching
+    :type met_tol: float
+    :param age_tol: Tolerance for log(age) values matching
+    :type age_tol: float
     :param def_params: Dictionary of default model parameters. This dictionary must
         include values for all the parameters.
     :type def_params: dict
@@ -164,7 +171,7 @@ def get_model(
     # Return proper values for fixed parameters and parameters required
     # for the (z, log(age)) isochrone averaging.
     met, loga, alpha, beta, av, dr, rv, dm, ml, mh, al, ah = properModel(
-        met_age_dict, def_params, params
+        met_age_dict, def_params, params, met_tol, age_tol
     )
 
     # If (z, a) are both fixed, use the single processed isochrone
@@ -269,8 +276,8 @@ def properModel(
     met_age_dict: dict,
     def_params: dict,
     fit_params: dict,
-    met_tol: float = 0.001,
-    age_tol: float = 0.005,
+    met_tol: float,
+    age_tol: float,
 ) -> tuple[float, float, float, float, float, float, float, float, int, int, int, int]:
     """Define the 'proper' model with values for (z, a) taken from its grid,
     and filled values for those parameters that are fixed.
@@ -296,17 +303,21 @@ def properModel(
     # duplicated values with those in `fit_params`
     fit_params = def_params | fit_params
 
-    def _check_param(val, grid, name, tol):
-        if len(grid) == 1:
-            if abs(val - grid[0]) > tol:
-                raise ValueError(f"{name}={val:.4f} != fixed value {grid[0]}")
-        elif not (grid[0] <= val <= grid[-1]):
+    def _check_param(name, tol):
+        if len(met_age_dict[name]) == 1:
+            if abs(fit_params[name] - met_age_dict[name][0]) > tol:
+                raise ValueError(
+                    f"Parameter {name}={fit_params[name]:.4f} != fixed value"
+                    + f" {met_age_dict[name][0]}"
+                )
+        elif not (met_age_dict[name][0] <= fit_params[name] <= met_age_dict[name][-1]):
             raise ValueError(
-                f"{name}={val:.4f} outside grid range [{grid[0]}, {grid[-1]}]"
+                f"Parameter {name}={fit_params[name]:.4f} outside isochrone"
+                + f" range [{met_age_dict[name][0]}, {met_age_dict[name][-1]}]"
             )
 
-    _check_param(fit_params["met"], met_age_dict["met"], "met", met_tol)
-    _check_param(fit_params["loga"], met_age_dict["loga"], "loga", age_tol)
+    _check_param("met", met_tol)
+    _check_param("loga", age_tol)
 
     ml = mh = 0
     if len(met_age_dict["met"]) > 1:
