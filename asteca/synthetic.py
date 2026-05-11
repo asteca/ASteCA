@@ -139,6 +139,12 @@ class Synthetic:
         self.m_ini_idx = 2  # (0->mag, 1->color, 2->mass_ini)
         if self.isochs.color2_effl is not None:
             self.m_ini_idx = 3  # (0->mag, 1->color, 2->color2, 3->mass_ini)
+        # Set tolerances for the ranges of the isochrones in `generate()`
+        self.age_tol = 0.01
+        if self.isochs.z_to_FeH is not None:
+            self.met_tol = 0.01  # FeH
+        else:
+            self.met_tol = 0.001  # z
 
         # Get extinction coefficients for these filters
         self.ext_coefs = []  # It is important to pass an empty list because the
@@ -171,9 +177,6 @@ class Synthetic:
 
         # Store for internal usage
         self.met_age_dict = self.isochs.met_age_dict
-        self.met_age_bounds = {
-            k: (min(v), max(v)) for k, v in self.met_age_dict.items()
-        }
 
         # Check that the ranges are respected
         for par in ("met", "loga"):
@@ -346,6 +349,8 @@ class Synthetic:
         return sm.get_model(
             params,
             self.met_age_dict,
+            self.met_tol,
+            self.age_tol,
             self.def_params,
             self.m_ini_idx,
             self.theor_tracks,
@@ -413,17 +418,6 @@ class Synthetic:
                 2,
             )
 
-        # Check isochrones ranges
-        for par in ("met", "loga"):
-            if par not in self.met_age_bounds or par not in model:
-                continue
-            pmin, pmax = self.met_age_bounds[par]
-            val = model[par]
-            new_val = min(max(val, pmin), pmax)
-            if new_val != val:
-                warnings.warn(f"Parameter '{par}' out of range: {val} -> {new_val}")
-                model[par] = new_val
-
         # Generate the 'N_models' models via sampling a Gaussian centered on
         # 'model', with standard deviation given by 'model_std'.
         sampled_models = {}
@@ -433,6 +427,14 @@ class Synthetic:
         sampled_models = [
             dict(zip(sampled_models, t)) for t in zip(*sampled_models.values())
         ]
+
+        # Check that the sampled models are within the ranges of the isochrones.
+        # If not, set to the closest value within the range and issue a warning.
+        met_min, met_max = self.met_age_dict["met"][0], self.met_age_dict["met"][-1]
+        age_min, age_max = self.met_age_dict["loga"][0], self.met_age_dict["loga"][-1]
+        for _model in sampled_models:
+            _model["met"] = min(max(_model["met"], met_min), met_max)
+            _model["loga"] = min(max(_model["loga"], age_min), age_max)
 
         # Generate the synthetic arrays using the above models
         sampled_models_no_empty, sampled_synthcls = [], []
@@ -446,6 +448,8 @@ class Synthetic:
             isoch_arr, synth_arr = sm.get_model(
                 smodel,
                 self.met_age_dict,
+                self.met_tol,
+                self.age_tol,
                 self.def_params,
                 self.m_ini_idx,
                 self.theor_tracks,
@@ -805,24 +809,11 @@ class Synthetic:
         :param N_stars: Number of synthetic stars to generate
         :type N_stars: int
 
-        :raises ValueError: If either parameter (met, age) is outside of allowed range
-
         :return: Array with the isochrone data to plot
         :rtype: np.ndarray
         """
         # Generate displaced isochrone
         fit_params_copy = dict(fit_params)
-
-        # Check isochrones ranges
-        for par in ("met", "loga"):
-            try:
-                pmin, pmax = min(self.met_age_dict[par]), max(self.met_age_dict[par])
-                if fit_params_copy[par] < pmin or fit_params_copy[par] > pmax:
-                    raise ValueError(
-                        f"Parameter '{par}'={fit_params_copy[par]} out of range: [{pmin} - {pmax}]"
-                    )
-            except KeyError:
-                pass
 
         from .modules import synth_model as sm
 
@@ -843,6 +834,8 @@ class Synthetic:
         isochrone = sm.get_model(
             fit_params_isoch,
             self.met_age_dict,
+            self.met_tol,
+            self.age_tol,
             self.def_params,
             self.m_ini_idx,
             self.theor_tracks,
@@ -867,6 +860,8 @@ class Synthetic:
         full_arr = sm.get_model(
             fit_params_copy,
             self.met_age_dict,
+            self.met_tol,
+            self.age_tol,
             self.def_params,
             self.m_ini_idx,
             self.theor_tracks,
