@@ -787,7 +787,7 @@ class Synthetic:
         fit_params: dict,
         color_idx: int = 0,
         full_track: bool = False,
-        N_stars: int = 100,
+        N_stars: int = 1000,
     ) -> np.ndarray:
         """Generate an isochrone for plotting.
 
