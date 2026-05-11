@@ -47,7 +47,7 @@ def main(N_repeat: int = 25_000):
     # Isochrones parameters
     isochs = asteca.Isochrones(
         model="parsec",
-        isochs_path="../../docs/_static/parsec/gaia",
+        isochs_path="../../docs/_static/isochrones/parsec/gaia",
         mag="Gmag",
         color=("G_BPmag", "G_RPmag"),
         verbose=3,
@@ -64,12 +64,12 @@ def main(N_repeat: int = 25_000):
     ""
     obs_df = pd.read_csv("../../docs/_static/cluster.csv")
     my_cluster = asteca.Cluster(
-        ra=obs_df["RA_ICRS"],
-        dec=obs_df["DE_ICRS"],
-        mag=obs_df["Gmag"],
-        e_mag=obs_df["e_Gmag"],
-        color=obs_df["BP-RP"],
-        e_color=obs_df["e_BP-RP"],
+        ra=np.array(obs_df["RA_ICRS"]),
+        dec=np.array(obs_df["DE_ICRS"]),
+        mag=np.array(obs_df["Gmag"]),
+        e_mag=np.array(obs_df["e_Gmag"]),
+        color=np.array(obs_df["BP-RP"]),
+        e_color=np.array(obs_df["e_BP-RP"]),
         verbose=2,
     )
     synthcl.calibrate(my_cluster)
@@ -113,7 +113,6 @@ def get_model(
     max_mag_syn: float,
     err_dist_synth: list[np.ndarray],
     N_synth_stars: int,
-    check_isoch_range: bool = True,
     return_flag: str = "array",
 ) -> np.ndarray | tuple[np.ndarray, np.ndarray]:
     """Generate a synthetic cluster.
@@ -149,9 +148,6 @@ def get_model(
     :type err_dist_synth: list[np.ndarray]
     :param N_synth_stars: Number of synthetic stars to generate.
     :type N_synth_stars: int
-    :param check_isoch_range: Flag that indicates if the range check for metallicity
-        and age should be applied
-    :type check_isoch_range: bool
     :param return_flag: Return mode: ``array``, ``isoch``, or ``isoch+array``.
     :type return_flag: str
 
@@ -168,7 +164,7 @@ def get_model(
     # Return proper values for fixed parameters and parameters required
     # for the (z, log(age)) isochrone averaging.
     met, loga, alpha, beta, av, dr, rv, dm, ml, mh, al, ah = properModel(
-        met_age_dict, def_params, params, check_isoch_range
+        met_age_dict, def_params, params
     )
 
     # If (z, a) are both fixed, use the single processed isochrone
@@ -273,7 +269,6 @@ def properModel(
     met_age_dict: dict,
     def_params: dict,
     fit_params: dict,
-    check_isoch_range: bool,
     met_tol: float = 0.001,
     age_tol: float = 0.005,
 ) -> tuple[float, float, float, float, float, float, float, float, int, int, int, int]:
@@ -286,9 +281,6 @@ def properModel(
     :type def_params: dict
     :param fit_params: Dictionary of fitted parameters.
     :type fit_params: dict
-    :param check_isoch_range: Flag that indicates if the range check for metallicity and age
-        should be applied
-    :type check_isoch_range: bool
     :param met_tol: Tolerance for metallicity values matching
     :type met_tol: float
     :param age_tol: Tolerance for log(age) values matching
@@ -304,19 +296,17 @@ def properModel(
     # duplicated values with those in `fit_params`
     fit_params = def_params | fit_params
 
-    if check_isoch_range:
+    def _check_param(val, grid, name, tol):
+        if len(grid) == 1:
+            if abs(val - grid[0]) > tol:
+                raise ValueError(f"{name}={val:.4f} != fixed value {grid[0]}")
+        elif not (grid[0] <= val <= grid[-1]):
+            raise ValueError(
+                f"{name}={val:.4f} outside grid range [{grid[0]}, {grid[-1]}]"
+            )
 
-        def _check_param(val, grid, name, tol):
-            if len(grid) == 1:
-                if abs(val - grid[0]) > tol:
-                    raise ValueError(f"{name}={val:.4f} != fixed value {grid[0]}")
-            elif not (grid[0] <= val <= grid[-1]):
-                raise ValueError(
-                    f"{name}={val:.4f} outside grid range [{grid[0]}, {grid[-1]}]"
-                )
-
-        _check_param(fit_params["met"], met_age_dict["met"], "met", met_tol)
-        _check_param(fit_params["loga"], met_age_dict["loga"], "loga", age_tol)
+    _check_param(fit_params["met"], met_age_dict["met"], "met", met_tol)
+    _check_param(fit_params["loga"], met_age_dict["loga"], "loga", age_tol)
 
     ml = mh = 0
     if len(met_age_dict["met"]) > 1:

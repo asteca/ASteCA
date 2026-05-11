@@ -304,7 +304,9 @@ class Synthetic:
         self.cluster_dec = cluster.dec
 
     def generate(
-        self, params: dict, N_stars: int = 100, check_isoch_range: bool = True,
+        self,
+        params: dict,
+        N_stars: int = 100,
     ) -> np.ndarray | tuple[np.ndarray, np.ndarray]:
         """Generate a synthetic cluster.
 
@@ -318,9 +320,6 @@ class Synthetic:
         :type params: dict
         :param N_stars: Number of synthetic stars to generate
         :type N_stars: int
-        :param check_isoch_range: Flag that indicates if the range check for metallicity
-            and age should be applied
-        :type check_isoch_range: bool
 
         :return: Returns a ``np.array`` containing a synthetic cluster
             with the data ``[mag, c1, (c2), mass, mass_b]``, where ``mag`` is
@@ -358,7 +357,6 @@ class Synthetic:
             max_mag_syn,
             err_dist_synth,
             N_synth_stars,
-            check_isoch_range,
         )
 
     def get_models(
@@ -821,7 +819,7 @@ class Synthetic:
                 pmin, pmax = min(self.met_age_dict[par]), max(self.met_age_dict[par])
                 if fit_params_copy[par] < pmin or fit_params_copy[par] > pmax:
                     raise ValueError(
-                        f"Parameter '{par}' out of range: [{pmin} - {pmax}]"
+                        f"Parameter '{par}'={fit_params_copy[par]} out of range: [{pmin} - {pmax}]"
                     )
             except KeyError:
                 pass
