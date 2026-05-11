@@ -127,6 +127,26 @@ def add_binarity(
     return theor_tracks
 
 
+def mag_combine(
+    m1: npt.NDArray[np.floating], m2: npt.NDArray[np.floating]
+) -> np.ndarray:
+    """Combine two magnitudes.
+
+    This is a faster re-ordering of the standard formula:
+    -2.5 * np.log10(10 ** (-0.4 * m1) + 10 ** (-0.4 * m2))
+
+    :param m1: Array of magnitudes.
+    :type m1: npt.NDArray[np.floating]
+    :param m2: Array of magnitudes.
+    :type m2: npt.NDArray[np.floating]
+
+    :returns: Array of combined magnitudes.
+    :rtype: np.ndarray
+    """
+    c = 10**-0.4
+    return -2.5 * (-0.4 * m1 + np.log10(1.0 + c ** (m2 - m1)))
+
+
 def qDistribution(
     M1: np.ndarray, gamma: float | str, rng: np.random.Generator
 ) -> np.ndarray:
@@ -296,27 +316,6 @@ def qDistribution(
             )
 
     return mass_ratios
-
-
-def mag_combine(
-    m1: npt.NDArray[np.floating], m2: npt.NDArray[np.floating]
-) -> np.ndarray:
-    """Combine two magnitudes.
-
-    This is a faster re-ordering of the standard formula:
-    -2.5 * np.log10(10 ** (-0.4 * m1) + 10 ** (-0.4 * m2))
-
-    :param m1: Array of magnitudes.
-    :type m1: npt.NDArray[np.floating]
-    :param m2: Array of magnitudes.
-    :type m2: npt.NDArray[np.floating]
-
-    :returns: Array of combined magnitudes.
-    :rtype: np.ndarray
-    """
-    c = 10**-0.4
-    mbin = -2.5 * (-0.4 * m1 + np.log10(1.0 + c ** (m2 - m1)))
-    return mbin
 
 
 def ccmo_ext_coeffs(
