@@ -304,7 +304,7 @@ class Synthetic:
         self.cluster_dec = cluster.dec
 
     def generate(
-        self, params: dict, N_stars: int = 100
+        self, params: dict, N_stars: int = 100, check_isoch_range: bool = True,
     ) -> np.ndarray | tuple[np.ndarray, np.ndarray]:
         """Generate a synthetic cluster.
 
@@ -355,6 +355,7 @@ class Synthetic:
             max_mag_syn,
             err_dist_synth,
             N_synth_stars,
+            check_isoch_range,
         )
 
     def get_models(
