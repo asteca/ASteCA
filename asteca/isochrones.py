@@ -135,8 +135,14 @@ class Isochrones:
         # Convert z to FeH if requested
         met_n = "z  "
         if self.z_to_FeH is not None:
-            self._func_z_to_FeH(self.z_to_FeH)
-            met_n = "FeH"
+            if isinstance(self.z_to_FeH, float):
+                self._func_z_to_FeH(self.z_to_FeH)
+                met_n = "FeH"
+            else:
+                raise ValueError(
+                    "'z_to_FeH' must be a float representing the solar metallicity"
+                    + " for the isochrones."
+                )
 
         # Extract metallicity and age ranges
         self.zmin = self.met_age_dict["met"].min()
