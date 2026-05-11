@@ -28,8 +28,8 @@ phot_systs_data = {
         "comment_char": "#",
         # "sep_cols": r"\s+",
         "idx_col_line": -1,
-        "parsec_stage_9_col": "label",  # column name for the post-AGB stage
-        "parsec_stage_9_id": "9",  # ID for the post-AGB stage
+        "parsec_stages_col": "label",  # column name for stages
+        "max_mag": 50.0,  # The new files contain bad '999.999' values
     },
     "MIST": {
         "col_names": {
@@ -65,7 +65,7 @@ def load(
     color2: tuple | None,
     column_names: dict | None,
     N_interp: int,
-    parsec_rm_stage_9: bool,
+    parsec_rm_stages: float,
 ) -> tuple[np.ndarray, list, dict, int]:
     """Load the theoretical isochrones and return processed data.
 
@@ -85,9 +85,9 @@ def load(
     :type column_names: dict | None
     :param N_interp: Number of points to interpolate.
     :type N_interp: int
-    :param parsec_rm_stage_9: Flag to indicate whether to remove post-AGB stage for
-        PARSEC models, defaults to True
-    :type parsec_rm_stage_9: bool
+    :param parsec_rm_stages: All stages with values equal or larger than this value
+        will be removed from the PARSEC models
+    :type parsec_rm_stages: float
 
     :return: Array of isochrones, individual filters for each color defined,
         dictionary with metallicities and ages, and number of files read.
@@ -103,7 +103,7 @@ def load(
     # met_age_arr.shape = (N_photsyst, N_z*N_a, 2)
     met_age_vals, isoch_arrays = read(
         model,
-        parsec_rm_stage_9,
+        parsec_rm_stages,
         f_paths,
         all_filters,
         eep_col,
@@ -135,11 +135,12 @@ def load(
     all_a = np.array(list(dict.fromkeys(all_a))).astype(float)
     met_age_dict = {"met": all_m, "loga": all_a}
 
-    if max(met_age_dict["loga"][1:] - met_age_dict["loga"][:-1]) > 0.25:
-        warnings.warn(
-            "The isochrones grid has very large steps in log(age). This can impact "
-            + "the proper generation of synthetic clusters. Consider using a smaller step."
-        )
+    if len(met_age_dict["loga"]) > 1:
+        if max(met_age_dict["loga"][1:] - met_age_dict["loga"][:-1]) > 0.25:
+            warnings.warn(
+                "The isochrones grid has very large steps in log(age). This can impact "
+                + "the proper generation of synthetic clusters. Consider using a smaller step."
+            )
 
     # theor_tracks.shape = (N_z, N_a, N_cols, N_interp)
     theor_tracks, color_filters = reshape_isochrones(
@@ -229,7 +230,7 @@ def extract_paths(isochs_path: str) -> list:
 
 def read(
     model: str,
-    parsec_rm_stage_9: bool,
+    parsec_rm_stages: float,
     f_paths: list,
     all_filters: list,
     eep_col: str | None,
@@ -242,8 +243,8 @@ def read(
 
     :param model: Isochrone model name.
     :type model: str
-    :param parsec_rm_stage_9: Remove post-AGB stage for PARSEC models.
-    :type parsec_rm_stage_9: bool
+    :param parsec_rm_stages: Remove stages from PARSEC models.
+    :type parsec_rm_stages: float
     :param f_paths: List of isochrone file paths.
     :type f_paths: list
     :param all_filters: List of photometric magnitude  + color(s)
@@ -300,12 +301,20 @@ def read(
                     age_mask = met_data[age_col] == age_val
                     df = met_data[age_mask]
 
-                    # Remove post-AGB stage
-                    if parsec_rm_stage_9 is True:
-                        stage_col = phot_systs_data[model]["parsec_stage_9_col"]
-                        stage_id = phot_systs_data[model]["parsec_stage_9_id"]
-                        msk = df[stage_col] != stage_id
-                        df = df[msk]
+                    # Remove bad values in filters
+                    mag_msk = np.logical_and.reduce(
+                        [
+                            df[_filter] < phot_systs_data[model]["max_mag"]
+                            for _filter in all_filters
+                        ]
+                    )
+                    df = df[mag_msk]
+
+                    # Remove all stages equal or larger than this value
+                    df = df[
+                        df[phot_systs_data[model]["parsec_stages_col"]]
+                        <= parsec_rm_stages
+                    ]
 
                     # Extract met, age values
                     met = str(df[met_col][0])

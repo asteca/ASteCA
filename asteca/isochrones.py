@@ -48,11 +48,11 @@ class Isochrones:
     :param N_points: Number of interpolation points used to ensure that all isochrones
         are the same shape
     :type N_points: int
-    :param parsec_rm_stage_9: If the isochrones are PARSEC, this argument set to
-        ``True`` will remove the *post_AGB* stage (label=9) which are still
-        "`in preparation <http://stev.oapd.inaf.it/cmd/faq.html>`__", defaults
-        to ``True``
-    :type parsec_rm_stage_9: bool
+    :param parsec_rm_stages: If the isochrones are PARSEC, this value indicates which
+        stages should be removed (all equal or larger than this value). The value is
+        set to ``9.0`` by default which corresponds to the  *post_AGB* stage still
+        "`in preparation <http://stev.oapd.inaf.it/cmd/faq.html>`__"
+    :type parsec_rm_stages: float
     :param column_names: Column names for the initial mass, metallicity, and age for
         the photometric system's isochrones files. Example:
         ``{"mass_col": "Mini", "met_col": "Zini", "age_col": "logAge"}``.
@@ -79,7 +79,7 @@ class Isochrones:
         color2_effl: tuple | None = None,
         z_to_FeH: float | None = None,
         N_points: int = 2000,
-        parsec_rm_stage_9: bool = True,
+        parsec_rm_stages: float = 9.0,
         column_names: dict | None = None,
         verbose: int = 1,
     ) -> None:
@@ -94,7 +94,7 @@ class Isochrones:
         self.z_to_FeH = z_to_FeH
         self.column_names = column_names
         self.N_points = N_points
-        self.parsec_rm_stage_9 = parsec_rm_stage_9
+        self.parsec_rm_stages = parsec_rm_stages
         self.verbose = verbose
 
         from .modules import isochrones_priv
@@ -128,7 +128,7 @@ class Isochrones:
                 self.color2,
                 self.column_names,
                 self.N_points,
-                self.parsec_rm_stage_9,
+                self.parsec_rm_stages,
             )
         )
 
