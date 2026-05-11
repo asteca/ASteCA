@@ -6,13 +6,13 @@ import asteca
 
 
 def main():
-    df = pd.read_csv("cluster.csv")
+    df = pd.read_csv("../cluster.csv")
 
     # Isochrones parameters
-    isochs = asteca.isochrones(
+    isochs = asteca.Isochrones(
         model="parsec",
-        isochs_path="parsec",
-        magnitude="Gmag",
+        isochs_path="../parsec",
+        mag="Gmag",
         color=("G_BPmag", "G_RPmag"),
         magnitude_effl=6390.7,
         color_effl=(5182.58, 7825.08),
@@ -20,11 +20,11 @@ def main():
     )
 
     # Synthetic clusters parameters
-    synthcl = asteca.synthetic(isochs, seed=42)
+    synthcl = asteca.Synthetic(isochs, seed=42)
 
     # Generate a `cluster` object
-    my_cluster = asteca.cluster(
-        magnitude=df["Gmag"],
+    my_cluster = asteca.Cluster(
+        mag=df["Gmag"],
         e_mag=df["e_Gmag"],
         color=df["BP-RP"],
         e_color=df["e_BP-RP"],
@@ -93,7 +93,7 @@ def plot2(my_cluster, x_synth, y_synth, binar_idx):
     plt.figure(figsize=(7, 5))
 
     plt.scatter(
-        my_cluster.colors[0],
+        my_cluster.color,
         my_cluster.mag,
         c="green",
         alpha=0.5,
@@ -132,7 +132,7 @@ def plot3(my_cluster, x_synth, y_synth, binar_idx, isoch_arr):
     plt.figure(figsize=(7, 5))
 
     plt.scatter(
-        my_cluster.colors[0],
+        my_cluster.color,
         my_cluster.mag,
         c="green",
         alpha=0.5,
