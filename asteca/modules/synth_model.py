@@ -324,7 +324,8 @@ def properModel(
             len(met_age_dict["met"]) - 1,
             np.searchsorted(met_age_dict["met"], fit_params["met"]),
         )
-        ml = mh - 1
+        # prevent negative index
+        ml = max(0, mh - 1)
 
     al = ah = 0
     if len(met_age_dict["loga"]) > 1:
@@ -332,7 +333,7 @@ def properModel(
             len(met_age_dict["loga"]) - 1,
             np.searchsorted(met_age_dict["loga"], fit_params["loga"]),
         )
-        al = ah - 1
+        al = max(0, ah - 1)
 
     return (
         float(fit_params["met"]),
