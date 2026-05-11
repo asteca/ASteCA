@@ -29,13 +29,14 @@ _BPRP_COEFFS = (
 )
 
 
-def main(N_repeat=25_000):
+def main(N_repeat: int = 25_000):
     """
     Main function used to test the performance of the `generate` function. It
     generates a synthetic cluster N_repeat times, and profiles the execution time
     of the function.
 
     :param N_repeat: Number of times to repeat the generation of the synthetic cluster.
+    :type N_repeat: int
     """
     import asteca
 
@@ -78,7 +79,7 @@ def main(N_repeat=25_000):
     profiler = Profiler()
     profiler.start()
     for _ in range(N_repeat):
-        _ = generate(
+        _ = get_model(
             params,
             synthcl.met_age_dict,
             synthcl.def_params,
@@ -92,11 +93,11 @@ def main(N_repeat=25_000):
             synthcl.max_mag_syn_obs,
             synthcl.err_dist_obs,
             synthcl.N_stars_obs,
+            True,
         )
     profiler.stop()
     profiler.open_in_browser()
 
-    breakpoint()
 
 def get_model(
     params: dict,
@@ -122,12 +123,11 @@ def get_model(
     :py:class:`Synthetic` object.
 
     :param params: Dictionary containing the values for the fundamental parameters.
-        The dictionary must include values for all the parameters, e.g.:
-        ``params = {met: 0.0152, loga: 8.1, alpha: 0.1, beta: 1, Av: 0.2, DR: 0., Rv: 3.1, dm: 9.7}``
     :type params: dict
     :param met_age_dict: Metallicity and age grid metadata.
     :type met_age_dict: dict
-    :param def_params: Dictionary of default model parameters.
+    :param def_params: Dictionary of default model parameters. This dictionary must
+        include values for all the parameters.
     :type def_params: dict
     :param m_ini_idx: Index of the initial mass.
     :type m_ini_idx: int
