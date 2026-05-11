@@ -318,6 +318,9 @@ class Synthetic:
         :type params: dict
         :param N_stars: Number of synthetic stars to generate
         :type N_stars: int
+        :param check_isoch_range: Flag that indicates if the range check for metallicity
+            and age should be applied
+        :type check_isoch_range: bool
 
         :return: Returns a ``np.array`` containing a synthetic cluster
             with the data ``[mag, c1, (c2), mass, mass_b]``, where ``mag`` is
