@@ -98,7 +98,7 @@ def main(N_repeat=25_000):
 
     breakpoint()
 
-
+def get_model(
 def generate(
     params: dict,
     met_age_dict: dict,

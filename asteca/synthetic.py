@@ -341,7 +341,7 @@ class Synthetic:
             err_dist_synth = []
             N_synth_stars = int(N_stars)
 
-        return sm.generate(
+        return sm.get_model(
             params,
             self.met_age_dict,
             self.def_params,
@@ -441,7 +441,7 @@ class Synthetic:
         }
         for smodel in sampled_models:
             # Get both the isochrone and the synthetic cluster
-            isoch_arr, synth_arr = sm.generate(
+            isoch_arr, synth_arr = sm.get_model(
                 smodel,
                 self.met_age_dict,
                 self.def_params,
@@ -838,7 +838,7 @@ class Synthetic:
         # isochrone only
         fit_params_isoch = dict(fit_params)
         fit_params_isoch["DR"] = 0.0
-        isochrone = sm.generate(
+        isochrone = sm.get_model(
             fit_params_isoch,
             self.met_age_dict,
             self.def_params,
@@ -862,7 +862,7 @@ class Synthetic:
         # Extract magnitude and mass from the isochrone and the full synthetic cluster
         isoch_mag, isoch_mass = isochrone[0], isochrone[self.m_ini_idx]
         # Generate physical synthetic cluster to extract the max mass
-        full_arr = sm.generate(
+        full_arr = sm.get_model(
             fit_params_copy,
             self.met_age_dict,
             self.def_params,
