@@ -27,71 +27,58 @@ To instantiate a :py:class:`asteca.Synthetic` object you need to pass the
     # Synthetic clusters object
     synthcl = asteca.Synthetic(isochs)
 
-This will perform the required initial processing and load the theoretical isochrones
-into the :obj:`synthcl` object. The processing involves sampling an `initial
-mass function`_ (IMF), setting the distributions for the binary systems' mass ratio,
-and the differential reddening (these two last processes are optional).
+This will load the theoretical isochrones and perform the required initial processing
+to define a :obj:`synthcl` object. The processing involves sampling an `initial
+mass function`_ (IMF) up to a total maximum mass, setting the distributions for the
+binary systems' mass ratio, defining the extinction law, and selecting the differential
+reddening model.
 
-The basic example above uses the default values for these three processes, but
+The basic example above uses the default values for these processes, but
 they can be modified by the user at this stage via their arguments. These arguments
 are (also see :py:class:`asteca.Synthetic`):
 
 .. code-block:: console
 
-    ext_law          : Extinction law
-    DR_distribution  : Distribution for the differential reddening
     IMF_name         : Initial mass function
     max_mass         : Maximum total initial mass
     gamma            : Distribution for the mass ratio of the binary systems
-
-The ``ext_law`` argument defines the extinction law as one of either ``CCMO`` or
-``GAIADR3``. The first one corresponds to the model by
-`Cardelli, Clayton & Mathis (1989)`_, with updated coefficients for near-UV from
-`O'Donnell (1994)`_. The second one is `Gaia's (E)DR3`_, color-dependent law (main
-sequence), only applicable to Gaia's photometry. If this law is selected, **ASteCA**
-assumes that the magnitude and first color used are Gaia's ``G`` and ``BP-RP``
-respectively. 
-
-.. important::
-
-    While ``CCMO`` allows different ``Rv`` values (which means this parameter can even
-    be fitted), ``GAIADR3`` is to be used with ``Rv=3.1``. Please read the online
-    documentation and its accompanying articles  to learn more about this law's
-    limitations.
-
-There are dedicated packages like `dustapprox`_, `dust_extinction`_ or `extinction`_
-that can handle the extinction coefficients generation. We employ our own
-implementation of the ``CCMO`` law adapted from an `IDL Astronomy User's Library`_
-script. We employ our own implementation to increase the performance. If you want to
-use a different extinction model, please drop me
-an `email <mailto:gabrielperren@gmail.com>`_.
+    ext_law          : Extinction law
+    DR_distribution  : Distribution for the differential reddening
 
 
-The ``DR_distribution`` argument fixes the distribution used for the differential
-reddening (assuming that the ``DR`` parameter is different than 0, see Section
-:ref:`ref_generating`). The differential reddening effect adds a random amount to the
-total extinction parameter ``Av``, sampled from either a `uniform`_ or a `normal`_
-distribution. The ``DR_distribution`` argument hence accepts one of two string values:
-``uniform`` (the default) or ``normal``.
+These are explained in more detail in the following sub-sections.
 
+
+
+
+Initial mass function
+=====================
 
 The ``IMF_name`` and ``max_mass`` arguments are used to generate random mass samples from
 an IMF. To improve the performance of the code, this step is performed when the
 :py:class:`asteca.Synthetic` object is created instead of every time a new synthetic
 cluster is generated. The ``IMF_name`` argument must be one of those available in
-:py:class:`asteca.Synthetic`: ``salpeter_1955, kroupa_2001, chabrier_2014``.
-Currently these are associated to the following IMFs:
+:py:class:`asteca.Synthetic`, associated to IMFs defined in `Salpeter (1995)`_,
+`Kroupa (2001)`_, and `Chabrier et al. (2014)`_ (the default value). These are
+shown in the figure below:
 
 .. figure:: ../_static/IMFs.webp
-    :scale: 35%
     :align: center
 
-as defined in `Salpeter (1995)`_, `Kroupa (2001)`_, and `Chabrier et al. (2014)`_
-(the default value). The ``max_mass`` argument simply fixes the total mass
-value to be sampled. This value should be large enough to allow generating as many
-synthetic stars as those present in the observed cluster. The default value is
-:math:`10000\;M_{\odot}` which should be more than enough for the vast majority of
-clusters.
+
+The ``max_mass`` argument fixes the total mass value to be sampled from the IMF (hence,
+it also controls the total number of synthetic stars). This
+value should be large enough to allow generating as many synthetic stars as those
+present in the observed cluster. The default value is :math:`10000\;M_{\odot}` which
+should be more than enough for the majority of clusters.
+
+
+
+
+
+
+Binary systems
+==============
 
 The ``gamma`` argument (:math:`\gamma`) defines the distribution of the mass ratio for
 the binary systems. The mass ratio is the ratio of secondary masses (:math:`m_2`)
@@ -119,7 +106,6 @@ left). In practice they all look somewhat similar, as shown in the figure below 
 random IMF mass sampling.
 
 .. figure:: ../_static/qdist_mass.webp
-    :scale: 35%
     :align: center
 
 The Fisher distributions (top row) favor :math:`q` values closer to unity (i.e.:
@@ -132,12 +118,108 @@ shows this distribution for three ``gamma`` (:math:`\gamma`) values, where ``gam
 means a uniform distribution.
 
 .. figure:: ../_static/qdist_unif.webp
-    :scale: 35%
     :align: center
 
 Only the Duchene & Kraus distribution is primary-mass dependent. The Fisher and Raghavan
 distributions, as well as the distributions set by the user via a float value for
 ``gamma``, are independent of mass values.
+
+
+
+.. _extinction_law:
+
+Extinction law
+==============
+
+An extinction law is required to transform the extinction of the photometric system
+used for the observed data (the same system used for the isochrones), into the standard
+total visual absorption parameter :math:`A_V`. This is defined by the
+``ext_law`` argument as one of either ``CCMO`` or ``GAIADR3``.
+The first one (``CCMO``) corresponds to the model by
+`Cardelli, Clayton & Mathis (1989)`_, with updated coefficients for near-UV from
+`O'Donnell (1994)`_. The second one (``GAIADR3``) is `Gaia's (E)DR3`_, color-dependent
+law (main sequence), only applicable to Gaia's photometry. If this law is selected,
+**ASteCA** assumes that the magnitude and first color used are Gaia's
+:math:`G` and :math:`BP-RP` respectively.
+
+While the ``CCMO`` law requires defining the effective lambdas for each filter
+in the photometric system when defining the :py:class:`asteca.Isochrones` object
+(see :ref:`isochrones_module`), the ``GAIADR3`` law does not require this data
+as the extinction coefficients are already defined for Gaia's photometry.
+
+.. important::
+
+    While ``CCMO`` allows different ratio of total to selective extinction :math:`R_V`
+    values (which means this parameter can even be fitted), ``GAIADR3`` is to
+    be used with :math:`R_V=3.1`. Please read the online documentation and its
+    accompanying articles  to learn more about this law's limitations.
+
+The figure below shows a comparison of the extinction laws implemented in **ASteCA**.
+Left panel: the ``CCMO`` law showing the normalized extinction curve
+:math:`A(\lambda)/A_V` as a function of inverse wavelength for different values of 
+:math:`R_V`.
+Right panel: ``GAIADR3`` color-dependent extinction law for main-sequence stars,
+applicable only to Gaia mission photometry, showing the variation of :math:`A_G/A_V`
+with intrinsic :math:`BP-RP` color for different extinction values.
+
+.. figure:: ../_static/ext_law.webp
+    :align: center
+
+
+There are dedicated packages like `dustapprox`_, `dust_extinction`_ or `extinction`_
+that can handle the extinction coefficients generation. We employ our own
+implementation of the ``CCMO`` law adapted from an `IDL Astronomy User's Library`_
+script, to increase the performance. If you want to use a different extinction model,
+please drop me an `email <mailto:gabrielperren@gmail.com>`_.
+
+To load the :py:class:`asteca.Synthetic` object with the ``GAIADR3`` extinction
+law, simply select it when instantiating the object, as follows:
+
+.. code-block:: python
+
+    # Synthetic clusters object
+    synthcl = asteca.Synthetic(isochs, ext_law=GAIADR3)
+
+
+
+
+Differential reddening
+======================
+
+The ``DR_distribution`` argument fixes the distribution used for the differential
+reddening (assuming :math:`DR>0`, see Section
+:ref:`ref_generating`). The ``DR_distribution`` argument accepts one of two
+string values: ``uniform`` (the default) or ``normal``. These add a random amount to the
+total extinction parameter :math:`A_V`, sampled from either a `uniform`_ or a `normal`_
+distribution (enforcing a non-negative result). The resulting reddening can be
+expressed as:
+
+.. math::
+
+   A_{V,\mathrm{DR}} = \max(0, X)
+
+where, in the ``uniform`` case:
+
+.. math::
+
+   X \sim \mathcal{U}(A_V - DR,\; A_V + DR)
+
+and in the ``normal`` case:
+
+.. math::
+
+   X \sim \mathcal{N}(A_V,\; DR)
+
+The ``uniform`` model produces bounded, symmetric fluctuations with limited dispersion,
+while the ``normal`` model yields unbounded fluctuations with heavier tails, leading to
+more frequent clipping at zero and a positively skewed distribution.
+
+The following figure shows an example of both distributions for a total extinction
+value of :math:`A_V=0.5` and a differential reddening of :math:`DR=1.0`:
+
+.. figure:: ../_static/dr_plot.webp
+    :align: center
+
 
 
 .. _initial mass function: https://en.wikipedia.org/wiki/Initial_mass_function
@@ -182,9 +264,9 @@ The calibration is performed via the :py:meth:`asteca.Synthetic.calibrate` metho
 
 This will extract the following information from the observed cluster:
 
-- maximum observed photometric magnitude
-- number of observed stars
-- distribution of photometric uncertainties
+- Maximum observed photometric magnitude
+- Number of observed stars
+- Distribution of photometric uncertainties
 
 The algorithm employed by **ASteCA** is to simply transport the observed uncertainty
 values in magnitude and color(s) to the generated synthetic stars. This way no
@@ -192,7 +274,7 @@ approximation to the distribution of photometric uncertainties is required.
 
 This process is optional. The user can generate synthetic clusters
 via the :py:meth:`asteca.Synthetic.generate` method (see :ref:`ref_generating`)
-without first calibrating the :obj:`synthcl` object. In this case, the synthetic
+without calibrating the :obj:`synthcl` object. In this case, the synthetic
 clusters will be generated with a given number of observed stars (default value is
 100 but the user can select any other value), the maximum photometric magnitude
 allowed by the loaded isochrones, and no photometric uncertainties added.
@@ -224,26 +306,36 @@ requires fitted fundamental parameters and their STDDEVS; see
 :ref:`post_process_parameters` for more details.
 
 An example of the dictionary of parameters used for the generation of a synthetic
-cluster is shown below, applied to a previously defined :obj:`synthcl` object:
+cluster is shown below, fed to a previously defined :obj:`synthcl` object:
 
 .. code-block:: python
 
-    # Define model parameters
+    # Synthetic cluster calibration
     params = {
-        "met": 0.01,
-        "loga": 9.87,
-        "alpha": 0.01,
-        "beta": 1.,
+        "met": 0.0152,
+        "loga": 8.0,
+        "alpha": 0.0,
+        "beta": 1.0,
         "Rv": 3.1,
-        "dm": 11.3,
-        "Av": 0.15,
-        "DR": 0.2,
+        "DR": 0.0,
+        "Av": 0.1,
+        "dm": 8,
     }
+    # Generate synthetic cluster.
+    synth_clust = synthcl.generate(params, N_stars=2000)
 
-    # Generate the synthetic cluster
-    synth_clust = synthcl.generate(params)
+which produces a synthetic CMD similar to the one shown below. Since the 
+:obj:`synthcl` object was not calibrated against ans observed cluster, no photometric
+uncertainties have been added, and the maximum observed magnitude is the maximum allowed
+by the loaded isochrones (the dispersion for the binary systems shown as red points is
+expected):
 
-The returned ``synth_clust`` variable will hold a ``numpy`` array with the synthetic
+.. figure:: ../_static/synthplot.webp
+    :scale: 35%
+    :align: center
+
+
+The returned ``synth_clust`` variable holds a ``numpy`` array with the synthetic
 cluster data. The notebook :ref:`synth_ntbk` contains more information and examples
 on how to generate and process synthetic clusters with **ASteCA**.
 
@@ -265,15 +357,14 @@ Extrinsic parameters
 ====================
 
 The four extrinsic parameters are related to two external processes affecting stellar
-clusters: their distance and the extinction associated to their line of sight. The
-distance is measured by the distance modulus ``dm``, which is the amount added to the
-photometric magnitude to position the cluster at the proper distance from us. 
+clusters: their distance and the extinction associated with their line of sight. The
+distance is quantified through the distance modulus (``dm``), defined as the difference
+between the apparent and absolute magnitudes, which determines the shift applied to the
+cluster photometry to place the cluster at its proper distance from us.
 
 The three remaining parameters are linked to the extinction process: the total
 extinction ``Av``, the ratio of total to selective extinction ``Rv``, and the
-differential reddening ``DR``.
-
-The first two are related through the equation:
+differential reddening ``DR``. The first two are related through the equation:
 
 .. math::
 
@@ -294,12 +385,12 @@ Intrinsic parameters
 ====================
 
 The four intrinsic parameters used to generate a stellar cluster are: metallicity, age,
-and total fraction of binary systems.
+and total fraction of binary systems (controlled by two parameters).
 
 The metallicity, ``met``, can be modeled either as ``z`` or (logarithmic) ``FeH`` as
-explained in section :ref:`isochrones_module`. The age parameter, ``loga``, is modeled
-as the logarithmic age. The valid ranges for the metallicity and the logarithmic age
-are inherited from the theoretical isochrone(s) loaded in the
+explained in the  section :ref:`isochrones_module`. The age parameter, ``loga``, is
+modeled as the logarithmic age. The valid ranges for the metallicity and the logarithmic
+age are inherited from the theoretical isochrone(s) loaded in the
 :py:class:`asteca.Isochrones` object.
 
 The fraction of binary systems in a synthetic cluster is determined by the
@@ -361,7 +452,7 @@ This method will store in the :class:`asteca.Synthetic` object a number of synth
 clusters, sampled from a normal distribution centered on the ``model`` values with
 STDDEVs taken from the ``model_std`` values.
 
-After calling these methods, we a<re ready to estimate:
+After calling these methods, we are ready to estimate:
 
 1. The initial, actual, and lost masses associated to the cluster
 2. The per-star masses (for both single and binary systems)

@@ -69,6 +69,12 @@ Where:
 - ``color_effl`` : Effective lambdas for the filters that make up the ``color`` (in the
   same order as the names in the defined color).
 
+The figure below shows loaded isochrones for the three supported models, with the same photometric system (``Gaia EDR3``) and the same metallicity and age ranges.
+
+.. figure:: ../_static/isoch_models.webp
+    :align: center
+
+
 The effective lambda values represent the effective central/midpoint wavelength of a
 filter. These values are returned by the
 `CMD service <http://stev.oapd.inaf.it/cgi-bin/cmd>`_, and are also available in
@@ -77,12 +83,38 @@ the documentation for the
 `Filter Profile Service <http://svo2.cab.inta-csic.es/theory/fps/>`_
 of the Spanish Virtual Observatory.
 
+The effective lambda values are required to generate synthetic clusters later on,
+as these values are used to calculate the extinction coefficients for the magnitude and color filters when using the default ``CCMO`` extinction law. If the :py:class:`Synthetic`
+object is generated with the ``GAIADR3`` extinction law, then the effective lambda
+values are not used and the extinction coefficients are calculated internally by
+the :py:class:`asteca.Synthetic` class using the extinction coefficients provided by the
+`Gaia EDR3 documentation <https://www.cosmos.esa.int/web/gaia/edr3-extinction-law>`_.
+In this case you can safely ignore the effective lambda values when loading the
+isochrones, as follows:
+
+.. code-block:: python
+
+    # Load PARSEC isochrones
+    isochs = asteca.Isochrones(
+        model="PARSEC",
+        isochs_path="isochrones/",
+        mag="Gmag",
+        color=("G_BPmag", "G_RPmag"),
+    )
+
+See the :ref:`extinction_law` section for a detailed explanation of how the extinction
+coefficients are calculated and used in **ASteCA**.
+
+
+
+
 
 Extra arguments
 ===============
 
-There are a few more arguments that can be modified when loading the isochrones. These
-are: ``z_to_FeH, N_points, parsec_rm_stage_9, column_names``.
+There are a few more arguments that can be modified when loading the
+:py:class:`asteca.Isochrones class. These are:
+``z_to_FeH, N_points, parsec_rm_stages, column_names``.
 
 The ``z_to_FeH`` argument is used to transform metallicity values from the default ``z``
 to the logarithmic version ``FeH``. If you want to generate your synthetic cluster
@@ -108,13 +140,13 @@ If this argument is not changed from its default then the ``z`` parameter will b
 to generate synthetic clusters, as shown in the section :ref:`ref_generating`.
 
 The ``N_points`` argument controls the resolution of the isochrones interpolation, set
-to ``2000`` by default. A smaller value con be used to lower the amount of memory
+to ``2000`` by default. A smaller value can be used to lower the amount of memory
 used by this class, but it comes at the expense of more coarse synthetic clusters being
 generated later on (since the isochrones will be interpolated with fewer points and will
 thus contain less resolution).
 
-The ``parsec_rm_stage_9`` affects PARSEC isochrones only. Is set to ``True`` by default
-and it indicates that the post_AGB stage (``label=9``) should be removed. This is
+The ``parsec_rm_stages`` affects PARSEC isochrones only. Is set to ``9.0`` by default
+and it indicates that the `post_AGB` stage (``label=9``) should be removed. This is
 because this stage is still `"in preparation" <https://stev.oapd.inaf.it/cmd/faq.html>`_
 
 Finally, the ``column_names`` argument is an internal dictionary that should only be
