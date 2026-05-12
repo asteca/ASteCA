@@ -307,12 +307,12 @@ def properModel(
         if len(met_age_dict[name]) == 1:
             if abs(fit_params[name] - met_age_dict[name][0]) > tol:
                 raise ValueError(
-                    f"Parameter {name}={fit_params[name]:.4f} != fixed value"
+                    f"Parameter {name}={fit_params[name]:.5f} != fixed value"
                     + f" {met_age_dict[name][0]}"
                 )
         elif not (met_age_dict[name][0] <= fit_params[name] <= met_age_dict[name][-1]):
             raise ValueError(
-                f"Parameter {name}={fit_params[name]:.4f} outside isochrone"
+                f"Parameter {name}={fit_params[name]:.5f} outside isochrone"
                 + f" range [{met_age_dict[name][0]}, {met_age_dict[name][-1]}]"
             )
 
