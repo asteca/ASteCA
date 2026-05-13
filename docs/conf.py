@@ -1,48 +1,18 @@
-import subprocess
+import re
+from pathlib import Path
 
 # -- Project information -----------------------------------------------------
 project = "ASteCA"
 copyright = "2024, Gabriel I Perren"
 author = "Gabriel I Perren"
 
-try:
-    # Extract latest tag version
-    __version__ = (
-        subprocess.check_output(
-            ["git", "tag", "--sort=-creatordate"],
-            stderr=subprocess.DEVNULL,
-        )
-        .decode("utf-8")
-        .split("\n")[0]
-        .replace("v", "")
-        .strip()
-    )
-except subprocess.CalledProcessError:
-    # Read version from pyproject.toml
-    with open("../pyproject.toml", encoding="utf-8") as pyproject_toml:
-        __version__ = (
-            next(line for line in pyproject_toml if line.startswith("version"))
-            .split("=")[1]
-            .strip("'\"\n ")
-        )
-    # remove "-dev"
-    __version__ = __version__.replace("-dev", "")
-    major, minor, patch = map(int, __version__.split("."))
-    if patch > 0:
-        patch -= 1
-    else:
-        patch = 9
-        if minor > 0:
-            minor -= 1
-        else:
-            minor = 9
-            if major > 0:
-                major -= 1
-            else:
-                raise ValueError("Cannot decrement version below 0.0.0")
-    __version__ = f"{major}.{minor}.{patch}"
+pyproject = Path(__file__).parent.parent / "pyproject.toml"
+match = re.search(r'^version\s*=\s*["\']([^"\']+)["\']', pyproject.read_text(), re.M)
+if match:
+    __version__ = match.group(1)
+else:
+    raise RuntimeError("Cannot determine version")
 
-# The full version, including alpha/beta/rc tags
 version = __version__
 release = __version__
 
