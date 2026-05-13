@@ -127,12 +127,6 @@ class Membership:
             xy_center = (xv_t[-1], yv_t[-1])
             cent_str = "lonlat_c"
 
-        self._vp("\nRunning Bayesian DA")
-        self._vp("{}       : ({:.4f}, {:.4f})".format(cent_str, *xy_center), 1)
-        self._vp(f"radius         : {self.my_field.radius:.4f} [deg]", 1)
-        self._vp(f"N_cluster      : {self.my_field.N_cluster}", 1)
-        self._vp(f"N_runs         : {N_runs}", 1)
-
         # Generate input data array
         X = [xv, yv]
         e_X = []
@@ -156,6 +150,18 @@ class Membership:
             e_X.append(self.my_field.e_pmde)
         X = np.array(X)
         e_X = np.array(e_X)
+
+        if X.ndim < 3:
+            raise ValueError(
+                "At least one data dimension beyond (RA, DEC) is required"
+                + f" for the Bayesian DA method, {3 - X.ndim} found"
+            )
+
+        self._vp("\nRunning Bayesian DA")
+        self._vp("{}       : ({:.4f}, {:.4f})".format(cent_str, *xy_center), 1)
+        self._vp(f"radius         : {self.my_field.radius:.4f} [deg]", 1)
+        self._vp(f"N_cluster      : {self.my_field.N_cluster}", 1)
+        self._vp(f"N_runs         : {N_runs}", 1)
 
         out_mssg, probs = bayesian_mp(
             self.my_field.N_cluster,
