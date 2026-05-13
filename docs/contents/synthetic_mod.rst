@@ -9,7 +9,7 @@ The :py:class:`asteca.Synthetic` class allows generating synthetic clusters from
 2. A dictionary of fundamental parameters
 3. A :py:class:`asteca.Cluster` object (optional, used for calibration)
 
-The handling of a :class:`synthetic` object is explained in detail in the sub-sections
+The handling of a :py:class:`asteca.Synthetic` object is explained in detail in the sub-sections
 that follow.
 
 
@@ -58,7 +58,7 @@ The ``IMF_name`` and ``max_mass`` arguments are used to generate random mass sam
 an IMF. To improve the performance of the code, this step is performed when the
 :py:class:`asteca.Synthetic` object is created instead of every time a new synthetic
 cluster is generated. The ``IMF_name`` argument must be one of those available in
-:py:class:`asteca.Synthetic`, associated to IMFs defined in `Salpeter (1995)`_,
+:py:class:`asteca.Synthetic`, associated to IMFs defined in `Salpeter (1955)`_,
 `Kroupa (2001)`_, and `Chabrier et al. (2014)`_ (the default value). These are
 shown in the figure below:
 
@@ -178,7 +178,7 @@ law, simply select it when instantiating the object, as follows:
 .. code-block:: python
 
     # Synthetic clusters object
-    synthcl = asteca.Synthetic(isochs, ext_law=GAIADR3)
+    synthcl = asteca.Synthetic(isochs, ext_law="GAIADR3")
 
 
 
@@ -232,7 +232,7 @@ value of :math:`A_V=0.5` and a differential reddening of :math:`DR=1.0`:
 .. _IDL Astronomy User's Library: https://github.com/wlandsman/IDLAstro
 .. _uniform: https://numpy.org/doc/stable/reference/random/generated/numpy.random.uniform.html
 .. _normal: https://numpy.org/doc/stable/reference/random/generated/numpy.random.normal.html
-.. _Salpeter (1995): https://ui.adsabs.harvard.edu/abs/1955ApJ...121..161S
+.. _Salpeter (1955): https://ui.adsabs.harvard.edu/abs/1955ApJ...121..161S
 .. _Kroupa (2001): https://ui.adsabs.harvard.edu/abs/2001MNRAS.322..231K/
 .. _Chabrier et al. (2014): https://ui.adsabs.harvard.edu/abs/2014ApJ...796...75C
 .. _Duchene & Kraus (2013): https://doi.org/10.1146/annurev-astro-081710-102602
@@ -310,7 +310,7 @@ cluster is shown below, fed to a previously defined :obj:`synthcl` object:
 
 .. code-block:: python
 
-    # Synthetic cluster calibration
+    # Fundamental parameters dictionary
     params = {
         "met": 0.0152,
         "loga": 8.0,
@@ -325,7 +325,7 @@ cluster is shown below, fed to a previously defined :obj:`synthcl` object:
     synth_clust = synthcl.generate(params, N_stars=2000)
 
 which produces a synthetic CMD similar to the one shown below. Since the 
-:obj:`synthcl` object was not calibrated against ans observed cluster, no photometric
+:obj:`synthcl` object was not calibrated against an observed cluster, no photometric
 uncertainties have been added, and the maximum observed magnitude is the maximum allowed
 by the loaded isochrones (the dispersion for the binary systems shown as red points is
 expected):

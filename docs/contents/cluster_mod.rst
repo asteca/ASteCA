@@ -76,11 +76,11 @@ can be accessed as:
 
 .. code-block:: python
 
-    my_field.RA      # Right Ascension
-    my_field.DEC     # Declination
+    my_field.ra      # Right Ascension
+    my_field.dec     # Declination
     ...
-    my_field.Gmag    # Gaia G magnitude
-    my_field.e_Gmag  # Error in Gaia G magnitude
+    my_field.mag     # Gaia G magnitude
+    my_field.e_mag   # Error in Gaia G magnitude
     my_field.probs   # Membership probabilities
 
 
@@ -160,7 +160,7 @@ the membership analysis. Currently **ASteCA** integrates two methods to perform 
 estimation, as shown in :py:meth:`asteca.Cluster.get_nmembers`.
 
 There are currently two algorithms available for the estimation of the true number
-of members associated to a give cluster. The default algorithm is called ``ripley``, it was originally introduced along with the ``fastMP`` membership method
+of members associated to a given cluster. The default algorithm is called ``ripley``. It was originally introduced along with the ``fastMP`` membership method
 in `Perren et al. (2023) <https://academic.oup.com/mnras/article/526/3/4107/7276628>`__.
 It requires ``(ra, dec, pmra, pmde, plx)`` data and their center estimates
 (``pms_c, plx_c``).
