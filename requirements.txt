@@ -1,0 +1,12 @@
+pyqt6
+matplotlib
+pyabc
+astroquery
+fastparquet
+pandas
+pydoclint
+pyinstrument
+jupyterlab
+jupyterlab-spellchecker
+pyright[nodejs]
+scipy-stubs[scipy]
