@@ -9,9 +9,14 @@ author = "Gabriel I Perren"
 pyproject = Path(__file__).parent.parent / "pyproject.toml"
 match = re.search(r'^version\s*=\s*["\']([^"\']+)["\']', pyproject.read_text(), re.M)
 if match:
-    __version__ = match.group(1)
+    __version__ = match.group(1).replace("-dev", "")
 else:
-    raise RuntimeError("Cannot determine version")
+    import importlib.metadata
+
+    try:
+        __version__ = importlib.metadata.version("asteca")
+    except importlib.metadata.PackageNotFoundError:
+        raise RuntimeError("Cannot determine version")
 
 version = __version__
 release = __version__
