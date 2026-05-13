@@ -11,9 +11,9 @@ this class: :py:meth:`asteca.Membership.bayesian` and
 The :py:meth:`bayesian` method was described in detail in the `article`_ where **ASteCA**
 was originally introduced. The method requires ``(ra, dec)``  data and will use any extra
 data dimensions stored in the :py:class:`Cluster <asteca.cluster.Cluster>` object, i.e.:
-photometry, proper motions, and parallax. A minimum of two data dimensions are required,
-in addition to ``(ra, dec)``. This method can produce membership probabilities on
-photometric data alone.
+photometry, proper motions, and parallax. At least one extra data dimension beyond
+``(ra, dec)`` is required (three dimensions total minimum). This method can produce
+membership probabilities on photometric data alone.
 
 The :py:meth:`fastmp` method was described in detail in the
 `article <https://academic.oup.com/mnras/article/526/3/4107/7276628>`__

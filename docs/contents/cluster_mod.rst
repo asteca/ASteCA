@@ -66,10 +66,30 @@ with the loaded ``UCC_members.parquet`` file to the class, as follows:
     The UCC is the `Unified Cluster Catalog`_, the largest open clusters catalogue in
     the literature.
 
+Loading a cluster's data from the UCC's members data file stores as attributes of
+the resulting :py:class:`asteca.Cluster` object all the available data for that
+cluster. This includes the six dimensions of its phase space vector:
+`(RA, DEC, Plx, e_Plx, pmRA, e_pmRA, pmDE, e_pmDE, RV, e_RV)` as well as its photometry
+in the Gaia bands `(Gmag, e_Gmag, BP-RP, e_BP-RP)`, along with their associated
+errors, and the membership probability values for each star `(probs)`. These attributes
+can be accessed as:
+
+.. code-block:: python
+
+    my_field.ra      # Right Ascension
+    my_field.dec     # Declination
+    ...
+    my_field.mag     # Gaia G magnitude
+    my_field.e_mag   # Error in Gaia G magnitude
+    my_field.probs   # Membership probabilities
+
+
 
 .. _pandas.DataFrame: https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html
 .. _UCC's members data file : https://doi.org/10.5281/zenodo.8250523
 .. _Unified Cluster Catalog: https://ucc.ar
+
+
 
 
 .. _structure:
@@ -140,7 +160,7 @@ the membership analysis. Currently **ASteCA** integrates two methods to perform 
 estimation, as shown in :py:meth:`asteca.Cluster.get_nmembers`.
 
 There are currently two algorithms available for the estimation of the true number
-of members associated to a give cluster. The default algorithm is called ``ripley``, it was originally introduced along with the ``fastMP`` membership method
+of members associated to a given cluster. The default algorithm is called ``ripley``. It was originally introduced along with the ``fastMP`` membership method
 in `Perren et al. (2023) <https://academic.oup.com/mnras/article/526/3/4107/7276628>`__.
 It requires ``(ra, dec, pmra, pmde, plx)`` data and their center estimates
 (``pms_c, plx_c``).

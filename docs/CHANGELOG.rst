@@ -7,6 +7,19 @@ Changelog
 #########
 
 
+`[v0.6.7] <https://github.com/asteca/asteca/releases/tag/v0.6.7>`__ - 2026-05-13
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+- Improved performance of `Synthetic.generate()` method by ~12%
+- Read extra columns from UCC members file (Rv, e_Rv, probs)
+- Fixed a bug with the `properModel()` function and the `(met, age)` values at
+  the lower edges. Also added range checking
+- Changed `parsec_rm_stage_9` flag in `Isochrones` class to `parsec_rm_stages`
+- Added a mask to filter out bad values (`999.999`) from PARSEC new isochrones
+- Added `max_mag_perc` to filter by magnitude percentile in `Cluster` class
+
+
+
 `[v0.6.6] <https://github.com/asteca/asteca/releases/tag/v0.6.6>`__ - 2026-04-25
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

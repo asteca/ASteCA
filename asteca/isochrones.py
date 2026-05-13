@@ -45,14 +45,14 @@ class Isochrones:
         converted to ``[FeH]`` values, to be used by the
         :py:meth:`Synthetic.generate` method
     :type z_to_FeH: float | None
-    :param N_interp: Number of interpolation points used to ensure that all isochrones
+    :param N_points: Number of interpolation points used to ensure that all isochrones
         are the same shape
-    :type N_interp: int
-    :param parsec_rm_stage_9: If the isochrones are PARSEC, this argument set to
-        ``True`` will remove the *post_AGB* stage (label=9) which are still
-        "`in preparation <http://stev.oapd.inaf.it/cmd/faq.html>`__", defaults
-        to ``True``
-    :type parsec_rm_stage_9: bool
+    :type N_points: int
+    :param parsec_rm_stages: If the isochrones are PARSEC, this value indicates which
+        stages should be removed (all equal or larger than this value). The value is
+        set to ``9.0`` by default which corresponds to the  *post_AGB* stage still
+        "`in preparation <http://stev.oapd.inaf.it/cmd/faq.html>`__"
+    :type parsec_rm_stages: float
     :param column_names: Column names for the initial mass, metallicity, and age for
         the photometric system's isochrones files. Example:
         ``{"mass_col": "Mini", "met_col": "Zini", "age_col": "logAge"}``.
@@ -78,8 +78,8 @@ class Isochrones:
         color_effl: tuple | None = None,
         color2_effl: tuple | None = None,
         z_to_FeH: float | None = None,
-        N_interp: int = 2000,
-        parsec_rm_stage_9: bool = True,
+        N_points: int = 2000,
+        parsec_rm_stages: float = 9.0,
         column_names: dict | None = None,
         verbose: int = 1,
     ) -> None:
@@ -93,8 +93,8 @@ class Isochrones:
         self.color2_effl = color2_effl
         self.z_to_FeH = z_to_FeH
         self.column_names = column_names
-        self.N_interp = N_interp
-        self.parsec_rm_stage_9 = parsec_rm_stage_9
+        self.N_points = N_points
+        self.parsec_rm_stages = parsec_rm_stages
         self.verbose = verbose
 
         from .modules import isochrones_priv
@@ -127,16 +127,22 @@ class Isochrones:
                 self.color,
                 self.color2,
                 self.column_names,
-                self.N_interp,
-                self.parsec_rm_stage_9,
+                self.N_points,
+                self.parsec_rm_stages,
             )
         )
 
         # Convert z to FeH if requested
         met_n = "z  "
         if self.z_to_FeH is not None:
-            self._func_z_to_FeH(self.z_to_FeH)
-            met_n = "FeH"
+            if isinstance(self.z_to_FeH, float):
+                self._func_z_to_FeH(self.z_to_FeH)
+                met_n = "FeH"
+            else:
+                raise ValueError(
+                    "'z_to_FeH' must be a float representing the solar metallicity"
+                    + " for the isochrones."
+                )
 
         # Extract metallicity and age ranges
         self.zmin = self.met_age_dict["met"].min()
@@ -144,7 +150,7 @@ class Isochrones:
         self.amin = self.met_age_dict["loga"].min()
         self.amax = self.met_age_dict["loga"].max()
 
-        N_met, N_age, _, N_points = self.theor_tracks.shape
+        N_met, N_age, _, _ = self.theor_tracks.shape
         self._vp(f"Model          : {self.model}", 1)
         self._vp(f"N_files        : {N_isoch_files}", 1)
         self._vp(f"N_mets         : {N_met}", 1)
@@ -178,45 +184,47 @@ class Isochrones:
         # Replace old values
         self.met_age_dict["met"] = feh_r
 
-    def _interpolate(self, met: float, loga: float) -> np.ndarray:
-        """ """
-        met_msk = self.met_age_dict["met"] == met
-        age_msk = self.met_age_dict["loga"] == loga
+    # def _interpolate(self, met: float, loga: float) -> np.ndarray:
+    #     """ """
+    #     met_msk = self.met_age_dict["met"] == met
+    #     age_msk = self.met_age_dict["loga"] == loga
 
-        # Index of the first element in mask that is True
-        try:
-            met_i = np.where(met_msk)[0][0]
-            age_i = np.where(age_msk)[0][0]
-            isoch = self.theor_tracks[met_i][age_i]
-        except IndexError:
-            from .modules import synth_cluster_priv as scp
+    #     # Index of the first element in mask that is True
+    #     try:
+    #         met_i = np.where(met_msk)[0][0]
+    #         age_i = np.where(age_msk)[0][0]
+    #         isoch = self.theor_tracks[met_i][age_i]
+    #     except IndexError:
+    #         from .modules import synth_model as sm
 
-            params = {
-                "met": met,
-                "loga": loga,
-                "alpha": 0,
-                "beta": 0,
-                "Av": 0,
-                "DR": 0,
-                "Rv": 0,
-                "dm": 0,
-            }
-            ml, mh, al, ah = scp.properModel(self.met_age_dict, {}, params)[-4:]
-            # Add dimension of zeroes to array
-            padded_arr = np.pad(self.theor_tracks, ((0, 0), (0, 0), (0, 2), (0, 0)))
+    #         params = {
+    #             "met": met,
+    #             "loga": loga,
+    #             "alpha": 0,
+    #             "beta": 0,
+    #             "Av": 0,
+    #             "DR": 0,
+    #             "Rv": 0,
+    #             "dm": 0,
+    #         }
+    #         ml, mh, al, ah = sm.properModel(
+    #             self.met_age_dict, def_params={}, fit_params=params
+    #         )[-4:]
+    #         # Add dimension of zeroes to array
+    #         padded_arr = np.pad(self.theor_tracks, ((0, 0), (0, 0), (0, 2), (0, 0)))
 
-            m_ini_idx = self.theor_tracks.shape[2]
+    #         m_ini_idx = self.theor_tracks.shape[2]
 
-            isoch = scp.zaWAverage(
-                padded_arr,
-                self.met_age_dict,
-                m_ini_idx,
-                met,
-                loga,
-                ml,
-                mh,
-                al,
-                ah,
-            )[:m_ini_idx, :]
+    #         isoch = sm.zaWAverage(
+    #             padded_arr,
+    #             self.met_age_dict,
+    #             m_ini_idx,
+    #             met,
+    #             loga,
+    #             ml,
+    #             mh,
+    #             al,
+    #             ah,
+    #         )[:m_ini_idx, :]
 
-        return isoch
+    #     return isoch

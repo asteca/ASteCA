@@ -23,6 +23,15 @@ class Synthetic:
     :type isochs: Isochrones
     :param def_params: Default values for all the required fundamental parameters
     :type def_params: dict[str, float]
+    :param IMF_name: Name of the initial mass function used to populate the isochrones,
+        one of ``salpeter_1955, kroupa_2001, chabrier_2014``
+    :type IMF_name: str
+    :param max_mass: Maximum total initial mass. Should be large enough to allow
+        generating as many synthetic stars as observed stars
+    :type max_mass: int
+    :param gamma: Distribution function for the mass ratio of the binary systems,
+        float or one of ``D&K, fisher_stepped, fisher_peaked, raghavan``
+    :type gamma: float | str
     :param ext_law: Extinction law, one of ``CCMO, GAIADR3``.
         If ``GAIADR3`` is selected, the magnitude and first
         color defined in the :py:class:`Isochrones <asteca.isochrones.Isochrones>` and
@@ -33,15 +42,6 @@ class Synthetic:
     :param DR_distribution: Distribution function for the differential reddening,
         one of ``uniform, normal``
     :type DR_distribution: str
-    :param IMF_name: Name of the initial mass function used to populate the isochrones,
-        one of ``salpeter_1955, kroupa_2001, chabrier_2014``
-    :type IMF_name: str
-    :param max_mass: Maximum total initial mass. Should be large enough to allow
-        generating as many synthetic stars as observed stars
-    :type max_mass: int
-    :param gamma: Distribution function for the mass ratio of the binary systems,
-        float or one of ``D&K, fisher_stepped, fisher_peaked, raghavan``
-    :type gamma: float | str
     :param seed: Random seed. If ``None`` a random integer will be generated and used
     :type seed: int | None
     :param verbose: Verbose level. A value of ``0`` hides all output
@@ -63,21 +63,21 @@ class Synthetic:
             "Av": 0.2,
             "dm": 9.0,
         },
-        ext_law: str = "CCMO",
-        DR_distribution: str = "uniform",
         IMF_name: str = "chabrier_2014",
         max_mass: int = 10_000,
         gamma: float | str = "D&K",
+        ext_law: str = "CCMO",
+        DR_distribution: str = "uniform",
         seed: int | None = None,
         verbose: int = 1,
     ) -> None:
         self.isochs = isochs
         self.def_params = def_params
-        self.ext_law = ext_law
-        self.DR_distribution = DR_distribution
         self.IMF_name = IMF_name
         self.max_mass = max_mass
         self.gamma = gamma
+        self.ext_law = ext_law
+        self.DR_distribution = DR_distribution
         self.seed = seed
         self.verbose = verbose
 
@@ -139,6 +139,12 @@ class Synthetic:
         self.m_ini_idx = 2  # (0->mag, 1->color, 2->mass_ini)
         if self.isochs.color2_effl is not None:
             self.m_ini_idx = 3  # (0->mag, 1->color, 2->color2, 3->mass_ini)
+        # Set tolerances for the ranges of the isochrones in `generate()`
+        self.age_tol = 0.01
+        if self.isochs.z_to_FeH is not None:
+            self.met_tol = 0.01  # FeH
+        else:
+            self.met_tol = 0.001  # z
 
         # Get extinction coefficients for these filters
         self.ext_coefs = []  # It is important to pass an empty list because the
@@ -171,9 +177,6 @@ class Synthetic:
 
         # Store for internal usage
         self.met_age_dict = self.isochs.met_age_dict
-        self.met_age_bounds = {
-            k: (min(v), max(v)) for k, v in self.met_age_dict.items()
-        }
 
         # Check that the ranges are respected
         for par in ("met", "loga"):
@@ -264,7 +267,7 @@ class Synthetic:
                 + "was defined in 'synthetic'."
             )
 
-        # Warning with hardcoded values
+        # Warning with hard coded values
         f_stars_mass = 7
         if cluster.mag.size * f_stars_mass > self.max_mass:
             warnings.warn(
@@ -304,7 +307,9 @@ class Synthetic:
         self.cluster_dec = cluster.dec
 
     def generate(
-        self, params: dict, N_stars: int = 100
+        self,
+        params: dict,
+        N_stars: int = 100,
     ) -> np.ndarray | tuple[np.ndarray, np.ndarray]:
         """Generate a synthetic cluster.
 
@@ -327,7 +332,7 @@ class Synthetic:
             single star, then ``mass_b==np.nan``.
         :rtype: np.ndarray | tuple[np.ndarray, np.ndarray]
         """
-        from .modules import synth_cluster_priv as scp
+        from .modules import synth_model as sm
 
         try:
             # Extract from calibrated observed cluster
@@ -341,9 +346,11 @@ class Synthetic:
             err_dist_synth = []
             N_synth_stars = int(N_stars)
 
-        return scp.generate_synth_arr(
+        return sm.get_model(
             params,
             self.met_age_dict,
+            self.met_tol,
+            self.age_tol,
             self.def_params,
             self.m_ini_idx,
             self.theor_tracks,
@@ -394,7 +401,7 @@ class Synthetic:
             )
 
         from .modules import stellar_stats_funcs as ssf
-        from .modules import synth_cluster_priv as scp
+        from .modules import synth_model as sm
 
         # Update dictionaries with default values, if required
         model = self.def_params | model
@@ -411,17 +418,6 @@ class Synthetic:
                 2,
             )
 
-        # Check isochrones ranges
-        for par in ("met", "loga"):
-            if par not in self.met_age_bounds or par not in model:
-                continue
-            pmin, pmax = self.met_age_bounds[par]
-            val = model[par]
-            new_val = min(max(val, pmin), pmax)
-            if new_val != val:
-                warnings.warn(f"Parameter '{par}' out of range: {val} -> {new_val}")
-                model[par] = new_val
-
         # Generate the 'N_models' models via sampling a Gaussian centered on
         # 'model', with standard deviation given by 'model_std'.
         sampled_models = {}
@@ -432,6 +428,14 @@ class Synthetic:
             dict(zip(sampled_models, t)) for t in zip(*sampled_models.values())
         ]
 
+        # Check that the sampled models are within the ranges of the isochrones.
+        # If not, set to the closest value within the range and issue a warning.
+        met_min, met_max = self.met_age_dict["met"][0], self.met_age_dict["met"][-1]
+        age_min, age_max = self.met_age_dict["loga"][0], self.met_age_dict["loga"][-1]
+        for _model in sampled_models:
+            _model["met"] = min(max(_model["met"], met_min), met_max)
+            _model["loga"] = min(max(_model["loga"], age_min), age_max)
+
         # Generate the synthetic arrays using the above models
         sampled_models_no_empty, sampled_synthcls = [], []
         turn_off_points = {
@@ -441,9 +445,11 @@ class Synthetic:
         }
         for smodel in sampled_models:
             # Get both the isochrone and the synthetic cluster
-            isoch_arr, synth_arr = scp.generate_synth_arr(
+            isoch_arr, synth_arr = sm.get_model(
                 smodel,
                 self.met_age_dict,
+                self.met_tol,
+                self.age_tol,
                 self.def_params,
                 self.m_ini_idx,
                 self.theor_tracks,
@@ -783,7 +789,7 @@ class Synthetic:
         fit_params: dict,
         color_idx: int = 0,
         full_track: bool = False,
-        N_stars: int = 100,
+        N_stars: int = 1000,
     ) -> np.ndarray:
         """Generate an isochrone for plotting.
 
@@ -803,26 +809,13 @@ class Synthetic:
         :param N_stars: Number of synthetic stars to generate
         :type N_stars: int
 
-        :raises ValueError: If either parameter (met, age) is outside of allowed range
-
         :return: Array with the isochrone data to plot
         :rtype: np.ndarray
         """
         # Generate displaced isochrone
         fit_params_copy = dict(fit_params)
 
-        # Check isochrones ranges
-        for par in ("met", "loga"):
-            try:
-                pmin, pmax = min(self.met_age_dict[par]), max(self.met_age_dict[par])
-                if fit_params_copy[par] < pmin or fit_params_copy[par] > pmax:
-                    raise ValueError(
-                        f"Parameter '{par}' out of range: [{pmin} - {pmax}]"
-                    )
-            except KeyError:
-                pass
-
-        from .modules import synth_cluster_priv as scp
+        from .modules import synth_model as sm
 
         try:
             # Extract from calibrated observed cluster
@@ -838,9 +831,11 @@ class Synthetic:
         # isochrone only
         fit_params_isoch = dict(fit_params)
         fit_params_isoch["DR"] = 0.0
-        isochrone = scp.generate_synth_arr(
+        isochrone = sm.get_model(
             fit_params_isoch,
             self.met_age_dict,
+            self.met_tol,
+            self.age_tol,
             self.def_params,
             self.m_ini_idx,
             self.theor_tracks,
@@ -862,9 +857,11 @@ class Synthetic:
         # Extract magnitude and mass from the isochrone and the full synthetic cluster
         isoch_mag, isoch_mass = isochrone[0], isochrone[self.m_ini_idx]
         # Generate physical synthetic cluster to extract the max mass
-        full_arr = scp.generate_synth_arr(
+        full_arr = sm.get_model(
             fit_params_copy,
             self.met_age_dict,
+            self.met_tol,
+            self.age_tol,
             self.def_params,
             self.m_ini_idx,
             self.theor_tracks,
