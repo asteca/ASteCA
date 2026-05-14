@@ -1,25 +1,34 @@
-import re
-from pathlib import Path
+import tomllib
 
 # -- Project information -----------------------------------------------------
 project = "ASteCA"
 copyright = "2024, Gabriel I Perren"
 author = "Gabriel I Perren"
 
-pyproject = Path(__file__).parent.parent / "pyproject.toml"
-match = re.search(r'^version\s*=\s*["\']([^"\']+)["\']', pyproject.read_text(), re.M)
-if match:
-    __version__ = match.group(1).replace("-dev", "")
-else:
-    import importlib.metadata
-
-    try:
-        __version__ = importlib.metadata.version("asteca")
-    except importlib.metadata.PackageNotFoundError:
-        raise RuntimeError("Cannot determine version")
+# 'pyproject.toml' is one dir up
+with open("../pyproject.toml", "rb") as f:
+    data = tomllib.load(f)
+__version__ = data["project"]["version"]
+if "-dev" in __version__:
+    # Remove "-dev"
+    __version__ = __version__.replace("-dev", "")
+    # Decrement patch version by 1
+    major, minor, patch = map(int, __version__.split("."))
+    if patch > 0:
+        patch -= 1
+    else:
+        patch = 9
+        if minor > 0:
+            minor -= 1
+        else:
+            minor = 9
+            if major > 0:
+                major -= 1
+            else:
+                raise ValueError("Cannot decrement version below 0.0.0")
+    __version__ = f"{major}.{minor}.{patch}"
 
 version = __version__
-release = __version__
 
 rst_epilog = """.. |ProjectVersion| replace:: **{versionnum}**""".format(
     versionnum=version,
