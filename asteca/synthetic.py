@@ -308,7 +308,7 @@ class Synthetic:
 
     def generate(
         self,
-        params: dict,
+        params: dict = {},
         N_stars: int = 100,
     ) -> np.ndarray | tuple[np.ndarray, np.ndarray]:
         """Generate a synthetic cluster.
@@ -317,9 +317,14 @@ class Synthetic:
         the ``params`` dictionary and the already calibrated
         :py:class:`Synthetic` object.
 
+        The ``params``dictionary can include values for all or some of the parameters.
+        E.g. of a dictionary with some fundamental parameters:
+        ``params = {met: 0.0152, loga: 8.1, Av: 0.2, DR: 0., Rv: 3.1, dm: 9.7}``
+        If no ``params`` dictionary is given, an empty one is used and the default values
+        defined in the :py:class:`Synthetic` object are used to generate the synthetic
+        cluster.
+
         :param params: Dictionary containing the values for the fundamental parameters.
-            The dictionary must include values for all the parameters, e.g.:
-            ``params = {met: 0.0152, loga: 8.1, alpha: 0.1, beta: 1, Av: 0.2, DR: 0., Rv: 3.1, dm: 9.7}``
         :type params: dict
         :param N_stars: Number of synthetic stars to generate
         :type N_stars: int
