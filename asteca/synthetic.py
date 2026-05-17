@@ -627,8 +627,17 @@ class Synthetic:
         - ``M_actual = M_obs + M_phot``
         - ``M_init = M_actual + M_evol + M_dyn``
 
-        :param radec_c: Center coordinates in ``(RA, DEC)``. If ``None``, the ``rho_amb``
-            parameter must be given
+        If ``rho_amb`` is not provided (``None``), then the method will try to estimate
+        it using the cluster's position and a model for the Galaxy's potential.
+        In this case, the coordinates of the cluster ``radec_c`` are required to
+        estimate the ambient density. If these are also ``None``, the method
+        will try to resolve the coordinates from the ``cluster_ra`` and ``cluster_dec``
+        attributes, stored when calling the ``calibrate()`` method with a
+        :py:class:`Cluster` object.
+        If these attributes are missing, a ValueError is raised because the
+        ambient density cannot be estimated without coordinates.
+
+        :param radec_c: Center coordinates in ``(RA, DEC)``
         :type radec_c: tuple | None
         :param rho_amb: Ambient density [:math:`M_{\odot}\,pc^{-3}`]. If ``None``, it
             is estimated using the cluster's position (``radec_c``) and a model for the
