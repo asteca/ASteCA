@@ -454,10 +454,10 @@ STDDEVs taken from the ``model_std`` values.
 
 After calling these methods, we are ready to estimate:
 
-1. The initial, actual, and lost masses associated to the cluster
-2. The per-star masses (for both single and binary systems)
-3. The per-star probability of being part of a binary system
-4. The per-star probability of being a blue straggler (BSS)
+1. The per-star masses (for both single and binary systems)
+2. The per-star probability of being part of a binary system
+3. The per-star probability of being a blue straggler (BSS)
+4. The initial, actual, and lost masses associated to the cluster
 
 From the per-star binary probabilities we can estimate the total binary fraction of the
 cluster, and from the per-star blue straggler probabilities we can estimate the total
@@ -465,132 +465,6 @@ number of BSSs in the cluster.
 
 The :ref:`post_process_ntbk` tutorial contains examples on how to perform these analyses.
 The following sub-sections explain in more detail the methods used to estimate these parameters.
-
-
-
-.. _cluster_mass:
-
-Cluster mass
-============
-
-**ASteCA** is able to estimate different masses for an observed cluster. The total
-initial mass of a cluster :math:`M_{i}` can be split in several parts, as follows:
-
-.. math::
-    :label: eq_Mi1
-
-    M_{i} = M_{a} + \Delta M_{evol}(t) + \Delta M_{dyn}(t)
-
-where :math:`M_{a}` is the actual mass, and  :math:`\Delta M_{evol}(t)` & 
-:math:`\Delta M_{dyn}(t)` are the fractions of mass **lost** via stellar evolution and
-dynamical effects (or *dissolution*), respectively. The actual mass :math:`M_{a}` can be
-further split as:
-
-.. math::
-
-    M_{a} = M_{obs} + M_{phot}
-
-where :math:`M_{obs}` is the observed mass and :math:`M_{phot}` is the mass unobserved
-due to photometric effects (i.e: the low mass stars beyond the maximum observed
-magnitude). The observed mass :math:`M_{obs}` is the sum of individual stellar masses
-in the observed CMD:
-
-.. math::
-
-    M_{obs} = \sum_{i}^{N} m_i
-
-where :math:`N` is the total number of observed stars which also includes the identified
-stellar binary masses.
-
-The photometric mass :math:`M_{phot}` is inferred
-by summing the mass that exists below the mass value associated to the maximum observed
-magnitude in the cluster. This requires sampling an IMF with a large mass and
-obtaining the ratio of the total mass :math:`M_{phot,s}` to the mass of the
-stars brighter than the maximum observed magnitude :math:`M_{obs,s}`.
-This ratio is then applied to the observed mass :math:`M_{obs}` to estimate :math:`M_{phot}`.
-
-.. math::
-
-    M_{phot} = \frac{M_{phot,s}}{M_{obs,s}} \times M_{obs}
-
-
-Following `Lamers et al. (2005)
-<https://www.aanda.org/articles/aa/abs/2005/37/aa2241-04/aa2241-04.html>`_ Eq. 7,
-the initial mass can be estimated via:
-
-.. math::
-    :label: eq_Mi2
-
-    M_i \simeq \left\{ M_a^{\gamma} + \frac{\gamma t}{t_0} \right\}^{1/\gamma} \mu_{\text
-    {evol}}(Z, t)^{-1}
-
-where :math:`M_{a}` is the actual mass, :math:`t` is the cluster's age,
-:math:`\mu_{\text{evol}}(Z, t)` is the "*fraction of the initial mass of the cluster that
-would have remained at age t, if stellar evolution would have been the only mass
-loss mechanism*", :math:`{\gamma}` is a constant, and :math:`t_{0}` is "*a constant that
-depends on the tidal field of the particular galaxy in which the cluster moves and on
-the ellipticity of its orbit*".
-
-The :math:`\gamma` constant is usually set to 0.62 (`Boutloukos & Lamers 2003
-<https://academic.oup.com/mnras/article/338/3/717/1458721>`_) and the
-:math:`\mu_{\text{evol}}(Z, t)` parameter can be estimated using a 3rd degree polynomial
-as shown in 
-`Lamers, Baumgardt & Gieles (2010) <http://adsabs.harvard.edu/abs/2010MNRAS.409..305L>`_,
-Table B2.
-
-The dissolution parameter :math:`t_0` of a cluster is the hypothetical dissolution
-time-scale of a cluster of 1 :math:`M_{\odot}` and is related to the disruption time
-:math:`t_{dis}` (defined as the time when 5% of the initial number of stars remain in
-the cluster; `Baumgardt & Makino 2003 <https://academic.oup.com/mnras/article/340/1/227/1126410>`_) via:
-
-.. math::
-
-    t_{dis} = t_{0} M_i^{\gamma}
-
-Furthermore, :math:`t_0` is expected to depend on the ambient density
-:math:`\rho_{amb}` at the location of the clusters in the Galaxy as:
-
-.. math::
-
-    t_{0} = C_{env} (1-\epsilon) 10^{-4\gamma} \rho_{amb}^{-1/2}
-
-where :math:`C_{env}` is a constant set to 810 Myr (`Lamers, Gieles & Portegies Zwart 2005
-<https://www.aanda.org/articles/aa/abs/2005/01/aa1476/aa1476.html>`_),
-:math:`\epsilon` is the eccentricity of the orbit, and :math:`\rho_{amb}` is the ambient
-density which depends on the adopted gravitational potential field.
-
-Following `Angelo et al. (2023)
-<https://ui.adsabs.harvard.edu/abs/2023MNRAS.522..956A/abstract>`_, **ASteCA** uses by
-default :math:`\epsilon=0.08` and estimates :math:`\rho_{amb}` as:
-
-.. math::
-
-    \rho_{\text{amb}} = \frac{1}{4\pi G} \nabla^2 \left[ \phi_B(r) + \phi_D(\rho, z) + \phi_H(r) \right]
-
-where :math:`\phi_B(r),\, \phi_D(\rho, z),\, \phi_H(r)` are the bulge, disc and halo
-potentials, respectively (see Eqs 8, 9 and 10 of the Angelo et al. article to see how
-these are modeled). The user can also use a custom :math:`\rho_{\text{amb}}` value,
-bypassing this estimation.
-
-Plugging these values into Eq :eq:`eq_Mi2`, we can obtain an estimate of :math:`M_{i}`.
-With this value we can then obtain :math:`M_{evol}` through the
-:math:`\mu_{\text{evol}}(Z, t)` parameter as:
-
-.. math::
-
-    \Delta M_{evol}(t) = M_{i}  \times [1 - \mu_{\text{evol}}(Z, t)]
-
-Finally, the last remaining mass is the dynamical mass (mass lost via dynamical
-effects) which we estimate simply using Eq :eq:`eq_Mi1` as:
-
-.. math::
-
-    \Delta M_{dyn}(t) = M_{i} - M_{a} - \Delta M_{evol}(t)
-
-The distributions for these masses are obtained through a bootstrap process that
-takes the uncertainties in the fundamental parameters into account.
-
-
 
 
 
@@ -799,3 +673,144 @@ can be modified by the user via the arguments of the
 The blue straggler probability assigned to each observed star can be easily
 used to obtain the total number of probable BSSs in the cluster. See the
 :ref:`post_process_ntbk` tutorial for an example of how this is done.
+
+
+
+
+.. _cluster_mass:
+
+Cluster mass
+============
+
+**ASteCA** is able to estimate different masses for an observed cluster via the
+:py:meth:`asteca.Synthetic.cluster_masses` method. This method uses the position
+of the observed cluster, as well as the synthetic clusters generated
+via the :py:meth:`asteca.Synthetic.get_models` method, to estimate the initial mass of
+the cluster, the actual mass, and the mass lost via stellar evolution and dynamical
+effects.
+
+The initial mass is the mass of the cluster at the moment of its formation, while the
+actual mass is the mass of the cluster at the present time. The difference between these
+two masses is the mass lost via stellar evolution and dynamical effects, which are the
+two main processes that cause the mass of a cluster to decrease over time. The mass lost
+via stellar evolution is due to the fact that stars lose mass as they evolve, while the
+mass lost via dynamical effects is due to the fact that stars can be ejected from the
+cluster due to interactions with other stars or with the tidal field of the Galaxy.
+
+The total initial mass of a cluster, :math:`M_{i}`, can thus be split in
+several parts, as follows:
+
+.. math::
+    :label: eq_Mi1
+
+    M_{i} = M_{a} + \Delta M_{evol}(t) + \Delta M_{dyn}(t)
+
+where :math:`M_{a}` is the actual mass, and  :math:`\Delta M_{evol}(t)` & 
+:math:`\Delta M_{dyn}(t)` are the fractions of mass **lost** via stellar evolution and
+dynamical effects (or *dissolution*), respectively. The actual mass :math:`M_{a}` can be
+further split as:
+
+.. math::
+
+    M_{a} = M_{obs} + M_{phot}
+
+where :math:`M_{obs}` is the observed mass and :math:`M_{phot}` is the mass unobserved
+due to photometric effects (i.e: the low mass stars beyond the maximum observed
+magnitude). The observed mass :math:`M_{obs}` is the sum of individual stellar masses
+in the observed CMD:
+
+.. math::
+
+    M_{obs} = \sum_{i}^{N} m_i
+
+where :math:`N` is the total number of observed stars which also includes the identified
+stellar binary masses.
+
+The photometric mass :math:`M_{phot}` is inferred by summing the mass that exists below
+the mass value associated to the maximum observed magnitude in the cluster. This
+requires sampling an IMF with a large mass and obtaining the ratio of the total mass
+:math:`M_{phot,s}` to the mass of the stars brighter than the maximum observed magnitude
+:math:`M_{obs,s}`. This ratio is then applied to the observed mass :math:`M_{obs}` to
+estimate :math:`M_{phot}`.
+
+.. math::
+
+    M_{phot} = \frac{M_{phot,s}}{M_{obs,s}} \times M_{obs}
+
+
+Following `Lamers et al. (2005)
+<https://www.aanda.org/articles/aa/abs/2005/37/aa2241-04/aa2241-04.html>`_ Eq. 7,
+the initial mass can be estimated via:
+
+.. math::
+    :label: eq_Mi2
+
+    M_i \simeq \left\{ M_a^{\gamma} + \frac{\gamma t}{t_0} \right\}^{1/\gamma} \mu_{\text
+    {evol}}(Z, t)^{-1}
+
+where :math:`M_{a}` is the actual mass, :math:`t` is the cluster's age,
+:math:`\mu_{\text{evol}}(Z, t)` is the "*fraction of the initial mass of the cluster that
+would have remained at age t, if stellar evolution would have been the only mass
+loss mechanism*", :math:`{\gamma}` is a constant, and :math:`t_{0}` is "*a constant that
+depends on the tidal field of the particular galaxy in which the cluster moves and on
+the ellipticity of its orbit*".
+
+The :math:`\gamma` constant is usually set to 0.62 (`Boutloukos & Lamers 2003
+<https://academic.oup.com/mnras/article/338/3/717/1458721>`_) and the
+:math:`\mu_{\text{evol}}(Z, t)` parameter can be estimated using a 3rd degree polynomial
+as shown in 
+`Lamers, Baumgardt & Gieles (2010) <http://adsabs.harvard.edu/abs/2010MNRAS.409..305L>`_,
+Table B2.
+
+The dissolution parameter :math:`t_0` of a cluster is the hypothetical dissolution
+time-scale of a cluster of 1 :math:`M_{\odot}` and is related to the disruption time
+:math:`t_{dis}` (defined as the time when 5% of the initial number of stars remain in
+the cluster; `Baumgardt & Makino 2003 <https://academic.oup.com/mnras/article/340/1/227/1126410>`_) via:
+
+.. math::
+
+    t_{dis} = t_{0} M_i^{\gamma}
+
+Furthermore, :math:`t_0` is expected to depend on the ambient density
+:math:`\rho_{amb}` at the location of the clusters in the Galaxy as:
+
+.. math::
+
+    t_{0} = C_{env} (1-\epsilon) 10^{-4\gamma} \rho_{amb}^{-1/2}
+
+where :math:`C_{env}` is a constant set to 810 Myr (`Lamers, Gieles & Portegies Zwart 2005
+<https://www.aanda.org/articles/aa/abs/2005/01/aa1476/aa1476.html>`_),
+:math:`\epsilon` is the eccentricity of the orbit, and :math:`\rho_{amb}` is the ambient
+density which depends on the adopted gravitational potential field.
+
+Following `Angelo et al. (2023)
+<https://ui.adsabs.harvard.edu/abs/2023MNRAS.522..956A/abstract>`_, **ASteCA** uses by
+default :math:`\epsilon=0.08` and estimates :math:`\rho_{amb}` as:
+
+.. math::
+
+    \rho_{\text{amb}} = \frac{1}{4\pi G} \nabla^2 \left[ \phi_B(r) + \phi_D(\rho, z) + \phi_H(r) \right]
+
+where :math:`\phi_B(r),\, \phi_D(\rho, z),\, \phi_H(r)` are the bulge, disc and halo
+potentials, respectively (see Eqs 8, 9 and 10 of the Angelo et al. article to see how
+these are modeled). The user can also use a custom :math:`\rho_{\text{amb}}` value,
+bypassing this estimation.
+
+Plugging these values into Eq :eq:`eq_Mi2`, we can obtain an estimate of :math:`M_{i}`.
+With this value we can then obtain :math:`M_{evol}` through the
+:math:`\mu_{\text{evol}}(Z, t)` parameter as:
+
+.. math::
+
+    \Delta M_{evol}(t) = M_{i}  \times [1 - \mu_{\text{evol}}(Z, t)]
+
+Finally, the last remaining mass is the dynamical mass (mass lost via dynamical
+effects) which we estimate simply using Eq :eq:`eq_Mi1` as:
+
+.. math::
+
+    \Delta M_{dyn}(t) = M_{i} - M_{a} - \Delta M_{evol}(t)
+
+The distributions for these masses are obtained through a bootstrap process that
+takes the uncertainties in the fundamental parameters into account.
+
