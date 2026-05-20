@@ -64,10 +64,13 @@ def bayesian_mp(
     cl_region, e_cl_region2 = dataNorm(cl_region, e_cl_region)
     fl_region_all, e_fl_region2_all = dataNorm(fl_region_all, e_fl_region_all)
 
-    # Proper shape for the likelihood function
-    cl_region_T, e_cl_region2_T = cl_region.T[:, None], e_cl_region2.T[:, None]
+    # Prepare cluster-region data for broadcasting: (N_cl_region, 1, n_dims)
+    cl_region_T = cl_region.T[:, None]
+    e_cl_region2_T = e_cl_region2.T[:, None]
 
-    # Initial null probabilities for all stars in the cluster region.
+    # Precompute cluster-region self-likelihood matrix (N_cl_region x N_cl_region)
+    L_cl = _likelihood_matrix(cl_region_T, e_cl_region2_T, cl_region, e_cl_region2)
+
     prob_old_arr = np.zeros(N_cl_region)
     # Probabilities for all stars in the cluster region.
     sum_cl_probs = np.zeros(N_cl_region)
@@ -75,8 +78,7 @@ def bayesian_mp(
     N_break = 50
     r, probs = 0, []
     for r in range(bayesda_runs):
-        # Select stars from the cluster region according to their
-        # associated probabilities so far.
+        # Select cluster members according to current probability estimates
         if N_cl_region > N_cluster:
             if r == 0:
                 # Initial run
@@ -91,17 +93,18 @@ def bayesian_mp(
         else:
             p = np.ones(N_cl_region, dtype=int)
 
-        # Generate a random field region
+        # Generate a random field region and compute its likelihood
         fl_region, e_fl_region2 = generate_field_region(
             rng, fl_region_all, e_fl_region2_all, n_field
         )
         # Compare cluster region with this field region
-        fl_lkl = likelihood(cl_region_T, e_cl_region2_T, fl_region, e_fl_region2)
-        # Compare cluster region with the most probable cluster members (so far)
-        cl_lkl = likelihood(
-            cl_region_T, e_cl_region2_T, cl_region[:, p], e_cl_region2[:, p]
+        fl_lkl = _likelihood_sum_chunked(
+            cl_region_T, e_cl_region2_T, fl_region, e_fl_region2
         )
+        # Cluster likelihood from precomputed matrix (fast sum over selected columns)
+        cl_lkl = L_cl[:, p].sum(axis=1)
 
+        # Bayesian probability for each star
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             # Bayesian probability for each star within the cluster region.
@@ -116,8 +119,7 @@ def bayesian_mp(
         # Check that all P>0.5 probabilities converged to 1%
         if (abs(prob_old_arr[msk] - probs[msk]) < 0.01).all() and r > N_break:
             break
-        else:
-            prob_old_arr = np.array(probs)
+        prob_old_arr = probs.copy()
 
     if r < bayesda_runs:
         out_mssg = f"Convergence reached at {r + 1} runs"
@@ -135,6 +137,7 @@ def get_regions(
     e_frame_arr2: np.ndarray,
     center: tuple[float, float],
     radius: float,
+    N_max: int = 2000,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Identify stars inside/outside the cluster region.
 
@@ -146,14 +149,29 @@ def get_regions(
     :type center: tuple[float, float]
     :param radius: Radius of the cluster.
     :type radius: float
+    :param N_max: Maximum number of stars in the cluster region.
+    :type N_max: int
 
     :return: Arrays with the cluster region, errors, field region, errors and indexes.
     :rtype: tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]
     """
     ra, dec = frame_arr[0], frame_arr[1]
-    dist = np.sqrt((ra - center[0]) ** 2 + (dec - center[1]) ** 2)
-    msk_in_rad = dist <= radius
-    cl_reg_idxs = np.arange(len(ra))[msk_in_rad]
+    dist_sq = (ra - center[0]) ** 2 + (dec - center[1]) ** 2
+    radius_sq = radius**2
+
+    msk_in_rad = dist_sq <= radius_sq
+    if msk_in_rad.sum() > N_max:
+        warnings.warn(
+            f"\nNumber of stars within the radius ({msk_in_rad.sum()}) is greater than"
+            f" the accepted maximum ({N_max}). Selecting {N_max} stars closest to center."
+            " Consider reducing the radius or employing another method to improve the performance."
+        )
+        # Select the N_cluster stars closest to the center
+        closest_idxs = np.argsort(dist_sq)[:N_max]
+        msk_in_rad = np.zeros_like(msk_in_rad, dtype=bool)
+        msk_in_rad[closest_idxs] = True
+
+    cl_reg_idxs = np.where(msk_in_rad)[0]
 
     # Cluster region inside radius
     cl_region = frame_arr[2:, msk_in_rad]
@@ -187,11 +205,7 @@ def generate_field_region(
     :rtype: tuple[np.ndarray, np.ndarray]
     """
     idxs = rng.choice(fl_region_all.shape[1], n_field, replace=False)
-
-    fl_region = fl_region_all[:, idxs]
-    e_fl_region2 = e_fl_region2_all[:, idxs]
-
-    return fl_region, e_fl_region2
+    return fl_region_all[:, idxs], e_fl_region2_all[:, idxs]
 
 
 def dataNorm(
@@ -213,28 +227,21 @@ def dataNorm(
     :rtype: tuple[np.ndarray, np.ndarray]
     """
     for tarr in (arr, e_arr):
-        for dim in tarr:
-            med, std = np.nanmedian(dim), np.nanstd(dim)
-            msk = np.logical_or(
-                dim < med - sigma_max * std, dim > med + sigma_max * std
-            )
-            dim[msk] = np.nan
+        med = np.nanmedian(tarr, axis=1, keepdims=True)
+        std = np.nanstd(tarr, axis=1, keepdims=True)
+        msk = (tarr < med - sigma_max * std) | (tarr > med + sigma_max * std)
+        tarr[msk] = np.nan
 
-    # Minimum values for all arrays
-    dmin = np.nanmin(arr, 1)
-    data_norm = arr.T - dmin
-    dmax = np.nanmax(data_norm, 0)
-    data_norm /= dmax
+    dmin = np.nanmin(arr, axis=1)  # shape (d,)
+    data_norm_T = arr.T - dmin  # (N, d)
+    dmax = np.nanmax(data_norm_T, axis=0)  # (d,)
+    data_norm_T /= dmax
 
-    # Scale errors
-    e_scaled = e_arr.T / dmax
-    # Square all uncertainties here
-    e_scaled2 = e_scaled**2
-
-    return data_norm.T, e_scaled2.T
+    e_scaled2_T = (e_arr.T / dmax) ** 2
+    return data_norm_T.T, e_scaled2_T.T
 
 
-def likelihood(
+def _likelihood_matrix(
     cl_region_T: np.ndarray,
     e_cl_region2_T: np.ndarray,
     region: np.ndarray,
@@ -275,18 +282,44 @@ def likelihood(
     :return: Array with the likelihoods.
     :rtype: np.ndarray
     """
-    arr_diff = cl_region_T - region.T[None, :]
+    diff = cl_region_T - region.T[None, :]  # (N_cl, N_r, d)
     e_sum2 = e_cl_region2_T + e_region2.T[None, :]
 
     # Handle 'nan' values. THIS IS IMPORTANT
-    arr_diff[np.isnan(arr_diff)] = 0.0
+    diff[np.isnan(diff)] = 0.0
     e_sum2[np.isnan(e_sum2)] = 1.0
 
-    Dsum = ((arr_diff) ** 2 / e_sum2).sum(axis=-1)
+    # In-place square avoids a full-size temporary
+    np.square(diff, out=diff)
+    diff /= e_sum2
+    Dsum = diff.sum(axis=-1)
+
     # Clip max values in place. THIS IS IMPORTANT
-    np.clip(Dsum, a_min=None, a_max=50.0, out=Dsum)
+    np.clip(Dsum, None, 50.0, out=Dsum)
+    np.log(e_sum2, out=e_sum2)
+    Dsum += e_sum2.sum(axis=-1)
 
-    sum_M_j = np.exp(-0.5 * Dsum) / np.sqrt(np.prod(e_sum2, axis=-1))
-    Lkl = np.nansum(sum_M_j, axis=-1)
+    return np.exp(-0.5 * Dsum)
 
-    return Lkl
+
+def _likelihood_sum_chunked(
+    cl_region_T: np.ndarray,
+    e_cl_region2_T: np.ndarray,
+    region: np.ndarray,
+    e_region2: np.ndarray,
+    chunk_size: int = 500,
+) -> np.ndarray:
+    """Summed likelihood per cluster star, chunked over field stars."""
+    n_f = region.shape[1]
+    if n_f <= chunk_size:
+        L = _likelihood_matrix(cl_region_T, e_cl_region2_T, region, e_region2)
+        return np.nansum(L, axis=-1)
+
+    out = np.zeros(cl_region_T.shape[0])
+    for start in range(0, n_f, chunk_size):
+        end = min(start + chunk_size, n_f)
+        chunk = region[:, start:end]
+        e_chunk = e_region2[:, start:end]
+        L_chunk = _likelihood_matrix(cl_region_T, e_cl_region2_T, chunk, e_chunk)
+        out += np.nansum(L_chunk, axis=-1)
+    return out
