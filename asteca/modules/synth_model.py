@@ -837,20 +837,19 @@ def gaiadr3_extlaw(
 
     X2 = X * X
     X3 = X2 * X
-    A2 = A * A
-    A3 = A2 * A
 
     ec_G = (
         _G_COEFFS[0]
         + _G_COEFFS[1] * X
         + _G_COEFFS[2] * X2
         + _G_COEFFS[3] * X3
-        + _G_COEFFS[4] * A
-        + _G_COEFFS[5] * A2
-        + _G_COEFFS[6] * A3
-        + _G_COEFFS[7] * X * A
-        + _G_COEFFS[8] * X2 * A
-        + _G_COEFFS[9] * X * A2
+        + A
+        * (
+            _G_COEFFS[4]
+            + _G_COEFFS[7] * X
+            + _G_COEFFS[8] * X2
+            + A * (_G_COEFFS[5] + _G_COEFFS[9] * X + A * _G_COEFFS[6])
+        )
     )
 
     ec_BPRP = (
@@ -858,12 +857,13 @@ def gaiadr3_extlaw(
         + _BPRP_COEFFS[1] * X
         + _BPRP_COEFFS[2] * X2
         + _BPRP_COEFFS[3] * X3
-        + _BPRP_COEFFS[4] * A
-        + _BPRP_COEFFS[5] * A2
-        + _BPRP_COEFFS[6] * A3
-        + _BPRP_COEFFS[7] * X * A
-        + _BPRP_COEFFS[8] * X2 * A
-        + _BPRP_COEFFS[9] * X * A2
+        + A
+        * (
+            _BPRP_COEFFS[4]
+            + _BPRP_COEFFS[7] * X
+            + _BPRP_COEFFS[8] * X2
+            + A * (_BPRP_COEFFS[5] + _BPRP_COEFFS[9] * X + A * _BPRP_COEFFS[6])
+        )
     )
 
     return ec_G, ec_BPRP
