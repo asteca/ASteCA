@@ -141,10 +141,9 @@ class Synthetic:
             self.m_ini_idx = 3  # (0->mag, 1->color, 2->color2, 3->mass_ini)
         # Set tolerances for the ranges of the isochrones in `generate()`
         self.age_tol = 0.01
+        self.met_tol = 0.001  # z
         if self.isochs.z_to_FeH is not None:
-            self.met_tol = 0.01  # FeH
-        else:
-            self.met_tol = 0.001  # z
+            self.met_tol = 0.01  # FeH            
 
         # Get extinction coefficients for these filters
         self.ext_coefs = []  # It is important to pass an empty list because the
