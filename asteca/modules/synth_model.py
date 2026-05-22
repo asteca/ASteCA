@@ -363,8 +363,8 @@ def zaWAverage(
     al: int,
     ah: int,
 ) -> np.ndarray:
-    """Generate a new "weighted" isochrone from the four closest points in the
-    (z, a) grid.
+    """Generate a new weighted isochrone using bilinear interpolation over the
+    orthogonal (z, loga) grid space.
 
     theor_tracks = [m1, m2, .., mN]
     mX = [age1, age2, ..., ageM]
@@ -403,9 +403,6 @@ def zaWAverage(
     :returns: Weighted isochrone.
     :rtype: np.ndarray
     """
-    # Distances between the (z, a) points in the 'model', and the four
-    # points in the (z, a) grid that contain the model point.
-    # Fast euclidean distance: https://stackoverflow.com/a/47775357/1391441
 
     # The four points in the (z, age) grid that define the box that contains
     # the model value (z_model, a_model)
@@ -414,63 +411,42 @@ def zaWAverage(
     a1 = met_age_dict["loga"][al]
     a2 = met_age_dict["loga"][ah]
 
-    # OLD Feb 2026
-    # pts = np.array([(z1, a1), (z1, a2), (z2, a1), (z2, a2)])
-    # a_min_b = np.array([(z_model, a_model)]) - pts
-    # # Don't take the square root, it's not necessary
-    # dist = np.einsum("ij,ij->i", a_min_b, a_min_b)
+    # Compute normalized coordinates (t, u) within the local cell bounds
+    # Safe division handling for edge cases where grid width might be zero
+    dz = z2 - z1
+    da = a2 - a1
 
-    # Use direct arithmetic instead of array operations
-    # Calculate squared distances (skip sqrt since we only need relative values)
-    dz1 = z_model - z1
-    dz2 = z_model - z2
-    da1 = a_model - a1
-    da2 = a_model - a2
-    dist = np.array(
-        [
-            dz1 * dz1 + da1 * da1,  # (z1, a1)
-            dz1 * dz1 + da2 * da2,  # (z1, a2)
-            dz2 * dz2 + da1 * da1,  # (z2, a1)
-            dz2 * dz2 + da2 * da2,  # (z2, a2)
-        ]
-    )
+    t = (z_model - z1) / dz if dz > 1e-15 else 0.0
+    u = (a_model - a1) / da if da > 1e-15 else 0.0
 
-    # Index to the minimum dist value
-    idx_dist_min = np.argmin(dist)
-    ma = ((ml, al), (ml, ah), (mh, al), (mh, ah))
-    # Index to the corresponding (z, a) indexes
-    m0, a0 = ma[idx_dist_min]
+    # Compute bilinear basis weights
+    # Let om_t = (1 - t) and om_u = (1 - u)
+    om_t = 1.0 - t
+    om_u = 1.0 - u
 
-    # If the model has a 0. distance to the closest isochrone, return that isochrone
-    if dist[idx_dist_min] == 0.0:
-        return np.array(theor_tracks[m0][a0])
+    # Weights
+    w11 = om_t * om_u  # Weight for (ml, al)
+    w12 = om_t * u  # Weight for (ml, ah)
+    w21 = t * om_u  # Weight for (mh, al)
+    w22 = t * u  # Weight for (mh, ah)
 
-    # Weighted average by the (inverse) distance to the four (z, a) grid points
-    inv_d = 1.0 / dist
-    weights = inv_d / inv_d.sum()
-    # Stack the four isochrones
-    isoch_stack = np.array(
-        [
-            theor_tracks[ml][al],
-            theor_tracks[ml][ah],
-            theor_tracks[mh][al],
-            theor_tracks[mh][ah],
-        ]
-    )
-    # Weighted average: einsum is faster than manual weight * array operations
-    # isochrone = (
-    #     theor_tracks[ml][al] * weights[0]
-    #     + theor_tracks[ml][ah] * weights[1]
-    #     + theor_tracks[mh][al] * weights[2]
-    #     + theor_tracks[mh][ah] * weights[3]
-    # )
-    isochrone = np.einsum("i,i...->...", weights, isoch_stack)
+    # Core interpolation via in-place accumulation
+    isochrone = theor_tracks[ml][al] * w11
+    isochrone += theor_tracks[ml][ah] * w12
+    isochrone += theor_tracks[mh][al] * w21
+    isochrone += theor_tracks[mh][ah] * w22
 
-    # DO NOT average the masses or their distribution will be lost. We use the
-    # mass values from the closest isochrone.
-    isochrone[m_ini_idx] = theor_tracks[m0][a0][m_ini_idx]
+    # Identify the closest grid point using a geometric boundary shortcut.
+    # Since t and u map strictly to [0, 1], crossing 0.5 determines the closest node.
+    m0 = mh if t >= 0.5 else ml
+    a0 = ah if u >= 0.5 else al
+
+    # DO NOT average the masses or their distribution will be lost.
+    # Overwrite mutated mass values with the exact discrete distribution from the closest node
+    closest_iso = theor_tracks[m0][a0]
+    isochrone[m_ini_idx] = closest_iso[m_ini_idx]
     # Now for the secondary masses
-    isochrone[m_ini_idx + 1] = theor_tracks[m0][a0][m_ini_idx + 1]
+    isochrone[m_ini_idx + 1] = closest_iso[m_ini_idx + 1]
 
     # temp_plot(
     #     "OLD",
@@ -487,7 +463,7 @@ def zaWAverage(
     #     weights,
     # )
 
-    return np.ascontiguousarray(isochrone)
+    return isochrone
 
 
 def temp_plot(
