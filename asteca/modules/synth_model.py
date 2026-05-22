@@ -947,12 +947,25 @@ def mass_interp(
     return isoch_mass
 
 
+# import _interp_mass_isoch as _c
+
+# def interp_mass_isoch(
+#     isoch_cut: np.ndarray,
+#     mass_ini: np.ndarray,
+#     mass_dist: np.ndarray,
+# ) -> np.ndarray:
+#     # C extension requires float64 C-contiguous arrays
+#     return _c.interp_mass_isoch(
+#         np.ascontiguousarray(isoch_cut, dtype=np.float64),
+#         np.ascontiguousarray(mass_ini,  dtype=np.float64),
+#         np.ascontiguousarray(mass_dist, dtype=np.float64),
+#     )
+
+
 def interp_mass_isoch(
     isoch_cut: np.ndarray,
     mass_ini: np.ndarray,
     mass_dist: np.ndarray,
-    # m_ini_idx: int,
-    # binar_flag: bool,
 ) -> np.ndarray:
     """Find where in the original data, the values to interpolate would be inserted.
 
@@ -997,6 +1010,17 @@ def interp_mass_isoch(
     # *****************************************************************************
 
     # *****************************************************************************
+    # # This approach is 3X slower
+    # isoch_T = np.ascontiguousarray(isoch_cut.T)   # shape (N_iso, D)
+
+    # isoch_mass = np.empty((len(mass_dist), isoch_cut.shape[0]))  # (N_samp, D)
+    # for i in range(isoch_cut.shape[0]):           # iterate over D rows
+    #     isoch_mass[:, i] = np.interp(mass_dist, mass_ini, isoch_T[:, i])
+
+    # isoch_mass = isoch_mass.T                     # back to (D, N_samp)
+    # *****************************************************************************
+
+    # *****************************************************************************
     # This is slower for more than 5 dimensions, and *very* slightly faster for lower
     # dimensions
     # isoch_mass = np.empty([isoch_cut.shape[0], mass_dist.size])
@@ -1028,19 +1052,6 @@ def interp_mass_isoch(
     #     # Random noise to binary magnitude
     #     isoch_mass[m_ini_idx + 2] += isoch_mass[m_ini_idx + 2] * m_perc
     # *****************************************************************************
-
-    # import matplotlib.pyplot as plt
-    # # plt.subplot(121)
-    # # plt.title("interp1d")
-    # plt.scatter(isoch_mass0[1], isoch_mass0[0], alpha=0.25, label="interp1d")
-    # # plt.gca().invert_yaxis()
-    # # plt.subplot(122)
-    # # plt.title("searchsorted")
-    # plt.scatter(isoch_mass[1], isoch_mass[0], alpha=0.25, label="searchsorted")
-    # plt.gca().invert_yaxis()
-    # plt.legend()
-    # plt.show()
-    # # breakpoint()
 
     return isoch_mass
 
