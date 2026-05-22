@@ -78,7 +78,7 @@ class Likelihood:
 
         # Obtain data used by the ``likelihood.get()`` method
         self.ranges, self.Nbins = lpriv.bin_edges_f(bin_method, self.mag, colors)
-        self.cl_z_idx, self.cl_histo_f_z = lpriv.lkl_data(
+        self.cl_z_idx, self.cl_histo_f_z, self.table2d = lpriv.lkl_data(
             self.mag, colors, self.ranges, self.Nbins
         )
         self.obs_mag_median = np.nanmedian(self.mag).astype(float)
@@ -132,6 +132,7 @@ class Likelihood:
                 self.offsets,
                 self.bin_sizes,
                 self.total_bins,
+                self.table2d,
                 self.max_lkl,
                 synth_clust,
             )

@@ -55,7 +55,7 @@ def bin_edges_f(
 
 def lkl_data(
     mag_v: np.ndarray, colors_v: list[np.ndarray], ranges: list, Nbins: list
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Prepare data for likelihood calculation.
 
     This function calculates the Hess diagram of the observed cluster and
@@ -70,8 +70,9 @@ def lkl_data(
     :param Nbins: Per-dimension total number of bins.
     :type Nbins: list
 
-    :return: Indexes of bins with stars and flattened histogram.
-    :rtype: tuple[np.ndarray, np.ndarray]
+    :return: Indexes of bins with stars, flattened histogram, and pre-computed table
+        for likelihood calculation.
+    :rtype: tuple[np.ndarray, np.ndarray, np.ndarray]
     """
 
     # Obtain histogram for observed cluster.
@@ -100,10 +101,36 @@ def lkl_data(
     cl_z_idx = cl_histo_f != 0
 
     # Remove all bins where n_i=0 (no observed stars)
-    cl_histo_f_z = cl_histo_f[cl_z_idx]
+    cl_histo_f_z = cl_histo_f[cl_z_idx].astype(int)
+
+    # table2d[n, m]: pre-computed table for likelihood calculation, where n is the
+    # number of observed stars in a bin and m is the number of synthetic stars in that
+    # bin. This table is used to speed up the likelihood calculation, as it avoids the
+    # need to compute the gammaln function for each bin and each synthetic cluster.
+    # The table is computed for all possible values of n and m up to a certain maximum,
+    # which is determined based on the observed histogram.
+
+    # The maximum number of synthetic stars in a bin should be large enough to cover
+    # the range of possible values given the number of observed stars, but not too
+    # large to avoid unnecessary computation. The following heuristic is used to
+    # determine the maximum number of synthetic stars:
+    N_obs = len(mag_v)
+    if N_obs < 50:
+        N_st_max = N_obs * 5
+    elif N_obs < 500:
+        N_st_max = N_obs * 2
+    else:
+        N_st_max = N_obs * 0.5
+    # Create a 2D table for all combinations of n and m, where n is the number of
+    # observed stars in a bin and m is the number of synthetic stars in that bin.
+    # The table is computed using the gammaln function, which is used in the
+    # likelihood calculation.
+    n_idx, m_idx = np.arange(cl_histo_f_z.max() + 1), np.arange(N_st_max)
+    N2, M2 = np.meshgrid(n_idx, m_idx, indexing="ij")
+    table2d = gammaln(N2 + M2 + 0.5) - gammaln(M2 + 0.5)
 
     # These variables are used by the likelihood functions called by the get() method
-    return cl_z_idx, cl_histo_f_z
+    return cl_z_idx, cl_histo_f_z, table2d
 
 
 def tremmel(
@@ -116,6 +143,7 @@ def tremmel(
     offsets: np.ndarray,
     bin_sizes: list,
     total_bins: int,
+    table2d: np.ndarray,
     max_lkl: None | float,
     synth_clust: np.ndarray,
 ) -> float:
@@ -130,9 +158,9 @@ def tremmel(
     :type cl_z_idx: np.ndarray
     :param cl_histo_f_z: Flattened observed Hess diagram with the empty bins removed
     :type cl_histo_f_z: np.ndarray
-    :param obs_mag_median: Medina observed magnitude
+    :param obs_mag_median: Median observed magnitude
     :type obs_mag_median: float
-    :param obs_col_median: Medina observed color
+    :param obs_col_median: Median observed color
     :type obs_col_median: float
     :param offsets: Offsets for direct array assignment
     :type offsets: np.ndarray
@@ -140,6 +168,8 @@ def tremmel(
     :type bin_sizes: list
     :param total_bins: Total number of bins in the Hess diagram, used for normalization
     :type total_bins: int
+    :param table2d: Pre-computed table for likelihood calculation.
+    :type table2d: np.ndarray
     :param max_lkl: Maximum likelihood value, used for normalization
     :type max_lkl: None | float
     :param synth_clust: Synthetic cluster data.
@@ -149,36 +179,50 @@ def tremmel(
     :rtype: float
     """
     # If synthetic cluster is empty, assign '10' indicating a large distance
-    if not synth_clust.any():
+    if synth_clust.size == 0:
         return 10
 
     # Obtain histogram for the synthetic cluster.
     mag, colors = synth_clust[0], synth_clust[1:]
 
-    syn_histo_f = np.empty(total_bins, dtype=np.float64)
-    for i, col in enumerate(colors):
+    if len(colors) == 1:
         hess_diag = histogram2d(
             mag,
-            col,
-            range=[
-                [ranges[0][0], ranges[0][1]],
-                [ranges[i + 1][0], ranges[i + 1][1]],
-            ],
-            bins=[Nbins[0], Nbins[i + 1]],
+            colors[0],
+            range=[[ranges[0][0], ranges[0][1]], [ranges[1][0], ranges[1][1]]],
+            bins=[Nbins[0], Nbins[1]],
         )
-        # Direct array assignment using pre-computed offset and size
-        offset = offsets[i]
-        # Flatten array and assign to the correct position in syn_histo_f
-        syn_histo_f[offset : offset + bin_sizes[i]] = hess_diag.ravel()
+        syn_histo_f_z = hess_diag.ravel()[cl_z_idx]
+    else:
+        syn_histo_f = np.empty(total_bins, dtype=np.float64)
+        for i, col in enumerate(colors):
+            hess_diag = histogram2d(
+                mag,
+                col,
+                range=[
+                    [ranges[0][0], ranges[0][1]],
+                    [ranges[i + 1][0], ranges[i + 1][1]],
+                ],
+                bins=[Nbins[0], Nbins[i + 1]],
+            )
+            # Direct array assignment using pre-computed offset and size
+            offset = offsets[i]
+            # Flatten array and assign to the correct position in syn_histo_f
+            syn_histo_f[offset : offset + bin_sizes[i]] = hess_diag.ravel()
 
-    # Remove all bins where n_i = 0 (no observed stars).
-    syn_histo_f_z = syn_histo_f[cl_z_idx]
+        # Remove all bins where n_i = 0 (no observed stars).
+        syn_histo_f_z = syn_histo_f[cl_z_idx]
 
     # The 1/2 term arises from using a Jeffreys prior (Eq 8 in Tremmel et al). Using a
     # flat prior instead, that 1/2 term becomes a 1
-    tremmel_lkl = np.sum(
-        gammaln(cl_histo_f_z + syn_histo_f_z + 0.5) - gammaln(syn_histo_f_z + 0.5)
-    )
+    # try:
+    tremmel_lkl = table2d[cl_histo_f_z, syn_histo_f_z.astype(int)].sum()
+    # except IndexError:
+    #     raise IndexError(
+    #         "The synthetic array contains more stars than expected. Check that the\n"
+    #         + " Likelihood object and the calibration of the Synthetic object\n"
+    #         + " were performed using the same Cluster object."
+    #     )
 
     # Attempted adding some weights, did not help
     # tremmel_lkl = gammaln(cl_histo_f_z + syn_histo_f_z + 0.5) - gammaln(syn_histo_f_z + 0.5)
