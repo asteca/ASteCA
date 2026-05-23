@@ -119,6 +119,8 @@ def lkl_data(
         N_st_max = N_obs * 5
     elif N_obs < 500:
         N_st_max = N_obs * 2
+    elif N_obs < 1000:
+        N_st_max = N_obs * 1
     else:
         N_st_max = N_obs * 0.5
     # Create a 2D table for all combinations of n and m, where n is the number of
