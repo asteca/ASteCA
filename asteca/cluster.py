@@ -546,7 +546,8 @@ class Cluster:
                 or hasattr(self, "plx_c") is False
             ):
                 raise AttributeError(
-                    "The arguments (pmra, pmde, plx, pms_c, plx_c) must be present as a 'cluster' attribute"
+                    "The arguments (pmra, pmde, plx, pms_c, plx_c) must be present "
+                    + "as a 'cluster' attribute"
                 )
             idx_selected = nm.ripley_nmembs(
                 xv,
