@@ -1,32 +1,18 @@
-import subprocess
+import tomllib
 
 # -- Project information -----------------------------------------------------
 project = "ASteCA"
 copyright = "2024, Gabriel I Perren"
 author = "Gabriel I Perren"
 
-try:
-    # Extract latest tag version
-    __version__ = (
-        subprocess.check_output(
-            ["git", "tag", "--sort=-creatordate"],
-            stderr=subprocess.DEVNULL,
-        )
-        .decode("utf-8")
-        .split("\n")[0]
-        .replace("v", "")
-        .strip()
-    )
-except subprocess.CalledProcessError:
-    # Read version from pyproject.toml
-    with open("../pyproject.toml", encoding="utf-8") as pyproject_toml:
-        __version__ = (
-            next(line for line in pyproject_toml if line.startswith("version"))
-            .split("=")[1]
-            .strip("'\"\n ")
-        )
-    # remove "-dev"
+# 'pyproject.toml' is one dir up
+with open("../pyproject.toml", "rb") as f:
+    data = tomllib.load(f)
+__version__ = data["project"]["version"]
+if "-dev" in __version__:
+    # Remove "-dev"
     __version__ = __version__.replace("-dev", "")
+    # Decrement patch version by 1
     major, minor, patch = map(int, __version__.split("."))
     if patch > 0:
         patch -= 1
@@ -42,9 +28,7 @@ except subprocess.CalledProcessError:
                 raise ValueError("Cannot decrement version below 0.0.0")
     __version__ = f"{major}.{minor}.{patch}"
 
-# The full version, including alpha/beta/rc tags
 version = __version__
-release = __version__
 
 rst_epilog = """.. |ProjectVersion| replace:: **{versionnum}**""".format(
     versionnum=version,

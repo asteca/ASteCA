@@ -4,6 +4,9 @@ pyabc
 astroquery
 fastparquet
 pandas
+ruff
+ty
+pyrefly
 pydoclint
 pyinstrument
 jupyterlab

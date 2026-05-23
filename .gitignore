@@ -5,9 +5,16 @@ WARP.md
 # general files
 *.pyc
 *.ipynb_checkpoints
+*.so
+## Not used (yet?)
+_interp_mass*.c
+_interp_mass*.so
+setup.py
+
 
 # folders
 /dist*
+/build*
 /tests*
 /docs/build/*
 /helpers/*

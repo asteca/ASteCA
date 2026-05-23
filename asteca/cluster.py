@@ -546,7 +546,8 @@ class Cluster:
                 or hasattr(self, "plx_c") is False
             ):
                 raise AttributeError(
-                    "The arguments (pmra, pmde, plx, pms_c, plx_c) must be present as a 'cluster' attribute"
+                    "The arguments (pmra, pmde, plx, pms_c, plx_c) must be present "
+                    + "as a 'cluster' attribute"
                 )
             idx_selected = nm.ripley_nmembs(
                 xv,
@@ -586,3 +587,21 @@ class Cluster:
         self.N_cluster = N_cluster
         self._vp("\nNumber of members estimated")
         self._vp(f"N_cluster      : {N_cluster}", 1)
+
+    # def select_members(self, prob_cut: float = 0.5):
+    #     if self.probs is None:
+    #         raise AttributeError("'probs' attribute is not defined")
+
+    #     msk = self.probs > prob_cut
+    #     if not msk.any():
+    #         raise ValueError(f"No members found with probability > {prob_cut}")
+
+    #     # Apply msk to self object
+    #     for attr in vars(self):
+    #         arr = getattr(self, attr)
+    #         if isinstance(arr, np.ndarray) and len(arr) == self.N_stars:
+    #             setattr(self, attr, arr[msk])
+
+    #     self._vp(f"\nMembers selected with probability > {prob_cut}")
+    #     self.N_stars = msk.sum()
+    #     self._vp(f"N_members       : {self.N_stars}", 1)

@@ -14,7 +14,7 @@ class Membership:
     were we originally introduced ``ASteCA``. The method requires ``(RA, DEC)``
     data and will use any extra data dimensions stored in the
     :py:class:`Cluster <asteca.cluster.Cluster>` object, i.e.: photometry,
-    proper motions, and parallax. A minimum of two data dimensions are required.
+    proper motions, and parallax.
 
     :py:meth:`fastmp` : The algorithm was described in detail in
     the `article <https://academic.oup.com/mnras/article/526/3/4107/7276628>`__
@@ -151,10 +151,10 @@ class Membership:
         X = np.array(X)
         e_X = np.array(e_X)
 
-        if X.ndim < 3:
+        if X.shape[0] < 3:
             raise ValueError(
                 "At least one data dimension beyond (RA, DEC) is required"
-                + f" for the Bayesian DA method, {3 - X.ndim} found"
+                + " for the Bayesian DA method"
             )
 
         self._vp("\nRunning Bayesian DA")

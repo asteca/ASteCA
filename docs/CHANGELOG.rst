@@ -7,6 +7,18 @@ Changelog
 #########
 
 
+`[v0.6.8] <https://github.com/asteca/asteca/releases/tag/v0.6.8>`__ - 2026-05-23
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+- Improved performance of `Synthetic.generate() + Likelihood.get()` by ~15%:
+   - Improved performance of `Likelihood.get()` by ~50%
+   - Modified (z, loga) interpolation (from inverse weight to bilinear) and improved
+     performance of `zaWAverage()` by ~30%
+   - Slight performance improvement of `GAIADR3` extinction law
+- Allow calling `Synthetic.generate()` with no dictionary of parameters (empty default)
+
+
+
 `[v0.6.7] <https://github.com/asteca/asteca/releases/tag/v0.6.7>`__ - 2026-05-13
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

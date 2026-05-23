@@ -141,10 +141,9 @@ class Synthetic:
             self.m_ini_idx = 3  # (0->mag, 1->color, 2->color2, 3->mass_ini)
         # Set tolerances for the ranges of the isochrones in `generate()`
         self.age_tol = 0.01
+        self.met_tol = 0.001  # z
         if self.isochs.z_to_FeH is not None:
-            self.met_tol = 0.01  # FeH
-        else:
-            self.met_tol = 0.001  # z
+            self.met_tol = 0.01  # FeH            
 
         # Get extinction coefficients for these filters
         self.ext_coefs = []  # It is important to pass an empty list because the
@@ -308,7 +307,7 @@ class Synthetic:
 
     def generate(
         self,
-        params: dict,
+        params: dict = {},
         N_stars: int = 100,
     ) -> np.ndarray | tuple[np.ndarray, np.ndarray]:
         """Generate a synthetic cluster.
@@ -317,9 +316,14 @@ class Synthetic:
         the ``params`` dictionary and the already calibrated
         :py:class:`Synthetic` object.
 
+        The ``params``dictionary can include values for all or some of the parameters.
+        E.g. of a dictionary with some fundamental parameters:
+        ``params = {met: 0.0152, loga: 8.1, Av: 0.2, DR: 0., Rv: 3.1, dm: 9.7}``
+        If no ``params`` dictionary is given, an empty one is used and the default values
+        defined in the :py:class:`Synthetic` object are used to generate the synthetic
+        cluster.
+
         :param params: Dictionary containing the values for the fundamental parameters.
-            The dictionary must include values for all the parameters, e.g.:
-            ``params = {met: 0.0152, loga: 8.1, alpha: 0.1, beta: 1, Av: 0.2, DR: 0., Rv: 3.1, dm: 9.7}``
         :type params: dict
         :param N_stars: Number of synthetic stars to generate
         :type N_stars: int
@@ -622,8 +626,17 @@ class Synthetic:
         - ``M_actual = M_obs + M_phot``
         - ``M_init = M_actual + M_evol + M_dyn``
 
-        :param radec_c: Center coordinates in ``(RA, DEC)``. If ``None``, the ``rho_amb``
-            parameter must be given
+        If ``rho_amb`` is not provided (``None``), then the method will try to estimate
+        it using the cluster's position and a model for the Galaxy's potential.
+        In this case, the coordinates of the cluster ``radec_c`` are required to
+        estimate the ambient density. If these are also ``None``, the method
+        will try to resolve the coordinates from the ``cluster_ra`` and ``cluster_dec``
+        attributes, stored when calling the ``calibrate()`` method with a
+        :py:class:`Cluster` object.
+        If these attributes are missing, a ValueError is raised because the
+        ambient density cannot be estimated without coordinates.
+
+        :param radec_c: Center coordinates in ``(RA, DEC)``
         :type radec_c: tuple | None
         :param rho_amb: Ambient density [:math:`M_{\odot}\,pc^{-3}`]. If ``None``, it
             is estimated using the cluster's position (``radec_c``) and a model for the
