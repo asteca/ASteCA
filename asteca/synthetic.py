@@ -143,7 +143,24 @@ class Synthetic:
         self.age_tol = 0.01
         self.met_tol = 0.001  # z
         if self.isochs.z_to_FeH is not None:
-            self.met_tol = 0.01  # FeH            
+            self.met_tol = 0.01  # FeH
+
+        if self.ext_law in ("GAIADR3",):
+            if (
+                self.isochs.magnitude_effl is not None
+                or self.isochs.color_effl is not None
+            ):
+                warnings.warn(
+                    f"\nExtinction law '{self.ext_law}' does not require effective lambda"
+                    + " values for the\nmagnitude and first color (assumed to be 'G' "
+                    + "and 'BP-RP', respectively)."
+                )
+
+            if self.isochs.color2_effl is not None:
+                raise ValueError(
+                    f"\nExtinction law '{self.ext_law}' does not apply to the second color.\n"
+                    + "Use the 'CCMO' extinction law if you need to process a second color"
+                )
 
         # Get extinction coefficients for these filters
         self.ext_coefs = []  # It is important to pass an empty list because the
@@ -154,22 +171,11 @@ class Synthetic:
                     f"Extinction law '{self.ext_law}' requires effective lambda\n"
                     + "values for the magnitude and first color."
                 )
-
             self.ext_coefs = scp.ccmo_ext_coeffs(
                 self.isochs.magnitude_effl,
                 self.isochs.color_effl,
                 self.isochs.color2_effl,
             )
-        if self.ext_law == "GAIADR3":
-            if (
-                self.isochs.magnitude_effl is not None
-                or self.isochs.color_effl is not None
-            ):
-                warnings.warn(
-                    f"\nExtinction law '{self.ext_law}' does not require effective lambda"
-                    + " values for the\nmagnitude and first color (assumed to be 'G' "
-                    + "and 'BP-RP', respectively)."
-                )
 
         # Generate random floats used by `generate()`
         self.rand_floats = scp.randVals(self.rng, self.theor_tracks, self.st_dist_mass)
