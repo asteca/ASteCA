@@ -543,7 +543,7 @@ def get_2D_center(
     :param y: Y coordinates.
     :type y: np.ndarray
     :param N_max: Maximum number of stars to use for performance reasons, defaults
-     to 10_000
+         to 10_000
     :type N_max: int
 
     :return: Center coordinates in (x, y).

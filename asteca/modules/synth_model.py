@@ -851,6 +851,9 @@ def gaiadr3_extlaw(
     The 'coeffs' values are the main sequence values taken from:
     https://www.cosmos.esa.int/web/gaia/edr3-extinction-law
 
+    "The coefficients should not be extrapolated outside the extinction and
+    temperature ranges used, the latter corresponding to -0.06<(GBP-GRP)0< 2.5"
+
     Tried (an failed) enhancing the performance with:
 
     1. Lookup table (LUT)
