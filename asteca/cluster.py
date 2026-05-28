@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import numpy as np
-
 if TYPE_CHECKING:
     import pandas as pd
 import warnings
+
+import numpy as np
 
 
 class Cluster:
@@ -54,9 +54,17 @@ class Cluster:
     :type pmde: np.ndarray | None
     :param e_pmde: Array that contains the DEC proper motion's uncertainty
     :type e_pmde: np.ndarray | None
-    :param N_clust_min: Lower limit on cluster size assumed by the membership estimation algorithm
+    :param probs: Array that contains the membership probabilities for each star. The
+        ``membership`` method stores here the estimated probabilities, but this
+        attribute can be used to store membership probabilities estimated in other ways.
+        The ``select_members`` method uses these values to select stars with
+        probabilities above a given threshold.
+    :type probs: np.ndarray | None
+    :param N_clust_min: Lower limit on cluster size assumed by the membership
+        estimation algorithm
     :type N_clust_min: int
-    :param N_clust_max: Upper limit on cluster size assumed by the membership estimation algorithm
+    :param N_clust_max: Upper limit on cluster size assumed by the membership
+        estimation algorithm
     :type N_clust_max: int
     :param verbose: Verbose level. A value of ``0`` hides all output
     :type verbose: int
@@ -85,6 +93,7 @@ class Cluster:
         e_pmra: np.ndarray | None = None,
         pmde: np.ndarray | None = None,
         e_pmde: np.ndarray | None = None,
+        probs: np.ndarray | None = None,
         N_clust_min: int = 25,
         N_clust_max: int = 2000,
         verbose: int = 1,
@@ -107,9 +116,42 @@ class Cluster:
         self.e_plx = e_plx
         self.e_pmra = e_pmra
         self.e_pmde = e_pmde
+        self.probs = probs
         self.N_clust_min = N_clust_min
         self.N_clust_max = N_clust_max
         self.verbose = verbose
+
+        # Detect generation of empty Cluster object
+        none_attrs = [
+            "cluster_name",
+            "UCC_members_file",
+            "ra",
+            "dec",
+            "mag",
+            "max_mag",
+            "max_mag_perc",
+            "e_mag",
+            "color",
+            "e_color",
+            "color2",
+            "e_color2",
+            "plx",
+            "e_plx",
+            "pmra",
+            "e_pmra",
+            "pmde",
+            "e_pmde",
+            "probs",
+        ]
+        # Extract data from defined arrays
+        all_none = True
+        for attr in none_attrs:
+            if getattr(self, attr) is not None:
+                all_none = False
+                break
+        if all_none:
+            self._vp("\nEmpty Cluster object created", 1)
+            return
 
         if self.cluster_name is not None and self.UCC_members_file is None:
             raise ValueError(
@@ -127,12 +169,21 @@ class Cluster:
             self._vp("\nInstantiating cluster from data")
             cols_read, mag_lim = self._load_column_data()
 
+        if not cols_read:
+            raise ValueError("No column names defined for cluster")
+
         self._vp(f"Columns read   : {', '.join(cols_read)}", 1)
         if mag_lim is not None:
             self._vp(f"Max magnitude  : {mag_lim:.2f}", 1)
         self._vp(f"N_stars        : {self.N_stars}", 1)
         self._vp(f"N_clust_min    : {self.N_clust_min}", 1)
         self._vp(f"N_clust_max    : {self.N_clust_max}", 1)
+
+        # Initialize membership object
+        from .membership import Membership
+
+        self.membership = Membership(self)
+
         self._vp("Cluster object generated")
 
     def _vp(self, mssg: str, level: int = 0) -> None:
@@ -141,10 +192,10 @@ class Cluster:
             print(mssg)
 
     def _load_UCC_data(self) -> tuple[list, float | None]:
-        if (
-            self.UCC_members_file is None
-            or type(self.UCC_members_file).__module__.startswith("pandas") is False
-        ):
+        """Load cluster data from UCC members file"""
+        import pandas as pd
+
+        if not isinstance(self.UCC_members_file, pd.DataFrame):
             raise TypeError("'UCC_members_file' must be a Pandas DataFrame")
 
         if not isinstance(self.cluster_name, str):
@@ -167,11 +218,6 @@ class Cluster:
         cluster_df = self.UCC_members_file[
             self.UCC_members_file["name"] == cluster_fname
         ]
-        if len(cluster_df) == 0:
-            raise ValueError(
-                f"No data found for cluster name '{self.cluster_name}' in UCC file"
-            )
-
         col_map = {
             "ra": "RA_ICRS",
             "dec": "DE_ICRS",
@@ -208,6 +254,7 @@ class Cluster:
         pairs = [
             ("ra", None),
             ("dec", None),
+            ("probs", None),
             ("mag", "e_mag"),
             ("color", "e_color"),
             ("color2", "e_color2"),
@@ -237,9 +284,9 @@ class Cluster:
 
         # Drop None values from list
         cols_read = [col for col in cols_read if col is not None]
-        if not cols_read:
-            raise ValueError("No column names defined for cluster")
 
+        if not N_stars_lst:
+            raise ValueError("No data arrays provided")
         if len(set(N_stars_lst)) > 1:
             raise ValueError("Data arrays have different lengths")
         if N_stars_lst[0] == 0:
@@ -256,10 +303,6 @@ class Cluster:
         self, cols_read: list, mag_arr: np.ndarray
     ) -> tuple[float | None, int]:
         """Apply magnitude cut"""
-
-        if self.max_mag is not None and self.max_mag_perc is not None:
-            raise ValueError("Only one of 'max_mag' or 'max_mag_perc' can be provided")
-
         if self.max_mag is not None:
             mag_lim = self.max_mag
         elif self.max_mag_perc is not None:
@@ -381,7 +424,7 @@ class Cluster:
 
             if c_str == "radec_c":
                 self.radec_c = (x_c, y_c)
-            if c_str == "pms_c":
+            elif c_str == "pms_c":
                 self.pms_c = (x_c, y_c)
 
             mssg = "{}        : ({:.4f}, {:.4f})".format(c_str, x_c, y_c)
@@ -587,21 +630,3 @@ class Cluster:
         self.N_cluster = N_cluster
         self._vp("\nNumber of members estimated")
         self._vp(f"N_cluster      : {N_cluster}", 1)
-
-    # def select_members(self, prob_cut: float = 0.5):
-    #     if self.probs is None:
-    #         raise AttributeError("'probs' attribute is not defined")
-
-    #     msk = self.probs > prob_cut
-    #     if not msk.any():
-    #         raise ValueError(f"No members found with probability > {prob_cut}")
-
-    #     # Apply msk to self object
-    #     for attr in vars(self):
-    #         arr = getattr(self, attr)
-    #         if isinstance(arr, np.ndarray) and len(arr) == self.N_stars:
-    #             setattr(self, attr, arr[msk])
-
-    #     self._vp(f"\nMembers selected with probability > {prob_cut}")
-    #     self.N_stars = msk.sum()
-    #     self._vp(f"N_members       : {self.N_stars}", 1)

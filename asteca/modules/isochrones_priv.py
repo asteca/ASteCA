@@ -682,7 +682,7 @@ def reshape_isochrones(
 
     theor_tracks = [m1, m2, .., mN]
     mX = [age1, age2, ..., ageM]
-    ageX = [f,.., c1, c2,.., Mini, fb,.., c1b, c2b,.., Minib]
+    ageX = [f, c1, c2,.., Mini, fb, c1b, c2b,.., Minib]
 
     where:
     N     : number of metallicities in grid

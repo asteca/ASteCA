@@ -7,50 +7,61 @@ Changelog
 #########
 
 
+`[v0.6.9] <https://github.com/asteca/asteca/releases/tag/v0.6.9>`__ - 2026-05-28
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+- The methods in the ``Membership`` class can be applied from the ``Cluster`` class
+- Added the ``Membership.select_members()`` method to filter a ``Cluster`` object
+  by membership probabilities
+
+
+
+
+
 `[v0.6.8] <https://github.com/asteca/asteca/releases/tag/v0.6.8>`__ - 2026-05-23
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-- Improved performance of `Synthetic.generate() + Likelihood.get()` by ~15%:
-   - Improved performance of `Likelihood.get()` by ~50%
+- Improved performance of ``Synthetic.generate() + Likelihood.get()`` by ~15%:
+   - Improved performance of ``Likelihood.get()`` by ~50%
    - Modified (z, loga) interpolation (from inverse weight to bilinear) and improved
-     performance of `zaWAverage()` by ~30%
-   - Slight performance improvement of `GAIADR3` extinction law
-- Allow calling `Synthetic.generate()` with no dictionary of parameters (empty default)
+     performance of ``zaWAverage()`` by ~30%
+   - Slight performance improvement of ``GAIADR3`` extinction law
+- Allow calling ``Synthetic.generate()`` with no dictionary of parameters (empty default)
 
 
 
 `[v0.6.7] <https://github.com/asteca/asteca/releases/tag/v0.6.7>`__ - 2026-05-13
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-- Improved performance of `Synthetic.generate()` method by ~12%
+- Improved performance of ``Synthetic.generate()`` method by ~12%
 - Read extra columns from UCC members file (Rv, e_Rv, probs)
-- Fixed a bug with the `properModel()` function and the `(met, age)` values at
+- Fixed a bug with the ``properModel()`` function and the ``(met, age)`` values at
   the lower edges. Also added range checking
-- Changed `parsec_rm_stage_9` flag in `Isochrones` class to `parsec_rm_stages`
-- Added a mask to filter out bad values (`999.999`) from PARSEC new isochrones
-- Added `max_mag_perc` to filter by magnitude percentile in `Cluster` class
+- Changed ``parsec_rm_stage_9`` flag in ``Isochrones`` class to ``parsec_rm_stages``
+- Added a mask to filter out bad values (``999.999``) from PARSEC new isochrones
+- Added ``max_mag_perc`` to filter by magnitude percentile in ``Cluster`` class
 
 
 
 `[v0.6.6] <https://github.com/asteca/asteca/releases/tag/v0.6.6>`__ - 2026-04-25
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-- Remove `pandas` dependency
+- Remove ``pandas`` dependency
 
 
 
 `[v0.6.5] <https://github.com/asteca/asteca/releases/tag/v0.6.5>`__ - 2026-04-24
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-- Method `stellar_masses()` is now `stellar_parameters()`
-- Added blue straggler probability estimation to `stellar_parameters()`
-- Removed `binary_fraction()` Monte Carlo method, not required
+- Method ``stellar_masses()`` is now ``stellar_parameters()``
+- Added blue straggler probability estimation to ``stellar_parameters()``
+- Removed ``binary_fraction()`` Monte Carlo method, not required
 
 
 [v0.6.4] - 2026-04-24
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-Bad build (missing `pandas` dependency)
+Bad build (missing ``pandas`` dependency)
 
 
 
@@ -58,14 +69,14 @@ Bad build (missing `pandas` dependency)
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 - Improved performance by ~22%
-   - Synthetic module: improved `generate()` performance by ~20%
-   - Likelihood module: improved `tremmel()` performance by ~30%
+   - Synthetic module: improved ``generate()`` performance by ~20%
+   - Likelihood module: improved ``tremmel()`` performance by ~30%
 
 - Cluster module:
    - Added arguments to allow loading a cluster's data from the `UCC members file <https://doi.org/10.5281/zenodo.8250523>`__ (.parquet)
-   - Added `max_mag` attribute to apply a maximum magnitude cut
+   - Added ``max_mag`` attribute to apply a maximum magnitude cut
 
-- Changed `magnitude` attribute to `mag` (Cluster, Isochrone, Synthetic classes)
+- Changed ``magnitude`` attribute to ``mag`` (Cluster, Isochrone, Synthetic classes)
 
 
 
@@ -73,22 +84,22 @@ Bad build (missing `pandas` dependency)
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 - Likelihood module:
-   - Better `tremmel` likelihood, now it zooms in to the solution faster
-   - Replaced `loggamma` with `gammaln` from `scipy.special` since values are always
+   - Better ``tremmel`` likelihood, now it zooms in to the solution faster
+   - Replaced ``loggamma`` with ``gammaln`` from ``scipy.special`` since values are always
      real (no change in performance)
 
 - Membership module:
-   - Moved `first_filter()` out of `fastMP` to be used also by the Ripley members
+   - Moved ``first_filter()`` out of `fastMP` to be used also by the Ripley members
      estimator
-   - Changed default value for `fixed_centers` in `fastMP()` to `True`
-   - Removed iterative IQR normalization in `fastMP()`; it caused issues for some OCs
+   - Changed default value for ``fixed_centers`` in ``fastMP()`` to ``True``
+   - Removed iterative IQR normalization in ``fastMP()``; it caused issues for some OCs
      that ended up looking stretched out in the LON/LAT axis
 
 - Cluster module:
-   - Make `(RA, DEC)` optional when defining a cluster object; request the center
-     coordinates in the `synthetic.cluster_masses()` method
-   - New `N_clust_max=2000` (down from `5000`)
-   - Added a `local_dens_clean()` function to the Ripley estimator of members for better
+   - Make ``(RA, DEC)`` optional when defining a cluster object; request the center
+     coordinates in the ``synthetic.cluster_masses()`` method
+   - New ``N_clust_max=2000`` (down from ``5000``)
+   - Added a ``local_dens_clean()`` function to the Ripley estimator of members for better
      performance
 
 
@@ -111,12 +122,12 @@ Bad build (missing `pandas` dependency)
 
 - Downgraded the versions of almost all the required packages to play nice with
   Google Colab (again)
-- Faster import of `asteca`, using lazy imports in classes
-  (https://github.com/asteca/ASteCA/issues/564); removed the `plot` class,
-  removed `pandas` and `matplotlib` as dependencies
+- Faster import of ``asteca``, using lazy imports in classes
+  (https://github.com/asteca/ASteCA/issues/564); removed the ``plot`` class,
+  removed ``pandas`` and ``matplotlib`` as dependencies
 - Allow generating synthetic clusters without calibrating an observed cluster
   (https://github.com/asteca/ASteCA/issues/565>)
-- Remove `fix_params` parameter from `synthetic.calibrate()`
+- Remove ``fix_params`` parameter from ``synthetic.calibrate()``
 - Major changes to the documentation
 - Small performance improvements in the generation of synthetic cluster
   (zaWAverage function)
@@ -139,10 +150,10 @@ Bad build (missing `pandas` dependency)
 
 - Downgraded the versions of almost all the required packages to play nice with
   Google Colab
-- Fix `AttributeError: ptp was removed from the ndarray class in NumPy 2.0. Use
-  np.ptp(arr, ...) instead.` for newer versions of `numpy`
-- Allow `isochrones` to load single files, not just paths to folders
-- Added an update notifier to `__init__.py` (added `requests` as requirement)
+- Fix ``AttributeError: ptp was removed from the ndarray class in NumPy 2.0. Use
+  np.ptp(arr, ...) instead.`` for newer versions of `numpy`
+- Allow ``isochrones`` to load single files, not just paths to folders
+- Added an update notifier to ``__init__.py`` (added ``requests`` as requirement)
 
 
 

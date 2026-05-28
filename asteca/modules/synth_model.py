@@ -368,13 +368,13 @@ def zaWAverage(
 
     theor_tracks = [m1, m2, .., mN]
     mX = [age1, age2, ..., ageM]
-    ageX = [f1,.., c1, (c2), M_ini, M_b, f1b,.., c1b, (c2b)]
+    ageX = [mag, c1, (c2), M_ini, M_b, magb, c1b, (c2b)]
     where:
-    fX:  individual filters (mags)
+    mag:  magnitude
     cX:  colors
     M_ini: initial mass
     M_b:  binary masses
-    fXb: filters with binary data
+    magb: binary magnitude
     cXb: colors with the binary data
 
     It is important that the returned isochrone is a *copy* of the
@@ -449,7 +449,6 @@ def zaWAverage(
     isochrone[m_ini_idx + 1] = closest_iso[m_ini_idx + 1]
 
     # temp_plot(
-    #     "OLD",
     #     theor_tracks,
     #     isochrone,
     #     m_ini_idx,
@@ -458,16 +457,13 @@ def zaWAverage(
     #     al,
     #     ah,
     #     z_model,
-    #     a_model,
-    #     pts,
-    #     weights,
+    #     a_model
     # )
 
     return isochrone
 
 
 def temp_plot(
-    title,
     theor_tracks,
     isochrone,
     m_ini_idx,
@@ -477,18 +473,12 @@ def temp_plot(
     ah,
     z_model,
     a_model,
-    pts,
-    weights,
 ):
     """ """
     import matplotlib.pyplot as plt
 
     print("ml, mh, al, ah:", ml, mh, al, ah)
     print("z_model, a_model:", z_model, a_model)
-    print("(z, loga) grid:", *pts)
-    print("weights:", weights)
-
-    plt.suptitle(title)
 
     plt.subplot(221)
     N_pts = len(theor_tracks[ml][al][m_ini_idx])
@@ -498,7 +488,7 @@ def temp_plot(
         theor_tracks[ml][al][0],
         c="b",
         alpha=0.5,
-        label=f"mlal (w={weights[0]:.3f})",
+        label="mlal",
     )
     plt.scatter(
         # theor_tracks[ml][ah][m_ini_idx],
@@ -506,7 +496,7 @@ def temp_plot(
         theor_tracks[ml][ah][0],
         c="r",
         alpha=0.5,
-        label=f"mlah (w={weights[1]:.3f})",
+        label="mlah",
     )
     plt.scatter(
         # theor_tracks[mh][al][m_ini_idx],
@@ -514,7 +504,7 @@ def temp_plot(
         theor_tracks[mh][al][0],
         c="cyan",
         alpha=0.5,
-        label=f"mhal (w={weights[2]:.3f})",
+        label="mhal",
     )
     plt.scatter(
         # theor_tracks[mh][ah][m_ini_idx],
@@ -522,7 +512,7 @@ def temp_plot(
         theor_tracks[mh][ah][0],
         c="orange",
         alpha=0.5,
-        label=f"mhah (w={weights[3]:.3f})",
+        label="mhah",
     )
     plt.xlabel("mass")
     plt.ylabel("mag")
@@ -791,6 +781,67 @@ def extinction(
     return isochrone
 
 
+# def gaiadr3_extlaw_LUT(
+#     X: np.ndarray,
+#     A: np.ndarray | float,
+#     x_min,
+#     a_min,
+#     _x_scale,
+#     _a_scale,
+#     lut_G,
+#     lut_BPRP,
+# ) -> tuple[np.ndarray, np.ndarray]:
+#     """
+#     Fast vectorized nearest-neighbor lookup via direct array indexing
+#     """
+#     # Map physical values to grid indices
+#     idx_x = ((X - x_min) * _x_scale).astype(int)
+
+#     # This check is faster than the approaches below
+#     if isinstance(A, np.ndarray):
+#         idx_a = ((A - a_min) * _a_scale).astype(int)
+#     else:
+#         idx_a = int(((A - a_min) * _a_scale))
+
+#     # if np.ndim(A) == 0:
+#     #     idx_a = int((A - a_min) * _a_scale)
+#     # else:
+#     #     idx_a = ((A - a_min) * _a_scale).astype(int)
+
+#     # idx_a = ((np.asarray(A) - a_min) * _a_scale).astype(int)
+
+#     return lut_G[idx_x, idx_a], lut_BPRP[idx_x, idx_a]
+
+
+# def gaiadr3_extlaw_pre(
+#     Av_dr: float | np.ndarray, ec_G_bprp: np.ndarray, ec_BPRP_bprp: np.ndarray
+# ) -> tuple[np.ndarray, np.ndarray]:
+#     """
+#     Gaia DR3 extinction law for main sequence stars.
+
+#     The 'coeffs' values are the main sequence values taken from:
+#     https://www.cosmos.esa.int/web/gaia/edr3-extinction-law
+
+#     :param X_: Array of BP-RP colors.
+#     :type X_: np.ndarray
+#     :param Av_dr: Total absorption (eventually containing differential reddening).
+#     :type Av_dr: float | np.ndarray
+
+#     :returns: Extinction coefficients for G and BP-RP.
+#     :rtype: tuple[np.ndarray, np.ndarray]
+#     """
+#     A = Av_dr
+
+#     ec_G_C1, ec_G_C2, ec_G_C3 = ec_G_bprp
+#     ec_BPRP_C1, ec_BPRP_C2, ec_BPRP_C3 = ec_BPRP_bprp
+
+#     ec_G = ec_G_C1 + A * (ec_G_C2 + A * (ec_G_C3 + A * _G_COEFFS[6]))
+
+#     ec_BPRP = ec_BPRP_C1 + A * (ec_BPRP_C2 + A * (ec_BPRP_C3 + A * _BPRP_COEFFS[6]))
+
+#     return ec_G, ec_BPRP
+
+
 def gaiadr3_extlaw(
     X_: np.ndarray, Av_dr: float | np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
@@ -799,6 +850,21 @@ def gaiadr3_extlaw(
 
     The 'coeffs' values are the main sequence values taken from:
     https://www.cosmos.esa.int/web/gaia/edr3-extinction-law
+
+    "The coefficients should not be extrapolated outside the extinction and
+    temperature ranges used, the latter corresponding to -0.06<(GBP-GRP)0< 2.5"
+
+    Tried (an failed) enhancing the performance with:
+
+    1. Lookup table (LUT)
+       Did not work because the length of the isochrones (2000 points by default)
+       make it have the same or even worse performance than the direct evaluation of
+       the polynomial.
+    2. Pre-computed coefficients using the isochrones BP-RP
+       Better performance by ~30%, but the coefficients have a difference of ~30%
+       with the actual values because the zwAverage() function modifies the
+       initial BP-RP arrays and using the (ml, al) isochrone values for the
+       coefficients is not accurate enough.
 
     :param X_: Array of BP-RP colors.
     :type X_: np.ndarray

@@ -431,6 +431,120 @@ def ccmo_model(mw: float) -> tuple[float, float]:
     return float(a), float(b)
 
 
+# def gaiadr3_precompute(theor_tracks):
+#     """ """
+#     _G_COEFFS = (
+#         0.995969721536602,
+#         -0.159726460302015,
+#         0.0122380738156057,
+#         0.00090726555099859,
+#         -0.0377160263914123,
+#         0.00151347495244888,
+#         -2.52364537395142e-05,
+#         0.0114522658102451,
+#         -0.000936914989014318,
+#         -0.000260296774134201,
+#     )
+#     # "BP" minus "RP" coefficients
+#     _BPRP_COEFFS = (
+#         0.49042409542357,
+#         -0.0634165826723407,
+#         -0.036506793426665456,
+#         0.02189430261385411,
+#         -0.01588332677592224,
+#         0.0008075446901998552,
+#         -1.468074307777017e-05,
+#         0.006681041701047307,
+#         -0.001137927314099498,
+#         -0.0001222634137884233,
+#     )
+
+#     # BP-RP
+#     all_bprp = theor_tracks[:, :, 1, :]
+
+#     ec_G_bprp, ec_BPRP_bprp = [], []
+#     for m in all_bprp:
+#         ec_G_bprp_m, ec_BPRP_bprp_m = [], []
+#         for X in m:
+#             X2 = X * X
+#             X3 = X2 * X
+
+#             ec_G_C1 = (
+#                 _G_COEFFS[0] + _G_COEFFS[1] * X + _G_COEFFS[2] * X2 + _G_COEFFS[3] * X3
+#             )
+#             ec_G_C2 = _G_COEFFS[4] + _G_COEFFS[7] * X + _G_COEFFS[8] * X2
+#             ec_G_C3 = _G_COEFFS[5] + _G_COEFFS[9] * X
+#             ec_G_bprp_m.append((ec_G_C1, ec_G_C2, ec_G_C3))
+
+#             ec_BPRP_C1 = (
+#                 _BPRP_COEFFS[0]
+#                 + _BPRP_COEFFS[1] * X
+#                 + _BPRP_COEFFS[2] * X2
+#                 + _BPRP_COEFFS[3] * X3
+#             )
+#             ec_BPRP_C2 = _BPRP_COEFFS[4] + _BPRP_COEFFS[7] * X + _BPRP_COEFFS[8] * X2
+#             ec_BPRP_C3 = _BPRP_COEFFS[5] + _BPRP_COEFFS[9] * X
+#             ec_BPRP_bprp_m.append((ec_BPRP_C1, ec_BPRP_C2, ec_BPRP_C3))
+
+#         ec_G_bprp.append(ec_G_bprp_m)
+#         ec_BPRP_bprp.append(ec_BPRP_bprp_m)
+
+#     ec_G_bprp, ec_BPRP_bprp = np.array(ec_G_bprp), np.array(ec_BPRP_bprp)
+#     return ec_G_bprp, ec_BPRP_bprp
+
+
+# def GaiaExtinctionLUT(
+#     theor_tracks: np.ndarray,
+#     # bprp_range: tuple[float, float] = (-1, 10),
+#     av_min: float = 0.0,
+#     av_max: float = 10,
+#     av_grid_size: int = 1000,
+# ):
+#     """
+#     Precomputes the Gaia DR3 extinction law into a 2D lookup table.
+
+#     > nanpercentile(UCC_membs['BP-RP'], (0.1, 99.9)) -->[-0.061,  5.236]
+#     > UCC_membs['BP-RP'].min() --> -0.9311
+#     > UCC_membs['BP-RP'].max() --> 8.475
+
+#     :param bprp_range: Tuple defining the minimum and maximum BP-RP color range.
+#     :type bprp_range: tuple[float, float]
+#     :param av_range: Tuple defining the minimum and maximum Av range.
+#     :type av_range: tuple[float, float]
+#     :param grid_size: Number of points in each dimension of the grid.
+#     :type grid_size: int
+
+#     :returns: Tuple containing the minimum BP-RP color, minimum Av, scaling factors
+#         for BP-RP and Av, and the precomputed extinction grids for G and BP-RP.
+#     :rtype: tuple[float, float, float, float, np.ndarray, np.ndarray]
+#     """
+#     from .synth_model import gaiadr3_extlaw
+
+#     # Find the range of the BP-RP array
+#     bp_rp = theor_tracks[:, :, 1, :]
+#     x_min, x_max = np.min(bp_rp), np.max(bp_rp)
+#     x_min = x_min - abs(x_min) * 0.1
+#     x_max = x_max + abs(x_max) * 0.1
+
+#     x_grid_size = int((x_max - x_min) / 0.01)
+
+#     # Generate high-resolution coordinate axes
+#     x_grid = np.linspace(x_min, x_max, x_grid_size)
+#     a_grid = np.linspace(av_min, av_max, av_grid_size)
+
+#     # Generate 2D parameter space mesh
+#     X, A = np.meshgrid(x_grid, a_grid, indexing="ij")
+
+#     # Pre-compute extinction grids using the original function
+#     lut_G, lut_BPRP = gaiadr3_extlaw(X, A)
+
+#     # Pre-compute scalars for fast index mapping
+#     _x_scale = (x_grid_size - 1) / (x_max - x_min)
+#     _a_scale = (av_grid_size - 1) / (av_max - av_min)
+
+#     return x_min, av_min, _x_scale, _a_scale, lut_G, lut_BPRP
+
+
 def randVals(
     rng: np.random.Generator, theor_tracks: np.ndarray, st_dist_mass: list
 ) -> dict:
