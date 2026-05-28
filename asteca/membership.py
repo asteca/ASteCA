@@ -1,6 +1,11 @@
-import numpy as np
+from __future__ import annotations
 
-from .cluster import Cluster
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .cluster import Cluster
+
+import numpy as np
 
 
 class Membership:
@@ -26,58 +31,25 @@ class Membership:
     :param my_field: :py:class:`Cluster <asteca.cluster.Cluster>` object with the
         loaded data for the observed field
     :type my_field: Cluster
-    :param seed: Random seed. If ``None`` a random integer will be generated and used
-    :type seed: int | None
-    :param verbose: Verbose level. A value of ``0`` hides all output
-    :type verbose: int
-
-    :raises ValueError: If there are missing required attributes in the
-        :py:class:`Cluster <asteca.cluster.Cluster>` object
     """
 
     def __init__(
         self,
         my_field: Cluster,
-        seed: int | None = None,
-        verbose: int = 1,
     ) -> None:
         self.my_field = my_field
-        self.seed = seed
-        self.verbose = verbose
-
-        noradeg_flag = False
-        try:
-            self.my_field.ra
-        except AttributeError:
-            noradeg_flag = True
-        try:
-            self.my_field.dec
-        except AttributeError:
-            noradeg_flag = True
-        if noradeg_flag:
-            raise ValueError(
-                "The 'Membership' class requires (RA, DEC) data\n"
-                + "to be present in the 'cluster' object"
-            )
-        if hasattr(self.my_field, "N_cluster") is False:
-            raise ValueError(
-                "The 'Membership' class requires the 'N_cluster' attribute\n"
-                + "to be present in the 'cluster' object"
-            )
-
-        # Set seed
-        self.rng = np.random.default_rng(self.seed)
-
-        self._vp("\nMembership object generated")
-        self._vp(f"N_cluster      : {self.my_field.N_cluster}", 1)
-        self._vp(f"Random seed    : {self.seed}", 1)
 
     def _vp(self, mssg: str, level: int = 0) -> None:
         """Verbose print method"""
-        if self.verbose > level:
+        if self.my_field.verbose > level:
             print(mssg)
 
-    def bayesian(self, N_runs: int = 1000, eq_to_gal: bool = False) -> np.ndarray:
+    def bayesian(
+        self,
+        N_runs: int = 1000,
+        eq_to_gal: bool = False,
+        seed: int | None = None,
+    ) -> None:
         """Assign membership probabilities.
 
         Estimate the probability of being a true cluster member for all observed
@@ -90,33 +62,39 @@ class Membership:
         :param eq_to_gal: Convert ``(RA, DEC)`` to ``(lon, lat)``. Useful for clusters
             with large ``DEC`` values to reduce the frame's distortion
         :type eq_to_gal: bool
+        :param seed: Random seed. If ``None`` a random integer will be generated and used
+        :type seed: int | None
 
-        :raises AttributeError: If either the ``radec_c`` or ``radius`` attributes
+        :raises AttributeError: If either required attributes
             are missing from the :py:class:`Cluster <asteca.cluster.Cluster>` object
-        :raises ValueError: If ``eq_to_gal`` is True and (RA, DEC) or center data are
-            missing from the :py:class:`Cluster <asteca.cluster.Cluster>` object
-
-        :return: Membership probabilities for all stars in the frame
-        :rtype: np.ndarray
+        :raises ValueError: If the ``N_runs`` parameter is less than 10
         """
+        self._vp("\nRunning Bayesian DA")
+
+        # These two are checked separately to avoid type checking issues
+        if self.my_field.ra is None or self.my_field.dec is None:
+            raise AttributeError("Missing required 'cluster' attributes: (ra, dec)")
+        required_attrs = ("N_cluster", "radec_c", "radius")
+        missing = [attr for attr in required_attrs if not hasattr(self.my_field, attr)]
+        if missing:
+            raise AttributeError(
+                f"Missing required 'cluster' attributes: {', '.join(missing)}"
+            )
+
+        if N_runs < 10:
+            raise ValueError("Parameter 'N_runs' should be > 10")
+
+        # Set seed
+        self.rng = np.random.default_rng(seed)
+
         from .modules import cluster_priv as cp
         from .modules.bayesian_da import bayesian_mp
-
-        txt = "Attribute '{}' is required to be present in the 'cluster' object"
-        if hasattr(self.my_field, "radec_c") is False:
-            raise AttributeError(txt.format("radec_c"))
-        if hasattr(self.my_field, "radius") is False:
-            raise AttributeError(txt.format("radius"))
-        if N_runs < 10:
-            raise AttributeError("Parameter 'N_runs' should be > 10")
 
         xv, yv = self.my_field.ra, self.my_field.dec
         xy_center = self.my_field.radec_c
         cent_str = "radec_c "
         # Convert (RA, DEC) to (lon, lat)
         if eq_to_gal is True:
-            if xv is None or yv is None or xy_center is None:
-                raise ValueError("(RA, DEC) data and center values are required")
             # Add center as last element
             xv_t = np.array(list(xv) + [xy_center[0]])
             yv_t = np.array(list(yv) + [xy_center[1]])
@@ -157,7 +135,6 @@ class Membership:
                 + " for the Bayesian DA method"
             )
 
-        self._vp("\nRunning Bayesian DA")
         self._vp("{}       : ({:.4f}, {:.4f})".format(cent_str, *xy_center), 1)
         self._vp(f"radius         : {self.my_field.radius:.4f} [deg]", 1)
         self._vp(f"N_cluster      : {self.my_field.N_cluster}", 1)
@@ -173,15 +150,16 @@ class Membership:
             self.rng,
         )
         self._vp(out_mssg, 1)
-
-        return probs
+        self.my_field.probs = probs
+        self._vp("Probabilities stored in 'probs' attribute", 1)
 
     def fastmp(
         self,
         fixed_centers: bool = True,
         N_runs: int = 1000,
         eq_to_gal: bool = True,
-    ) -> np.ndarray:
+        seed: int | None = None,
+    ) -> None:
         """Assign membership probabilities.
 
         Estimate the probability of being a true cluster member for all observed
@@ -198,21 +176,19 @@ class Membership:
         :param eq_to_gal: Convert ``(RA, DEC)`` to ``(lon, lat)``. Useful for clusters
             with large ``DEC`` values to reduce the frame's distortion
         :type eq_to_gal: bool
+        :param seed: Random seed. If ``None`` a random integer will be generated and used
+        :type seed: int | None
 
         :raises AttributeError: If the :py:class:`Cluster <asteca.cluster.Cluster>`
-            object is missing a required attribute:
-            ``(ra, dec, pmra, pmde, plx, e_pmra, e_pmde, e_plx, radec_c, pms_c, plx_c)``
+            object is missing a required attribute
         :raises ValueError: If the ``N_runs`` parameter is less than 10
-
-        :return: Membership probabilities for all stars in the frame
-        :rtype: np.ndarray
         """
-        from .modules import cluster_priv as cp
-        from .modules.fastmp import fastMP
+        self._vp("\nRunning fastMP")
 
-        for k in (
-            "ra",
-            "dec",
+        # These two are checked separately to avoid type checking issues
+        if self.my_field.ra is None or self.my_field.dec is None:
+            raise AttributeError("Missing required 'cluster' attributes: (ra, dec)")
+        required_attrs = (
             "pmra",
             "pmde",
             "plx",
@@ -222,19 +198,32 @@ class Membership:
             "radec_c",
             "pms_c",
             "plx_c",
-        ):
-            if hasattr(self.my_field, k) is False:
-                raise AttributeError(f"'{k}' must be present as a 'cluster' attribute")
+            "N_cluster",
+        )
+        missing = [
+            attr
+            for attr in required_attrs
+            if not hasattr(self.my_field, attr) or getattr(self.my_field, attr) is None
+        ]
+        if missing:
+            raise AttributeError(
+                f"Missing required 'cluster' attributes: {', '.join(missing)}"
+            )
+
         if N_runs < 10:
             raise ValueError("Parameter 'N_runs' should be > 10")
+
+        # Set seed
+        self.rng = np.random.default_rng(seed)
+
+        from .modules import cluster_priv as cp
+        from .modules.fastmp import fastMP
 
         xv, yv = self.my_field.ra, self.my_field.dec
         xy_center = self.my_field.radec_c
         cent_str = "radec_c "
         # Convert (RA, DEC) to (lon, lat)
         if eq_to_gal is True:
-            if xv is None or yv is None or xy_center is None:
-                raise ValueError("(RA, DEC) data and center values are required")
             # Add center as last element
             xv_t = np.array(list(xv) + [xy_center[0]])
             yv_t = np.array(list(yv) + [xy_center[1]])
@@ -245,7 +234,6 @@ class Membership:
             xy_center = (xv_t[-1], yv_t[-1])
             cent_str = "lonlat_c"
 
-        self._vp("\nRunning fastMP")
         self._vp("{}       : ({:.4f}, {:.4f})".format(cent_str, *xy_center), 1)
         self._vp("pms_c          : ({:.3f}, {:.3f})".format(*self.my_field.pms_c), 1)
         self._vp(f"plx_c          : {self.my_field.plx_c:.3f}", 1)
@@ -282,5 +270,90 @@ class Membership:
         )
 
         self._vp(out_mssg, 1)
+        self.my_field.probs = probs
+        self._vp("Probabilities stored in 'probs' attribute", 1)
 
-        return probs
+    def select_members(
+        self, prob_min: float | None = 0.5, N_prob_max: int | None = None
+    ) -> Cluster:
+        """Select members based on membership probabilities. This method modifies
+        the :py:class:`Cluster <asteca.cluster.Cluster>` object in place, keeping only the
+        stars that meet the selection criteria.
+
+        :param prob_min: Minimum probability threshold for membership selection. Stars with
+            probabilities above this threshold will be selected as members.
+        :type prob_min: float | None
+        :param N_prob_max: Maximum number of members to select based on probability. The
+            top ``N_prob_max`` stars with the highest probabilities will be selected as
+            members.
+        :type N_prob_max: int | None
+
+        :raises AttributeError: If the 'probs' attribute is not defined in the
+            'cluster' object
+        :raises ValueError: Raised if:
+
+            - both ``prob_min`` and ``N_prob_max`` are provided,
+            - neither is provided,
+            - ``prob_min`` is not between 0 and 1,
+            - no members are found with probability above ``prob_min``
+            - ``N_prob_max`` is greater than the total number of stars
+
+        :return: A new :py:class:`Cluster <asteca.cluster.Cluster>` object containing
+            only the selected members
+        :rtype: Cluster
+        """
+        if self.my_field.probs is None:
+            raise AttributeError(
+                "The 'probs' attribute is not defined in the 'cluster' object"
+            )
+
+        if prob_min is not None and N_prob_max is not None:
+            raise ValueError(
+                "Only one of 'prob_min' or 'N_prob_max' should be provided"
+            )
+
+        N_all = len(self.my_field.probs)
+
+        if N_prob_max is not None:
+            if N_prob_max > N_all:
+                raise ValueError(
+                    f"'N_prob_max' ({N_prob_max}) cannot be greater than the total"
+                    + f" number of stars ({N_all})"
+                )
+            if N_prob_max <= 0:
+                raise ValueError("'N_prob_max' must be a positive integer")
+
+            # Sort probabilities and select top N_prob_max
+            sorted_indices = np.argsort(self.my_field.probs)[::-1]
+            msk = np.zeros_like(self.my_field.probs, dtype=bool)
+            msk[sorted_indices[:N_prob_max]] = True
+            self._vp(f"\nTop {N_prob_max} members selected based on probability")
+        elif prob_min is not None:
+            if not (0.0 <= prob_min <= 1.0):
+                raise ValueError("'prob_min' should be between 0 and 1")
+            msk = self.my_field.probs > prob_min
+            if not msk.any():
+                raise ValueError(f"No members found with probability > {prob_min}")
+            self._vp(f"\nMembers selected with probability > {prob_min}")
+        else:
+            raise ValueError("Either 'prob_min' or 'N_prob_max' must be provided")
+
+        from .cluster import Cluster
+
+        new_cluster = Cluster(verbose=0)
+
+        # Apply msk to self object
+        for attr, arr in vars(self.my_field).items():
+            # Only apply mask to array attributes with the same length as N_stars
+            if isinstance(arr, np.ndarray) and len(arr) == self.my_field.N_stars:
+                setattr(new_cluster, attr, arr[msk])
+            else:
+                setattr(new_cluster, attr, arr)
+
+        new_cluster.N_stars = msk.sum()
+        new_cluster.N_cluster = new_cluster.N_stars
+        self._vp("New Cluster object created", 1)
+        self._vp(f"N_cluster      : {new_cluster.N_cluster} (kept)", 1)
+        self._vp(f"Field stars    : {N_all - new_cluster.N_cluster} (removed)", 1)
+
+        return new_cluster

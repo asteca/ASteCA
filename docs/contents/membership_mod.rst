@@ -34,29 +34,39 @@ the :ref:`nmembers` section, which is done by calling the
 
 With the ``N_cluster`` attribute in place in a
 :py:class:`Cluster <asteca.cluster.Cluster>` object, here called ``my_field``, you can
-define a :py:class:`Membership <asteca.membership.Membership>` object, here called
-:py:obj:`memb`:
-
-.. code-block:: python
-
-    # Define a `membership` object
-    memb = asteca.Membership(my_field)
-
-and apply either the :py:meth:`bayesian` or the :py:meth:`fastmp` method:
+and apply either the :py:meth:`bayesian` or the :py:meth:`fastmp` method (both part
+of the :py:class:`Membership <asteca.membership.Membership>` class) as follows:
 
 
 .. code-block:: python
 
     # Run `fastmp` method
-    probs_fastmp = memb.fastmp()
+    my_field.membership.fastmp()
 
     # Run `bayesian` method
-    probs_bayes = memb.bayesian()
+    my_field.membership.bayesian()
 
-The arrays stored in the ``probs_fastmp`` or ``probs_bayes`` variables are the
-per-star membership probabilities. The results will naturally not be equivalent as both
-algorithms are rather different. The :py:meth:`bayesian` algorithm for example tends to
-assign lower probabilities than the :py:meth:`fastmp` algorithm.
+
+The per-star membership probabilities arrays are stored in the ``probs`` attribute
+of the ``my_field`` object.
+
+Following the obtention of the membership probabilities, the next step is to apply a
+selection criterion to filter out likely non-members from the dataset. This can be
+achieved using the :py:meth:`asteca.Membership.select_members` method, which allows
+users to retain only those stars that meet specific membership probability thresholds or
+to limit the number of accepted members based on their probabilities.
+
+This operation generates a new :py:class:`Cluster <asteca.cluster.Cluster>` object,
+by modifying the existing ``my_field`` object:
+
+.. code-block:: python
+
+    # Apply membership selection method
+    my_cluster = my_field.membership.select_members()
+
+Upon execution all internal arrays of ``my_field`` (such as coordinates, magnitudes,
+and kinematic data) are modified to match the accepted subset of most probable members.
+The resulting data is stored in the new ``my_cluster`` object.
 
 A step-by-step example is shown in the :ref:`membership_ntbk` tutorial.
 
