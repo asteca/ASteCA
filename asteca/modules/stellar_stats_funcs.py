@@ -129,7 +129,7 @@ def get_stellar_masses(
     for isoch in sampled_synthcls:
         # Indexes of the photometrically closest synthetic stars to the observed stars
         tree = KDTree(isoch[:m_ini_idx].T)
-        dist, close_stars_idxs = tree.query(obs_phot, k=1)
+        _, close_stars_idxs = tree.query(obs_phot, k=1)
 
         # # Store inverse normalized distance used as weights
         # inv_dist = 1 / dist

@@ -10,10 +10,10 @@ from .synthetic import Synthetic
 
 __all__ = [
     "Cluster",
-    "Membership",
     "Isochrones",
-    "Synthetic",
     "Likelihood",
+    "Membership",
+    "Synthetic",
 ]
 
 

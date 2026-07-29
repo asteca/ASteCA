@@ -404,12 +404,12 @@ class Cluster:
 
         elif algo == "kde_2d":
             if data_2d == "radec":
-                if any([_ is None for _ in (self.ra, self.dec)]):
+                if self.ra is None or self.dec is None:
                     raise ValueError("Data for (ra, dec) is required")
                 c_str = "radec_c"
                 x, y = self.ra, self.dec
             elif data_2d == "pms":
-                if any([_ is None for _ in (self.pmra, self.pmde)]):
+                if self.pmra is None or self.pmde is None:
                     raise ValueError("Data for (pmra, pmde) is required")
                 c_str = "pms_c"
                 x, y = self.pmra, self.pmde
@@ -427,7 +427,7 @@ class Cluster:
             elif c_str == "pms_c":
                 self.pms_c = (x_c, y_c)
 
-            mssg = "{}        : ({:.4f}, {:.4f})".format(c_str, x_c, y_c)
+            mssg = f"{c_str}        : ({x_c:.4f}, {y_c:.4f})"
 
         else:
             raise ValueError(f"Selected method '{algo}' not recognized")
@@ -630,3 +630,37 @@ class Cluster:
         self.N_cluster = N_cluster
         self._vp("\nNumber of members estimated")
         self._vp(f"N_cluster      : {N_cluster}", 1)
+
+    def to_csv(self, filename: str) -> None:
+        """Save cluster data to a CSV file
+
+        :param filename: Name of the CSV file to save the cluster data
+        :type filename: str
+        """
+        import pandas as pd
+
+        data_dict = {}
+        for attr in [
+            "ra",
+            "dec",
+            "mag",
+            "e_mag",
+            "color",
+            "e_color",
+            "color2",
+            "e_color2",
+            "plx",
+            "e_plx",
+            "pmra",
+            "e_pmra",
+            "pmde",
+            "e_pmde",
+            "probs",
+        ]:
+            arr = getattr(self, attr)
+            if arr is not None:
+                data_dict[attr] = np.round(arr, 5)
+
+        df = pd.DataFrame(data_dict)
+        df.to_csv(filename, index_label="index")
+        self._vp(f"\nCluster data saved to '{filename}'", 1)

@@ -21,8 +21,20 @@ class Synthetic:
     :param isochs: :py:class:`Isochrones <asteca.isochrones.Isochrones>` object with
         the loaded files for the theoretical isochrones
     :type isochs: Isochrones
-    :param def_params: Default values for all the required fundamental parameters
-    :type def_params: dict[str, float]
+    :param def_params: Default values for all the required fundamental parameters. If
+        ``None`` is given, the following values are used::
+
+            {
+                "met": 0.0152,
+                "loga": 8.0,
+                "alpha": 0.09,
+                "beta": 0.94,
+                "Rv": 3.1,
+                "DR": 0.0,
+                "Av": 0.2,
+                "dm": 9.0,
+            }
+    :type def_params: dict[str, float] | None
     :param IMF_name: Name of the initial mass function used to populate the isochrones,
         one of ``salpeter_1955, kroupa_2001, chabrier_2014``
     :type IMF_name: str
@@ -53,16 +65,7 @@ class Synthetic:
     def __init__(
         self,
         isochs: Isochrones,
-        def_params: dict[str, float] = {
-            "met": 0.0152,
-            "loga": 8.0,
-            "alpha": 0.09,
-            "beta": 0.94,
-            "Rv": 3.1,
-            "DR": 0.0,
-            "Av": 0.2,
-            "dm": 9.0,
-        },
+        def_params: dict[str, float] | None = None,
         IMF_name: str = "chabrier_2014",
         max_mass: int = 10_000,
         gamma: float | str = "D&K",
@@ -71,6 +74,19 @@ class Synthetic:
         seed: int | None = None,
         verbose: int = 1,
     ) -> None:
+
+        if def_params is None:
+            def_params = {
+                "met": 0.0152,
+                "loga": 8.0,
+                "alpha": 0.09,
+                "beta": 0.94,
+                "Rv": 3.1,
+                "DR": 0.0,
+                "Av": 0.2,
+                "dm": 9.0,
+            }
+
         self.isochs = isochs
         self.def_params = def_params
         self.IMF_name = IMF_name
@@ -86,11 +102,10 @@ class Synthetic:
 
         # Check gamma distribution
         gammas = ("D&K", "fisher_stepped", "fisher_peaked", "raghavan")
-        if isinstance(self.gamma, str):
-            if self.gamma not in gammas:
-                raise ValueError(
-                    f"gamma '{self.gamma}' not recognized. Should be one of {gammas}"
-                )
+        if isinstance(self.gamma, str) and self.gamma not in gammas:
+            raise ValueError(
+                f"gamma '{self.gamma}' not recognized. Should be one of {gammas}"
+            )
 
         # Check differential reddening function
         DR_funcs = ("uniform", "normal")
@@ -313,7 +328,7 @@ class Synthetic:
 
     def generate(
         self,
-        params: dict = {},
+        params: dict | None = None,
         N_stars: int = 100,
     ) -> np.ndarray | tuple[np.ndarray, np.ndarray]:
         """Generate a synthetic cluster.
@@ -330,7 +345,7 @@ class Synthetic:
         cluster.
 
         :param params: Dictionary containing the values for the fundamental parameters.
-        :type params: dict
+        :type params: dict | None
         :param N_stars: Number of synthetic stars to generate
         :type N_stars: int
 
@@ -343,6 +358,9 @@ class Synthetic:
         :rtype: np.ndarray | tuple[np.ndarray, np.ndarray]
         """
         from .modules import synth_model as sm
+
+        if params is None:
+            params = {}
 
         try:
             # Extract from calibrated observed cluster
@@ -415,8 +433,8 @@ class Synthetic:
 
         # Update dictionaries with default values, if required
         model = self.def_params | model
-        for k in self.def_params.keys():
-            if k not in model_std.keys():
+        for k in self.def_params:
+            if k not in model_std:
                 model_std[k] = 0
 
         pars_k = ("met", "loga", "alpha", "beta", "Rv", "DR", "Av", "dm")
@@ -715,16 +733,18 @@ class Synthetic:
 
         # Resolve radec_c if not explicitly provided
         msg = None
-        if rho_amb is None:
-            if radec_c is None:
-                if (
-                    hasattr(self, "cluster_ra")
-                    and hasattr(self, "cluster_dec")
-                    and self.cluster_ra is not None
-                    and self.cluster_dec is not None
-                ):
-                    radec_c = (np.median(self.cluster_ra), np.median(self.cluster_dec))
-                    msg = "\nUsing ambient density estimated from observed cluster (ra, dec)"
+        if (
+            rho_amb is None
+            and radec_c is None
+            and (
+                hasattr(self, "cluster_ra")
+                and hasattr(self, "cluster_dec")
+                and self.cluster_ra is not None
+                and self.cluster_dec is not None
+            )
+        ):
+            radec_c = (np.median(self.cluster_ra), np.median(self.cluster_dec))
+            msg = "\nUsing ambient density estimated from observed cluster (ra, dec)"
 
         # Compute rho_amb_arr
         if rho_amb is not None:

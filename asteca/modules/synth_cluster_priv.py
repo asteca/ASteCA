@@ -112,9 +112,9 @@ def add_binarity(
             theor_tracks[mx][ax][m_ini_idx + 2] = mag_combine(mag, mag_m2)
 
             # Calculate unresolved color for each color defined.
-            for ic, color in enumerate(all_colors):
-                mc1 = color_filters[mx][ax][color[0]]
-                mc2 = color_filters[mx][ax][color[1]]
+            for ic, _color in enumerate(all_colors):
+                mc1 = color_filters[mx][ax][_color[0]]
+                mc2 = color_filters[mx][ax][_color[1]]
                 f_m1 = np.interp(m2, mass_ini, mc1)
                 f1 = mag_combine(mc1, f_m1)
                 f_m2 = np.interp(m2, mass_ini, mc2)
@@ -424,8 +424,8 @@ def ccmo_model(mw: float) -> tuple[float, float]:
         a, b = np.polyval(c1, y), np.polyval(c2, y)
     else:
         raise ValueError(
-            "The effective wavelength is {} [1/micron], beyond "
-            "the CCM model limit (10 [1/micron]).".format(mw)
+            f"The effective wavelength is {mw} [1/micron], beyond "
+            "the CCM model limit (10 [1/micron])."
         )
 
     return float(a), float(b)

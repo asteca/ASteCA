@@ -407,9 +407,11 @@ def estimate_field_density(
         ratio = fdens_outer / fdens
     else:
         ratio = np.inf
-    if len(idx) > large_cluster_N:
-        if fdens_ratio_bounds[0] < ratio < fdens_ratio_bounds[1]:
-            fdens = fdens_outer
+    if (
+        len(idx) > large_cluster_N
+        and fdens_ratio_bounds[0] < ratio < fdens_ratio_bounds[1]
+    ):
+        fdens = fdens_outer
 
     return dist_to_cent, local_density, fdens
 

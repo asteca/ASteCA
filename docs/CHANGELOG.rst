@@ -7,6 +7,15 @@ Changelog
 #########
 
 
+`[v0.7.0] <https://github.com/asteca/asteca/releases/tag/v0.7.0>`__ - 2026-07-29
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+- Added ``to_csv()`` method to ``Cluster`` class to export cluster data to a CSV file
+- Several ``ruff`` linting fixes to the codebase
+
+
+
+
 `[v0.6.9] <https://github.com/asteca/asteca/releases/tag/v0.6.9>`__ - 2026-05-28
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
