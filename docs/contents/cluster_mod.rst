@@ -83,6 +83,10 @@ can be accessed as:
     my_field.e_mag   # Error in Gaia G magnitude
     my_field.probs   # Membership probabilities
 
+At any point, the user can employ the :py:meth:`asteca.Cluster.to_csv` method to save
+the data stored in the :py:class:`asteca.Cluster` object to a CSV file. This is
+helpful, for example, to access the probabilities estimated by the methods in the
+:py:class:`asteca.Membership` class.
 
 
 .. _pandas.DataFrame: https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html
