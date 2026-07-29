@@ -404,12 +404,12 @@ class Cluster:
 
         elif algo == "kde_2d":
             if data_2d == "radec":
-                if any([_ is None for _ in (self.ra, self.dec)]):
+                if self.ra is None or self.dec is None:
                     raise ValueError("Data for (ra, dec) is required")
                 c_str = "radec_c"
                 x, y = self.ra, self.dec
             elif data_2d == "pms":
-                if any([_ is None for _ in (self.pmra, self.pmde)]):
+                if self.pmra is None or self.pmde is None:
                     raise ValueError("Data for (pmra, pmde) is required")
                 c_str = "pms_c"
                 x, y = self.pmra, self.pmde
@@ -427,7 +427,7 @@ class Cluster:
             elif c_str == "pms_c":
                 self.pms_c = (x_c, y_c)
 
-            mssg = "{}        : ({:.4f}, {:.4f})".format(c_str, x_c, y_c)
+            mssg = f"{c_str}        : ({x_c:.4f}, {y_c:.4f})"
 
         else:
             raise ValueError(f"Selected method '{algo}' not recognized")

@@ -474,7 +474,11 @@ def temp_plot(
     z_model,
     a_model,
 ):
-    """ """
+    """
+    Temporary plotting function to visualize the bilinear interpolation of the
+    theoretical tracks and the resulting isochrone. This function is intended for
+    debugging and verification purposes.
+    """
     import matplotlib.pyplot as plt
 
     print("ml, mh, al, ah:", ml, mh, al, ah)
@@ -520,7 +524,6 @@ def temp_plot(
     plt.scatter(np.arange(0, len(isochrone[0])), isochrone[0], marker="x", c="k")
     plt.legend()
 
-    #
     plt.subplot(222)
     plt.scatter(
         # theor_tracks[ml][al][m_ini_idx],

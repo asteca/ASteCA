@@ -135,12 +135,14 @@ def load(
     all_a = np.array(list(dict.fromkeys(all_a))).astype(float)
     met_age_dict = {"met": all_m, "loga": all_a}
 
-    if len(met_age_dict["loga"]) > 1:
-        if max(met_age_dict["loga"][1:] - met_age_dict["loga"][:-1]) > 0.25:
-            warnings.warn(
-                "The isochrones grid has very large steps in log(age). This can impact "
-                + "the proper generation of synthetic clusters. Consider using a smaller step."
-            )
+    if (
+        len(met_age_dict["loga"]) > 1
+        and max(met_age_dict["loga"][1:] - met_age_dict["loga"][:-1]) > 0.25
+    ):
+        warnings.warn(
+            "The isochrones grid has very large steps in log(age). This can impact "
+            + "the proper generation of synthetic clusters. Consider using a smaller step."
+        )
 
     # theor_tracks.shape = (N_z, N_a, N_cols, N_interp)
     theor_tracks, color_filters = reshape_isochrones(
@@ -606,9 +608,9 @@ def merge_ps_massini_check(mass_col: str, isochrones: dict) -> tuple[list, list]
     :rtype: tuple[list, list]
     """
     met_age_arr, isochrones_ordered = [], []
-    for met_k in isochrones.keys():
+    for met_k, age_dict in isochrones.items():
         met_vals = []
-        for age_k, age_list in isochrones[met_k].items():
+        for age_k, age_list in age_dict.items():
             met_age_arr.append([met_k, age_k])
 
             df_age_0 = age_list[0]
@@ -632,7 +634,7 @@ def merge_ps_massini_check(mass_col: str, isochrones: dict) -> tuple[list, list]
     Nvals = []
     for met in isochrones_ordered:
         for age in met:
-            for k, arr in age.items():
+            for arr in age.values():
                 Nvals.append(arr.shape[0])
                 # if k == mass_col:
                 #     # Use a mass tolerance instead of the 'sort_flag':
