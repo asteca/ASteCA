@@ -22,17 +22,18 @@ class Synthetic:
         the loaded files for the theoretical isochrones
     :type isochs: Isochrones
     :param def_params: Default values for all the required fundamental parameters. If
-        ``None`` is given, the following default values are used:
-        {
-            "met": 0.0152,
-            "loga": 8.0,
-            "alpha": 0.09,
-            "beta": 0.94,
-            "Rv": 3.1,
-            "DR": 0.0,
-            "Av": 0.2,
-            "dm": 9.0,
-        }
+        ``None`` is given, the following values are used::
+
+            {
+                "met": 0.0152,
+                "loga": 8.0,
+                "alpha": 0.09,
+                "beta": 0.94,
+                "Rv": 3.1,
+                "DR": 0.0,
+                "Av": 0.2,
+                "dm": 9.0,
+            }
     :type def_params: dict[str, float] | None
     :param IMF_name: Name of the initial mass function used to populate the isochrones,
         one of ``salpeter_1955, kroupa_2001, chabrier_2014``
