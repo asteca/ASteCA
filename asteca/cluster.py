@@ -630,3 +630,37 @@ class Cluster:
         self.N_cluster = N_cluster
         self._vp("\nNumber of members estimated")
         self._vp(f"N_cluster      : {N_cluster}", 1)
+
+    def to_csv(self, filename: str) -> None:
+        """Save cluster data to a CSV file
+
+        :param filename: Name of the CSV file to save the cluster data
+        :type filename: str
+        """
+        import pandas as pd
+
+        data_dict = {}
+        for attr in [
+            "ra",
+            "dec",
+            "mag",
+            "e_mag",
+            "color",
+            "e_color",
+            "color2",
+            "e_color2",
+            "plx",
+            "e_plx",
+            "pmra",
+            "e_pmra",
+            "pmde",
+            "e_pmde",
+            "probs",
+        ]:
+            arr = getattr(self, attr)
+            if arr is not None:
+                data_dict[attr] = np.round(arr, 5)
+
+        df = pd.DataFrame(data_dict)
+        df.to_csv(filename, index_label="index")
+        self._vp(f"\nCluster data saved to '{filename}'", 1)

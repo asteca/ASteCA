@@ -331,10 +331,10 @@ class Membership:
         elif prob_min is not None:
             if not (0.0 <= prob_min <= 1.0):
                 raise ValueError("'prob_min' should be between 0 and 1")
-            msk = self.my_field.probs > prob_min
+            msk = self.my_field.probs >= prob_min
             if not msk.any():
-                raise ValueError(f"No members found with probability > {prob_min}")
-            self._vp(f"\nMembers selected with probability > {prob_min}")
+                raise ValueError(f"No members found with probability >= {prob_min}")
+            self._vp(f"\nMembers selected with probability >= {prob_min}")
         else:
             raise ValueError("Either 'prob_min' or 'N_prob_max' must be provided")
 
