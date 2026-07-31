@@ -29,7 +29,7 @@ phot_systs_data = {
         # "sep_cols": r"\s+",
         "idx_col_line": -1,
         "parsec_stages_col": "label",  # column name for stages
-        "max_mag": 50.0,  # The new files contain bad '999.999' values
+        "max_mag": 50.0,  # The new files (July 2026) contain bad '999.999' values
     },
     "MIST": {
         "col_names": {
@@ -315,7 +315,7 @@ def read(
                     # Remove all stages equal or larger than this value
                     df = df[
                         df[phot_systs_data[model]["parsec_stages_col"]]
-                        <= parsec_rm_stages
+                        < parsec_rm_stages
                     ]
 
                     # Extract met, age values
