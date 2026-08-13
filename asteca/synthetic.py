@@ -313,11 +313,6 @@ class Synthetic:
             self.rand_floats["norm"][1],
         )
 
-        self._vp("\nCalibrated observed cluster")
-        self._vp(f"N_stars_obs    : {self.N_stars_obs}", 1)
-        self._vp(f"Max magnitude  : {self.max_mag_syn_obs:.2f}", 1)
-        self._vp("Error distribution loaded", 1)
-
         # Used by the `get_models()` and `stellar_stats()` methods
         self.cluster_mag = cluster.mag
         self.cluster_colors = [cluster.color, cluster.color2]
@@ -325,6 +320,11 @@ class Synthetic:
         # Used by the `cluster_masses()` method
         self.cluster_ra = cluster.ra
         self.cluster_dec = cluster.dec
+
+        self._vp("\nCalibrated observed cluster")
+        self._vp(f"N_stars_obs    : {self.N_stars_obs}", 1)
+        self._vp(f"Max magnitude  : {self.max_mag_syn_obs:.2f}", 1)
+        self._vp("Error distribution loaded", 1)
 
     def generate(
         self,
@@ -489,7 +489,7 @@ class Synthetic:
                 self.max_mag_syn_obs,
                 self.err_dist_obs,
                 self.N_stars_obs,
-                return_flag="isoch+array",
+                return_flag="isoch",
             )
 
             # Do not store models that result in empty arrays
@@ -851,8 +851,8 @@ class Synthetic:
         :return: Array with the isochrone data to plot
         :rtype: np.ndarray
         """
-        # Generate displaced isochrone
-        fit_params_copy = dict(fit_params)
+        # # Generate displaced isochrone
+        # fit_params_copy = dict(fit_params)
 
         from .modules import synth_model as sm
 
@@ -866,12 +866,9 @@ class Synthetic:
             err_dist_synth = []
             N_synth_stars = int(N_stars)
 
-        # Generate displaced isochrone, The 'N_stars=-99' indicates to return the
-        # isochrone only
-        fit_params_isoch = dict(fit_params)
-        fit_params_isoch["DR"] = 0.0
-        isochrone = sm.get_model(
-            fit_params_isoch,
+        # Generate displaced isochrone and full synthetic CMD array
+        isochrone, full_arr = sm.get_model(
+            fit_params,
             self.met_age_dict,
             self.met_tol,
             self.age_tol,
@@ -895,25 +892,6 @@ class Synthetic:
 
         # Extract magnitude and mass from the isochrone and the full synthetic cluster
         isoch_mag, isoch_mass = isochrone[0], isochrone[self.m_ini_idx]
-        # Generate physical synthetic cluster to extract the max mass
-        full_arr = sm.get_model(
-            fit_params_copy,
-            self.met_age_dict,
-            self.met_tol,
-            self.age_tol,
-            self.def_params,
-            self.m_ini_idx,
-            self.theor_tracks,
-            self.ext_law,
-            self.ext_coefs,
-            self.rand_floats,
-            self.DR_distribution,
-            self.st_dist_mass,
-            max_mag_syn,
-            err_dist_synth,
-            N_synth_stars,
-        )
-
         mag_full, mass_full = full_arr[0], full_arr[self.m_ini_idx]
         full_mag_min = mag_full.min()
 

@@ -158,9 +158,9 @@ def get_model(
     :param return_flag: Return mode: ``array``, ``isoch``, or ``isoch+array``.
     :type return_flag: str
 
-    :return: Synthetic array for ``return_flag='array'`` or ``'isoch'``; tuple
-        ``(isochrone, synthetic_array)`` for ``return_flag='isoch+array'``.
-        The synthetic cluster contains the data ``[mag, c1, (c2), mass, mass_b]``,
+    :return: Synthetic array for ``return_flag='array'`` or synthetic isochrone
+        plus synthetic array for ``return_flag='isoch'``.
+        The synthetic array contains the data ``[mag, c1, (c2), mass, mass_b]``,
         where ``mag`` is the magnitude, ``c1`` is the color, ``c2`` is the
         optional second color, and ``mass, mass_b`` are the masses of the single
         and secondary components of the binary systems, respectively
@@ -205,6 +205,26 @@ def get_model(
     # Move theoretical isochrone using the distance modulus
     isoch_moved = move_isochrone(isochrone, binar_flag, m_ini_idx, dm)
 
+    isoch_cut_dr_0 = np.array([])
+    if return_flag == "isoch":
+        # Set DR=0 to avoid disrupting the isochrone
+        dr = 0.0
+        isoch_extin_dr_0 = extinction(
+            ext_law,
+            ext_coefs,
+            rand_floats["norm"][0],
+            rand_floats["unif"][0],
+            DR_distribution,
+            m_ini_idx,
+            binar_flag,
+            av,
+            dr,
+            rv,
+            isoch_moved,
+        )
+        # Isochrone un-affected by DR
+        isoch_cut_dr_0 = cut_max_mag(isoch_extin_dr_0, max_mag_syn)
+
     # Apply extinction correction
     isoch_extin = extinction(
         ext_law,
@@ -223,13 +243,9 @@ def get_model(
     # Remove isochrone stars beyond the maximum magnitude
     isoch_cut = cut_max_mag(isoch_extin, max_mag_syn)
     if isoch_cut.size == 0:
-        if return_flag == "isoch+array":
-            return np.array([]), np.array([])
+        if return_flag == "isoch":
+            return isoch_cut_dr_0, np.array([])
         return np.array([])
-
-    # Return the isochrone only
-    if return_flag == "isoch":
-        return isoch_cut
 
     # Interpolate IMF's sampled masses into the isochrone.
     isoch_mass = mass_interp(
@@ -240,8 +256,8 @@ def get_model(
         # binar_flag,
     )
     if isoch_mass.size == 0:
-        if return_flag == "isoch+array":
-            return np.array([]), np.array([])
+        if return_flag == "isoch":
+            return isoch_cut_dr_0, np.array([])
         return np.array([])
 
     # import matplotlib.pyplot as plt
@@ -265,9 +281,8 @@ def get_model(
     # Assign errors according to errors distribution.
     synth_clust = add_errors(isoch_binar, err_dist_synth)
 
-    # Return both the isochrone and the full synthetic cluster
-    if return_flag == "isoch+array":
-        return isoch_cut, synth_clust
+    if return_flag == "isoch":
+        return isoch_cut_dr_0, synth_clust
 
     return synth_clust
 
