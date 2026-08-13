@@ -25,13 +25,31 @@ def to_point_find(
 
     :param x: One-dimensional array of isochrone color values.
     :type x: np.ndarray
-    :param y: One-dimensional array of isochrone magnitudes corresponding to ``x``.
+    :param y: One-dimensional array of isochrone magnitudes values.
     :type y: np.ndarray
     :param isochs_model: Name of the isochrone model.
     :type isochs_model: str
     :param window: Window length for the Savitzky-Golay filter.
+        - Smaller window:
+            - Less smoothing
+            - More sensitive to local features and noise
+            - Can detect short-lived changes in the isochrone
+            - More likely to produce an early/unstable turn-off
+        - Larger window:
+            - More smoothing
+            - Ignores small-scale structure
+            - Requires a broader, more persistent change in color
+            - Produces a more robust but potentially later/less precise detection
     :type window: int
     :param polyorder: Polynomial order for the Savitzky-Golay filter.
+        - Lower polyorder (e.g. 2):
+            - More restrictive local fit
+            - Smoother derivative
+            - Less sensitive to complicated curvature
+        - Higher polyorder(e.g. 4 or 5):
+            - Can reproduce more complicated local shapes
+            - Potentially more sensitive to real curvature
+            - Also potentially more sensitive to noise
     :type polyorder: int
     :param deriv: Derivative order for the Savitzky-Golay filter.
     :type deriv: int
@@ -51,7 +69,6 @@ def to_point_find(
     :rtype: tuple[float, float]
     """
     n = len(x)
-
     eps = eps_default
 
     # The MIST isochrones require a much larger epsilon value to identify the turn-off
@@ -78,10 +95,13 @@ def to_point_find(
     if to_idx < fallback_min_idx:
         # Assign to the index that corresponds to the middle point in magnitude
         y_mid_point = 0.5 * (max(y) + min(y))
-        to_idx = np.argmin(np.abs(y - y_mid_point))
-
-    # Extract the color and magnitude values at the detected turn-off index
-    to_col, to_mag = float(x[to_idx]), float(y[to_idx])
+        to_idx_mid = np.argmin(np.abs(y - y_mid_point))
+        to_mag = float(y[to_idx_mid])
+        # Leftmost color value
+        to_col = float(min(x))
+    else:
+        # Extract the color and magnitude values at the detected turn-off index
+        to_col, to_mag = float(x[to_idx]), float(y[to_idx])
 
     return to_col, to_mag
 
