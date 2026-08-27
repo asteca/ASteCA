@@ -21,6 +21,8 @@ class Cluster:
     :type cluster_name: str | None
     :param UCC_members_file: Loaded UCC members .parquet file
     :type UCC_members_file: pd.DataFrame | None
+    :param star_id: Array that contains per-star IDs
+    :type star_id: np.ndarray | None
     :param ra: Array that contains the right ascension (RA)
     :type ra: np.ndarray | None
     :param dec: Array that contains the declination (DEC)
@@ -77,6 +79,7 @@ class Cluster:
         self,
         cluster_name: str | None = None,
         UCC_members_file: pd.DataFrame | None = None,
+        star_id: np.ndarray | None = None,
         ra: np.ndarray | None = None,
         dec: np.ndarray | None = None,
         mag: np.ndarray | None = None,
@@ -100,6 +103,7 @@ class Cluster:
     ) -> None:
         self.cluster_name = cluster_name
         self.UCC_members_file = UCC_members_file
+        self.star_id = star_id
         self.ra = ra
         self.dec = dec
         self.mag = mag
@@ -125,6 +129,7 @@ class Cluster:
         none_attrs = [
             "cluster_name",
             "UCC_members_file",
+            "star_id",
             "ra",
             "dec",
             "mag",
@@ -172,10 +177,21 @@ class Cluster:
         if not cols_read:
             raise ValueError("No column names defined for cluster")
 
+        # Count photometric nan values
+        nan_phot = 0
+        if self.mag is not None:
+            nan_phot += np.isnan(self.mag).sum()
+        if self.color is not None:
+            nan_phot += np.isnan(self.color).sum()
+        if self.color2 is not None:
+            nan_phot += np.isnan(self.color2).sum()
+
         self._vp(f"Columns read   : {', '.join(cols_read)}", 1)
         if mag_lim is not None:
             self._vp(f"Max magnitude  : {mag_lim:.2f}", 1)
         self._vp(f"N_stars        : {self.N_stars}", 1)
+        if nan_phot > 0:
+            self._vp(f"N_nan_phot     : {nan_phot}", 1)
         self._vp(f"N_clust_min    : {self.N_clust_min}", 1)
         self._vp(f"N_clust_max    : {self.N_clust_max}", 1)
 
@@ -218,6 +234,9 @@ class Cluster:
         cluster_df = self.UCC_members_file[
             self.UCC_members_file["name"] == cluster_fname
         ]
+        # String columns
+        self.star_id = np.asarray(cluster_df["Source"], dtype=str)
+        # Float columns
         col_map = {
             "ra": "RA_ICRS",
             "dec": "DE_ICRS",
@@ -238,7 +257,7 @@ class Cluster:
         for attr, col in col_map.items():
             setattr(self, attr, np.asarray(cluster_df[col], dtype=float))
 
-        cols_read = list(col_map)
+        cols_read = ["star_id"] + list(col_map)
 
         mag_lim, N_stars = self._max_mag_cut(cols_read, np.array(self.mag))
 
@@ -252,6 +271,7 @@ class Cluster:
 
         # Value + uncertainty pairs
         pairs = [
+            ("star_id", None),
             ("ra", None),
             ("dec", None),
             ("probs", None),
@@ -268,7 +288,10 @@ class Cluster:
         for name, err_name in pairs:
             if getattr(self, name) is None:
                 continue
-            arr = np.asarray(getattr(self, name), dtype=float)
+            if name == "star_id":
+                arr = np.asarray(getattr(self, name), dtype=str)
+            else:
+                arr = np.asarray(getattr(self, name), dtype=float)
             setattr(self, name, arr)
             N_stars_lst.append(len(arr))
 
