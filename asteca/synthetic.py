@@ -313,9 +313,13 @@ class Synthetic:
             self.rand_floats["norm"][1],
         )
 
-        # Used by the `get_models()` and `stellar_stats()` methods
+        # Used by the `get_models()` and `stellar_parameters()` methods
+        self.star_id = cluster.star_id
         self.cluster_mag = cluster.mag
         self.cluster_colors = [cluster.color, cluster.color2]
+        # Used by get_stellar_masses()
+        self.cluster_e_mag = cluster.e_mag
+        self.cluster_e_colors = [cluster.e_color, cluster.e_color2]
 
         # Used by the `cluster_masses()` method
         self.cluster_ra = cluster.ra
@@ -330,7 +334,7 @@ class Synthetic:
         self,
         params: dict | None = None,
         N_stars: int = 100,
-    ) -> np.ndarray | tuple[np.ndarray, np.ndarray]:
+    ) -> np.ndarray:
         """Generate a synthetic cluster.
 
         The synthetic cluster is generated according to the parameters given in
@@ -355,7 +359,7 @@ class Synthetic:
             and ``mass, mass_b`` are the masses of the single and secondary components
             of the binary systems, respectively (if generated). If the system is a
             single star, then ``mass_b==np.nan``.
-        :rtype: np.ndarray | tuple[np.ndarray, np.ndarray]
+        :rtype: np.ndarray
         """
         from .modules import synth_model as sm
 
@@ -374,7 +378,7 @@ class Synthetic:
             err_dist_synth = []
             N_synth_stars = int(N_stars)
 
-        return sm.get_model(
+        _, synth_arr = sm.get_model(
             params,
             self.met_age_dict,
             self.met_tol,
@@ -391,6 +395,8 @@ class Synthetic:
             err_dist_synth,
             N_synth_stars,
         )
+
+        return synth_arr
 
     def get_models(
         self,
@@ -471,6 +477,9 @@ class Synthetic:
             "to_col": [],
             "to_mag": [],
         }
+        # Initial minimum isochrone index for identifying the turn-off point
+        fallback_min_idx = 10
+        to_idx_lst = [fallback_min_idx]
         for smodel in sampled_models:
             # Get both the isochrone and the synthetic cluster
             isoch_arr, synth_arr = sm.get_model(
@@ -489,7 +498,7 @@ class Synthetic:
                 self.max_mag_syn_obs,
                 self.err_dist_obs,
                 self.N_stars_obs,
-                return_flag="isoch",
+                isoch_flag=True,
             )
 
             # Do not store models that result in empty arrays
@@ -507,7 +516,20 @@ class Synthetic:
             # Extract isochrone up to the max mass
             mag, color = np.array([isoch_arr[0], isoch_arr[color_idx + 1]])[:, msk]
             # Find turn-off point for the isochrone
-            to_col, to_mag = ssf.to_point_find(color, mag, self.isochs.model)
+            to_col, to_mag, to_idx = ssf.to_point_find(
+                color, mag, self.isochs.model, fallback_min_idx
+            )
+
+            # If the turn-off point is below the minimum allowed, use the median of the
+            # previous (non fallback) turn-off points
+            if (to_idx < fallback_min_idx) and turn_off_points["to_col"]:
+                to_col = np.median(turn_off_points["to_col"])
+                to_mag = np.median(turn_off_points["to_mag"])
+
+            to_idx_lst.append(to_idx)
+            # Use the 10% percentile as the minimum fallback value for the turn-off index
+            fallback_min_idx = int(np.percentile(to_idx_lst, 10))
+
             turn_off_points["to_col"].append(to_col)
             turn_off_points["to_mag"].append(to_mag)
 
@@ -521,16 +543,26 @@ class Synthetic:
 
         # Used by: cluster_masses
         self.sampled_models = sampled_models_no_empty
-        # Used by: stellar_stats, cluster_masses
+        # Used by: stellar_parameters, cluster_masses
         self.sampled_synthcls = sampled_synthcls
-        # Used by: stellar_stats (get_bss_probabilities)
+        # Used by: stellar_parameters (get_bss_probabilities)
         self.turn_off_points = turn_off_points
+        # Used by: stellar_parameters (get_bss_masses)
+        self.extrinsic_pars = {
+            "values": {"Av": model["Av"], "dm": model["dm"], "Rv": model["Rv"]},
+            "stddevs": {
+                "Av": model_std["Av"],
+                "dm": model_std["dm"],
+                "Rv": model_std["Rv"],
+            },
+        }
 
         self._vp(f"N_models       : {len(sampled_models_no_empty)}", 1)
         self._vp("Attributes stored in Synthetic object", 1)
 
     def stellar_parameters(
         self,
+        isochs_young: Isochrones | None = None,
         mag_offset_1: float = 0.5,
         col_offset_1: float = -0.1,
         mag_offset_2: float = -0.5,
@@ -542,6 +574,8 @@ class Synthetic:
         - Binary probabilities; if binarity was estimated
         - Blue straggler probabilities
 
+        :param isochs_young: Isochrones object with log(age)<=7 isochrones
+        :type isochs_young: Isochrones | None
         :param mag_offset_1: Offset applied to the turn-off magnitude to define the
             first BSS region
         :type mag_offset_1: float
@@ -562,24 +596,28 @@ class Synthetic:
 
         :raises ValueError: If the `get_models()` method was not previously called
         """
-        if hasattr(self, "sampled_synthcls") is False:
+        if not hasattr(self, "sampled_synthcls"):
             raise ValueError(
                 "This method requires running the 'get_models()' method first"
             )
 
         from .modules import stellar_stats_funcs as ssf
 
-        N_sampled_synthcls = len(self.sampled_synthcls)
-
         # Stellar masses
         m1_med, m1_std, m2_med, m2_std, nan_msk, m2_obs = ssf.get_stellar_masses(
-            self.cluster_mag, self.cluster_colors, self.m_ini_idx, self.sampled_synthcls
+            self.cluster_mag,
+            self.cluster_e_mag,
+            self.cluster_colors,
+            self.cluster_e_colors,
+            self.m_ini_idx,
+            self.sampled_synthcls,
         )
 
         # Binary probabilities
-        binar_probs = ssf.get_binar_probabilities(m2_obs, N_sampled_synthcls)
+        binar_probs = ssf.get_binar_probabilities(m2_obs)
 
         # BSS probabilities
+        N_sampled_synthcls = len(self.sampled_synthcls)
         bss_probs = ssf.get_bss_probabilities(
             self.cluster_mag,
             self.cluster_colors,
@@ -591,12 +629,43 @@ class Synthetic:
             col_offset_2,
         )
 
+        binar_probs = (1 - bss_probs) * binar_probs
+        single_probs = 1 - binar_probs - bss_probs
+
+        N_cluster = len(self.cluster_mag)
+        bss_mass_median, bss_mass_stddev = (
+            np.full(N_cluster, np.nan),
+            np.full(N_cluster, np.nan),
+        )
+        if isochs_young is not None:
+            # Check that at least one isochrone with loga<=7 exists
+            if isochs_young.amin > 7:
+                raise ValueError("No isochrones with log(ages)<=7 found")
+
+            bss_mass_median, bss_mass_stddev = ssf.get_bss_masses(
+                self.cluster_mag,
+                self.cluster_colors[0],
+                self.extrinsic_pars,
+                self.ext_law,
+                self.ext_coefs,
+                self.rng,
+                isochs_young.met_age_dict,
+                isochs_young.theor_tracks,
+            )
+        else:
+            warnings.warn(
+                "No young isochrones were provided, BSSs masses can not be estimated"
+            )
+
         # Store as dictionary
         data = {
-            "m1": m1_med,
-            "m1_std": m1_std,
-            "m2": m2_med,
-            "m2_std": m2_std,
+            "mass_single": m1_med,
+            "mass_single_std": m1_std,
+            "mass_binar": m2_med,
+            "mass_binar_std": m2_std,
+            "mass_bss": bss_mass_median,
+            "mass_bss_std": bss_mass_stddev,
+            "single_prob": single_probs,
             "binar_prob": binar_probs,
             "bss_prob": bss_probs,
         }
@@ -605,14 +674,19 @@ class Synthetic:
         for value in data.values():
             value[nan_msk] = np.nan
 
+        # Add ID column if it exists
+        if self.star_id is not None:
+            data = {"star_id": self.star_id, **data}
+
         if nan_msk.sum() > 0:
+            self._vp("", 0)
             warnings.warn(
                 f"\nN={nan_msk.sum()} stars found with no valid photometric data. "
                 + "These will be assigned 'nan' values\nfor masses and "
                 + "binarity probability"
             )
 
-        self._vp("\nStellar masses and binary+BSS probabilities estimated", 1)
+        self._vp("\nStellar masses and probabilities estimated", 1)
 
         return data
 
@@ -883,7 +957,7 @@ class Synthetic:
             max_mag_syn,
             err_dist_synth,
             N_synth_stars,
-            return_flag="isoch",
+            isoch_flag=True,
         )
 
         if full_track:
