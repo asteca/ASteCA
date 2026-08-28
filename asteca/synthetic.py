@@ -890,7 +890,7 @@ class Synthetic:
 
         return {
             "M_init": (np.median(M_init), np.std(M_init)),
-            "M_actual": (np.median(M_actual), np.median(M_actual)),
+            "M_actual": (np.median(M_actual), np.std(M_actual)),
             "M_obs": (np.median(masses_all[0]), np.std(masses_all[0])),
             "M_phot": (np.median(masses_all[1]), np.std(masses_all[1])),
             "M_evol": (np.median(masses_all[2]), np.std(masses_all[2])),
