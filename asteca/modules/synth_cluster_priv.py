@@ -7,7 +7,7 @@ from .imfs import invTrnsfSmpl, sampleInv
 
 def sample_imf(
     rng: np.random.Generator, IMF_name: str, max_mass: float, Nmets: int, Nages: int
-) -> tuple[list, list]:
+) -> list:
     """Returns arrays of sampled stars for the selected IMF.
 
     :param rng: Random number generator.
@@ -21,9 +21,8 @@ def sample_imf(
     :param Nages: Number of age values.
     :type Nages: int
 
-    :returns: A tuple containing two lists. The first list contains the sampled masses,
-     and the second list contains the ordered sampled masses.
-    :rtype: tuple[list, list]
+    :returns: Sampled masses.
+    :rtype: list
     """
     inv_cdf = invTrnsfSmpl(IMF_name)
 
@@ -31,7 +30,7 @@ def sample_imf(
     # analysis points to this being the optimal N_chunk
     N_chunk = max(100, int(max_mass / 40))
 
-    st_dist_mass, st_dist_mass_ordered = [], []
+    st_dist_mass = []
     for i in range(Nmets):
         met_lst, met_lst_ord = [], []
         for j in range(Nages):
@@ -39,9 +38,8 @@ def sample_imf(
             met_lst.append(sampled_IMF)
             met_lst_ord.append(np.sort(sampled_IMF))
         st_dist_mass.append(met_lst)
-        st_dist_mass_ordered.append(met_lst_ord)
 
-    return st_dist_mass, st_dist_mass_ordered
+    return st_dist_mass
 
 
 def add_binarity(

@@ -41,7 +41,6 @@ def get_M_actual(
     rng: np.random.Generator,
     m_ini_idx: int,
     st_dist_mass: list[list],
-    st_dist_mass_ordered: list[list],
     sampled_synthcl: np.ndarray,
 ) -> tuple[float, float, float]:
     """Estimate the actual mass using the observed mass and the fraction of
@@ -57,8 +56,6 @@ def get_M_actual(
     :type m_ini_idx: int
     :param st_dist_mass: List of sampled masses
     :type st_dist_mass: list[list]
-    :param st_dist_mass_ordered: List of ordered sampled masses
-    :type st_dist_mass_ordered: list[list]
     :param sampled_synthcl: Sampled synthetic cluster data.
     :type sampled_synthcl: np.ndarray
 
@@ -72,18 +69,25 @@ def get_M_actual(
     Nmets, Nages = len(st_dist_mass), len(st_dist_mass[0])
     i = rng.integers(Nmets)
     j = rng.integers(Nages)
-    sorted_masses = st_dist_mass_ordered[i][j]
 
-    idx_min = np.argmin(abs(sorted_masses - mass_ini.min()))
-    idx_max = np.argmin(abs(sorted_masses - mass_ini.max()))
-    M_phot_sample = max(1, sorted_masses[:idx_min].sum())
-    M_obs_sample = max(1, sorted_masses[idx_min:idx_max].sum())
+    masses = st_dist_mass[i][j]
+
+    # Find sampled IMF masses closest to the observed mass limits
+    mass_min = masses[np.argmin(np.abs(masses - mass_ini.min()))]
+    mass_max = masses[np.argmin(np.abs(masses - mass_ini.max()))]
+
+    # Calculate the photometric mass fraction and scale it to the observed mass
+    M_phot_sample = max(1, masses[masses < mass_min].sum())
+    M_obs_sample = max(
+        1,
+        masses[(masses >= mass_min) & (masses < mass_max)].sum(),
+    )
+
     factor = M_phot_sample / M_obs_sample
     M_phot = factor * M_obs
+    M_actual = M_obs + M_phot
 
-    M_a = M_obs + M_phot
-
-    return M_obs, M_phot, M_a
+    return M_obs, M_phot, M_actual
 
 
 def stellar_evol_mass_loss(z_met: float, loga: float) -> float:

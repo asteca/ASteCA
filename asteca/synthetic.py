@@ -136,7 +136,7 @@ class Synthetic:
 
         # Sample the selected IMF
         Nmets, Nages = self.isochs.theor_tracks.shape[:2]
-        self.st_dist_mass, self.st_dist_mass_ordered = scp.sample_imf(
+        self.st_dist_mass = scp.sample_imf(
             self.rng, self.IMF_name, self.max_mass, Nmets, Nages
         )
 
@@ -149,6 +149,23 @@ class Synthetic:
             self.isochs.theor_tracks,
             self.isochs.color_filters,
         )
+
+        # import sys
+        # def memory_size(obj):
+        #     if isinstance(obj, np.ndarray):
+        #         return obj.nbytes
+
+        #     if isinstance(obj, (list, tuple)):
+        #         return sys.getsizeof(obj) + sum(memory_size(x) for x in obj)
+
+        #     return sys.getsizeof(obj)
+        # for name, obj in (
+        #     ("st_dist_mass", self.st_dist_mass),
+        #     ("theor_tracks", self.theor_tracks),
+        # ):
+        #     size = memory_size(obj)
+        #     print(f"{name}: {size / 1024**2:.2f} MiB")
+        # # 'st_dist_mass' occupies ~4.5X more memory than 'theor_tracks'
 
         # Data used by the `generate()` method
         self.m_ini_idx = 2  # (0->mag, 1->color, 2->mass_ini)
@@ -852,7 +869,6 @@ class Synthetic:
                 self.rng,
                 self.m_ini_idx,
                 self.st_dist_mass,
-                self.st_dist_mass_ordered,
                 sampled_synthcl,
             )
 
