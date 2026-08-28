@@ -607,6 +607,7 @@ def merge_ps_massini_check(mass_col: str, isochrones: dict) -> tuple[list, list]
     :return: Ordered isochrones and metallicity-age array.
     :rtype: tuple[list, list]
     """
+    multiple_phot_syst = False
     met_age_arr, isochrones_ordered = [], []
     for met_k, age_dict in isochrones.items():
         met_vals = []
@@ -616,11 +617,14 @@ def merge_ps_massini_check(mass_col: str, isochrones: dict) -> tuple[list, list]
             df_age_0 = age_list[0]
             # Check masses if more than one photometric system was used
             if len(age_list) > 1:
+                multiple_phot_syst = True
                 for df_age_X in age_list[1:]:
                     mass_diff = abs(df_age_0[mass_col] - df_age_X[mass_col]).sum()
                     if mass_diff > 0.001:
                         raise ValueError(
-                            "Initial mass values differ across photometric systems"
+                            "\nMore than one photometric system was detected at "
+                            f"(met={met_k}, age{age_k}) and the initial mass values "
+                            "differ across them."
                         )
                     # Drop 'mass_col' column from this photometric system
                     del df_age_X[mass_col]
@@ -630,30 +634,63 @@ def merge_ps_massini_check(mass_col: str, isochrones: dict) -> tuple[list, list]
             met_vals.append(df_age_0)
         isochrones_ordered.append(met_vals)
 
+    # Check whether the (metallicity, age) grid is regular
+    met_age = np.asarray(met_age_arr, dtype=float)
+    met_vals = np.unique(met_age[:, 0])
+    age_vals = np.unique(met_age[:, 1])
+
+    issues = []
+
+    def _find_irregular_spacing(values: np.ndarray, name: str) -> list[str]:
+        if len(values) <= 2:
+            return []
+
+        diffs = np.diff(values)
+        step = np.median(diffs)
+        bad_idx = np.where(~np.isclose(diffs, step))[0]
+
+        if not len(bad_idx):
+            return []
+
+        lines = [f"Irregular {name} spacing (expected step ~{step:g}):"]
+        for i in bad_idx:
+            i0 = max(0, i - 1)
+            i1 = min(len(values), i + 3)
+            context = values[i0:i1]
+            lines.append(
+                f"  around {values[i]:g} -> {values[i + 1]:g} "
+                f"(step={diffs[i]:g}): {context}"
+            )
+
+        return lines
+
+    issues.extend(_find_irregular_spacing(met_vals, "metallicity"))
+    issues.extend(_find_irregular_spacing(age_vals, "age"))
+
+    # Check for missing (metallicity, age) combinations
+    grid = {(met, age) for met, age in met_age}
+    for met in met_vals:
+        ages_present = np.sort(np.array([age for m, age in grid if np.isclose(m, met)]))
+        missing = [age for age in age_vals if (met, age) not in grid]
+        for age in missing:
+            idx = np.searchsorted(ages_present, age)
+            adjacent = ages_present[max(0, idx - 1) : min(len(ages_present), idx + 1)]
+            issues.append(
+                f"Missing grid point (met={met:g}, age={age:g}); "
+                f"adjacent ages at this metallicity: {adjacent}"
+            )
+
+    if issues:
+        warnings.warn(
+            "The (metallicity, age) isochrone grid is irregular:\n" + "\n".join(issues)
+        )
+
     # Check array sizes and mass order (min to max)
     Nvals = []
     for met in isochrones_ordered:
         for age in met:
             for arr in age.values():
                 Nvals.append(arr.shape[0])
-                # if k == mass_col:
-                #     # Use a mass tolerance instead of the 'sort_flag':
-                #     #
-                #     # sort_flag = all(arr[i] <= arr[i + 1] for i in range(len(arr) - 1))
-                #     #
-                #     # which checks if all masses are perfectly sorted, because the
-                #     # PARSEC isochrones contain some rounding errors of the order
-                #     # 10**-7, 10**-8 for large masses, which would always set the flag
-                #     # to False
-                #     max_mass_diff = max(
-                #         (arr[i] - arr[i + 1]) for i in range(len(arr) - 1)
-                #     )
-                #     if max_mass_diff > 0.01:
-                #         raise ValueError(
-                #             "Masses are not min-max sorted in loaded isochrones."
-                #         )
-                #     if np.any(np.diff(arr) < -0.01):
-                #         raise ValueError("Masses are not min-max sorted in loaded isochrones.")
 
     if not np.all(Nvals):
         raise ValueError(
