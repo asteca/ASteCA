@@ -47,7 +47,9 @@ def bin_edges_f(
     # used by histogram2d
     ranges, Nbins = [], []
     for be in bin_edges:
-        ranges.append([be[0], be[-1]])
+        # Add a small buffer to the edges to rejecting stars on the edges when
+        # generating the Hess diagram
+        ranges.append([be[0] - 0.001, be[-1] + 0.001])
         Nbins.append(len(be))
 
     return ranges, Nbins
