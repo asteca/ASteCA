@@ -98,6 +98,8 @@ class Synthetic:
         self.verbose = verbose
 
         # Set seed
+        if self.seed is None:
+            self.seed = np.random.randint(0, 100_000)
         self.rng = np.random.default_rng(self.seed)
 
         # Check gamma distribution
@@ -321,7 +323,7 @@ class Synthetic:
 
         # Calibrate parameters using the observed cluster
         self.max_mag_syn_obs = max(cluster.mag)
-        self.N_stars_obs = len(cluster.mag)
+        self.N_stars_obs = cluster.N_stars - cluster.N_nan_phot
         self.err_dist_obs = scp.error_distribution(
             cluster.mag,
             cluster.e_mag,
