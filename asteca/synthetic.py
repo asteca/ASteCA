@@ -138,6 +138,7 @@ class Synthetic:
 
         # Sample the selected IMF
         Nmets, Nages = self.isochs.theor_tracks.shape[:2]
+        self._vp("(Sampling IMF)", 1)
         self.st_dist_mass = scp.sample_imf(
             self.rng, self.IMF_name, self.max_mass, Nmets, Nages
         )
