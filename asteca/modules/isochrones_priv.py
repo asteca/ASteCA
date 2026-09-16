@@ -65,6 +65,7 @@ def load(
     color2: tuple | None,
     column_names: dict | None,
     N_interp: int,
+    uniform_mass_interp: bool,
     parsec_rm_stages: float,
 ) -> tuple[np.ndarray, list, dict, int]:
     """Load the theoretical isochrones and return processed data.
@@ -85,6 +86,9 @@ def load(
     :type column_names: dict | None
     :param N_interp: Number of points to interpolate.
     :type N_interp: int
+    :param uniform_mass_interp: If True, use a uniform mass interpolation grid.
+        If False, use a weighted mass distribution.
+    :type uniform_mass_interp: bool
     :param parsec_rm_stages: All stages with values equal or larger than this value
         will be removed from the PARSEC models
     :type parsec_rm_stages: float
@@ -123,7 +127,7 @@ def load(
     # Time performance:
     # 10_000: 1, 5000: 0.74, 2500: 0.63, 2000: 0.59, 1000: 0.53, 500: 0.51
     isochrones = interp_isochrones(
-        N_interp, mass_col, eep_col, met_age_sorted, isochs_sorted
+        N_interp, mass_col, eep_col, met_age_sorted, isochs_sorted, uniform_mass_interp
     )
 
     isochrones, met_age_arr = merge_ps_massini_check(mass_col, isochrones)
@@ -488,20 +492,31 @@ def interp_isochrones(
     eep_col: str | None,
     met_age_sorted: list,
     isochs_sorted: list[np.ndarray],
+    uniform_mass_interp: bool,
 ) -> dict:
     """
     Interpolate the isochrone data based on either mass or EEP distribution.
 
+    The variables b1, ..., b5 determine how many of the N_interp interpolation
+    points are assigned to five different mass intervals.
+
+    The intention is to sample the high-mass end much more densely, because the
+    upper isochrone changes more rapidly and contains crucial evolutionary phases
+    where finer interpolation is useful.
+
     :param N_interp: Number of points to interpolate (for mass distribution).
     :type N_interp: int
-    :param mass_col: Column name for the initial mass (for mass distribution).
+    :param mass_col: Column name for the initial mass.
     :type mass_col: str
-    :param eep_col: Column name for the EEP (for EEP distribution).
+    :param eep_col: Column name for the EEP.
     :type eep_col: str | None
     :param met_age_sorted: List of sorted metallicity and ages.
     :type met_age_sorted: list
     :param isochs_sorted: List of sorted isochrones as numpy arrays.
     :type isochs_sorted: list[np.ndarray]
+    :param uniform_interp: If True, use a uniform mass interpolation grid.
+        If False, use the weighted mass distribution.
+    :type uniform_interp: bool
 
     :raises ValueError: If the isochrone dtype does not contain column names.
 
@@ -510,30 +525,20 @@ def interp_isochrones(
     """
     # Dummy values (avoid typing errors)
     b1 = b2 = b3 = b4 = b5 = 0
-    mass_percs = np.array([0.25, 0.5, 0.75, 0.9])
+    mass_fracs = np.array([0.25, 0.5, 0.75, 0.9], dtype=float)
     eep_dist = []
 
     isochrones: dict = {}
     # Define interpolation grid (independent of per-isochrone operations)
-    if eep_col is None:
+    if eep_col is None and not uniform_mass_interp:
         # Mass-based distribution parameters
         weights = np.array([0.5, 1, 1.5, 2, 5], dtype=float)
         percs = weights / weights.sum()
+
         b1, b2, b3, b4 = [int(N_interp * p) for p in percs[:4]]
         b5 = N_interp - (b1 + b2 + b3 + b4)
-        # Per isochrone mass based distribution
-        mass_percs = np.array([0.25, 0.5, 0.75, 0.9], dtype=float)
 
-        # General distribution, isochrone independent. The above works a bit better
-        # mp = np.array([0.0, 0.25, 0.5, 0.75, 0.9, 1.])
-        # m1 = np.linspace(mp[0], mp[1], b1, endpoint=False)
-        # m2 = np.linspace(mp[1], mp[2], b2, endpoint=False)
-        # m3 = np.linspace(mp[2], mp[3], b3, endpoint=False)
-        # m4 = np.linspace(mp[3], mp[4], b4, endpoint=False)
-        # m5 = np.linspace(mp[4], mp[5], b5)
-        # mass_dist = np.concatenate([m1, m2, m3, m4, m5])
-
-    else:
+    elif eep_col is not None:
         # EEP-based global distribution
         if not isochs_sorted:
             raise ValueError("Empty 'isochs_sorted'")
@@ -553,15 +558,21 @@ def interp_isochrones(
             mmin = np.min(isoch[mass_col])
             mmax = np.max(isoch[mass_col])
 
-            mstep1, mstep2, mstep3, mstep4 = mmax * mass_percs
-            m1 = np.linspace(mmin, mstep1, b1, endpoint=False)
-            m2 = np.linspace(mstep1, mstep2, b2, endpoint=False)
-            m3 = np.linspace(mstep2, mstep3, b3, endpoint=False)
-            m4 = np.linspace(mstep3, mstep4, b4, endpoint=False)
-            m5 = np.linspace(mstep4, mmax, b5)
+            if uniform_mass_interp:
+                interp_dist = np.linspace(mmin, mmax, N_interp)
 
-            # General distribution, isochrone independent
-            interp_dist = np.concatenate((m1, m2, m3, m4, m5))
+            else:
+                mstep1, mstep2, mstep3, mstep4 = mmax * mass_fracs
+
+                m1 = np.linspace(mmin, mstep1, b1, endpoint=False)
+                m2 = np.linspace(mstep1, mstep2, b2, endpoint=False)
+                m3 = np.linspace(mstep2, mstep3, b3, endpoint=False)
+                m4 = np.linspace(mstep3, mstep4, b4, endpoint=False)
+                m5 = np.linspace(mstep4, mmax, b5)
+
+                # General distribution, isochrone independent
+                interp_dist = np.concatenate((m1, m2, m3, m4, m5))
+
             interp_col = isoch[mass_col]
             cols_keep = isoch.dtype.names
 
@@ -607,7 +618,7 @@ def merge_ps_massini_check(mass_col: str, isochrones: dict) -> tuple[list, list]
     :return: Ordered isochrones and metallicity-age array.
     :rtype: tuple[list, list]
     """
-    multiple_phot_syst = False
+    # Process all isochrones, merging photometric systems if needed
     met_age_arr, isochrones_ordered = [], []
     for met_k, age_dict in isochrones.items():
         met_vals = []
@@ -617,7 +628,6 @@ def merge_ps_massini_check(mass_col: str, isochrones: dict) -> tuple[list, list]
             df_age_0 = age_list[0]
             # Check masses if more than one photometric system was used
             if len(age_list) > 1:
-                multiple_phot_syst = True
                 for df_age_X in age_list[1:]:
                     mass_diff = abs(df_age_0[mass_col] - df_age_X[mass_col]).sum()
                     if mass_diff > 0.001:

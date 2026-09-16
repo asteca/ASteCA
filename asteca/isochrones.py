@@ -48,6 +48,11 @@ class Isochrones:
     :param N_points: Number of interpolation points used to ensure that all isochrones
         are the same shape
     :type N_points: int
+    :param uniform_mass_interp: If ``True``, use a uniform mass interpolation grid
+        If ``False``, use a weighted mass distribution that interpolates the
+        large masses more finely than the low masses. Applies to isochrones with no
+        EEPs (Equivalent Evolutionary Point) only.
+    :type uniform_mass_interp: bool
     :param parsec_rm_stages: If the isochrones are PARSEC, this value indicates which
         stages should be removed (all equal or larger than this value). The value is
         set to ``9.0`` by default which corresponds to the  *post_AGB* stage still
@@ -79,6 +84,7 @@ class Isochrones:
         color2_effl: tuple | None = None,
         z_to_FeH: float | None = None,
         N_points: int = 2000,
+        uniform_mass_interp: bool = True,
         parsec_rm_stages: float = 9.0,
         column_names: dict | None = None,
         verbose: int = 1,
@@ -94,6 +100,7 @@ class Isochrones:
         self.z_to_FeH = z_to_FeH
         self.column_names = column_names
         self.N_points = N_points
+        self.uniform_mass_interp = uniform_mass_interp
         self.parsec_rm_stages = parsec_rm_stages
         self.verbose = verbose
 
@@ -128,6 +135,7 @@ class Isochrones:
                 self.color2,
                 self.column_names,
                 self.N_points,
+                self.uniform_mass_interp,
                 self.parsec_rm_stages,
             )
         )
