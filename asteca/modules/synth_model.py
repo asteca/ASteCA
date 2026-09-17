@@ -732,8 +732,10 @@ def extinction(
 
         if DR_distribution == "uniform":
             # Transform uniform random values from [0, 1] to [-1, 1], then scale by dr
+            # to get the differential reddening values in the range [-dr, dr].
             dr_arr = (2.0 * rand_unif[:Ns] - 1.0) * dr
         elif DR_distribution == "normal":
+            #  Transform normal random values to have a standard deviation of dr
             dr_arr = rand_norm[:Ns] * dr
         else:
             dr_arr = 0
