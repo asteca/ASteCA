@@ -70,7 +70,7 @@ class Synthetic:
         max_mass: int = 10_000,
         gamma: float | str = "D&K",
         ext_law: str = "CCMO",
-        DR_distribution: str = "uniform",
+        DR_distribution: str = "normal",
         seed: int | None = None,
         verbose: int = 1,
     ) -> None:
