@@ -354,6 +354,7 @@ class Synthetic:
         self,
         params: dict | None = None,
         N_stars: int = 100,
+        show_errors: bool = False,
     ) -> np.ndarray:
         """Generate a synthetic cluster.
 
@@ -370,8 +371,11 @@ class Synthetic:
 
         :param params: Dictionary containing the values for the fundamental parameters.
         :type params: dict | None
-        :param N_stars: Number of synthetic stars to generate
+        :param N_stars: Number of synthetic stars to generate.
         :type N_stars: int
+        :param show_errors: If ``True``, possible errors will be printed to the screen.
+            Useful for debugging.
+        :type show_errors: bool
 
         :return: Returns a ``np.array`` containing a synthetic cluster
             with the data ``[mag, c1, (c2), mass, mass_b]``, where ``mag`` is
@@ -414,6 +418,7 @@ class Synthetic:
             max_mag_syn,
             err_dist_synth,
             N_synth_stars,
+            show_errors,
         )
 
         return synth_arr

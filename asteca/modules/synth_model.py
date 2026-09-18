@@ -116,6 +116,7 @@ def get_model(
     max_mag_syn: float,
     err_dist_synth: list[np.ndarray],
     N_synth_stars: int,
+    show_errors: bool = False,
     isoch_flag: bool = False,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Generate a synthetic cluster.
@@ -174,6 +175,14 @@ def get_model(
     met, loga, alpha, beta, av, dr, rv, dm, ml, mh, al, ah = properModel(
         met_age_dict, def_params, params, met_tol, age_tol
     )
+
+    # This guards against excessive clipping into the negative values of Av,
+    # which would produce nonphysical results. Some clipping is still
+    # present when DR_distribution=="normal"
+    if dr > av:
+        if show_errors:
+            print(f"DR cannot be greater than Av: DR={dr:.3f} > Av={av:.3f}")
+        return np.array([]), np.array([])
 
     # If (z, a) are both fixed, use the single processed isochrone
     if ml == al == mh == ah == 0:
@@ -242,6 +251,11 @@ def get_model(
     # Remove isochrone stars beyond the maximum magnitude
     isoch_cut = cut_max_mag(isoch_extin, max_mag_syn)
     if isoch_cut.size == 0:
+        if show_errors:
+            print(
+                f"No stars left after max magnitude cut (met={met:.5f},"
+                + f"log(age)={loga:.3f}, Av={av:.3f}, DR={dr:.3f}, dm={dm:.3f})"
+            )
         return isoch_extin_dr_0, np.array([])
 
     # Interpolate IMF's sampled masses into the isochrone.
@@ -253,6 +267,11 @@ def get_model(
         # binar_flag,
     )
     if isoch_mass.size == 0:
+        if show_errors:
+            print(
+                f"No stars left after IMF interpolation (met={met:.5f},"
+                + f"log(age)={loga:.3f}, Av={av:.3f}, DR={dr:.3f}, dm={dm:.3f})"
+            )
         return isoch_extin_dr_0, np.array([])
 
     # Assignment of binarity.
