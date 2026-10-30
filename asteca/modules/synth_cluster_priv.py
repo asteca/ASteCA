@@ -629,3 +629,46 @@ def error_distribution(
         err_dist.append(rand_norm_vals[:N] * e_col[idx])
 
     return err_dist
+
+
+def mass_idx_lookup(
+    theor_tracks: np.ndarray, st_dist_mass: list, m_ini_idx: int
+) -> dict:
+    """Pre-compute the search indexes of each sampled IMF mass distribution into
+    the mass grid of the isochrones, used by :py:func:`mass_interp`.
+
+    In :py:func:`get_model` the masses of the isochrone are always taken from a
+    single node of the (z, log(age)) grid: the closest node (m0, a0) to the model,
+    with m0 in (ml, mh) and a0 in (al, ah). The IMF sample used is
+    ``st_dist_mass[ml][al]``. Hence, for each IMF sample (ml, al) only the (up to)
+    four nodes (ml or ml+1, al or al+1) are required.
+
+    The indexes are ``np.searchsorted(mass_grid, st_dist_mass[ml][al])`` where
+    ``mass_grid = theor_tracks[m0][a0][m_ini_idx]``, i.e.: the full mass grid
+    before the maximum magnitude cut. These are stored with the smallest integer
+    type that can hold them, to reduce memory usage.
+
+    :param theor_tracks: Array of theoretical isochrones.
+    :type theor_tracks: np.ndarray
+    :param st_dist_mass: Sampled IMF mass distributions.
+    :type st_dist_mass: list
+    :param m_ini_idx: Index of the initial mass.
+    :type m_ini_idx: int
+
+    :returns: Dictionary with keys (ml, al, m0, a0) and integer arrays of indexes
+     as values.
+    :rtype: dict
+    """
+    N_z, N_a = theor_tracks.shape[:2]
+    N_interp = theor_tracks.shape[-1]
+    dtype = np.int16 if N_interp <= np.iinfo(np.int16).max else np.int32
+
+    lookup = {}
+    for ml in range(N_z):
+        for al in range(N_a):
+            for m0 in sorted({ml, min(ml + 1, N_z - 1)}):
+                for a0 in sorted({al, min(al + 1, N_a - 1)}):
+                    lookup[(ml, al, m0, a0)] = np.searchsorted(
+                        theor_tracks[m0][a0][m_ini_idx], st_dist_mass[ml][al]
+                    ).astype(dtype)
+    return lookup

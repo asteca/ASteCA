@@ -218,6 +218,11 @@ class Synthetic:
         # Store for internal usage
         self.met_age_dict = self.isochs.met_age_dict
 
+        # Pre-computed search indexes used by mass_interp()
+        self.mass_idx = scp.mass_idx_lookup(
+            self.theor_tracks, self.st_dist_mass, self.m_ini_idx
+        )
+
         # Check that the ranges are respected
         for par in ("met", "loga"):
             if par in def_params:
@@ -415,6 +420,7 @@ class Synthetic:
             self.rand_floats,
             self.DR_distribution,
             self.st_dist_mass,
+            self.mass_idx,
             max_mag_syn,
             err_dist_synth,
             N_synth_stars,
@@ -520,6 +526,7 @@ class Synthetic:
                 self.rand_floats,
                 self.DR_distribution,
                 self.st_dist_mass,
+                self.mass_idx,
                 self.max_mag_syn_obs,
                 self.err_dist_obs,
                 self.N_stars_obs,
@@ -978,6 +985,7 @@ class Synthetic:
             self.rand_floats,
             self.DR_distribution,
             self.st_dist_mass,
+            self.mass_idx,
             max_mag_syn,
             err_dist_synth,
             N_synth_stars,
