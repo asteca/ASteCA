@@ -65,8 +65,8 @@ def load(
     color2: tuple | None,
     column_names: dict | None,
     N_interp: int,
-    uniform_mass_interp: bool,
     parsec_rm_stages: float,
+    mass_interpolation: str,
 ) -> tuple[np.ndarray, list, dict, int]:
     """Load the theoretical isochrones and return processed data.
 
@@ -86,9 +86,6 @@ def load(
     :type column_names: dict | None
     :param N_interp: Number of points to interpolate.
     :type N_interp: int
-    :param uniform_mass_interp: If True, use a uniform mass interpolation grid.
-        If False, use a weighted mass distribution.
-    :type uniform_mass_interp: bool
     :param parsec_rm_stages: All stages with values equal or larger than this value
         will be removed from the PARSEC models
     :type parsec_rm_stages: float
@@ -118,16 +115,15 @@ def load(
 
     met_age_sorted, isochs_sorted = sort_by_met_age(met_age_vals, isoch_arrays)
 
-    # N_interp = 10_000 gives excellent photometric results
-    # N_interp = 5000 gives good photometric results
-    # N_interp = 2500 gives reasonable photometric results
-    # N_interp = 2000 gives borderline photometric results (binary artifacts in low mass region)
-    # N_interp = 1000 gives sub-par photometric results
-    # N_interp = 500 gives poor photometric results
-    # Time performance:
-    # 10_000: 1, 5000: 0.74, 2500: 0.63, 2000: 0.59, 1000: 0.53, 500: 0.51
+    # Interpolate the isochrones based on either mass or EEP distribution
     isochrones = interp_isochrones(
-        N_interp, mass_col, eep_col, met_age_sorted, isochs_sorted, uniform_mass_interp
+        N_interp,
+        mass_col,
+        eep_col,
+        met_age_sorted,
+        isochs_sorted,
+        mass_interpolation,
+        all_filters,
     )
 
     isochrones, met_age_arr = merge_ps_massini_check(mass_col, isochrones)
@@ -492,7 +488,9 @@ def interp_isochrones(
     eep_col: str | None,
     met_age_sorted: list,
     isochs_sorted: list[np.ndarray],
-    uniform_mass_interp: bool,
+    mass_interpolation: str,
+    all_filters: list,
+    mass_tol: float = 1e-6,
 ) -> dict:
     """
     Interpolate the isochrone data based on either mass or EEP distribution.
@@ -514,86 +512,267 @@ def interp_isochrones(
     :type met_age_sorted: list
     :param isochs_sorted: List of sorted isochrones as numpy arrays.
     :type isochs_sorted: list[np.ndarray]
-    :param uniform_interp: If True, use a uniform mass interpolation grid.
-        If False, use the weighted mass distribution.
-    :type uniform_interp: bool
+    :param mass_interpolation: One of 'mass_uniform', 'mass_skewed', or
+        'curve_uniform'. The latter parameterises points by normalised cumulative
+        arc-length distance along the (color_col, mag_col) curve instead of mass,
+        which better preserves shape in regions of high CMD curvature.
+    :type mass_interpolation: str
+    :param color_col: Column name for the color, required if
+        mass_interpolation == 'curve_uniform'.
+    :type color_col: str | None
+    :param mag_col: Column name for the magnitude, required if
+        mass_interpolation == 'curve_uniform'.
+    :type mag_col: str | None
 
     :raises ValueError: If the isochrone dtype does not contain column names.
 
     :return: Dictionary of interpolated isochrones.
     :rtype: dict
     """
-    # Dummy values (avoid typing errors)
-    b1 = b2 = b3 = b4 = b5 = 0
-    mass_fracs = np.array([0.25, 0.5, 0.75, 0.9], dtype=float)
+    # Dummy value to avoid Pyright "possibly unbound" error
     eep_dist = []
 
-    isochrones: dict = {}
-    # Define interpolation grid (independent of per-isochrone operations)
-    if eep_col is None and not uniform_mass_interp:
-        # Mass-based distribution parameters
-        weights = np.array([0.5, 1, 1.5, 2, 5], dtype=float)
-        percs = weights / weights.sum()
+    # Mass-based distribution parameters
+    mass_fracs = np.array([0.25, 0.5, 0.75, 0.9], dtype=float)
+    weights = np.array([0.5, 1, 1.5, 2, 5], dtype=float)
+    percs = weights / weights.sum()
+    b1, b2, b3, b4 = [int(N_interp * p) for p in percs[:4]]
+    b5 = N_interp - (b1 + b2 + b3 + b4)
 
-        b1, b2, b3, b4 = [int(N_interp * p) for p in percs[:4]]
-        b5 = N_interp - (b1 + b2 + b3 + b4)
-
-    elif eep_col is not None:
+    if eep_col is not None:
         # EEP-based global distribution
         if not isochs_sorted:
             raise ValueError("Empty 'isochs_sorted'")
 
+        # Determine the global min and max EEP values across all isochrones
         eep_min = int(min(np.min(isoch[eep_col]) for isoch in isochs_sorted))
         eep_max = int(max(np.max(isoch[eep_col]) for isoch in isochs_sorted))
         eep_dist = np.arange(eep_min, eep_max + 1)
 
+    isochrones = {}
     for (met, age), isoch in zip(met_age_sorted, isochs_sorted):
         if isoch.dtype.names is None:
-            raise ValueError("No 'names' found for isoch.dtype")
+            raise ValueError(
+                f"No 'names' found for isoch.dtype: (met, age)=({met}, {age})"
+            )
 
+        # Create nested dictionary structure for metallicity and age
         isochrones.setdefault(met, {}).setdefault(age, [])
 
-        if eep_col is None:
-            # ---- Mass-based interpolation ----
-            mmin = np.min(isoch[mass_col])
-            mmax = np.max(isoch[mass_col])
-
-            if uniform_mass_interp:
-                interp_dist = np.linspace(mmin, mmax, N_interp)
-
-            else:
-                mstep1, mstep2, mstep3, mstep4 = mmax * mass_fracs
-
-                m1 = np.linspace(mmin, mstep1, b1, endpoint=False)
-                m2 = np.linspace(mstep1, mstep2, b2, endpoint=False)
-                m3 = np.linspace(mstep2, mstep3, b3, endpoint=False)
-                m4 = np.linspace(mstep3, mstep4, b4, endpoint=False)
-                m5 = np.linspace(mstep4, mmax, b5)
-
-                # General distribution, isochrone independent
-                interp_dist = np.concatenate((m1, m2, m3, m4, m5))
-
-            interp_col = isoch[mass_col]
-            cols_keep = isoch.dtype.names
+        if mass_interpolation == "adaptive":
+            # ---- Curve-arclength-based interpolation, uniform ----
+            isoch_interp = adaptive_interpolation(
+                age, isoch, all_filters, mass_col, N_interp
+            )
 
         else:
-            # ---- EEP-based interpolation ----
-            interp_dist = eep_dist
-            interp_col = isoch[eep_col]
-            cols_keep = tuple(c for c in isoch.dtype.names if c != eep_col)
+            if eep_col is None:
+                # interp_col = isoch[mass_col]
+                mass = isoch[mass_col]
+                if np.any(np.diff(mass) < -mass_tol):
+                    raise ValueError(
+                        f"Masses not monotonic in raw isochrone: (met, age)=({met}, {age})"
+                    )
+                # Numerical noise below tol: clamp without reordering
+                interp_col = np.maximum.accumulate(mass)
 
-        # ---- Interpolate columns ----
-        isoch_interp: dict = {
-            col: np.interp(interp_dist, interp_col, isoch[col]) for col in cols_keep
-        }
+                if mass_interpolation == "mass_uniform":
+                    # ---- Mass-based interpolation, uniform ----
+                    mmin = np.min(isoch[mass_col])
+                    mmax = np.max(isoch[mass_col])
+                    interp_dist = np.linspace(mmin, mmax, N_interp)
 
-        # Check for strict min-max mass sorting
-        if np.any(isoch_interp[mass_col][1:] < isoch_interp[mass_col][:-1]):
-            raise ValueError("Masses are not min-max sorted in loaded isochrones.")
+                elif mass_interpolation == "mass_skewed":
+                    # ---- Mass-based interpolation, skewed ----
+                    mmin = np.min(isoch[mass_col])
+                    mmax = np.max(isoch[mass_col])
+                    mstep1, mstep2, mstep3, mstep4 = mmax * mass_fracs
+                    m1 = np.linspace(mmin, mstep1, b1, endpoint=False)
+                    m2 = np.linspace(mstep1, mstep2, b2, endpoint=False)
+                    m3 = np.linspace(mstep2, mstep3, b3, endpoint=False)
+                    m4 = np.linspace(mstep3, mstep4, b4, endpoint=False)
+                    m5 = np.linspace(mstep4, mmax, b5)
+                    interp_dist = np.concatenate((m1, m2, m3, m4, m5))
+                else:
+                    raise ValueError(
+                        f"Invalid mass_interpolation value: {mass_interpolation}"
+                    )
 
+                cols_keep = isoch.dtype.names
+
+            else:
+                # ---- EEP-based interpolation ----
+                interp_dist = eep_dist
+                interp_col = isoch[eep_col]
+                cols_keep = tuple(c for c in isoch.dtype.names if c != eep_col)
+
+            # ---- Interpolate columns ----
+            isoch_interp: dict = {
+                col: np.interp(interp_dist, interp_col, isoch[col]) for col in cols_keep
+            }
+
+        # Store the interpolated isochrone in the dictionary
         isochrones[met][age].append(isoch_interp)
 
     return isochrones
+
+
+def adaptive_interpolation(
+    age: float, isoch: np.ndarray, all_filters, mass_col, N_interp, min_dist=0.001
+) -> dict:
+    """
+    Interpolate the isochrone data based on normalized cumulative arc-length distance
+    """
+    filter_1, filter_2 = isoch[all_filters[1]], isoch[all_filters[2]]
+    color = filter_1 - filter_2
+    mag = isoch[all_filters[0]]
+    mass_ini = isoch[mass_col]
+
+    # Normalized color, magnitude in [0, 1]
+    color_norm = (color - np.min(color)) / (np.max(color) - np.min(color))
+    mag_norm = (mag - np.min(mag)) / (np.max(mag) - np.min(mag))
+
+    # Iterate through each point in the CMD
+    prev_cmd_point = np.array([color[0], mag[0]])
+    prev_cmd_point_norm = np.array([color_norm[0], mag_norm[0]])
+    prev_filter_1, prev_filter_2 = filter_1[0], filter_2[0]
+    prev_mass_ini = mass_ini[0]
+
+    mag_interp, filter_1_interp, filter_2_interp, mass_ini_interp = [], [], [], []
+    for point in zip(
+        color_norm[1:],
+        mag_norm[1:],
+        color[1:],
+        mag[1:],
+        filter_1[1:],
+        filter_2[1:],
+        mass_ini[1:],
+    ):
+        (
+            next_color_norm,
+            next_mag_norm,
+            next_color,
+            next_mag,
+            next_f1,
+            next_f2,
+            next_mini,
+        ) = point
+
+        next_cmd_point = np.array([next_color, next_mag])
+        next_cmd_point_norm = np.array([next_color_norm, next_mag_norm])
+
+        dist = np.linalg.norm(next_cmd_point_norm - prev_cmd_point_norm)
+
+        if dist <= min_dist:
+            mag_interp.append(next_mag)
+            filter_1_interp.append(next_f1)
+            filter_2_interp.append(next_f2)
+            mass_ini_interp.append(next_mini)
+            prev_cmd_point = next_cmd_point
+            prev_cmd_point_norm = next_cmd_point_norm
+            prev_filter_1, prev_filter_2 = next_f1, next_f2
+            prev_mass_ini = next_mini
+            continue
+
+        N_interp_pts = int(np.ceil(dist / min_dist))
+        if N_interp_pts < 2:
+            mag_interp.append(next_mag)
+            filter_1_interp.append(next_f1)
+            filter_2_interp.append(next_f2)
+            mass_ini_interp.append(next_mini)
+            prev_cmd_point = next_cmd_point
+            prev_cmd_point_norm = next_cmd_point_norm
+            prev_filter_1, prev_filter_2 = next_f1, next_f2
+            prev_mass_ini = next_mini
+            continue
+
+        interp_points = np.linspace(prev_cmd_point, next_cmd_point, N_interp_pts)
+        mag_interp.extend(interp_points[:, 1])
+
+        color_interp = interp_points[:, 0]
+        f1_interp = np.linspace(prev_filter_1, next_f1, N_interp_pts)
+        f2_interp = np.linspace(prev_filter_2, next_f2, N_interp_pts)
+
+        filter_1_interp.extend(color_interp + f2_interp)
+        filter_2_interp.extend(f1_interp - color_interp)
+
+        mass_ini_interp.extend(np.linspace(prev_mass_ini, next_mini, N_interp_pts))
+
+        prev_cmd_point = next_cmd_point
+        prev_cmd_point_norm = next_cmd_point_norm
+        prev_filter_1, prev_filter_2 = next_f1, next_f2
+        prev_mass_ini = next_mini
+
+    # Remove points non-uniformly from interpolated arrays until the number of
+    # total points == N_interp, preferentially keeping points around the
+    # index closest to mass=1 Msun (typical MS+turn-off region)
+    mag_interp = np.array(mag_interp)
+    filter_1_interp = np.array(filter_1_interp)
+    filter_2_interp = np.array(filter_2_interp)
+    mass_ini_interp = np.array(mass_ini_interp)
+    N_old, m_ini_min, m_ini_max = (
+        len(mag_interp),
+        mass_ini_interp[0],
+        mass_ini_interp[-1],
+    )
+    mass_mid_point = 1
+    if N_old > N_interp:
+        # mass_ini_interp is monotonic increasing; find the first index
+        # where mass crosses 1 Msun, starting from the beginning
+        mass_mid_point = min(mass_mid_point, (m_ini_min + m_ini_max) / 2)
+        i_ref = np.searchsorted(mass_ini_interp, mass_mid_point)
+        i_ref = np.clip(i_ref, 0, N_old - 1)
+
+        # Weight by distance in index space from i_ref (peaked there)
+        idx_arr = np.arange(N_old)
+        scale = N_old / 10  # controls how sharply weight falls off
+        weights = np.exp(-0.5 * ((idx_arr - i_ref) / scale) ** 2)
+        weights += 1e-3  # floor so no region has exactly zero probability
+        weights /= weights.sum()
+
+        idx = np.random.choice(N_old, size=N_interp - 2, replace=False, p=weights)
+        idx = np.concatenate(([0], idx, [N_old - 1]))  # force-keep endpoints
+        idx = np.unique(idx)
+        if len(idx) < N_interp:
+            remaining = np.setdiff1d(idx_arr, idx)
+            extra = np.random.choice(
+                remaining,
+                size=N_interp - len(idx),
+                replace=False,
+                p=weights[remaining] / weights[remaining].sum(),
+            )
+            idx = np.concatenate((idx, extra))
+        idx = np.sort(idx)
+
+        mag_interp = mag_interp[idx]
+        filter_1_interp = filter_1_interp[idx]
+        filter_2_interp = filter_2_interp[idx]
+        mass_ini_interp = mass_ini_interp[idx]
+
+    print(
+        f"logage={age}, mass_mid_point:{mass_mid_point:.3f}, N: {len(mag)} --> {N_old} --> {len(mag_interp)} ; Mini: [{m_ini_min:.3f}, {m_ini_max:.2f}] --> [{mass_ini_interp[0]:.3f}, {mass_ini_interp[-1]:.2f}]"
+    )
+
+    isoch_interp = {
+        all_filters[0]: mag_interp,
+        all_filters[1]: filter_1_interp,
+        all_filters[2]: filter_2_interp,
+        mass_col: mass_ini_interp,
+    }
+
+    # if mass_ini_interp[-1]-mass_ini_interp[0]<0.2:
+    #     import matplotlib.pyplot as plt
+
+    #     plt.subplot(121)
+    #     plt.scatter(np.array(filter_1_interp) - np.array(filter_2_interp), mag_interp, s=5, alpha=.5)
+    #     plt.scatter(isoch[all_filters[1]] - isoch[all_filters[2]], isoch[all_filters[0]], c='k', s=10)
+    #     plt.gca().invert_yaxis()
+    #     plt.subplot(122)
+    #     plt.hist(mass_ini_interp)
+    #     plt.show()
+    #     breakpoint()
+
+    return isoch_interp
 
 
 def merge_ps_massini_check(mass_col: str, isochrones: dict) -> tuple[list, list]:
