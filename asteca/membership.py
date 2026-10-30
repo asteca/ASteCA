@@ -159,6 +159,7 @@ class Membership:
         N_runs: int = 1000,
         eq_to_gal: bool = True,
         seed: int | None = None,
+        mag_correct: bool = False,
     ) -> None:
         """Assign membership probabilities.
 
@@ -178,6 +179,11 @@ class Membership:
         :type eq_to_gal: bool
         :param seed: Random seed. If ``None`` a random integer will be generated and used
         :type seed: int | None
+        :param mag_correct: If ``True``, remove the bias towards stars with small
+            uncertainties (i.e.: brighter stars). The probabilities are adjusted so that
+            a ``P>=0.5`` cut follows the magnitude distribution of the members selected
+            with no error resampling. Requires the ``mag`` attribute
+        :type mag_correct: bool
 
         :raises AttributeError: If the :py:class:`Cluster <asteca.cluster.Cluster>`
             object is missing a required attribute
@@ -200,6 +206,8 @@ class Membership:
             "plx_c",
             "N_cluster",
         )
+        if mag_correct is True:
+            required_attrs += ("mag",)
         missing = [
             attr
             for attr in required_attrs
@@ -267,11 +275,17 @@ class Membership:
             fixed_centers,
             X,
             N_runs,
+            self.my_field.mag if mag_correct is True else None,
         )
 
         self._vp(out_mssg, 1)
         self.my_field.probs = probs
-        self._vp("Probabilities stored in 'probs' attribute", 1)
+        if mag_correct:
+            self._vp(
+                "Probabilities stored in 'probs' attribute (magnitude corrected)", 1
+            )
+        else:
+            self._vp("Probabilities stored in 'probs' attribute", 1)
 
     def select_members(
         self, prob_min: float | None = 0.5, N_prob_max: int | None = None
