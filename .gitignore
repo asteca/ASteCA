@@ -6,13 +6,9 @@ WARP.md
 *.pyc
 *.ipynb_checkpoints
 *.so
-## Not used (yet?)
-_interp_mass*.c
-_interp_mass*.so
-setup.py
-
 
 # folders
+__pycache__*
 /dist*
 /build*
 /tests*
