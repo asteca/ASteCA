@@ -30,13 +30,18 @@ def sample_imf(
     # analysis points to this being the optimal N_chunk
     N_chunk = max(100, int(max_mass / 40))
 
+    # Number of values drawn at once: the expected number of chunks required to
+    # reach 'max_mass' (the mean mass is the integral of the inverse CDF in [0, 1])
+    # plus a 20% margin
+    mean_mass = float(inv_cdf.integrate(0.0, 1.0))
+    N_draw = (int(1.2 * max_mass / (mean_mass * N_chunk)) + 2) * N_chunk
+
     st_dist_mass = []
     for i in range(Nmets):
-        met_lst, met_lst_ord = [], []
+        met_lst = []
         for j in range(Nages):
-            sampled_IMF = sampleInv(rng, max_mass, inv_cdf, N_chunk)
+            sampled_IMF = sampleInv(rng, max_mass, inv_cdf, N_chunk, N_draw)
             met_lst.append(sampled_IMF)
-            met_lst_ord.append(np.sort(sampled_IMF))
         st_dist_mass.append(met_lst)
 
     return st_dist_mass

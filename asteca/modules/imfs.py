@@ -1,6 +1,9 @@
 import numpy as np
 from scipy.interpolate import BSpline, make_interp_spline
 
+from . import HAS_NUMBA as _HAS_NUMBA
+from . import njit
+
 
 def invTrnsfSmpl(IMF_name: str, m_low: float = 0.08, m_high: float = 100) -> BSpline:
     """IMF inverse transform sampling.
@@ -138,8 +141,16 @@ def sampleInv(
     Max_mass: float,
     inv_cdf: BSpline,
     N_chunk: int,
+    N_draw: int,
 ) -> np.ndarray:
     """Sample the inverse CDF up to `Max_mass`
+
+    Masses are sampled in chunks of `N_chunk` stars until the total mass reaches
+    `Max_mass`. To avoid sampling one chunk at a time, `N_draw` uniform values are
+    drawn at once, and the masses are kept up to the end of the first chunk that
+    reaches `Max_mass`. The random generator is then rewound and advanced by the
+    number of values kept, so that the results (and the state of `rng`) are the
+    same as those obtained sampling one chunk at a time.
 
     :param rng: Random number generator.
     :type rng: np.random.Generator
@@ -147,26 +158,85 @@ def sampleInv(
     :type Max_mass: float
     :param inv_cdf: Interpolated function of the inverse cumulative distribution function.
     :type inv_cdf: BSpline
-    :param N_chunk: Integer that controls the while loop that samples masses in chunks
+    :param N_chunk: Number of stars sampled in each chunk
     :type N_chunk: int
+    :param N_draw: Number of uniform values drawn at once (a multiple of `N_chunk`).
+        It is doubled if it is not enough to reach `Max_mass`
+    :type N_draw: int
 
     :return: Array of sampled masses.
     :rtype: np.ndarray
     """
+    state = rng.bit_generator.state
+    while True:
+        u_vals = rng.uniform(0.0, 1.0, N_draw)
+        if _HAS_NUMBA:
+            # The spline is of order k=1 (linear) so its knots without the
+            # boundary repetitions and its coefficients are the (x, y) points
+            N_kept = _sample_chunks_nb(
+                u_vals, inv_cdf.t[1:-1], inv_cdf.c, Max_mass, N_chunk
+            )
+            masses = u_vals
+        else:
+            masses = inv_cdf(u_vals)
+            # Total mass at the end of each chunk
+            chunk_mass = np.cumsum(masses.reshape(-1, N_chunk).sum(axis=1))
+            N_kept = (int(np.searchsorted(chunk_mass, Max_mass)) + 1) * N_chunk
+            if N_kept > N_draw:
+                N_kept = -1
+        if N_kept > 0:
+            break
+        # Not enough values drawn to reach 'Max_mass': rewind and draw more
+        rng.bit_generator.state = state
+        N_draw *= 2
 
-    # DEPRECATED 13/01/25
-    # def sampled_inv_cdf(N):
-    #     # The internal seed can not be 'self.seed' because otherwise all the
-    #     # floats returned are equal
-    #     # mr = np.random.default_rng(ijkseed).uniform(0.0, 1.0, N)
-    #     return inv_cdf(mr)
+    # Rewind and advance the generator by the number of values kept. Each
+    # uniform float consumes a single 64 bit value of the generator
+    rng.bit_generator.state = state
+    if hasattr(rng.bit_generator, "advance"):
+        rng.bit_generator.advance(N_kept)
+    else:
+        rng.uniform(0.0, 1.0, N_kept)
 
-    # TODO: make this faster?
-    k, Mass_tot, mass_samples = 0, 0, []
-    while Mass_tot < Max_mass:
-        masses = list(inv_cdf(rng.uniform(0.0, 1.0, N_chunk)))
-        mass_samples += masses
-        Mass_tot += sum(masses)
-        k += 1
+    # Copy to release the values not kept
+    return masses[:N_kept].copy()
 
-    return np.array(mass_samples)
+
+if _HAS_NUMBA:
+
+    @njit(cache=True)
+    def _sample_chunks_nb(
+        u_vals: np.ndarray,
+        x: np.ndarray,
+        y: np.ndarray,
+        Max_mass: float,
+        N_chunk: int,
+    ) -> int:
+        """Compiled (numba) version of the chunk sampling in :py:func:`sampleInv`.
+
+        The uniform values in 'u_vals' are replaced in place by their masses,
+        linearly interpolated (and extrapolated, as the k=1 BSpline does) in the
+        (x, y) points of the inverse CDF. The masses are summed per chunk, as
+        the original one chunk at a time loop did, and the conversion stops at
+        the end of the first chunk that reaches 'Max_mass'.
+
+        Returns the number of masses converted, or -1 if 'Max_mass' was not
+        reached.
+        """
+        N_x = x.size
+        Mass_tot = 0.0
+        i = 0
+        while i + N_chunk <= u_vals.size:
+            chunk_mass = 0.0
+            for _ in range(N_chunk):
+                u = u_vals[i]
+                k = np.searchsorted(x, u) - 1
+                k = min(max(k, 0), N_x - 2)
+                m = y[k] + (u - x[k]) * (y[k + 1] - y[k]) / (x[k + 1] - x[k])
+                u_vals[i] = m
+                chunk_mass += m
+                i += 1
+            Mass_tot += chunk_mass
+            if Mass_tot >= Max_mass:
+                return i
+        return -1
