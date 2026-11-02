@@ -1,11 +1,7 @@
 import numpy as np
 
-try:
-    from numba import njit
-
-    _HAS_NUMBA = True
-except ImportError:  # numba is optional: fall back to the NumPy implementation
-    _HAS_NUMBA = False
+from . import HAS_NUMBA as _HAS_NUMBA
+from . import njit
 
 # The 'coeffs' values are the main sequence values taken from:
 # https://www.cosmos.esa.int/web/gaia/edr3-extinction-law
