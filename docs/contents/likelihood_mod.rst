@@ -111,7 +111,124 @@ likelihood ratio:
 
 
 This likelihood is normalized and inverted so that the best value is ``0`` and the
-worst value is ``1``, as mentioned above.
+worst value is ``1``, as mentioned above:
+
+.. math::
+
+    d = \frac{\log(p)_{max} - \log(p)}{\log(p)_{max} - \log(p)_{min}}
+
+where :math:`\log(p)_{max}` is the value obtained comparing the observed cluster with
+itself (:math:`m_i=n_i`), and :math:`\log(p)_{min}` is the value obtained when no
+synthetic star falls in any of the bins occupied by observed stars (:math:`m_i=0`).
+Hence :math:`d=0` means an exact match, and :math:`d=1` means that the synthetic and
+observed clusters do not overlap at all in the CMD. This puts the end points of the
+distance on the same scale for all clusters, but the values in between are still not
+comparable across clusters: the distance obtained for a correct model depends on the
+number of stars and on the binning (see :ref:`cmd_overlap`).
+
+When the synthetic and observed clusters do not overlap at all, the likelihood takes
+the same value regardless of where the synthetic stars are located in the CMD. To
+break this tie, which can stall the parameter fit when most models sampled from the
+priors have no overlap (e.g.: for small clusters), the distance for these models is
+set to:
+
+.. math::
+
+    d = 1 + \left(\frac{\tilde{G}_{obs} - \tilde{G}_{syn}}{\Delta G}\right)^2 +
+    \left(\frac{\tilde{C}_{obs} - \tilde{C}_{syn}}{\Delta C}\right)^2
+
+where :math:`\tilde{G}` and :math:`\tilde{C}` are the median magnitude and color of
+the observed and synthetic clusters, and :math:`\Delta G` and :math:`\Delta C` are the
+widths of the magnitude and color ranges of the observed Hess diagram. The latter
+put both dimensions on the same scale, so that the magnitude (which usually spans a
+much larger range) does not dominate over the color. Hence any synthetic cluster with
+some overlap (:math:`d<1`) is always considered better than any synthetic cluster wit
+no overlap (:math:`d\geq 1`), and the latter are pulled towards the region of the
+CMD where the observed cluster is located.
+
+
+.. _cmd_overlap:
+
+Goodness of fit
+===============
+
+The distance returned by :py:meth:`asteca.Likelihood.get` is useful to compare
+synthetic clusters for the *same* observed cluster, but its value can not be compared
+across clusters: even a perfect model gives :math:`d>0` because of the finite number of
+stars, and this "noise floor" depends on the number of stars and on the binning of the
+Hess diagram.
+
+To assess whether a given synthetic cluster (e.g.: generated with the best fit
+parameters) is a good representation of the observed cluster, the
+:py:meth:`asteca.Likelihood.cmd_overlap` method can be used:
+
+.. code-block:: python
+
+    synth_cluster_arr = synthcl.generate(best_fit_params)
+    D, D_std = likelihood.cmd_overlap(synth_cluster_arr)
+
+The first value returned is:
+
+.. math::
+
+    D = 1 - \frac{2\,K_{os}}{K_{oo} + K_{ss}}
+
+where :math:`K_{os}` is the mean value of a Gaussian kernel over all the pairs of
+observed and synthetic stars, and :math:`K_{oo}` and :math:`K_{ss}` are the mean values
+over all the pairs of *distinct* observed stars and of distinct synthetic stars. The
+kernel for two stars separated by :math:`(\Delta G, \Delta C)` in magnitude and color
+is:
+
+.. math::
+
+    k = \exp\left[-\frac{1}{4}\left(\frac{\Delta G^2}{h_G^2} +
+    \frac{\Delta C^2}{h_C^2}\right)\right]
+
+with :math:`h_G=0.3` and :math:`h_C=0.075` mag by default. :math:`D` is the squared
+difference between the observed and synthetic densities in the CMD, both smoothed with
+a Gaussian of widths :math:`(h_G, h_C)`, normalized so that :math:`D=0` means the same
+distribution and :math:`D=1` means no overlap. In other words: for each star it
+compares the fraction of the synthetic cluster located around it (within the kernel
+widths) with the fraction of the observed cluster.
+
+Two properties make :math:`D` comparable across clusters with very different numbers
+of stars:
+
+- Stars are never compared with themselves (:math:`K_{oo}` and :math:`K_{ss}` exclude
+  the pairs of a star with itself). Hence a synthetic cluster drawn from the same
+  distribution as the observed one gives :math:`D=0` on average for any number of
+  stars. Individual values fluctuate around ``0`` (and can be negative) by an amount
+  that decreases with the number of stars
+- The kernel widths, i.e.: the scale at which the CMDs are compared, are fixed and do
+  not depend on the number of stars. Hence a given mismatch gives on average the same
+  :math:`D` for any number of stars
+
+In tests with simulated clusters a value od :math:`D\leq 0.25` was found to be
+a reasonable general threshold for a good fit; for clusters with many stars a
+stricter threshold can be used.
+
+The second value returned, ``D_std``, is the approximate standard deviation of
+:math:`D` for a synthetic cluster drawn from the same distribution as the observed one
+(i.e.: a correct model). It decreases with the number of stars and gives the size of
+the fluctuations expected by chance alone. If the synthetic cluster has fewer than two
+stars, ``D=1`` and ``D_std=0`` are returned.
+
+Notes:
+
+- Negative values are expected and are **not** clipped to ``0``. They only mean that,
+  by chance, the synthetic cluster matches the observed one slightly better than the
+  average correct model, i.e.: :math:`D<0` is a match within the noise. A value of
+  e.g. :math:`D=-0.03` with a standard deviation of ``0.05`` is fully consistent with
+  :math:`D=0`. Clipping would bias the average of :math:`D` upwards (more so for
+  small clusters), which is precisely what excluding the self-pairs avoids. Including
+  the self-pairs instead would make :math:`D\geq 0` always, but then even a correct
+  model would give larger values for smaller clusters, and :math:`D` could no longer
+  be compared across clusters
+- The same kernel widths must be used for all the clusters whose :math:`D` values are
+  compared
+- :math:`D` is dominated by the most populated regions of the CMD. Sparse field
+  contaminants have a very small effect on it, but differences in sparsely populated
+  regions (e.g.: a turn-off or a few giants) also contribute little
 
 
 .. _Tremmel et al (2013): https://ui.adsabs.harvard.edu/abs/2013ApJ...766...19T/abstract

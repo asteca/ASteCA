@@ -118,7 +118,7 @@ class Likelihood:
         # bin (all m_i=0). Used to normalize the distance so that 1 means no match
         self.min_lkl = float(self.table_flat.take(self.row_off).sum())
 
-        self.max_lkl = None
+        self.max_lkl = np.inf
         if self.lkl_name == "plr":
             # Evaluate cluster against itself to obtain the maximum likelihood.
             self.max_lkl = self.get(np.array([self.mag, *colors]))
@@ -211,9 +211,11 @@ class Likelihood:
         :raises ValueError: If the observed cluster has fewer than two stars with
             valid photometry
 
-        :return: ``D`` or, if ``return_std=True``, ``(D, D_std)``. If the synthetic
-            cluster has fewer than two stars, ``D=1`` (and ``D_std=0``)
-        :rtype: float | tuple[float, float]
+        :return: ``(D, D_std)``, where ``D_std`` is the approximate standard
+            deviation of ``D`` for a synthetic cluster drawn from the same
+            distribution as the observed one (it decreases with the number of stars).
+            If the synthetic cluster has fewer than two stars, ``D=1`` and ``D_std=0``
+        :rtype: tuple[float, float]
         """
         from .modules import likelihood_priv as lpriv
 
