@@ -14,7 +14,7 @@ and estimating a cluster's fundamental parameters.
    notebooks/structure
    notebooks/membership
    notebooks/synthetic
-   notebooks/paramfit
+   paramfit
    notebooks/post_process
 
 
@@ -38,11 +38,12 @@ clusters via the :py:meth:`asteca.Synthetic.generate` method using specified fun
 parameters. Optionally, the generator can be calibrated with observed cluster data using
 the :py:meth:`asteca.Synthetic.calibrate` method to enhance realism in terms of star count, magnitude limits, and errors. The process culminates in visualizing the resulting synthetic Color-Magnitude Diagrams (CMDs), often distinguishing stellar systems and potentially overlaying the underlying isochrone.
 
-The :ref:`paramfit_ntbk` notebook provides a step-by-step guide to estimating the
-fundamental parameters of a stellar cluster using **ASteCA** and the `pyABC`_
-library. The tutorial shows how to set up the fitting process, run it, and interpret
-the results, including the final parameter estimates (medians and standard deviations)
-along with ``pyABC``  visualizations and a comparison Color-Magnitude Diagram (CMD).
+The :ref:`paramfit_section` section contains two notebooks that provide a
+step-by-step guide to estimating the fundamental parameters of a stellar cluster
+by combining **ASteCA** with the `pyABC`_ and `pocoMC`_ libraries. They show how to set
+up the fitting process, run it, and interpret the results, including the final
+parameter estimates (medians and standard deviations), the goodness of fit (CMD
+overlap), and a comparison Color-Magnitude Diagram (CMD).
 
 
 The :ref:`post_process_ntbk` notebook shows how to apply the following methods:
@@ -57,3 +58,4 @@ The :ref:`post_process_ntbk` notebook shows how to apply the following methods:
 
 
 .. _pyABC: https://pyabc.readthedocs.io/
+.. _pocoMC: https://pocomc.readthedocs.io/
