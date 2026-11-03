@@ -5,6 +5,18 @@ from astropy.stats import calculate_bin_edges
 from fast_histogram import histogram2d
 from scipy.special import gammaln
 
+from . import HAS_NUMBA as _HAS_NUMBA
+from . import njit
+
+try:
+    # C core of fast_histogram, skips the (costly) argument validation performed by
+    # the public histogram2d() wrapper
+    from fast_histogram._histogram_core import _histogram2d
+except ImportError:  # private module, fall back to the public function
+
+    def _histogram2d(x, y, nx, xmin, xmax, ny, ymin, ymax):
+        return histogram2d(x, y, bins=[nx, ny], range=[[xmin, xmax], [ymin, ymax]])
+
 
 def bin_edges_f(
     bin_method: Literal["blocks", "knuth", "scott", "freedman", "fixed"],
@@ -137,45 +149,59 @@ def lkl_data(
     return cl_z_idx, cl_histo_f_z, table2d
 
 
+def _median(x: np.ndarray) -> float:
+    """Median of a 1D array, equal to ``np.median`` but faster as it uses
+    ``np.partition`` directly"""
+    N = x.shape[0]
+    k = N // 2
+    if N % 2:
+        return np.partition(x, k)[k]
+    xp = np.partition(x, (k - 1, k))
+    return 0.5 * (xp[k - 1] + xp[k])
+
+
 def tremmel(
-    ranges: list,
-    Nbins: list,
-    cl_z_idx: np.ndarray,
-    cl_histo_f_z: np.ndarray,
+    hist_args: np.ndarray,
+    nz_pos: np.ndarray,
+    row_off: np.ndarray,
+    table_flat: np.ndarray,
+    m_max: int,
     obs_mag_median: float,
     obs_col_median: float,
-    offsets: np.ndarray,
-    bin_sizes: list,
-    total_bins: int,
-    table2d: np.ndarray,
+    cmd_widths: tuple[float, float],
     max_lkl: None | float,
+    min_lkl: float,
     synth_clust: np.ndarray,
 ) -> float:
     r"""Poisson likelihood ratio as defined in Tremmel et al (2013), Eq 10 with
     v_{i,j}=1 (see documentation). This returns the log likelihood.
 
-    :param ranges: Per-dimension ranges.
-    :type ranges: list
-    :param Nbins: Per-dimension total number of bins
-    :type Nbins: list
-    :param cl_z_idx: Index of bins where the number of stars is not 0
-    :type cl_z_idx: np.ndarray
-    :param cl_histo_f_z: Flattened observed Hess diagram with the empty bins removed
-    :type cl_histo_f_z: np.ndarray
+    :param hist_args: Per-color ``(nx, xmin, xmax, ny, ymin, ymax)`` arguments for
+        the 2D histogram, shape ``(N_colors, 6)``
+    :type hist_args: np.ndarray
+    :param nz_pos: Positions in the flattened Hess diagram of the bins where the
+        number of observed stars is not 0
+    :type nz_pos: np.ndarray
+    :param row_off: Offset in ``table_flat`` of the row associated to the number of
+        observed stars in each non-empty bin
+    :type row_off: np.ndarray
+    :param table_flat: Flattened pre-computed table for likelihood calculation
+    :type table_flat: np.ndarray
+    :param m_max: Largest number of synthetic stars per bin covered by the table
+        (number of columns minus 1). Larger counts are clipped to this value
+    :type m_max: int
     :param obs_mag_median: Median observed magnitude
     :type obs_mag_median: float
     :param obs_col_median: Median observed color
     :type obs_col_median: float
-    :param offsets: Offsets for direct array assignment
-    :type offsets: np.ndarray
-    :param bin_sizes: Sizes of the bins for direct array assignment
-    :type bin_sizes: list
-    :param total_bins: Total number of bins in the Hess diagram, used for normalization
-    :type total_bins: int
-    :param table2d: Pre-computed table for likelihood calculation.
-    :type table2d: np.ndarray
+    :param cmd_widths: Widths of the Hess diagram ranges for the magnitude and
+        (first) color, used to scale the no-overlap penalty
+    :type cmd_widths: tuple[float, float]
     :param max_lkl: Maximum likelihood value, used for normalization
     :type max_lkl: None | float
+    :param min_lkl: Minimum likelihood value, obtained when no synthetic star falls
+        in any observed bin. Used for normalization
+    :type min_lkl: float
     :param synth_clust: Synthetic cluster data.
     :type synth_clust: np.ndarray
 
@@ -186,76 +212,125 @@ def tremmel(
     if synth_clust.size == 0:
         return 10
 
-    # Obtain histogram for the synthetic cluster.
-    mag, colors = synth_clust[0], synth_clust[1:]
-
-    if len(colors) == 1:
-        hess_diag = histogram2d(
-            mag,
-            colors[0],
-            range=[[ranges[0][0], ranges[0][1]], [ranges[1][0], ranges[1][1]]],
-            bins=[Nbins[0], Nbins[1]],
-        )
-        syn_histo_f_z = hess_diag.ravel()[cl_z_idx]
-    else:
-        syn_histo_f = np.empty(total_bins, dtype=np.float64)
-        for i, col in enumerate(colors):
-            hess_diag = histogram2d(
-                mag,
-                col,
-                range=[
-                    [ranges[0][0], ranges[0][1]],
-                    [ranges[i + 1][0], ranges[i + 1][1]],
-                ],
-                bins=[Nbins[0], Nbins[i + 1]],
-            )
-            # Direct array assignment using pre-computed offset and size
-            offset = offsets[i]
-            # Flatten array and assign to the correct position in syn_histo_f
-            syn_histo_f[offset : offset + bin_sizes[i]] = hess_diag.ravel()
-
-        # Remove all bins where n_i = 0 (no observed stars).
-        syn_histo_f_z = syn_histo_f[cl_z_idx]
-
+    mag = synth_clust[0]
     # The 1/2 term arises from using a Jeffreys prior (Eq 8 in Tremmel et al). Using a
     # flat prior instead, that 1/2 term becomes a 1
-    # try:
-    tremmel_lkl = table2d[cl_histo_f_z, syn_histo_f_z.astype(int)].sum()
-    # except IndexError:
-    #     raise IndexError(
-    #         "The synthetic array contains more stars than expected. Check that the\n"
-    #         + " Likelihood object and the calibration of the Synthetic object\n"
-    #         + " were performed using the same Cluster object."
-    #     )
-
-    # Attempted adding some weights, did not help
-    # tremmel_lkl = gammaln(cl_histo_f_z + syn_histo_f_z + 0.5) - gammaln(syn_histo_f_z + 0.5)
-    # tremmel_lkl *= np.linspace(10, 0, cl_histo_f_z.shape[0])
-    # tremmel_lkl = np.sum(tremmel_lkl)
+    # Equivalent to table2d[cl_histo_f_z, syn_histo_f_z].sum()
+    if _HAS_NUMBA:
+        tremmel_lkl = _tremmel_lkl_nb(
+            mag, synth_clust[1:], hist_args, nz_pos, row_off, table_flat, m_max
+        )
+    else:
+        # Obtain histogram for the synthetic cluster.
+        syn_histo_f = np.concatenate(
+            [
+                _histogram2d(
+                    mag,
+                    synth_clust[i + 1],
+                    int(h[0]),
+                    h[1],
+                    h[2],
+                    int(h[3]),
+                    h[4],
+                    h[5],
+                ).ravel()
+                for i, h in enumerate(hist_args)
+            ]
+        )
+        # Remove all bins where n_i = 0 (no observed stars). Counts beyond the
+        # table's last column are clipped, otherwise they would read the next row
+        syn_histo_f_z = np.minimum(syn_histo_f.take(nz_pos).astype(np.intp), m_max)
+        tremmel_lkl = table_flat.take(row_off + syn_histo_f_z).sum()
 
     # If this is the call made to calibrate the likelihood
     if max_lkl is None:
         return tremmel_lkl
 
     # Normalize and invert the likelihood so that its values are equivalent to a
-    # distance that goes from 0 (exact match) to 1 (no match).
-    dist = 1 - tremmel_lkl / max_lkl
+    # distance that goes from 0 (exact match) to 1 (no match). The 'no match' value
+    # (min_lkl) is the likelihood obtained when no synthetic star falls in any of the
+    # observed bins, i.e.: sum(table2d[cl_histo_f_z, 0]). Since table2d[n, m] grows with
+    # m for n>0, tremmel_lkl >= min_lkl and thus dist <= 1 always.
+    # This is only a rescaling of '1 - tremmel_lkl / max_lkl', it does not change the
+    # ordering of the distances but puts the values on the same 0–1 scale for all
+    # clusters (1 = no overlap)
+    dist = (max_lkl - tremmel_lkl) / (max_lkl - min_lkl)
 
     # If m_i==0 and n_i<3, the term
     # gammaln(cl_histo_f_z + syn_histo_f_z + 0.5) - gammaln(syn_histo_f_z + 0.5)
     # will be negative, thus reducing the final likelihood value.
 
-    # This factor helps to "pull" the solution closer to the region where the observed
-    # cluster is located in the CMD, by adding a penalty based on the photometric
-    # distance between the synthetic cluster and the observed cluster.
-    # Only use penalty when the normalized distance is large
-    if dist > 0.5:
-        cmd_dist = (obs_mag_median - np.median(mag)) ** 2 + (
-            obs_col_median - np.median(colors[0])
+    # If no synthetic star falls in any observed bin (no overlap), the likelihood is
+    # constant (min_lkl) no matter where the synthetic stars are, i.e.: dist=1 for all
+    # these models. When most of the models sampled from the priors are in this
+    # situation (e.g.: small clusters in a small region of the CMD) this tie stalls
+    # the optimizer (pyABC's epsilon stays at 1). To break the tie, a penalty based on
+    # the photometric distance between the synthetic and observed clusters is added.
+    # This "pulls" the solution towards the region of the CMD where the observed
+    # cluster is located. The penalty is only applied to the no-overlap models, so
+    # that any model with some overlap (dist<1) is always better than any model with
+    # no overlap (dist>=1), and the former are ranked by the likelihood alone.
+    # Each dimension is scaled by the width of the Hess diagram range, so that the
+    # magnitude (usually spanning a much larger range) does not dominate the color.
+    # Both sums are computed identically, so they are exactly equal for no overlap
+    if tremmel_lkl <= min_lkl:
+        cmd_dist = ((obs_mag_median - _median(mag)) / cmd_widths[0]) ** 2 + (
+            (obs_col_median - _median(synth_clust[1])) / cmd_widths[1]
         ) ** 2
-        return dist + cmd_dist
+        return 1 + cmd_dist
 
     return dist
+
+
+if _HAS_NUMBA:
+
+    @njit(cache=True)
+    def _tremmel_lkl_nb(
+        mag: np.ndarray,
+        colors: np.ndarray,
+        hist_args: np.ndarray,
+        nz_pos: np.ndarray,
+        row_off: np.ndarray,
+        table_flat: np.ndarray,
+        m_max: int,
+    ) -> float:
+        """Compiled (numba) version of the likelihood sum in :py:func:`tremmel`.
+        A single pass bins the synthetic stars into one flattened Hess diagram
+        (same binning as ``fast_histogram``: values outside ``[min, max)`` or NaN
+        are dropped), then the table values of the non-empty observed bins are
+        added, without the temporary arrays of the NumPy version.
+        """
+        N_col = hist_args.shape[0]
+        nx = int(hist_args[0, 0])
+        xmin, xmax = hist_args[0, 1], hist_args[0, 2]
+        fx = nx / (xmax - xmin)
+
+        # Offset of each color's Hess diagram in the flattened array
+        offs = np.empty(N_col + 1, dtype=np.int64)
+        offs[0] = 0
+        for c in range(N_col):
+            offs[c + 1] = offs[c] + nx * int(hist_args[c, 3])
+        counts = np.zeros(offs[N_col], dtype=np.int64)
+
+        for c in range(N_col):
+            ny = int(hist_args[c, 3])
+            ymin, ymax = hist_args[c, 4], hist_args[c, 5]
+            fy = ny / (ymax - ymin)
+            col = colors[c]
+            for k in range(mag.shape[0]):
+                x = mag[k]
+                y = col[k]
+                if x >= xmin and x < xmax and y >= ymin and y < ymax:
+                    i = min(int((x - xmin) * fx), nx - 1)
+                    j = min(int((y - ymin) * fy), ny - 1)
+                    counts[offs[c] + i * ny + j] += 1
+
+        lkl = 0.0
+        for p in range(nz_pos.shape[0]):
+            # Clip counts beyond the table's last column (see tremmel())
+            m = min(counts[nz_pos[p]], m_max)
+            lkl += table_flat[row_off[p] + m]
+        return lkl
 
 
 # def visual(cluster_dict, synth_clust):
@@ -496,3 +571,130 @@ def chi_square(
 
     chisq = ((cl_histo_f_z - syn_histo_f_z) ** 2).sum()
     return chisq
+
+
+def cmd_overlap(
+    mag: np.ndarray,
+    color: np.ndarray,
+    synth_clust: np.ndarray,
+    h_mag: float,
+    h_col: float,
+    chunk: int = 500,
+) -> tuple[float, float]:
+    """Overlap distance between the observed and synthetic clusters in the CMD
+    (magnitude and first color), see :py:meth:`asteca.Likelihood.cmd_overlap`.
+
+    :param mag: Array of observed magnitudes.
+    :type mag: np.ndarray
+    :param color: Array of observed colors.
+    :type color: np.ndarray
+    :param synth_clust: Synthetic cluster data.
+    :type synth_clust: np.ndarray
+    :param h_mag: Width of the Gaussian kernel in magnitude.
+    :type h_mag: float
+    :param h_col: Width of the Gaussian kernel in color.
+    :type h_col: float
+    :param chunk: Number of stars processed at once, limits the memory used.
+    :type chunk: int
+
+    :raises ValueError: If the observed cluster has fewer than two stars with valid
+        photometry
+
+    :return: Overlap distance and its approximate standard deviation for a synthetic
+        cluster drawn from the same distribution as the observed one.
+    :rtype: tuple[float, float]
+    """
+    # Scale each dimension by the width of the kernel, so that it becomes
+    # k = exp(-d^2/4) with d the Euclidean distance
+    obs = np.column_stack([mag / h_mag, color / h_col])
+    obs = obs[~np.isnan(obs).any(axis=1)]
+    N = len(obs)
+    if N < 2:
+        raise ValueError(
+            "The observed cluster must contain at least two stars with valid photometry"
+        )
+
+    # A synthetic cluster with fewer than two stars has no overlap with the observed one
+    if synth_clust.size == 0:
+        return 1.0, 0.0
+    syn = np.column_stack([synth_clust[0] / h_mag, synth_clust[1] / h_col])
+    syn = syn[~np.isnan(syn).any(axis=1)]
+    M = len(syn)
+    if M < 2:
+        return 1.0, 0.0
+
+    def k_sums(x: np.ndarray, y: np.ndarray) -> tuple[float, float]:
+        """Sums of k and of k^2 over all the (x, y) pairs"""
+        s1 = s2 = 0.0
+        for i in range(0, len(x), chunk):
+            xc = x[i : i + chunk]
+            d2 = (xc[:, :1] - y[:, 0]) ** 2 + (xc[:, 1:] - y[:, 1]) ** 2
+            k = np.exp(-0.25 * d2)
+            s1 += k.sum()
+            s2 += (k * k).sum()
+        return s1, s2
+
+    if _HAS_NUMBA:
+        s_oo, s2_oo = _k_sums_self_nb(obs)
+        s_ss, s2_ss = _k_sums_self_nb(syn)
+        s_os = _k_sums_cross_nb(obs, syn)
+    else:
+        s_oo, s2_oo = k_sums(obs, obs)
+        s_ss, s2_ss = k_sums(syn, syn)
+        s_os, _ = k_sums(obs, syn)
+
+    # Mean kernel values over the pairs of distinct observed stars, of distinct
+    # synthetic stars, and of observed-synthetic stars. Removing the pairs of a star
+    # with itself (where k=1) makes these unbiased, so that a synthetic cluster
+    # drawn from the same distribution as the observed one gives D=0 on average for
+    # any number of stars
+    k_oo = (s_oo - N) / (N * (N - 1))
+    k_ss = (s_ss - M) / (M * (M - 1))
+    k_os = s_os / (N * M)
+    D = 1 - 2 * k_os / (k_oo + k_ss)
+
+    # Standard deviation of D for a synthetic cluster drawn from the same
+    # distribution as the observed one: leading order of the variance of the
+    # unbiased MMD^2 estimator (Gretton et al. 2012), with E[k^2] in place of the
+    # (smaller) second moment of the centered kernel, i.e. slightly conservative
+    k2 = 0.5 * ((s2_oo - N) / (N * (N - 1)) + (s2_ss - M) / (M * (M - 1)))
+    var = (2 / (N * (N - 1)) + 2 / (M * (M - 1)) + 4 / (N * M)) * k2
+    D_std = np.sqrt(var) / (k_oo + k_ss)
+
+    return float(D), float(D_std)
+
+
+if _HAS_NUMBA:
+
+    @njit(cache=True)
+    def _k_sums_self_nb(x: np.ndarray) -> tuple[float, float]:
+        """Compiled (numba) version of the sums of k and of k^2 over all the (x, x)
+        pairs in :py:func:`cmd_overlap`, including the pairs of a star with itself
+        (k=1). Since k is symmetric only the pairs i<j are evaluated, and no
+        temporary arrays are created.
+        """
+        n = x.shape[0]
+        s1 = s2 = 0.0
+        for i in range(n):
+            xi, yi = x[i, 0], x[i, 1]
+            for j in range(i + 1, n):
+                dx = xi - x[j, 0]
+                dy = yi - x[j, 1]
+                k = np.exp(-0.25 * (dx * dx + dy * dy))
+                s1 += k
+                s2 += k * k
+        return n + 2 * s1, n + 2 * s2
+
+    @njit(cache=True)
+    def _k_sums_cross_nb(x: np.ndarray, y: np.ndarray) -> float:
+        """Compiled (numba) version of the sum of k over all the (x, y) pairs in
+        :py:func:`cmd_overlap`
+        """
+        s1 = 0.0
+        for i in range(x.shape[0]):
+            xi, yi = x[i, 0], x[i, 1]
+            for j in range(y.shape[0]):
+                dx = xi - y[j, 0]
+                dy = yi - y[j, 1]
+                s1 += np.exp(-0.25 * (dx * dx + dy * dy))
+        return s1

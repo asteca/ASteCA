@@ -83,14 +83,40 @@ class Likelihood:
         )
         self.obs_mag_median = np.nanmedian(self.mag).astype(float)
         self.obs_col_median = np.nanmedian(colors[0]).astype(float)
+        # Widths of the Hess diagram ranges for the magnitude and (first) color, used
+        # to scale the dimensions of the no-overlap penalty
+        self.cmd_widths = (
+            float(self.ranges[0][1] - self.ranges[0][0]),
+            float(self.ranges[1][1] - self.ranges[1][0]),
+        )
 
         # Pre-compute 'tremmel' parameters
-        n_colors = len(colors)
-        self.bin_sizes = [self.Nbins[0] * self.Nbins[i + 1] for i in range(n_colors)]
-        self.offsets = np.array(
-            [0] + list(np.cumsum(self.bin_sizes[:-1])), dtype=np.int32
+        # Per-color histogram2d arguments: (nx, xmin, xmax, ny, ymin, ymax)
+        self.hist_args = np.array(
+            [
+                (
+                    self.Nbins[0],
+                    self.ranges[0][0],
+                    self.ranges[0][1],
+                    self.Nbins[i],
+                    self.ranges[i][0],
+                    self.ranges[i][1],
+                )
+                for i in range(1, len(self.Nbins))
+            ],
+            dtype=float,
         )
-        self.total_bins = sum(self.bin_sizes)
+        # Positions of the non-empty observed bins in the flattened Hess diagram
+        self.nz_pos = np.flatnonzero(self.cl_z_idx)
+        # Flattened table and row offsets, so that table2d[n, m] becomes
+        # table_flat[row_off + m]
+        self.table_flat = self.table2d.ravel()
+        self.row_off = self.cl_histo_f_z.astype(np.intp) * self.table2d.shape[1]
+        # Largest number of synthetic stars per bin covered by the table
+        self.m_max = int(self.table2d.shape[1] - 1)
+        # Minimum likelihood, obtained when no synthetic star falls in any observed
+        # bin (all m_i=0). Used to normalize the distance so that 1 means no match
+        self.min_lkl = float(self.table_flat.take(self.row_off).sum())
 
         self.max_lkl = None
         if self.lkl_name == "plr":
@@ -123,17 +149,16 @@ class Likelihood:
 
         if self.lkl_name == "plr":
             return lpriv.tremmel(
-                self.ranges,
-                self.Nbins,
-                self.cl_z_idx,
-                self.cl_histo_f_z,
+                self.hist_args,
+                self.nz_pos,
+                self.row_off,
+                self.table_flat,
+                self.m_max,
                 self.obs_mag_median,
                 self.obs_col_median,
-                self.offsets,
-                self.bin_sizes,
-                self.total_bins,
-                self.table2d,
+                self.cmd_widths,
                 self.max_lkl,
+                self.min_lkl,
                 synth_clust,
             )
         # if self.lkl_name == "visual":
@@ -148,3 +173,50 @@ class Likelihood:
             )
         else:
             raise ValueError(f"Likelihood '{self.lkl_name}' not recognized")
+
+    def cmd_overlap(
+        self, synth_clust: np.ndarray, h_mag: float = 0.3, h_col: float = 0.075
+    ) -> tuple[float, float]:
+        """Goodness of fit of a synthetic cluster, that can be compared across
+        observed clusters with any number of stars.
+
+        The value is ``D = 1 - 2 * K_os / (K_oo + K_ss)``, where ``K_os`` is the mean
+        value of a Gaussian kernel (with widths ``h_mag`` and ``h_col``) over all the
+        pairs of observed and synthetic stars, and ``K_oo`` and ``K_ss`` are the mean
+        values over the pairs of distinct observed stars and of distinct synthetic
+        stars. ``D`` is the normalized squared difference between the observed and
+        synthetic densities in the CMD (magnitude and first color), both smoothed
+        with the kernel: ``0`` means the same distribution and ``1`` means no overlap.
+
+        Since stars are never compared with themselves, a synthetic cluster drawn
+        from the same distribution as the observed one gives ``D=0`` on average for
+        any number of stars, and a given mismatch gives on average the same ``D`` for
+        any number of stars. Individual values fluctuate around ``0`` and can be
+        negative: ``D<0`` is a match within the noise (compare it with ``D_std``),
+        not an error. Values are not clipped to ``0``, as this would bias their
+        average upwards. ``D<=0.25`` is a reasonable general threshold for a good
+        fit (see the documentation). The kernel widths set the scale at which the
+        CMDs are compared, so the same values must be used for all the clusters
+        whose ``D`` values are compared.
+
+        :param synth_clust: Array containing the synthetic cluster data. The
+            shape of this array is assumed to be: ``[magnitude, color1, ...]``. Only
+            the magnitude and the first color are used.
+        :type synth_clust: np.ndarray
+        :param h_mag: Width of the Gaussian kernel in magnitude, defaults to ``0.3``
+        :type h_mag: float
+        :param h_col: Width of the Gaussian kernel in color, defaults to ``0.075``
+        :type h_col: float
+
+        :raises ValueError: If the observed cluster has fewer than two stars with
+            valid photometry
+
+        :return: ``D`` or, if ``return_std=True``, ``(D, D_std)``. If the synthetic
+            cluster has fewer than two stars, ``D=1`` (and ``D_std=0``)
+        :rtype: float | tuple[float, float]
+        """
+        from .modules import likelihood_priv as lpriv
+
+        D, D_std = lpriv.cmd_overlap(self.mag, self.color, synth_clust, h_mag, h_col)
+
+        return D, D_std
