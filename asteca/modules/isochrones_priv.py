@@ -277,15 +277,21 @@ def read(
         # Columns to keep for this photometric system
         cols_keep_ps = list(set(col_names) & set(cols_keep))
 
+        # Only read the columns used below. np.loadtxt is much faster than
+        # np.genfromtxt (C parser) and returns the same structured array
+        cols_read = set(cols_keep_ps) | {met_col, age_col}
+        if model == "PARSEC":
+            cols_read.add(phot_systs_data[model]["parsec_stages_col"])
+        cols_idx = sorted(col_names.index(c) for c in cols_read if c in col_names)
+
         # Load file
-        data = np.genfromtxt(
+        data = np.loadtxt(
             file_path,
             comments=phot_systs_data[model]["comment_char"],
-            names=col_names,
-            # delimiter=phot_systs_data[model]["sep_cols"],
+            usecols=cols_idx,
+            dtype=[(col_names[i], float) for i in cols_idx],
             encoding="utf-8",
-            deletechars="",
-            autostrip=True,
+            ndmin=1,
         )
 
         if model == "PARSEC":
@@ -857,17 +863,19 @@ def merge_ps_massini_check(mass_col: str, isochrones: dict) -> tuple[list, list]
     issues.extend(_find_irregular_spacing(age_vals, "age"))
 
     # Check for missing (metallicity, age) combinations
-    grid = {(met, age) for met, age in met_age}
-    for met in met_vals:
-        ages_present = np.sort(np.array([age for m, age in grid if np.isclose(m, met)]))
-        missing = [age for age in age_vals if (met, age) not in grid]
-        for age in missing:
-            idx = np.searchsorted(ages_present, age)
-            adjacent = ages_present[max(0, idx - 1) : min(len(ages_present), idx + 1)]
-            issues.append(
-                f"Missing grid point (met={met:g}, age={age:g}); "
-                f"adjacent ages at this metallicity: {adjacent}"
-            )
+    present = np.zeros((len(met_vals), len(age_vals)), dtype=bool)
+    present[
+        np.searchsorted(met_vals, met_age[:, 0]),
+        np.searchsorted(age_vals, met_age[:, 1]),
+    ] = True
+    for i, j in zip(*np.nonzero(~present)):
+        ages_present = age_vals[present[i]]
+        idx = np.searchsorted(ages_present, age_vals[j])
+        adjacent = ages_present[max(0, idx - 1) : min(len(ages_present), idx + 1)]
+        issues.append(
+            f"Missing grid point (met={met_vals[i]:g}, age={age_vals[j]:g}); "
+            f"adjacent ages at this metallicity: {adjacent}"
+        )
 
     if issues:
         warnings.warn(
