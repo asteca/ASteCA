@@ -213,35 +213,49 @@ def resample_loop(
     :rtype: tuple[str, np.ndarray]
     """
     lon, lat, pmRA, pmDE, plx, data_err = data
+    e_pmRA, e_pmDE, e_plx = data_err
     N_stars = len(lon)
 
     st_idx = None
     probs_all = np.zeros(N_stars)
     prob_old_arr = np.zeros(N_stars)
     N_break = 50
-    r, probs, data_5d = 0, [], np.zeros((N_stars, 5))
+    r, probs = 0, np.zeros(N_stars)
     converged = False
+    # Squared normalized (lon, lat) distances to the center. These are not
+    # resampled, so they are only re-computed when the IQR or centers change
+    d2_xy = None
     for r in range(N_resample):
-        # Sample data in parallax and proper motions
-        grs = rng.normal(0.0, 1.0, N_stars)
-        s_pmRA, s_pmDE, s_plx = np.array([pmRA, pmDE, plx]) + grs * data_err
+        # Sample data in parallax and proper motions, with independent draws for
+        # each dimension
+        grs_pmRA, grs_pmDE, grs_plx = rng.normal(0.0, 1.0, (3, N_stars))
 
-        # Normalize sampled data
-        data_5d = norm_data(
-            lon, lat, s_pmRA, s_pmDE, s_plx, xy_c, vpd_c, plx_c, data_iqr
+        if d2_xy is None:
+            d2_xy = ((lon - xy_c[0]) / data_iqr[0]) ** 2 + (
+                (lat - xy_c[1]) / data_iqr[1]
+            ) ** 2
+        # Squared normalized 5D distances to the (moved) centers. Squared
+        # distances select the same stars, and avoid the square root
+        d2 = (
+            d2_xy
+            + ((pmRA + grs_pmRA * e_pmRA - vpd_c[0]) / data_iqr[2]) ** 2
+            + ((pmDE + grs_pmDE * e_pmDE - vpd_c[1]) / data_iqr[3]) ** 2
+            + ((plx + grs_plx * e_plx - plx_c) / data_iqr[4]) ** 2
         )
 
-        # Indexes of the sorted 5D distances to the (moved) centers
-        d_idxs = cp.get_Nd_dists(CENTS_5D, data_5d)
-
-        # Star selection
-        st_idx = d_idxs[:N_cluster]
+        # Star selection: the 'N_cluster' closest stars. Their order is not
+        # needed so a partition is used instead of a full sort
+        if N_cluster >= N_stars:
+            st_idx = np.arange(N_stars)
+        else:
+            st_idx = np.argpartition(d2, N_cluster - 1)[:N_cluster]
 
         # Only re-estimate the IQR for the first set of selected members
         if r == 0:
             data_iqr = iqr(
                 [lon[st_idx], lat[st_idx], pmRA[st_idx], pmDE[st_idx], plx[st_idx]], 1
             )
+            d2_xy = None
 
         if fixed_centers is False:
             # Re-estimate centers using the selected stars
@@ -256,6 +270,7 @@ def resample_loop(
                 plx_c,
             )
             xy_c, vpd_c = (x_c, y_c), (pmra_c, pmde_c)
+            d2_xy = None
 
         # Update the probabilities of the selected stars
         probs_all[st_idx] += 1
@@ -269,7 +284,8 @@ def resample_loop(
             converged = True
             break
         else:
-            prob_old_arr = np.array(probs)
+            # 'probs' is a new array in every iteration, no copy required
+            prob_old_arr = probs
 
     if converged:
         out_mssg = f"Convergence reached at {r + 1} runs"
