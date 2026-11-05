@@ -41,7 +41,7 @@ class Likelihood:
         self.lkl_name = lkl_name
         self.bin_method = bin_method
 
-        likelihoods = ("plr", "bins_distance", "chisq")
+        likelihoods = ("plr",)  # "bins_distance", "chisq")
         if self.lkl_name not in likelihoods:
             raise ValueError(
                 f"'{self.lkl_name}' not recognized. Should be one of {likelihoods}"
