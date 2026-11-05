@@ -507,7 +507,7 @@ class Cluster:
             elif c_str == "pms_c":
                 self.pms_c = (x_c, y_c)
 
-            mssg = f"{c_str}        : ({x_c:.4f}, {y_c:.4f})"
+            mssg = f"{c_str:<15}: ({x_c:.4f}, {y_c:.4f})"
 
         else:
             raise ValueError(f"Selected method '{algo}' not recognized")

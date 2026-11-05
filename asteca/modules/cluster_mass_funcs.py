@@ -91,7 +91,8 @@ def get_M_actual(
 
 
 def stellar_evol_mass_loss(z_met: float, loga: float) -> float:
-    """Fraction of the initial cluster mass (M_ini) lost by stellar evolution.
+    """Fraction of the initial cluster mass (M_ini) that remains after the mass loss
+    by stellar evolution.
 
     Source: Lamers, Baumgardt & Gieles (2010); Table B2
     (http://adsabs.harvard.edu/abs/2010MNRAS.409..305L)
@@ -101,7 +102,8 @@ def stellar_evol_mass_loss(z_met: float, loga: float) -> float:
     :param loga: Logarithm of the age.
     :type loga: float
 
-    :return: Fraction of mass lost by stellar evolution.
+    :return: Fraction of the initial mass remaining after the mass loss by stellar
+        evolution.
     :rtype: float
     """
     mu_coeffs = {
@@ -265,7 +267,8 @@ def minit_LGB05(
     :type gamma: float
     :param t0: Dissolution parameter [yr].
     :type t0: float
-    :param mu_ev: Fraction of mass lost by stellar evolution.
+    :param mu_ev: Fraction of the initial mass remaining after the mass loss by
+        stellar evolution.
     :type mu_ev: float
 
     :return: Initial mass.

@@ -53,8 +53,8 @@ class Membership:
         """Assign membership probabilities.
 
         Estimate the probability of being a true cluster member for all observed
-        stars, using a Bayesian algorithm. The ``radec_c`` and ``radius`` attributes
-        are required to be present in the
+        stars, using a Bayesian algorithm. The ``N_cluster``, ``radec_c`` and
+        ``radius`` attributes are required to be present in the
         :py:class:`Cluster <asteca.cluster.Cluster>` object.
 
         :param N_runs: Maximum number of runs
@@ -65,8 +65,9 @@ class Membership:
         :param seed: Random seed. If ``None`` a random integer will be generated and used
         :type seed: int | None
 
-        :raises AttributeError: If either required attributes
-            are missing from the :py:class:`Cluster <asteca.cluster.Cluster>` object
+        :raises AttributeError: If any of the required attributes (``ra, dec,
+            N_cluster, radec_c, radius``) are missing from the
+            :py:class:`Cluster <asteca.cluster.Cluster>` object
         :raises ValueError: If the ``N_runs`` parameter is less than 10
         """
         self._vp("\nRunning Bayesian DA")
@@ -82,7 +83,7 @@ class Membership:
             )
 
         if N_runs < 10:
-            raise ValueError("Parameter 'N_runs' should be > 10")
+            raise ValueError("Parameter 'N_runs' should be >= 10")
 
         # Set seed
         self.rng = np.random.default_rng(seed)
@@ -219,7 +220,7 @@ class Membership:
             )
 
         if N_runs < 10:
-            raise ValueError("Parameter 'N_runs' should be > 10")
+            raise ValueError("Parameter 'N_runs' should be >= 10")
 
         # Set seed
         self.rng = np.random.default_rng(seed)

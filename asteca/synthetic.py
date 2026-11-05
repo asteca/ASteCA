@@ -293,7 +293,7 @@ class Synthetic:
         :type cluster: Cluster
 
         :raises ValueError:
-            - If required are 'Cluster' attributes missing.
+            - If required 'Cluster' attributes are missing
             - If the number of colors defined in the :py:class:`Cluster` and
               :py:class:`Synthetic` objects do not match
         """
@@ -828,7 +828,7 @@ class Synthetic:
             <https://iopscience.iop.org/article/10.3847/1538-4357/aa5eb4>`__, Table 1)
         :type r_s: float
         :param C_env: Constant related to the disruption time; defaults to
-            ``810e6`` [Myr] (from `Lamers, Gieles & Zwart 2005
+            ``810e6`` [yr] (i.e.: 810 Myr, from `Lamers, Gieles & Zwart 2005
             <https://www.aanda.org/articles/aa/abs/2005/01/aa1476/aa1476.html>`__)
         :type C_env: float
         :param gamma: Constant related to the disruption time (no units); defaults to
@@ -921,7 +921,8 @@ class Synthetic:
             # Dissolution parameter
             t0 = cmf.dissolution_param(C_env, epsilon, gamma, rho_amb_arr[i])
 
-            # Fraction of the initial mass that is lost by stellar evolution
+            # Fraction of the initial mass that remains after the mass loss by stellar
+            # evolution
             mu_ev = cmf.stellar_evol_mass_loss(z_met, loga)
 
             # Initial mass
