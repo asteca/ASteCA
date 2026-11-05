@@ -178,11 +178,8 @@ distributed along the isochrones that do not include EEPs (PARSEC and BASTI):
   where the photometry changes quickly with mass, more finely than the lower main
   sequence
 - ``mass_uniform``: the points are distributed uniformly in initial mass
-- ``adaptive``: the points are distributed according to the shape of the isochrone in
-  the color-magnitude diagram. This option is still under development
 
-MIST isochrones are always interpolated on their EEP grid, unless ``adaptive`` is
-selected.
+MIST isochrones are always interpolated on their EEP grid.
 
 The ``parsec_rm_stages`` affects PARSEC isochrones only. Is set to ``9.0`` by default
 and it indicates that the `post_AGB` stage (``label=9``) should be removed. This is
