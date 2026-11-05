@@ -73,7 +73,7 @@ from Eq 10 with :math:`v_{i,j}=1` (i.e.: equal volumes for all cells), we have:
 .. math::
 
     p(d|\theta) = \prod_i^B \frac{\Gamma(n_i+m_i+\frac{1}{2})}
-    {2^{n_i+m_i+\frac{1}{2}} n_i!\Gamma(m_i+\frac{1}{2}))}
+    {2^{n_i+m_i+\frac{1}{2}} n_i!\Gamma(m_i+\frac{1}{2})}
 
 where :math:`n_i` and :math:`m_i` are the number of observed and synthetic stars in 
 bin :math:`i`, respectively, and :math:`B` is the total number of bins.
@@ -97,7 +97,7 @@ employing the :math:`LogGamma()` function;
 
 .. math::
 
-    \log(p) = \sum_i^B \left[LogGamma(n_i+m_i+\frac{1}{2}) - LogGamma(m_i+\frac{1}{2}) \right] - \\ (N+\frac{1}{2}B) \log 2 - \sum_i^N \log n_i! -M  \log 2
+    \log(p) = \sum_i^B \left[LogGamma(n_i+m_i+\frac{1}{2}) - LogGamma(m_i+\frac{1}{2}) \right] - \\ (N+\frac{1}{2}B) \log 2 - \sum_i^B \log n_i! -M  \log 2
 
 .. note::
 
@@ -162,6 +162,12 @@ much larger range) does not dominate over the color. Hence any synthetic cluster
 some overlap (:math:`d<1`) is always considered better than any synthetic cluster with
 no overlap (:math:`d\geq 1`), and the latter are pulled towards the region of the
 CMD where the observed cluster is located.
+
+Synthetic clusters with no stars (e.g.: parameters that place the whole isochrone below
+the maximum magnitude of the observed cluster) are assigned a fixed distance of
+:math:`d=10`, so that they are always considered worse than synthetic clusters with
+stars (unless these have medians several Hess diagram widths away from the observed
+cluster).
 
 
 .. _cmd_overlap:

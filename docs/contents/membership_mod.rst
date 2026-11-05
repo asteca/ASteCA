@@ -42,7 +42,7 @@ the :ref:`nmembers` section, which is done by calling the
 
 With the ``N_cluster`` attribute in place in a
 :py:class:`Cluster <asteca.cluster.Cluster>` object, here called ``my_field``, you can
-and apply either the :py:meth:`bayesian` or the :py:meth:`fastmp` method (both part
+apply either the :py:meth:`bayesian` or the :py:meth:`fastmp` method (both part
 of the :py:class:`Membership <asteca.membership.Membership>` class) as follows:
 
 

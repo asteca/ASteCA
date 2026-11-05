@@ -187,7 +187,7 @@ because this stage is still `"in preparation" <https://stev.oapd.inaf.it/cmd/faq
 
 Finally, the ``column_names`` argument is an internal dictionary that should only be
 manually passed if the :py:class:`Isochrones` class fails to parse the column names of
-the isochrones files. Please `contact me <gabrielperren@gmail.com>`_ if you have any
+the isochrones files. Please `contact me <mailto:gabrielperren@gmail.com>`_ if you have any
 issues with the loading process of the theoretical isochrones and need to modify
 this argument.
 
