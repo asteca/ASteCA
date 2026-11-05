@@ -403,10 +403,12 @@ def randVals(
     :rtype: dict
     """
     # This is the maximum number of stars that will ever be interpolated into
-    # an isochrone
-    N_isoch, N_mass = theor_tracks.shape[-1], 0
-    for sdm in st_dist_mass:
-        N_mass = max(len(sdm[0]), N_mass, N_isoch)
+    # an isochrone: the largest of all the IMF samples (one per metallicity and
+    # age), or the number of isochrone points. All the samples must be checked, not
+    # just the first age of each metallicity: their lengths differ, and the numba
+    # functions that use these arrays do not check bounds
+    N_isoch = theor_tracks.shape[-1]
+    N_mass = max(N_isoch, max(arr.size for met in st_dist_mass for arr in met))
 
     # Used by `move_isochrone()` and `add_errors`
     # rand_norm_vals = np.random.normal(0.0, 1.0, (2, N_mass))
