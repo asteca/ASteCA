@@ -51,8 +51,12 @@ class Synthetic:
         (E)DR3 **G** and **(BP-RP)** respectively. The second color (if defined) will
         always be affected by the ``CCMO`` model
     :type ext_law: str
-    :param DR_distribution: Distribution function for the differential reddening,
-        one of ``uniform, normal``
+    :param DR_distribution: Model for the differential reddening, one of
+        ``foreground, internal``. ``foreground``: dust-free cluster behind a patchy
+        foreground screen. ``internal``: dust mixed with the cluster stars, behind a
+        uniform foreground screen. In both models the absorption of each star is
+        ``Av + f * DR`` with ``f`` in ``[0, 1]``, i.e.: ``Av`` is the minimum and
+        ``Av + DR`` the maximum absorption
     :type DR_distribution: str
     :param seed: Random seed. If ``None`` a random integer will be generated and used
     :type seed: int | None
@@ -70,7 +74,7 @@ class Synthetic:
         max_mass: int = 10_000,
         gamma: float | str = "D&K",
         ext_law: str = "CCMO",
-        DR_distribution: str = "normal",
+        DR_distribution: str = "foreground",
         seed: int | None = None,
         verbose: int = 1,
     ) -> None:
@@ -110,7 +114,7 @@ class Synthetic:
             )
 
         # Check differential reddening function
-        DR_funcs = ("uniform", "normal")
+        DR_funcs = ("foreground", "internal")
         if self.DR_distribution not in DR_funcs:
             raise ValueError(
                 f"Differential reddening function '{self.DR_distribution}' not "
@@ -213,7 +217,9 @@ class Synthetic:
             )
 
         # Generate random floats used by `generate()`
-        self.rand_floats = scp.randVals(self.rng, self.theor_tracks, self.st_dist_mass)
+        self.rand_floats = scp.randVals(
+            self.rng, self.theor_tracks, self.st_dist_mass, self.DR_distribution
+        )
 
         # Store for internal usage
         self.met_age_dict = self.isochs.met_age_dict
@@ -418,7 +424,6 @@ class Synthetic:
             self.ext_law,
             self.ext_coefs,
             self.rand_floats,
-            self.DR_distribution,
             self.st_dist_mass,
             self.mass_idx,
             max_mag_syn,
@@ -466,6 +471,7 @@ class Synthetic:
             )
 
         from .modules import stellar_stats_funcs as ssf
+        from .modules import synth_cluster_priv as scp
         from .modules import synth_model as sm
 
         # Update dictionaries with default values, if required
@@ -484,22 +490,22 @@ class Synthetic:
             )
 
         # Generate the 'N_models' models via sampling a Gaussian centered on
-        # 'model', with standard deviation given by 'model_std'.
+        # 'model', with standard deviation given by 'model_std', truncated to the
+        # valid range of each parameter: the isochrones' ranges for (met, loga),
+        # and non-negative values for the rest
+        bounds = {
+            "met": (self.met_age_dict["met"][0], self.met_age_dict["met"][-1]),
+            "loga": (self.met_age_dict["loga"][0], self.met_age_dict["loga"][-1]),
+        }
         sampled_models = {}
         for k, f_val in model.items():
-            std = model_std[k]
-            sampled_models[k] = self.rng.normal(f_val, std, N_models)
+            low, high = bounds.get(k, (scp.PARAMS_MIN.get(k, -np.inf), np.inf))
+            sampled_models[k] = scp.truncnorm_sample(
+                self.rng, f_val, model_std[k], low, high, N_models
+            )
         sampled_models = [
             dict(zip(sampled_models, t)) for t in zip(*sampled_models.values())
         ]
-
-        # Check that the sampled models are within the ranges of the isochrones.
-        # If not, set to the closest value within the range and issue a warning.
-        met_min, met_max = self.met_age_dict["met"][0], self.met_age_dict["met"][-1]
-        age_min, age_max = self.met_age_dict["loga"][0], self.met_age_dict["loga"][-1]
-        for _model in sampled_models:
-            _model["met"] = min(max(_model["met"], met_min), met_max)
-            _model["loga"] = min(max(_model["loga"], age_min), age_max)
 
         # Generate the synthetic arrays using the above models
         sampled_models_no_empty, sampled_synthcls = [], []
@@ -524,7 +530,6 @@ class Synthetic:
                 self.ext_law,
                 self.ext_coefs,
                 self.rand_floats,
-                self.DR_distribution,
                 self.st_dist_mass,
                 self.mass_idx,
                 self.max_mag_syn_obs,
@@ -983,7 +988,6 @@ class Synthetic:
             self.ext_law,
             self.ext_coefs,
             self.rand_floats,
-            self.DR_distribution,
             self.st_dist_mass,
             self.mass_idx,
             max_mag_syn,

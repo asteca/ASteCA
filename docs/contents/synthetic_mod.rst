@@ -43,7 +43,7 @@ are (also see :py:class:`asteca.Synthetic`):
     max_mass         : Maximum total initial mass
     gamma            : Distribution for the mass ratio of the binary systems
     ext_law          : Extinction law
-    DR_distribution  : Distribution for the differential reddening
+    DR_distribution  : Model for the differential reddening
 
 
 These are explained in more detail in the following sub-sections.
@@ -186,39 +186,376 @@ law, simply select it when instantiating the object, as follows:
 Differential reddening
 ======================
 
-The ``DR_distribution`` argument fixes the distribution used for the differential
-reddening (assuming :math:`DR>0`, see Section
-:ref:`ref_generating`). The ``DR_distribution`` argument accepts one of two
-string values: ``uniform`` (the default) or ``normal``. These add a random amount to the
-total extinction parameter :math:`A_V`, sampled from either a `uniform`_ or a `normal`_
-distribution (enforcing a non-negative result). The resulting reddening can be
-expressed as:
+The ``DR_distribution`` argument selects the model used for the differential
+reddening (assuming :math:`DR>0`, see Section :ref:`ref_generating`). It accepts one
+of two string values: ``foreground`` (the default) or ``internal``. Both models
+assign to each star :math:`i` the absorption
 
 .. math::
 
-   A_{V,\mathrm{DR}} = \max(0, X)
+   A_i = A_V + f_i\, DR, \qquad 0 \le f_i \le 1
 
-where, in the ``uniform`` case:
+where :math:`A_V` and :math:`DR` are the fitted parameters and :math:`f_i` is a
+random fraction. The two models share the following properties:
 
-.. math::
+- :math:`A_V` is the **minimum** absorption in the cluster and :math:`A_V + DR` the
+  maximum. Every star has :math:`A_V \le A_i \le A_V + DR`.
+- No value is ever negative, so nothing needs to be clipped at zero. There is no
+  :math:`DR \le A_V` restriction, and a cluster with :math:`A_V = 0` and
+  :math:`DR > 0` is valid.
+- :math:`DR = 0` gives every star the same absorption :math:`A_V`.
 
-   X \sim \mathcal{U}(A_V - DR,\; A_V + DR)
+The models differ only in how :math:`f_i` is distributed. That distribution stands
+for a geometry of the dust, which in turn sets what :math:`A_V` and :math:`DR`
+mean physically:
 
-and in the ``normal`` case:
+- ``internal``: the stars are mixed with dust inside the cluster, behind a uniform
+  foreground screen.
+- ``foreground``: the cluster is free of dust and is seen through a patchy
+  foreground screen.
 
-.. math::
-
-   X \sim \mathcal{N}(A_V,\; DR)
-
-The ``uniform`` model produces bounded, symmetric fluctuations with limited dispersion,
-while the ``normal`` model yields unbounded fluctuations with heavier tails, leading to
-more frequent clipping at zero and a positively skewed distribution.
-
-The following figure shows an example of both distributions for a total extinction
-value of :math:`A_V=0.5` and a differential reddening of :math:`DR=1.0`:
-
-.. figure:: ../_static/dr_plot.webp
+.. figure:: ../_static/dr_models_geometry.webp
     :align: center
+
+    Top: in the ``internal`` model the absorption of a star depends on how deep it
+    sits inside the dusty cluster. Bottom: in the ``foreground`` model it depends on
+    the screen thickness along the star's line of sight, not on its depth.
+
+
+
+The ``internal`` model
+----------------------
+
+This model assumes that
+
+- a uniform foreground screen adds the same absorption :math:`A_V` to every
+  member, and
+- the cluster is a sphere of radius :math:`R` filled with dust of uniform density,
+  with the stars distributed uniformly through it.
+
+:math:`DR` is then the absorption of the internal dust column along the line of
+sight through the centre of the cluster, from front to back (a length
+:math:`2R`). A star with a path :math:`\ell_i` of dust in front of it, before the
+edge of the cluster, has
+
+.. math::
+
+   f_i = \frac{\ell_i}{2R}
+
+Stars on the near side of the cluster have :math:`f_i \approx 0`. Only a star at
+the far edge, on the central line of sight, reaches :math:`f_i = 1`.
+
+For stars uniformly distributed in the sphere, the distribution of :math:`f` can
+be derived exactly. For a star at projected radius :math:`\rho` the chord through
+the cluster has half-length :math:`h=\sqrt{R^2-\rho^2}`, and :math:`f` is uniform
+in :math:`[0, h/R]`. Averaging over the distribution of :math:`h` gives
+
+.. math::
+
+   p(f) = \frac{3}{2}\left(1 - f^2\right), \qquad 0 \le f \le 1
+
+This density is largest at :math:`f=0`, where the stars just behind the front
+surface of the cluster pile up. It falls to zero at :math:`f=1`. Its mean is
+:math:`3/8=0.375`, its standard deviation is :math:`0.244`, and it is skewed
+towards high :math:`f` (skewness :math:`0.38`). About 15% of the stars have
+:math:`f<0.1`.
+
+Its cumulative distribution :math:`F(f) = (3f - f^3)/2` can be inverted in closed
+form, so :math:`f` is sampled from a uniform random number
+:math:`u \sim \mathcal{U}(0, 1)` as
+
+.. math::
+
+   f = 2 \sin\!\left(\frac{\arcsin u}{3}\right)
+
+
+
+The ``foreground`` model
+------------------------
+
+This model assumes that
+
+- the cluster contains no dust, and
+- the foreground screen in front of it is patchy, so its absorption varies across
+  the face of the cluster.
+
+Each star takes the absorption of the screen along its own line of sight. Stars
+that are close together on the sky but at different depths in the cluster get the
+same absorption.
+
+The screen's absorption is taken to follow a normal distribution truncated at
+:math:`\pm 3\sigma`, with :math:`A_V` at the lower end and :math:`A_V + DR` at the
+upper end. Here :math:`A_V` is the **minimum** foreground absorption towards the
+cluster and :math:`DR` is the full range of its variation (about :math:`6\sigma`):
+
+.. math::
+
+   f \sim \mathcal{N}\!\left(\tfrac{1}{2},\, \tfrac{1}{6}\right),
+   \quad \text{truncated to } [0, 1]
+
+The distribution is symmetric about :math:`f=0.5`, with a standard deviation of
+:math:`0.164`. Fewer than 1% of the stars fall in each of the outer tenths
+(:math:`f<0.1` or :math:`f>0.9`). It is sampled from a uniform random number
+through the inverse cumulative distribution of the normal.
+
+
+
+How the two distributions differ
+--------------------------------
+
+.. list-table::
+   :header-rows: 1
+   :widths: 40 30 30
+
+   * -
+     - ``internal``
+     - ``foreground``
+   * - Density of :math:`f`
+     - :math:`\frac{3}{2}(1-f^2)`
+     - :math:`\mathcal{N}(0.5, 1/6)`, truncated at :math:`\pm 3\sigma`
+   * - Mean of :math:`f`
+     - 0.375
+     - 0.500
+   * - Standard deviation of :math:`f`
+     - 0.244
+     - 0.164
+   * - Median / mode of :math:`f`
+     - 0.347 / 0
+     - 0.5 / 0.5
+   * - Skewness
+     - 0.38
+     - 0
+   * - :math:`P(f<0.1)` / :math:`P(f>0.9)`
+     - 15% / 1.5%
+     - 0.7% / 0.7%
+   * - Mean absorption :math:`\langle A\rangle`
+     - :math:`A_V + 0.375\,DR`
+     - :math:`A_V + 0.5\,DR`
+   * - Spread of the absorption
+     - :math:`0.244\,DR`
+     - :math:`0.164\,DR`
+
+The figure below shows the two distributions of :math:`f` (left). The middle
+panel shows the absorption they produce for the same parameters,
+:math:`A_V=0.5` and :math:`DR=1` (shaded range :math:`[A_V, A_V+DR]`). The right
+panel uses ``internal`` parameters chosen to give the same mean and standard
+deviation of :math:`A` as the ``foreground`` case.
+
+.. figure:: ../_static/dr_models_distr.webp
+    :align: center
+
+For the same parameters the ``internal`` model gives a lower mean absorption with a
+larger spread. Most of its stars stay close to :math:`A_V`, with a tail towards
+:math:`A_V + DR`. With the mean and spread matched, the two differ only in shape.
+The ``internal`` distribution has a sharp lower edge and a long upper tail, while
+the ``foreground`` one is symmetric with soft edges on both sides.
+
+The same differences show up in the synthetic CMDs (single stars only, no
+photometric uncertainties):
+
+.. figure:: ../_static/dr_models_cmd.webp
+    :align: center
+
+    Lines show the isochrone moved by the minimum (:math:`A_V`), mean
+    (:math:`\langle A\rangle`), and maximum (:math:`A_V+DR`) absorption.
+
+- ``internal``: the blue edge of the sequence follows the isochrone at
+  :math:`A_V`, because the stars on the near side of the cluster are almost
+  unreddened. The sequence then spreads redwards from there.
+- ``foreground``: the stars cluster around the isochrone at
+  :math:`A_V + DR/2`. Few of them come close to either the :math:`A_V` or the
+  :math:`A_V+DR` isochrone.
+- With matched mean and spread (right panel), the two models give similar
+  sequences. The ``internal`` one keeps its sharper blue edge.
+
+
+
+Converting between the two parametrisations
+-------------------------------------------
+
+Since the mean and spread of the absorption are what the photometry constrains
+best, the parameters of one model can be translated into those of the other by
+matching these two moments:
+
+.. math::
+
+   DR_{\rm int} &= \frac{0.164}{0.244}\, DR_{\rm fg} = 0.674\, DR_{\rm fg} \\
+   A_{V,\rm int} &= A_{V,\rm fg} + 0.5\, DR_{\rm fg} - 0.375\, DR_{\rm int}
+   = A_{V,\rm fg} + 0.247\, DR_{\rm fg}
+
+Fits to observed clusters follow this relation closely. For trumpler5, the
+``foreground`` fit gives :math:`A_V=0.46, DR=2.80` (see the table below). These
+convert to :math:`A_V=1.15, DR=1.89`, while the ``internal`` fit gives
+:math:`A_V=1.03, DR=1.89`.
+
+In practice, then, the choice of model mostly changes how the total absorption is
+split between :math:`A_V` and :math:`DR`, and what each of them means physically.
+The mean and spread of the absorption are well constrained by the data in either
+case.
+
+
+
+Interpretation of the parameters
+--------------------------------
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 40 40
+
+   * -
+     - ``internal``
+     - ``foreground``
+   * - :math:`A_V`
+     - Uniform foreground absorption, the same for every member
+     - Minimum foreground absorption across the face of the cluster
+   * - :math:`DR`
+     - Absorption of the dust inside the cluster, through its centre from front to
+       back
+     - Full range of the foreground variations across the face of the cluster
+   * - Absorption of a star depends on
+     - Its depth inside the cluster
+     - Its position on the sky
+   * - Suited to
+     - Young clusters that still contain gas and dust
+     - Clusters without internal dust, seen through a patchy foreground (e.g.
+       through or behind a molecular cloud)
+
+The ``internal`` model's assumptions of uniform dust and uniformly distributed
+stars are simplifications. Real clusters are centrally concentrated, which moves
+:math:`f` towards 0.5, and their dust is clumpy. The ``foreground`` model's normal
+shape is also an assumption: a cloud edge across the cluster, for example, would
+give a bimodal distribution. A combination of both models, a variable foreground
+plus internal dust, was also tested. The photometry could not separate the two
+contributions, so it is not offered.
+
+
+
+Application to observed clusters
+--------------------------------
+
+Both models were fitted, with the same settings, to three clusters with very
+different absorption:
+
+- ngc2516: young, nearby, low absorption.
+- berkeley29: old, distant, few members.
+- trumpler5: old, with strong differential reddening.
+
+Median and [16, 84] percentile values:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Cluster
+     - Model
+     - ``loga``
+     - ``dm``
+     - :math:`A_V`
+     - :math:`DR`
+     - :math:`\langle A\rangle`
+     - sd(:math:`A`)
+   * - ngc2516
+     - ``foreground``
+     - 8.21 [8.19, 8.56]
+     - 8.08 [8.06, 8.10]
+     - 0.12 [0.08, 0.29]
+     - 0.29 [0.09, 0.41]
+     - 0.27
+     - 0.05
+   * -
+     - ``internal``
+     - 8.18 [8.10, 8.69]
+     - 8.07 [8.04, 8.10]
+     - 0.22 [0.08, 0.32]
+     - 0.22 [0.09, 0.53]
+     - 0.30
+     - 0.05
+   * - berkeley29
+     - ``foreground``
+     - 9.55 [9.48, 9.63]
+     - 15.67 [15.52, 15.83]
+     - 0.13 [0.04, 0.32]
+     - 0.22 [0.08, 0.49]
+     - 0.24
+     - 0.04
+   * -
+     - ``internal``
+     - 9.59 [9.50, 9.65]
+     - 15.64 [15.50, 15.78]
+     - 0.05 [0.01, 0.24]
+     - 0.31 [0.16, 0.56]
+     - 0.17
+     - 0.08
+   * - trumpler5
+     - ``foreground``
+     - 9.37 [9.34, 9.46]
+     - 12.44 [12.37, 12.52]
+     - 0.46 [0.35, 0.57]
+     - 2.80 [2.61, 2.91]
+     - 1.86
+     - 0.46
+   * -
+     - ``internal``
+     - 9.36 [9.35, 9.51]
+     - 12.54 [12.42, 12.61]
+     - 1.03 [0.94, 1.17]
+     - 1.89 [1.82, 2.02]
+     - 1.73
+     - 0.46
+
+.. figure:: ../_static/dr_models_fits.webp
+    :align: center
+
+    Observed CMDs (left) and the best-fit synthetic clusters of each model (grey:
+    observed stars).
+
+- **Fit quality:** the two models fit equally well. Their best-fit distances are
+  0.066 and 0.065 for ngc2516 and 0.046 for both models on trumpler5. The gap of
+  about 0.01 on berkeley29 (0.141 and 0.132) is smaller than the scatter caused by
+  the random realisation of a synthetic cluster. On trumpler5, the same best-fit
+  parameters evaluated with six other random seeds gave distances with a standard
+  deviation of 0.008 to 0.019, depending on the model.
+- **Age and distance:** these agree between the models within their
+  uncertainties. On trumpler5 the ``internal`` model's lower mean absorption
+  (1.73 against 1.86) is compensated by a distance modulus 0.1 mag larger.
+- **Absorption:** the main difference is how the absorption is split. For
+  trumpler5, an old (about 2.3 Gyr) cluster, the ``internal`` model attributes
+  :math:`DR=1.9` mag to dust inside the cluster. That is not plausible at this
+  age, when the gas and dust left over from star formation have long been
+  dispersed. The ``foreground`` model describes the same absorption as a minimum
+  foreground of 0.46 mag plus a 2.8 mag range of variation across the field.
+
+The choice between the two models therefore can't be made from the quality of the
+fit. It should be made from what is known about the cluster:
+
+- ``internal`` for young clusters that are still embedded in their natal gas and
+  dust.
+- ``foreground`` for clusters without dust of their own, which covers most open
+  clusters older than a few tens of Myr.
+
+
+
+Implementation notes
+--------------------
+
+- **Fixed per object:** the fractions :math:`f` are drawn once, when the
+  :py:class:`asteca.Synthetic` object is created, from its pre-generated random
+  values. Every synthetic cluster generated by the same object therefore uses the
+  same fractions, and only :math:`A_V` and :math:`DR` change, so the likelihood is
+  a deterministic function of the parameters.
+- **Extinction per isochrone point:** the absorption is applied to each point of
+  the isochrone, and the synthetic stars are then interpolated between those
+  points according to their masses. Interpolating between two independent draws
+  averages them, which narrows the realised distribution of :math:`f` by about
+  :math:`\sqrt{2/3}\approx 0.82`. Measured from the G-band shift of each synthetic
+  star:
+
+  - ``internal``: standard deviation 0.20 instead of 0.244, and only 5% instead of
+    15% of the stars with :math:`f<0.1`.
+  - ``foreground``: standard deviation 0.14 instead of 0.164.
+
+  Stars of similar mass also share the same pair of draws, so their absorptions
+  are correlated (visible as short streaks along the sequences in the CMD
+  figures). This applies to any differential reddening model in the current code.
 
 
 
@@ -230,8 +567,6 @@ value of :math:`A_V=0.5` and a differential reddening of :math:`DR=1.0`:
 .. _dust_extinction: https://dust-extinction.readthedocs.io/
 .. _extinction: https://extinction.readthedocs.io/en/latest/
 .. _IDL Astronomy User's Library: https://github.com/wlandsman/IDLAstro
-.. _uniform: https://numpy.org/doc/stable/reference/random/generated/numpy.random.uniform.html
-.. _normal: https://numpy.org/doc/stable/reference/random/generated/numpy.random.normal.html
 .. _Salpeter (1955): https://ui.adsabs.harvard.edu/abs/1955ApJ...121..161S
 .. _Kroupa (2001): https://ui.adsabs.harvard.edu/abs/2001MNRAS.322..231K/
 .. _Chabrier et al. (2014): https://ui.adsabs.harvard.edu/abs/2014ApJ...796...75C
@@ -370,11 +705,12 @@ differential reddening ``DR``. The first two are related through the equation:
 
     A_V = R_V \times E_{B-V}
 
-Finally, the differential reddening parameter ``DR`` adds random scatter to the cluster
-stars affected by ``Av``. The distribution for this scatter is controlled setting the
-argument ``DR_distribution`` when the :py:class:`asteca.Synthetic` object is
-instantiated (as explained in :ref:`ref_defining`), which can currently be either a
-uniform or a normal distribution.
+Finally, the differential reddening parameter ``DR`` adds random scatter to the
+absorption of the cluster stars. Each star receives an absorption between ``Av`` (the
+minimum) and ``Av + DR`` (the maximum), distributed according to the model selected
+with the ``DR_distribution`` argument when the :py:class:`asteca.Synthetic` object is
+instantiated: ``foreground`` (the default) or ``internal``. See
+:ref:`ref_defining` for details.
 
 
 

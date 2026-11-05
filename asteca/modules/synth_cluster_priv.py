@@ -549,7 +549,10 @@ def ccmo_model(mw: float) -> tuple[float, float]:
 
 
 def randVals(
-    rng: np.random.Generator, theor_tracks: np.ndarray, st_dist_mass: list
+    rng: np.random.Generator,
+    theor_tracks: np.ndarray,
+    st_dist_mass: list,
+    DR_distribution: str,
 ) -> dict:
     """Generate lists of random values used by the synthetic cluster generating
     function.
@@ -560,6 +563,9 @@ def randVals(
     :type theor_tracks: np.ndarray
     :param st_dist_mass: List of sampled masses.
     :type st_dist_mass: list
+    :param DR_distribution: Differential reddening model, see
+        :py:func:`dr_fractions`.
+    :type DR_distribution: str
 
     :returns: Dictionary of random values.
     :rtype: dict
@@ -578,8 +584,86 @@ def randVals(
     # rand_unif_vals = np.random.uniform(0.0, 1.0, (2, N_mass))
     rand_unif_vals = rng.uniform(0.0, 1.0, (2, N_mass))
 
-    rand_floats = {"norm": rand_norm_vals, "unif": rand_unif_vals}
+    # Used by `extinction()`
+    dr_frac = dr_fractions(rand_unif_vals[0], DR_distribution)
+
+    rand_floats = {"norm": rand_norm_vals, "unif": rand_unif_vals, "dr_frac": dr_frac}
     return rand_floats
+
+
+# Lower limits of the parameters that can not be negative (Rv must also be > 0,
+# see synth_model.properModel())
+PARAMS_MIN = {"alpha": 0.0, "beta": 0.0, "Av": 0.0, "DR": 0.0, "dm": 0.0, "Rv": 0.0}
+
+
+def truncnorm_sample(
+    rng: np.random.Generator,
+    mean: float,
+    std: float,
+    low: float,
+    high: float,
+    N: int,
+) -> np.ndarray:
+    """Sample a normal distribution truncated to the range [low, high].
+
+    Unlike clipping the samples of a normal distribution, this does not pile up
+    values at the limits of the range.
+
+    :param rng: Random number generator.
+    :type rng: np.random.Generator
+    :param mean: Mean of the (untruncated) normal distribution.
+    :type mean: float
+    :param std: Standard deviation of the (untruncated) normal distribution. If
+        ``0``, all the values are equal to ``mean``.
+    :type std: float
+    :param low: Lower limit of the range.
+    :type low: float
+    :param high: Upper limit of the range.
+    :type high: float
+    :param N: Number of samples.
+    :type N: int
+
+    :returns: Array of samples.
+    :rtype: np.ndarray
+    """
+    if std <= 0.0:
+        return np.full(N, float(mean))
+    a, b = (low - mean) / std, (high - mean) / std
+    return stats.truncnorm.rvs(a, b, loc=mean, scale=std, size=N, random_state=rng)
+
+
+def dr_fractions(rand_unif: np.ndarray, DR_distribution: str) -> np.ndarray:
+    """Fractions 'f' (in [0, 1]) of the differential reddening applied to each
+    point, A_i = Av + f_i * DR.
+
+    internal: stars and dust uniformly mixed in a sphere, behind a uniform
+    foreground screen (Av). DR is the absorption through the centre of the
+    cluster, front to back, and 'f' the fraction of that column in front of each
+    star. Its distribution is p(f) = 3/2 (1 - f^2), with inverse CDF
+    f = 2 sin(arcsin(u) / 3).
+
+    foreground: dust-free cluster behind a patchy foreground screen. Av is its
+    minimum absorption and DR the full range of its variation, i.e.: 'f' follows
+    a normal distribution N(0.5, 1/6) truncated at +/-3 sigma.
+
+    :param rand_unif: Array of random uniform values in [0, 1).
+    :type rand_unif: np.ndarray
+    :param DR_distribution: Differential reddening model, one of
+        ``internal, foreground``.
+    :type DR_distribution: str
+
+    :raises ValueError: If the differential reddening model is not recognized.
+
+    :returns: Array of fractions.
+    :rtype: np.ndarray
+    """
+    if DR_distribution == "internal":
+        return 2.0 * np.sin(np.arcsin(rand_unif) / 3.0)
+    if DR_distribution == "foreground":
+        # Inverse CDF of the normal, restricted to +/-3 sigma
+        p_lo, p_hi = stats.norm.cdf(-3.0), stats.norm.cdf(3.0)
+        return 0.5 + stats.norm.ppf(p_lo + rand_unif * (p_hi - p_lo)) / 6.0
+    raise ValueError(f"Differential reddening model '{DR_distribution}' not recognized")
 
 
 def error_distribution(

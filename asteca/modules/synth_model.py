@@ -88,8 +88,7 @@ def main(N_repeat: int = 25_000):
     profiler = Profiler()
     profiler.start()
     for _ in range(N_repeat):
-        # Random parameter values within reasonable ranges. DR is kept below Av
-        # to avoid the early return in get_model()
+        # Random parameter values within reasonable ranges
         _av = rng.uniform(0.0, 3.0)
         params = {
             "met": rng.uniform(met_min, met_max),
@@ -112,7 +111,6 @@ def main(N_repeat: int = 25_000):
             synthcl.ext_law,
             synthcl.ext_coefs,
             synthcl.rand_floats,
-            synthcl.DR_distribution,
             synthcl.st_dist_mass,
             synthcl.mass_idx,
             synthcl.max_mag_syn_obs,
@@ -134,7 +132,6 @@ def get_model(
     ext_law: str,
     ext_coefs: list | np.ndarray,
     rand_floats: dict[str, np.ndarray],
-    DR_distribution: str,
     st_dist_mass: list,
     mass_idx_lookup: dict,
     max_mag_syn: float,
@@ -170,8 +167,6 @@ def get_model(
     :type ext_coefs: list | np.ndarray
     :param rand_floats: Pre-generated random values used during synthesis.
     :type rand_floats: dict[str, np.ndarray]
-    :param DR_distribution: Differential reddening distribution.
-    :type DR_distribution: str
     :param st_dist_mass: Sampled IMF mass distributions.
     :type st_dist_mass: list
     :param max_mag_syn: Maximum synthetic magnitude allowed.
@@ -204,14 +199,6 @@ def get_model(
     met, loga, alpha, beta, av, dr, rv, dm, ml, mh, al, ah = properModel(
         met_age_dict, def_params, params, met_tol, age_tol
     )
-
-    # This guards against excessive clipping into the negative values of Av,
-    # which would produce nonphysical results. Some clipping is still
-    # present when DR_distribution=="normal"
-    if dr > av:
-        if show_errors:
-            print(f"DR cannot be greater than Av: DR={dr:.3f} > Av={av:.3f}")
-        return np.array([]), np.array([])
 
     # If (z, a) are both fixed, use the single processed isochrone
     if ml == al == mh == ah == 0:
@@ -254,9 +241,7 @@ def get_model(
         isoch_extin_dr_0 = extinction(
             ext_law,
             ext_coefs,
-            rand_floats["norm"][0],
-            rand_floats["unif"][0],
-            DR_distribution,
+            rand_floats["dr_frac"],
             m_ini_idx,
             binar_flag,
             av,
@@ -269,9 +254,7 @@ def get_model(
     isoch_extin = extinction(
         ext_law,
         ext_coefs,
-        rand_floats["norm"][0],
-        rand_floats["unif"][0],
-        DR_distribution,
+        rand_floats["dr_frac"],
         m_ini_idx,
         binar_flag,
         av,
@@ -353,6 +336,9 @@ def properModel(
     :param age_tol: Tolerance for log(age) values matching
     :type age_tol: float
 
+    :raises ValueError: If (z, a) are outside of the isochrones' ranges, if any of
+     ``alpha, beta, Av, DR, dm`` is negative, or if ``Rv <= 0``.
+
     :returns: A tuple containing all fundamental parameters, and the indexes of the
      (z, a) values in the grid that define the box that enclose the proper (z, a)
      values.
@@ -378,6 +364,13 @@ def properModel(
 
     _check_param("met", met_tol)
     _check_param("loga", age_tol)
+
+    # Parameters that can not be negative (Rv can not be zero either)
+    for name in ("alpha", "beta", "Av", "DR", "dm"):
+        if fit_params[name] < 0.0:
+            raise ValueError(f"Parameter {name}={fit_params[name]:.5f} must be >= 0")
+    if fit_params["Rv"] <= 0.0:
+        raise ValueError(f"Parameter Rv={fit_params['Rv']:.5f} must be > 0")
 
     ml = mh = 0
     if len(met_age_dict["met"]) > 1:
@@ -769,9 +762,7 @@ def move_isochrone(
 def extinction(
     ext_law: str,
     ext_coefs: list | np.ndarray,
-    rand_norm: np.ndarray,
-    rand_unif: np.ndarray,
-    DR_distribution: str,
+    dr_frac: np.ndarray,
     m_ini_idx: int,
     binar_flag: bool,
     Av: float,
@@ -797,6 +788,15 @@ def extinction(
     and:
     ccm_coef = a + b / Rv = ext_coefs[i][0] + ext_coefs[i][1] / Rv
 
+    With differential reddening (dr>0) the total absorption of each point is:
+
+    A_i = Av + f_i * dr
+
+    where 'f_i' (in [0, 1]) are the fractions in 'dr_frac', drawn from the
+    distribution selected with 'DR_distribution' (see
+    :py:func:`synth_cluster_priv.dr_fractions`). Hence Av is the minimum and
+    Av + dr the maximum absorption.
+
     Ax = ef * Av
     m_obs = M_int + Ax + dist_mod
           = M_int + ef * R_V * E(B-V) + dist_mod
@@ -815,12 +815,8 @@ def extinction(
     :type ext_law: str
     :param ext_coefs: List of extinction coefficients.
     :type ext_coefs: list | np.ndarray
-    :param rand_norm: Array of random normal values.
-    :type rand_norm: np.ndarray
-    :param rand_unif: Array of random uniform values.
-    :type rand_unif: np.ndarray
-    :param DR_distribution: Distribution of the differential reddening.
-    :type DR_distribution: str
+    :param dr_frac: Fractions of the differential reddening applied to each point.
+    :type dr_frac: np.ndarray
     :param m_ini_idx: Index of the initial mass.
     :type m_ini_idx: int
     :param binar_flag: Flag to indicate if binarity is being used.
@@ -843,48 +839,19 @@ def extinction(
 
     if _HAS_NUMBA and ext_law == "GAIADR3":
         # Compiled version: identical results, see _extinction_gaiadr3_nb()
-        # dr_kind: 0 -> no differential reddening (scalar A), 1 -> uniform,
-        # 2 -> normal
-        dr_kind, rand_vals, A_scalar = 0, rand_unif, Av
-        if dr > 0.0:
-            if DR_distribution == "uniform":
-                dr_kind = 1
-            elif DR_distribution == "normal":
-                dr_kind, rand_vals = 2, rand_norm
-            else:
-                A_scalar = max(Av, 0.0)
+        # dr_kind: 0 -> no differential reddening (scalar A), 1 -> A = Av + f*dr
+        dr_kind = 1 if dr > 0.0 else 0
         _extinction_gaiadr3_nb(
-            isochrone, rand_vals, dr_kind, A_scalar, Av, dr, m_ini_idx, binar_flag
+            isochrone, dr_frac, dr_kind, Av, Av, dr, m_ini_idx, binar_flag
         )
         return isochrone
 
     Av_dr = Av
     if dr > 0.0:
         Ns = isochrone.shape[-1]
-
-        if DR_distribution == "uniform":
-            # Transform uniform random values from [0, 1] to [-1, 1], then scale by dr
-            # to get the differential reddening values in the range [-dr, dr].
-            Av_dr = 2.0 * rand_unif[:Ns]
-            Av_dr -= 1.0
-            Av_dr *= dr
-        elif DR_distribution == "normal":
-            #  Transform normal random values to have a standard deviation of dr
-            Av_dr = rand_norm[:Ns] * dr
-        else:
-            Av_dr = None
-
-        # In place in case I ever want to implement the percentage of stars affected.
-        # Without this, all stars are affected by the DR.
-        # dr_arr[rand_unif[:Ns] > DR_percentage] = 0.0
-
-        if Av_dr is None:
-            Av_dr = max(Av, 0.0)
-        else:
-            # Add Av and clip at 0, in place. Equivalent to
-            # np.clip(Av + dr_arr, a_min=0, a_max=None)
-            Av_dr += Av
-            np.maximum(Av_dr, 0.0, out=Av_dr)
+        # A_i = Av + f_i * dr, in [Av, Av + dr]
+        Av_dr = dr_frac[:Ns] * dr
+        Av_dr += Av
 
     if ext_law == "CCMO":
         # Magnitude
@@ -929,7 +896,7 @@ if _HAS_NUMBA:
     @njit(cache=True)
     def _extinction_gaiadr3_nb(
         isochrone: np.ndarray,
-        rand_vals: np.ndarray,
+        dr_frac: np.ndarray,
         dr_kind: int,
         A_scalar: float,
         Av: float,
@@ -948,7 +915,7 @@ if _HAS_NUMBA:
         identical.
 
         dr_kind: 0 -> scalar absorption 'A_scalar' (no differential reddening),
-        1 -> uniform, 2 -> normal differential reddening from 'rand_vals'.
+        1 -> differential reddening A = Av + f * dr, with f from 'dr_frac'.
         """
         g = _G_COEFFS
         b = _BPRP_COEFFS
@@ -983,16 +950,8 @@ if _HAS_NUMBA:
                 Ex *= X
                 Ex += bk0
             else:
-                if dr_kind == 1:
-                    A = 2.0 * rand_vals[i]
-                    A -= 1.0
-                    A *= dr
-                else:
-                    A = rand_vals[i] * dr
+                A = dr_frac[i] * dr
                 A += Av
-                # np.maximum(A, 0.0)
-                if not (A >= 0.0 or np.isnan(A)):
-                    A = 0.0
 
                 # G: A * [P0(X) + A * (P1(X) + A * (P2(X) + c6 * A))]
                 R = g[9] * X

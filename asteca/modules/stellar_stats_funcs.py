@@ -361,6 +361,7 @@ def get_bss_masses(
     :return: Median and STDDEVS of BSS mass estimated for each observed star.
     :rtype: tuple[np.ndarray, np.ndarray]
     """
+    from . import synth_cluster_priv as scp
     from . import synth_model as sm
 
     # Extract young isochrones. Shape of 'isoch_youngs_arrs' is (Na, Nm, Nc, Ni):
@@ -380,19 +381,21 @@ def get_bss_masses(
     # Dummy values
     binar_flag = False
     m_ini_idx = 99
-    rand_norm = np.array([])
-    rand_unif = np.array([])
-    DR_distribution = ""
+    dr_frac = np.array([])
     # Set DR=0 to avoid disrupting the isochrone.
     dr = 0.0
 
     # Sample extrinsic parameter values
     Na, Nm = [int(_) for _ in np.shape(isoch_youngs_arrs)[:2]]
     N_samples = max(1, int(N_models / (Na * Nm) + 1))
+    # Truncated to the valid ranges (Av, dm, Rv can not be negative)
     sampled_models = {
-        k: rng.normal(
+        k: scp.truncnorm_sample(
+            rng,
             f_val,
             extrinsic_pars["stddevs"][k],
+            scp.PARAMS_MIN.get(k, -np.inf),
+            np.inf,
             N_samples,
         )
         for k, f_val in extrinsic_pars["values"].items()
@@ -422,9 +425,7 @@ def get_bss_masses(
                 isoch = sm.extinction(
                     ext_law,
                     ext_coefs,
-                    rand_norm,
-                    rand_unif,
-                    DR_distribution,
+                    dr_frac,
                     m_ini_idx,
                     binar_flag,
                     av,
