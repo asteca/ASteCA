@@ -143,7 +143,10 @@ The ``N_points`` argument controls the resolution of the isochrones interpolatio
 to ``2000`` by default. A smaller value can be used to lower the amount of memory
 used by this class, but it comes at the expense of more coarse synthetic clusters being
 generated later on (since the isochrones will be interpolated with fewer points and will
-thus contain less resolution).
+thus contain less resolution). This argument does not apply to MIST isochrones, which include
+Equivalent Evolutionary Points (EEPs): these are interpolated on their own EEP grid,
+with one point per EEP (e.g.: ~1700 points). The number of points actually used is
+shown in the ``N_points`` line of the output.
 
 The ``parsec_rm_stages`` affects PARSEC isochrones only. Is set to ``9.0`` by default
 and it indicates that the `post_AGB` stage (``label=9``) should be removed. This is

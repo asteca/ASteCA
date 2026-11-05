@@ -953,9 +953,9 @@ class Synthetic:
         The isochrone is generated using the fundamental parameter values
         given in the ``fit_params`` dictionary.
 
-        :param fit_params: Dictionary with the values for the fundamental parameters
-            that were **not** included in the ``fix_params`` dictionary when the
-            :py:class:`Synthetic` object was calibrated (:py:meth:`calibrate` method).
+        :param fit_params: Dictionary with the values for the fundamental parameters.
+            Parameters not included take the default values defined in the
+            ``def_params`` argument of the :py:class:`Synthetic` object
         :type fit_params: dict
         :param color_idx: Index of the color to plot. If ``0`` (default), plot the
             first color. If ``1`` plot the second color

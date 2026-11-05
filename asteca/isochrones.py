@@ -46,7 +46,9 @@ class Isochrones:
         :py:meth:`Synthetic.generate` method
     :type z_to_FeH: float | None
     :param N_points: Number of interpolation points used to ensure that all isochrones
-        are the same shape
+        are the same shape. Ignored for isochrones with EEPs (MIST), which are
+        interpolated on their own EEP grid (one point per EEP), unless
+        ``mass_interpolation="adaptive"``
     :type N_points: int
     :param mass_interpolation: If ``mass_skewed``, use a weighted mass distribution
         that interpolates the large masses more finely than the low masses. Applies
@@ -60,9 +62,11 @@ class Isochrones:
         set to ``9.0`` by default which corresponds to the  *post_AGB* stage still
         "`in preparation <http://stev.oapd.inaf.it/cmd/faq.html>`__"
     :type parsec_rm_stages: float
-    :param column_names: Column names for the initial mass, metallicity, and age for
-        the photometric system's isochrones files. Example:
-        ``{"mass_col": "Mini", "met_col": "Zini", "age_col": "logAge"}``.
+    :param column_names: Column names for the initial mass, metallicity, age, and EEP
+        (Equivalent Evolutionary Point) for the photometric system's isochrones files.
+        All four keys are required, with ``eep_col`` set to ``None`` for isochrones
+        with no EEPs. Example for PARSEC:
+        ``{"mass_col": "Mini", "met_col": "Zini", "age_col": "logAge", "eep_col": None}``.
         This dictionary is defined internally in **ASteCA** and should only be given
         by the user if the isochrone service changes its format and the `isochrones`
         class fails to load the files
@@ -167,12 +171,14 @@ class Isochrones:
         self.amin = self.met_age_dict["loga"].min()
         self.amax = self.met_age_dict["loga"].max()
 
-        N_met, N_age, _, _ = self.theor_tracks.shape
+        # Actual number of points per isochrone (for isochrones with EEPs this is the
+        # number of EEPs, not 'N_points')
+        N_met, N_age, _, N_pts = self.theor_tracks.shape
         self._vp(f"Model          : {self.model}", 1)
         self._vp(f"N_files        : {N_isoch_files}", 1)
         self._vp(f"N_mets         : {N_met}", 1)
         self._vp(f"N_ages         : {N_age}", 1)
-        self._vp(f"N_points       : {N_points}", 1)
+        self._vp(f"N_points       : {N_pts}", 1)
         self._vp(f"{met_n}  range     : [{self.zmin}, {self.zmax}]", 1)
         self._vp(f"loga range     : [{self.amin}, {self.amax}]", 1)
         self._vp(f"Magnitude      : {self.mag}", 1)
