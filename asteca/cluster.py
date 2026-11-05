@@ -178,13 +178,7 @@ class Cluster:
             raise ValueError("No column names defined for cluster")
 
         # Count photometric nan values
-        nan_phot = 0
-        if self.mag is not None:
-            nan_phot += np.isnan(self.mag).sum()
-        if self.color is not None:
-            nan_phot += np.isnan(self.color).sum()
-        if self.color2 is not None:
-            nan_phot += np.isnan(self.color2).sum()
+        nan_phot = self._count_nan_phot()
         self.N_nan_phot = nan_phot
 
         self._vp(f"Columns read   : {', '.join(cols_read)}", 1)
@@ -207,6 +201,17 @@ class Cluster:
         """Verbose print method"""
         if self.verbose > level:
             print(mssg)
+
+    def _count_nan_phot(self) -> int:
+        """Count the nan values in the photometric arrays"""
+        nan_phot = 0
+        if self.mag is not None:
+            nan_phot += np.isnan(self.mag).sum()
+        if self.color is not None:
+            nan_phot += np.isnan(self.color).sum()
+        if self.color2 is not None:
+            nan_phot += np.isnan(self.color2).sum()
+        return int(nan_phot)
 
     def _load_UCC_data(self) -> tuple[list, float | None]:
         """Load cluster data from UCC members file"""

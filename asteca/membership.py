@@ -366,6 +366,9 @@ class Membership:
 
         new_cluster.N_stars = msk.sum()
         new_cluster.N_cluster = new_cluster.N_stars
+        # Count the nan values in the photometry of the selected stars only (the
+        # value copied above is that of the full field)
+        new_cluster.N_nan_phot = new_cluster._count_nan_phot()
         self._vp("New Cluster object created", 1)
         self._vp(f"N_cluster      : {new_cluster.N_cluster} (kept)", 1)
         self._vp(f"Field stars    : {N_all - new_cluster.N_cluster} (removed)", 1)
