@@ -629,7 +629,7 @@ STDDEVs taken from the ``model_std`` values.
 
 After calling these methods, we are ready to estimate:
 
-1. The per-star masses (for both single and binary systems)
+1. The per-star masses (for single and binary systems, and for probable BSSs)
 2. The per-star probability of being part of a binary system
 3. The per-star probability of being a blue straggler (BSS)
 4. The initial, actual, and lost masses associated to the cluster
@@ -677,27 +677,39 @@ and/or of being a blue straggler star (BSS). The method is called
 
 At the end of this process each observed star will have ``N_models`` (synthetic)
 primary and secondary masses assigned, as well as ``N_models`` classifications as
-single or binary systems, and as BSS or non-BSS. Dividing these values by ``N_models``
-we can obtain the median and STDDEV of the primary and secondary masses
-(``m1, m1_std, m2, m2_std``), as well as the binary (``binar_prob``) and BSS
-(``bss_prob``) probabilities for each observed star. This information is returned in a
-dictionary, e.g.:
+single or binary systems, and as BSS or non-BSS. From these values we obtain the
+median and STDDEV of the primary and secondary masses
+(``mass_single, mass_single_std, mass_binar, mass_binar_std``), and the probabilities
+of being a single system (``single_prob``), a binary system (``binar_prob``), or a BSS
+(``bss_prob``), which add up to ``1`` for each star. If a
+:py:class:`asteca.Isochrones` object with young isochrones is passed via the
+``isochs_young`` argument, the masses that the stars would have if they were BSSs are
+also estimated (``mass_bss, mass_bss_std``, see :ref:`bss_total_number`); otherwise
+these values are ``NaN``. This information is returned in a dictionary (which also
+includes the ``star_id`` array if the observed :py:class:`asteca.Cluster` object
+contains it), e.g. (shown as a ``pandas.DataFrame``, from the :ref:`post_process_ntbk`
+tutorial):
 
 
 .. code-block:: python
 
-    m1          m1_std      m2          m2_std      binar_prob  bss_prob
-    2.097448    0.069362    0.943936    0.428501    0.955       0.00
-    2.448664    0.069279    0.899969    0.505402    0.880       0.00
-    1.144592    0.033893    0.792089    0.148655    1.000       0.00
-    5.128257    0.006436    0.332486    1.866812    1.000       0.00
-    2.013352    0.047131    0.617952    0.402121    0.925       0.00
-    ...         ...         ...         ...         ...         ...
-    4.903612    0.066992    1.077981    1.053122    0.935       0.58
-    5.004987    0.027138    0.136899    1.547418    1.000       1.00
-    4.903612    0.071683    1.077981    1.111556    0.935       1.00
-    5.004987    0.027138    0.136899    1.547418    1.000       1.00
-    5.267652    0.107628    1.115867    1.133406    0.990       1.00
+          mass_single  mass_single_std  mass_binar  mass_binar_std   mass_bss  \
+    0        0.523066         0.012542    0.172024        0.028333   0.455759
+    1        1.438580         0.057697    0.374469        0.227820   1.525796
+    2        1.070895         0.040243    0.402593        0.086267   1.294216
+    ...           ...              ...         ...             ...        ...
+    1425     4.654422         0.160930    1.129809        1.406911   8.852999
+    1426     5.174737         0.066102    1.700512        1.356713  12.462478
+    1427     5.207315         0.044258    1.700512        1.145802  15.453795
+
+          mass_bss_std  single_prob  binar_prob  bss_prob
+    0         0.042102      0.51500     0.48500     0.000
+    1         0.076385      0.37500     0.62500     0.000
+    2         0.066010      0.97000     0.03000     0.000
+    ...            ...          ...         ...       ...
+    1425      0.329228      0.00000     0.00000     1.000
+    1426      0.339142      0.00000     0.00000     1.000
+    1427      0.548481      0.00000     0.00000     1.000
 
 
 The sub-sections that follow explain in more detail how the stellar masses are
@@ -731,14 +743,15 @@ synthetic star is a single system, then the secondary mass value assigned to
 ``observed_star_i`` will be ``NaN``.
 
 By taking the median and the STDDEV of these two arrays, we obtain an estimate of the
-primary and secondary masses (called ``m1`` and ``m2`` respectively), as well as their
-uncertainties (``m1_std`` and ``m2_std``), for each observed star, i.e.:
+primary and secondary masses (returned as ``mass_single`` and ``mass_binar``
+respectively), as well as their uncertainties (``mass_single_std`` and
+``mass_binar_std``), for each observed star, i.e.:
 
 .. code-block:: python
 
     observed_star_i = {
-        m1: 0.73,  m1_std: 0.09,
-        m2: 0.32,  m2_std: 0.01,
+        mass_single: 0.73,  mass_single_std: 0.09,
+        mass_binar: 0.32,   mass_binar_std: 0.01,
     }
 
 .. note::
@@ -748,11 +761,11 @@ uncertainties (``m1_std`` and ``m2_std``), for each observed star, i.e.:
    observed stars are binary systems. The user has to decide which observed stars are
    binary systems and which ones are single systems. This is explained below.
 
-For observed stars associated to single systems, only the primary mass (``m1``) makes
-sense. On the other hand, for those observed stars better described as binary systems
-(i.e: those with ``binar_prob>0.5``), the secondary mass value estimated above
-(``m2``) can be used to describe the total mass of the "`observed binary system`" as
-``m_tot = m1+m2``.
+For observed stars associated to single systems, only the primary mass
+(``mass_single``) makes sense. On the other hand, for those observed stars better
+described as binary systems (i.e: those with ``binar_prob>0.5``), the secondary mass
+value estimated above (``mass_binar``) can be used to describe the total mass of the
+"`observed binary system`" as ``m_tot = mass_single + mass_binar``.
 
 For example, if ``observed_star_i`` has ``binar_prob=0.95`` we can decide that it is
 a binary system. Hence the primary and secondary mass values are valid and we can
@@ -761,11 +774,11 @@ use them to describe the observed binary system as:
 .. code-block:: python
 
     observed_binary_star_i = {
-        m1: 0.73,  m1_std: 0.09,
-        m2: 0.32,  m2_std: 0.01,
+        mass_single: 0.73,  mass_single_std: 0.09,
+        mass_binar: 0.32,   mass_binar_std: 0.01,
     }
 
-for a total mass of the binary system of ``m_tot = m1 + m2 = 1.05``.
+for a total mass of the binary system of ``m_tot = mass_single + mass_binar = 1.05``.
 
 If, on the other hand, ``observed_star_i`` has ``binar_prob=0.25`` we can decide that
 it is a single system. Hence the secondary mass value is of no interest and we can
@@ -774,8 +787,12 @@ ignore it. The observed star will then be described as:
 .. code-block:: python
 
     observed_single_star_i = {
-        m1: 0.73,  m1_std: 0.09,
+        mass_single: 0.73,  mass_single_std: 0.09,
     }
+
+For the stars that are probable BSSs (large ``bss_prob``), neither of these masses is
+meaningful, and the ``mass_bss`` value should be used instead (see
+:ref:`bss_total_number`).
 
 
 
@@ -794,7 +811,10 @@ observed cluster's binary system distribution.
 
 There is thus no *total binary fraction* parameter used when generating synthetic
 clusters. This parameter can be estimated via the binary system probabilities obtained
-by the :py:meth:`asteca.Synthetic.stellar_parameters` method.
+by the :py:meth:`asteca.Synthetic.stellar_parameters` method. The binary probability of
+each star is the fraction of the ``N_models`` synthetic clusters in which its closest
+synthetic star is a binary system, multiplied by ``1-bss_prob``, so that probable BSSs
+are not counted as binary systems.
 The :ref:`post_process_ntbk` tutorial shows how the median and standard deviation of the
 total cluster binary fraction for an observed cluster can be computed from these
 probabilities.
@@ -836,14 +856,20 @@ can be modified by the user via the arguments of the
 :py:meth:`asteca.Synthetic.stellar_parameters` method.
 
 
-.. important::
-
-    The current implementation assigns masses and binary probabilities to all
-    observed stars, including those identified as probable BSSs. **These values are
-    not expected to be accurate**, since the BSSs follow a younger isochrone than that
-    used for the remaining cluster stars.
-    The user should ignore these values until a proper implementation to handle BSSs
-    masses and binary probabilities is implemented.
+BSSs are not described by the isochrone of the rest of the cluster: they behave as
+younger, more massive stars. Hence the ``mass_single`` and ``mass_binar`` values
+assigned to probable BSSs are not meaningful. To estimate their masses, an
+:py:class:`asteca.Isochrones` object with the same photometric system and isochrones
+with ``log(age)<=7`` can be passed to
+:py:meth:`asteca.Synthetic.stellar_parameters` via its ``isochs_young`` argument (a
+``ValueError`` is raised if it has no such isochrones). For each observed star, the
+closest point on each young isochrone (all metallicities and all ages with
+``log(age)<=7``) is found, after moving the isochrone by distance modulus and
+extinction values sampled from the ``model`` and ``model_std`` dictionaries given to
+:py:meth:`asteca.Synthetic.get_models`. The median and STDDEV of the masses of these
+points are returned as ``mass_bss`` and ``mass_bss_std``. These values are computed for
+all the observed stars, but they are only meaningful for those with large ``bss_prob``
+values. If ``isochs_young`` is not given, they are ``NaN`` and a warning is shown.
 
 The blue straggler probability assigned to each observed star can be easily
 used to obtain the total number of probable BSSs in the cluster. See the

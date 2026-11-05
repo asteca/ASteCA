@@ -606,12 +606,17 @@ class Synthetic:
         col_offset_2: float = -0.05,
     ) -> dict:
         """Estimate parameters for the observed stars:
-        - Mass of single system
-        - Mass of binary system; if binarity was estimated
-        - Binary probabilities; if binarity was estimated
-        - Blue straggler probabilities
 
-        :param isochs_young: Isochrones object with log(age)<=7 isochrones
+        - Primary mass (``mass_single``), and secondary mass (``mass_binar``) if
+          binary systems were generated
+        - Mass assuming the star is a blue straggler (``mass_bss``), if
+          ``isochs_young`` is given
+        - Probabilities of being a single system, a binary system, or a blue
+          straggler (``single_prob, binar_prob, bss_prob``; these add up to ``1``)
+
+        :param isochs_young: Isochrones object (same photometric system) that contains
+            isochrones with ``log(age)<=7``. These are used to estimate the
+            ``mass_bss`` values. If ``None``, these values are ``nan``
         :type isochs_young: Isochrones | None
         :param mag_offset_1: Offset applied to the turn-off magnitude to define the
             first BSS region
@@ -626,12 +631,15 @@ class Synthetic:
             second BSS region
         :type col_offset_2: float
 
-        :return: Data frame containing per-star primary and secondary masses along with
-            their uncertainties, and their probability of being a binary system and/or a
-            blue straggler star (BSS)
+        :return: Dictionary of per-star arrays with keys: ``star_id`` (if the
+            :py:class:`Cluster` object contains it), ``mass_single, mass_single_std,
+            mass_binar, mass_binar_std, mass_bss, mass_bss_std, single_prob,
+            binar_prob, bss_prob``. Stars with no valid photometry are assigned
+            ``nan`` values
         :rtype: dict
 
-        :raises ValueError: If the `get_models()` method was not previously called
+        :raises ValueError: If the `get_models()` method was not previously called, or
+            if ``isochs_young`` contains no isochrones with ``log(age)<=7``
         """
         if not hasattr(self, "sampled_synthcls"):
             raise ValueError(
