@@ -109,18 +109,20 @@ def add_binarity(
             # Secondary masses
             m2 = mass_ratios * mass_ini
 
-            # Calculate unresolved binary magnitude
+            # Calculate unresolved binary magnitude. Secondary masses below the
+            # isochrone's minimum mass are assigned an infinite magnitude (i.e.: no
+            # flux), so that the binary system's photometry equals that of the primary
             mag = isoch[mag_idx]
-            mag_m2 = np.interp(m2, mass_ini, mag)
+            mag_m2 = np.interp(m2, mass_ini, mag, left=np.inf)
             theor_tracks[mx][ax][m_ini_idx + 2] = mag_combine(mag, mag_m2)
 
             # Calculate unresolved color for each color defined.
             for ic, _color in enumerate(all_colors):
                 mc1 = color_filters[mx][ax][_color[0]]
                 mc2 = color_filters[mx][ax][_color[1]]
-                f_m1 = np.interp(m2, mass_ini, mc1)
+                f_m1 = np.interp(m2, mass_ini, mc1, left=np.inf)
                 f1 = mag_combine(mc1, f_m1)
-                f_m2 = np.interp(m2, mass_ini, mc2)
+                f_m2 = np.interp(m2, mass_ini, mc2, left=np.inf)
                 f2 = mag_combine(mc2, f_m2)
                 theor_tracks[mx][ax][m_ini_idx + 2 + 1 + ic] = f1 - f2
 
