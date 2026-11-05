@@ -71,7 +71,18 @@ class Cluster:
     :param verbose: Verbose level. A value of ``0`` hides all output
     :type verbose: int
 
-    :raises ValueError: If ``cluster_name`` is provided but ``UCC_file_path`` is not provided
+    :raises ValueError: Raised if:
+
+        - ``cluster_name`` is provided but ``UCC_members_file`` is not,
+        - ``cluster_name`` is not found in ``UCC_members_file``,
+        - both ``max_mag`` and ``max_mag_perc`` are provided,
+        - ``color2`` is provided but ``color`` is not,
+        - a data array is provided without its uncertainty, or with uncertainties
+          that are not ``>0``,
+        - the data arrays have different lengths, or are empty,
+        - no stars remain after the maximum magnitude cut
+    :raises TypeError: If ``UCC_members_file`` is not a ``pandas.DataFrame`` or
+        ``cluster_name`` is not a string
 
     """
 
@@ -569,7 +580,8 @@ class Cluster:
           stars within that region. Requires the ``(ra, dec)`` center and the radius of
           the cluster to be defined.
 
-        :param algo: Algorithm used to estimate center values, one of (``ripley, density``)
+        :param algo: Algorithm used to estimate the number of members, one of
+            (``ripley, density``)
         :type algo: str
         :param eq_to_gal: Convert ``(ra, dec)`` to ``(lon, lat)``. Useful for clusters
             with large ``dec`` values to reduce the frame's distortion
