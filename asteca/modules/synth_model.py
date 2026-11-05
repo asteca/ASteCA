@@ -243,8 +243,8 @@ def get_model(
 
     isoch_extin_dr_0 = np.array([])
     if isoch_flag:
-        # Set DR=0 to avoid disrupting the isochrone
-        dr = 0.0
+        # Use DR=0 to avoid disrupting the isochrone. The 'dr' variable is not
+        # modified because it is used below for the synthetic cluster
         isoch_extin_dr_0 = extinction(
             ext_law,
             ext_coefs,
@@ -252,7 +252,7 @@ def get_model(
             m_ini_idx,
             binar_flag,
             av,
-            dr,
+            0.0,
             rv,
             isoch_moved.copy(),  # IMPORTANT, avoids double perturbing
         )
