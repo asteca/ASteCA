@@ -47,15 +47,12 @@ class Isochrones:
     :type z_to_FeH: float | None
     :param N_points: Number of interpolation points used to ensure that all isochrones
         are the same shape. Ignored for isochrones with EEPs (MIST), which are
-        interpolated on their own EEP grid (one point per EEP), unless
-        ``mass_interpolation="adaptive"``
+        interpolated on their own EEP grid (one point per EEP)
     :type N_points: int
     :param mass_interpolation: If ``mass_skewed``, use a weighted mass distribution
         that interpolates the large masses more finely than the low masses. Applies
         to isochrones with no EEPs (Equivalent Evolutionary Point) only.
         If ``mass_uniform`` use a uniform mass interpolation grid.
-        If ``adaptive``, use a mass interpolation grid that is adaptive to the
-        isochrone's shape (UNDER DEVELOPMENT)
     :type mass_interpolation: str
     :param parsec_rm_stages: If the isochrones are PARSEC, this value indicates which
         stages should be removed (all equal or larger than this value). The value is
@@ -130,7 +127,9 @@ class Isochrones:
                 f"Model '{self.model}' not recognized. Should be one of {models}"
             )
 
-        mass_interps = ("mass_skewed", "mass_uniform", "adaptive")
+        # NOTE: the 'adaptive' method in isochrones_priv.adaptive_interpolation() is
+        # still under development and not exposed to the user
+        mass_interps = ("mass_skewed", "mass_uniform")
         if self.mass_interpolation not in mass_interps:
             raise ValueError(
                 f"Mass interpolation '{self.mass_interpolation}' not recognized. "
@@ -211,48 +210,3 @@ class Isochrones:
             round_n += 1
         # Replace old values
         self.met_age_dict["met"] = feh_r
-
-    # def _interpolate(self, met: float, loga: float) -> np.ndarray:
-    #     """ """
-    #     met_msk = self.met_age_dict["met"] == met
-    #     age_msk = self.met_age_dict["loga"] == loga
-
-    #     # Index of the first element in mask that is True
-    #     try:
-    #         met_i = np.where(met_msk)[0][0]
-    #         age_i = np.where(age_msk)[0][0]
-    #         isoch = self.theor_tracks[met_i][age_i]
-    #     except IndexError:
-    #         from .modules import synth_model as sm
-
-    #         params = {
-    #             "met": met,
-    #             "loga": loga,
-    #             "alpha": 0,
-    #             "beta": 0,
-    #             "Av": 0,
-    #             "DR": 0,
-    #             "Rv": 0,
-    #             "dm": 0,
-    #         }
-    #         ml, mh, al, ah = sm.properModel(
-    #             self.met_age_dict, def_params={}, fit_params=params
-    #         )[-4:]
-    #         # Add dimension of zeroes to array
-    #         padded_arr = np.pad(self.theor_tracks, ((0, 0), (0, 0), (0, 2), (0, 0)))
-
-    #         m_ini_idx = self.theor_tracks.shape[2]
-
-    #         isoch = sm.zaWAverage(
-    #             padded_arr,
-    #             self.met_age_dict,
-    #             m_ini_idx,
-    #             met,
-    #             loga,
-    #             ml,
-    #             mh,
-    #             al,
-    #             ah,
-    #         )[:m_ini_idx, :]
-
-    #     return isoch
