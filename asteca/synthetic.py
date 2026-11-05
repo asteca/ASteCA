@@ -48,8 +48,8 @@ class Synthetic:
         If ``GAIADR3`` is selected, the magnitude and first
         color defined in the :py:class:`Isochrones <asteca.isochrones.Isochrones>` and
         :py:class:`Cluster <asteca.cluster.Cluster>` objects are assumed to be Gaia's
-        (E)DR3 **G** and **(BP-RP)** respectively. The second color (if defined) will
-        always be affected by the ``CCMO`` model
+        (E)DR3 **G** and **(BP-RP)** respectively. A second color can not be used with
+        this law (a ``ValueError`` is raised if one is defined); use ``CCMO`` instead
     :type ext_law: str
     :param DR_distribution: Model for the differential reddening, one of
         ``foreground, internal``. ``foreground``: dust-free cluster behind a patchy

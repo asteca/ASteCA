@@ -290,12 +290,14 @@ class Membership:
     def select_members(
         self, prob_min: float | None = None, N_prob_max: int | None = None
     ) -> Cluster:
-        """Select members based on membership probabilities. This method modifies
-        the :py:class:`Cluster <asteca.cluster.Cluster>` object in place, keeping only the
-        stars that meet the selection criteria.
+        """Select members based on membership probabilities. This method returns a new
+        :py:class:`Cluster <asteca.cluster.Cluster>` object that contains only the stars
+        that meet the selection criteria. The original object (the observed field) is
+        not modified.
 
         :param prob_min: Minimum probability threshold for membership selection. Stars with
-            probabilities above this threshold will be selected as members. If neither
+            probabilities equal to or above this threshold will be selected as members.
+            If neither
             ``prob_min`` nor ``N_prob_max`` is given, ``prob_min=0.5`` is used
         :type prob_min: float | None
         :param N_prob_max: Maximum number of members to select based on probability. The

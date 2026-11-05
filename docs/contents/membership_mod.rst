@@ -56,17 +56,21 @@ achieved using the :py:meth:`asteca.Membership.select_members` method, which all
 users to retain only those stars that meet specific membership probability thresholds or
 to limit the number of accepted members based on their probabilities.
 
-This operation generates a new :py:class:`Cluster <asteca.cluster.Cluster>` object,
-by modifying the existing ``my_field`` object:
+This operation returns a new :py:class:`Cluster <asteca.cluster.Cluster>` object
+that contains only the selected stars:
 
 .. code-block:: python
 
     # Apply membership selection method
     my_cluster = my_field.membership.select_members()
 
-Upon execution all internal arrays of ``my_field`` (such as coordinates, magnitudes,
-and kinematic data) are modified to match the accepted subset of most probable members.
-The resulting data is stored in the new ``my_cluster`` object.
+All the per-star arrays of ``my_cluster`` (such as coordinates, magnitudes, and
+kinematic data) contain only the accepted subset of most probable members. The
+``my_field`` object is not modified, so the selection can be repeated with different
+criteria. By default, stars with probabilities equal to or above ``0.5`` are selected.
+Use the ``prob_min`` argument to change this threshold, or ``N_prob_max`` to keep
+instead the ``N_prob_max`` stars with the largest probabilities (only one of the two
+can be given).
 
 A step-by-step example is shown in the :ref:`membership_ntbk` tutorial.
 
