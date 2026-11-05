@@ -422,9 +422,12 @@ def get_bss_masses(
                     m_ini_idx,
                     dm,
                 )
+                # Only the magnitude and first color are present in the
+                # (magnitude, color, initial mass) array: drop the coefficients of
+                # a second color, which would otherwise be applied to the mass row
                 isoch = sm.extinction(
                     ext_law,
-                    ext_coefs,
+                    ext_coefs[:2],
                     dr_frac,
                     m_ini_idx,
                     binar_flag,
