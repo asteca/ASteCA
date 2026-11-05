@@ -254,7 +254,14 @@ def get_model(
             isoch_moved.copy(),  # IMPORTANT, avoids double perturbing
         )
 
-    # Apply extinction correction
+    # Apply extinction correction.
+    # NOTE: the differential reddening is drawn for each isochrone point, and the
+    # synthetic stars are interpolated between two points in mass_interp(). A star's
+    # absorption is thus a weighted average of two independent draws, which makes the
+    # realized spread of the absorption ~sqrt(2/3) (~18% narrower) that of the
+    # selected DR model, and correlates the absorption of stars with similar masses.
+    # Applying the DR per star (after the interpolation and binarity) gives the
+    # nominal distributions, but was found to be ~1.4-1.6X slower per model
     isoch_extin = extinction(
         ext_law,
         ext_coefs,

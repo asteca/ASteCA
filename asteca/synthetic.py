@@ -405,6 +405,10 @@ class Synthetic:
             of the binary systems, respectively (if generated). If the system is a
             single star, then ``mass_b==np.nan``.
         :rtype: np.ndarray
+
+        :raises ValueError: If ``met`` or ``loga`` are outside of the ranges of the
+            loaded isochrones, if any of ``alpha, beta, Av, DR, dm`` is negative, or if
+            ``Rv<=0``
         """
         from .modules import synth_model as sm
 
@@ -453,6 +457,11 @@ class Synthetic:
     ) -> None:
         """Generate random sampled models from the selected solution. Use these models
         to generate full synthetic clusters.
+
+        The values of each parameter are sampled from a normal distribution with mean
+        and STDDEV given by ``model`` and ``model_std``, truncated to the valid range of
+        the parameter: the isochrones' ranges for ``met, loga``, ``>=0`` for
+        ``alpha, beta, Av, DR, dm``, and ``>0`` for ``Rv``.
 
         :param model: Dictionary with the values for the fundamental parameters
         :type model: dict[str, float]

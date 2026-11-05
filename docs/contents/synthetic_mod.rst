@@ -151,7 +151,10 @@ The first one (``CCMO``) corresponds to the model by
 `O'Donnell (1994)`_. The second one (``GAIADR3``) is `Gaia's (E)DR3`_, color-dependent
 law (main sequence), only applicable to Gaia's photometry. If this law is selected,
 **ASteCA** assumes that the magnitude and first color used are Gaia's
-:math:`G` and :math:`BP-RP` respectively.
+:math:`G` and :math:`BP-RP` respectively. The coefficients of this law are
+polynomials in the intrinsic color, fitted for :math:`-0.06<(BP-RP)_0<2.5`, which
+diverge outside of that range. Stars outside of it (e.g.: very red dwarfs) are
+assigned the coefficients of the closest valid color.
 
 While the ``CCMO`` law requires defining the effective lambdas for each filter
 in the photometric system when defining the :py:class:`asteca.Isochrones` object
@@ -489,12 +492,16 @@ fundamental parameters to the :py:meth:`asteca.Synthetic.generate` method.
 **ASteCA** currently requires eight parameters, related to the following intrinsic and
 extrinsic cluster characteristics:
 
-- *Extrinsic*: distance modulus (``dm``) and extinction related parameters (total
-  extinction ``Av``, differential reddening ``DR``, ratio of total to selective
+- *Extrinsic*: distance modulus (``dm``) and extinction related parameters
+  (extinction ``Av``, differential reddening ``DR``, ratio of total to selective
   extinction ``Rv``)
 - *Intrinsic*: metallicity (``met``), age (``loga``), and binarity (``alpha, beta``)
 
 These eight parameters are described in more depth in the following sub-sections.
+Values outside of their valid ranges raise a ``ValueError``: ``met`` and ``loga``
+outside of the ranges of the loaded isochrones, negative values of
+``alpha, beta, Av, DR, dm``, and ``Rv<=0``. The priors used to fit the parameters
+should hence be restricted to these ranges.
 **ASteCA** also allows estimating a cluster's total mass as well as the member stars'
 masses and binary and blue straggler probabilities. This process is optional and
 requires fitted fundamental parameters and their STDDEVS; see
@@ -557,9 +564,12 @@ distance is quantified through the distance modulus (``dm``), defined as the dif
 between the apparent and absolute magnitudes, which determines the shift applied to the
 cluster photometry to place the cluster at its proper distance from us.
 
-The three remaining parameters are linked to the extinction process: the total
-extinction ``Av``, the ratio of total to selective extinction ``Rv``, and the
-differential reddening ``DR``. The first two are related through the equation:
+The three remaining parameters are linked to the extinction process: the extinction
+``Av``, the ratio of total to selective extinction ``Rv``, and the differential
+reddening ``DR``. If ``DR=0``, ``Av`` is the total extinction of all the cluster stars;
+if ``DR>0``, it is the minimum extinction, and each star has an extinction between
+``Av`` and ``Av+DR`` (see :ref:`ref_defining`). The first two are related through the
+equation:
 
 .. math::
 
@@ -649,7 +659,12 @@ the observed cluster (however obtained), and a ``model_std`` dictionary, which c
 the uncertainties (standard deviations) associated to each parameter in ``model``. 
 This method will store in the :class:`asteca.Synthetic` object a number of synthetic
 clusters, sampled from a normal distribution centered on the ``model`` values with
-STDDEVs taken from the ``model_std`` values.
+STDDEVs taken from the ``model_std`` values. The distribution of each parameter is
+truncated to its valid range: the ranges of the loaded isochrones for ``met`` and
+``loga``, values ``>=0`` for ``alpha, beta, Av, DR, dm``, and ``>0`` for ``Rv``. Unlike
+clipping, this does not pile up models at the limits of the ranges; note however that
+for a parameter close to a limit (e.g.: ``Av=0.05`` with a STDDEV of ``0.1``) the mean of
+the sampled values is shifted away from it.
 
 After calling these methods, we are ready to estimate:
 
