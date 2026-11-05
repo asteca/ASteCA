@@ -1027,6 +1027,16 @@ class Synthetic:
             # Return the full track without applying the max mass filter
             return np.array(isochrone)[[0, color_idx + 1]]
 
+        if full_arr.size == 0:
+            # No synthetic stars were generated (e.g.: all the isochrone is below
+            # the maximum magnitude), the max mass filter can not be applied
+            warnings.warn(
+                "The synthetic cluster for these parameters is empty, returning "
+                + "the full isochrone",
+                stacklevel=2,
+            )
+            return np.array(isochrone)[[0, color_idx + 1]]
+
         # Extract magnitude and mass from the isochrone and the full synthetic cluster
         isoch_mag, isoch_mass = isochrone[0], isochrone[self.m_ini_idx]
         mag_full, mass_full = full_arr[0], full_arr[self.m_ini_idx]
@@ -1049,7 +1059,11 @@ class Synthetic:
                 best_max_mass_isoch = max_mass_isoch
 
         # Apply max mass filter to isochrone
-        msk = isoch_mass < best_max_mass_isoch
+        if best_max_mass_isoch is None:
+            # No isochrone points below any of the mass percentiles: keep them all
+            msk = np.full(isoch_mass.size, True)
+        else:
+            msk = isoch_mass < best_max_mass_isoch
         # Generate proper array for plotting
         isochrone = np.array([isoch_mag, isochrone[color_idx + 1]])[:, msk]
 
