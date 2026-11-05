@@ -30,11 +30,13 @@ The likelihood compares the observed and synthetic clusters through their Hess d
 (the color-magnitude diagram split into cells). The ``bin_method`` argument selects how
 the cells are defined, from the observed photometry:
 
-- ``knuth`` (default), ``blocks``, ``scott``, ``freedman``: the number and widths of
-  the bins in magnitude and in each color are obtained with the methods of the same
-  name in `astropy <https://docs.astropy.org/en/stable/visualization/histogram.html>`_
-- ``fixed``: the magnitude and color ranges are split into 14 and 9 bins of equal
-  width, respectively
+- ``knuth`` (default), ``blocks``, ``scott``, ``freedman``: the number of bins in
+  magnitude and in each color is set with the methods of the same name in
+  `astropy <https://docs.astropy.org/en/stable/visualization/histogram.html>`_
+- ``fixed``: 15 bins in magnitude and 10 bins in each color
+
+In all cases the bins have equal widths and span the observed range of each
+dimension.
 
 .. code-block:: python
 

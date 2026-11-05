@@ -268,8 +268,9 @@ class Cluster:
             "e_pmra": "e_pmRA",
             "pmde": "pmDE",
             "e_pmde": "e_pmDE",
-            "Rv": "RV",
-            "e_Rv": "e_RV",
+            # Radial velocities (named to avoid confusion with the extinction 'Rv')
+            "Rad_v": "RV",
+            "eRad_v": "e_RV",
             "probs": "probs",
         }
         for attr, col in col_map.items():
@@ -376,9 +377,12 @@ class Cluster:
         center coordinates as the point(s) of maximum density. Algorithms:
 
         - ``knn_5d``: Estimates the 5-dimensional center values (in
-          ``ra, dec, pmra, pmde, plx``) as the median position of the k
-          (``k=N_clust_min``) stars with the largest nearest-neighbor density to a
-          5D center value that can be either given (fully or partially) or estimated.
+          ``ra, dec, pmra, pmde, plx``). First, the proper motions center is estimated
+          (or taken from ``pms_c``), and the stars closest to it and to the given
+          ``radec_c`` and/or ``plx_c`` values are selected (10% of the stars, between
+          25 and 250). The center is then the median position of the 25 selected stars
+          with the largest nearest-neighbor densities (estimated in
+          ``ra, dec, pmra, pmde``, with ``k=25``).
         - ``kde_2d``: Estimates the 2-dimensional center values (either in ``(ra, dec)``
           or in ``(pmra, pmde)``; determined by the ``data_2d`` argument) using a
           Kernel Density Estimator (KDE).
@@ -682,6 +686,9 @@ class Cluster:
         import pandas as pd
 
         data_dict = {}
+        # String column, not rounded
+        if self.star_id is not None:
+            data_dict["star_id"] = self.star_id
         for attr in [
             "ra",
             "dec",
@@ -697,9 +704,13 @@ class Cluster:
             "e_pmra",
             "pmde",
             "e_pmde",
+            "Rad_v",
+            "eRad_v",
             "probs",
         ]:
-            arr = getattr(self, attr)
+            # The radial velocities are only defined if the data was loaded from the
+            # UCC members file
+            arr = getattr(self, attr, None)
             if arr is not None:
                 data_dict[attr] = np.round(arr, 5)
 

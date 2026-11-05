@@ -103,17 +103,17 @@ can be accessed as:
     my_field.e_mag   # Error in Gaia G magnitude
     my_field.probs   # Membership probabilities
 
-The radial velocities ``(RV, e_RV)`` are stored as the ``Rv`` and ``e_Rv`` attributes,
+The radial velocities ``(RV, e_RV)`` are stored as the ``Rad_v`` and ``eRad_v``
+attributes (to avoid confusion with the extinction parameter ``Rv``),
 and the star identifiers (``Source`` column of the file) as the ``star_id`` attribute.
 
 At any point, the user can employ the :py:meth:`asteca.Cluster.to_csv` method to save
 the data stored in the :py:class:`asteca.Cluster` object to a CSV file. This is
 helpful, for example, to access the probabilities estimated by the methods in the
 :py:class:`asteca.Membership` class. The file contains the columns
-``ra, dec, mag, e_mag, color, e_color, color2, e_color2, plx, e_plx, pmra, e_pmra, pmde,
-e_pmde, probs`` that are defined in the object (rounded to 5 decimals), plus an
-``index`` column with the position of each star. The ``star_id`` and radial velocity
-values are not saved.
+``star_id, ra, dec, mag, e_mag, color, e_color, color2, e_color2, plx, e_plx, pmra,
+e_pmra, pmde, e_pmde, Rad_v, eRad_v, probs`` that are defined in the object (the numeric
+ones rounded to 5 decimals), plus an ``index`` column with the position of each star.
 
 
 .. _pandas.DataFrame: https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html
