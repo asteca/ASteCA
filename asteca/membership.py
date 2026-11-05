@@ -288,14 +288,15 @@ class Membership:
             self._vp("Probabilities stored in 'probs' attribute", 1)
 
     def select_members(
-        self, prob_min: float | None = 0.5, N_prob_max: int | None = None
+        self, prob_min: float | None = None, N_prob_max: int | None = None
     ) -> Cluster:
         """Select members based on membership probabilities. This method modifies
         the :py:class:`Cluster <asteca.cluster.Cluster>` object in place, keeping only the
         stars that meet the selection criteria.
 
         :param prob_min: Minimum probability threshold for membership selection. Stars with
-            probabilities above this threshold will be selected as members.
+            probabilities above this threshold will be selected as members. If neither
+            ``prob_min`` nor ``N_prob_max`` is given, ``prob_min=0.5`` is used
         :type prob_min: float | None
         :param N_prob_max: Maximum number of members to select based on probability. The
             top ``N_prob_max`` stars with the highest probabilities will be selected as
@@ -307,7 +308,6 @@ class Membership:
         :raises ValueError: Raised if:
 
             - both ``prob_min`` and ``N_prob_max`` are provided,
-            - neither is provided,
             - ``prob_min`` is not between 0 and 1,
             - no members are found with probability above ``prob_min``
             - ``N_prob_max`` is greater than the total number of stars
@@ -325,6 +325,9 @@ class Membership:
             raise ValueError(
                 "Only one of 'prob_min' or 'N_prob_max' should be provided"
             )
+        # Default selection
+        if prob_min is None and N_prob_max is None:
+            prob_min = 0.5
 
         N_all = len(self.my_field.probs)
 
@@ -342,15 +345,13 @@ class Membership:
             msk = np.zeros_like(self.my_field.probs, dtype=bool)
             msk[sorted_indices[:N_prob_max]] = True
             self._vp(f"\nTop {N_prob_max} members selected based on probability")
-        elif prob_min is not None:
+        else:
             if not (0.0 <= prob_min <= 1.0):
                 raise ValueError("'prob_min' should be between 0 and 1")
             msk = self.my_field.probs >= prob_min
             if not msk.any():
                 raise ValueError(f"No members found with probability >= {prob_min}")
             self._vp(f"\nMembers selected with probability >= {prob_min}")
-        else:
-            raise ValueError("Either 'prob_min' or 'N_prob_max' must be provided")
 
         from .cluster import Cluster
 
