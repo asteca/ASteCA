@@ -902,14 +902,14 @@ def merge_ps_massini_check(mass_col: str, isochrones: dict) -> tuple[list, list]
             "The (metallicity, age) isochrone grid is irregular:\n" + "\n".join(issues)
         )
 
-    # Check array sizes and mass order (min to max)
+    # Check that all the (interpolated) isochrones have the same number of points
     Nvals = []
     for met in isochrones_ordered:
         for age in met:
             for arr in age.values():
                 Nvals.append(arr.shape[0])
 
-    if not np.all(Nvals):
+    if len(set(Nvals)) > 1:
         raise ValueError(
             "Shape mismatch in loaded isochrones. This usually means that an\n"
             + "incorrect number of ages and/or metallicities are stored in the\n"
