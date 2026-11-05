@@ -493,11 +493,10 @@ class Synthetic:
         from .modules import synth_cluster_priv as scp
         from .modules import synth_model as sm
 
-        # Update dictionaries with default values, if required
+        # Update dictionaries with default values, if required. New dictionaries are
+        # created so that the ones passed by the user are not modified
         model = self.def_params | model
-        for k in self.def_params:
-            if k not in model_std:
-                model_std[k] = 0
+        model_std = {k: 0 for k in self.def_params} | model_std
 
         pars_k = ("met", "loga", "alpha", "beta", "Rv", "DR", "Av", "dm")
         self._vp("\nGenerate synthetic models", 1)
