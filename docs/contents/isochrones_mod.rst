@@ -114,7 +114,29 @@ Extra arguments
 
 There are a few more arguments that can be modified when loading the
 :py:class:`asteca.Isochrones` class. These are:
-``z_to_FeH, N_points, parsec_rm_stages, column_names``.
+``color2, color2_effl, z_to_FeH, N_points, mass_interpolation, parsec_rm_stages,
+column_names``.
+
+The ``color2`` argument defines an optional second color, with the same format as
+``color`` (two filter names, in the order used to compute the color). Its effective
+lambdas must be given via the ``color2_effl`` argument (a ``ValueError`` is raised if
+only one of the two is defined). A second color can only be used with the ``CCMO``
+extinction law (see :ref:`extinction_law`), and the observed
+:py:class:`asteca.Cluster` object must also contain it (``color2, e_color2``
+arguments). For example:
+
+.. code-block:: python
+
+    isochs = asteca.Isochrones(
+        model="PARSEC",
+        isochs_path="isochrones/",
+        mag="Gmag",
+        color=("G_BPmag", "G_RPmag"),
+        magnitude_effl=6390.7,
+        color_effl=(5182.58, 7825.08),
+        color2=("G_BPmag", "Gmag"),
+        color2_effl=(5182.58, 6390.7),
+    )
 
 The ``z_to_FeH`` argument is used to transform metallicity values from the default ``z``
 to the logarithmic version ``FeH``. If you want to generate your synthetic cluster
@@ -147,6 +169,20 @@ thus contain less resolution). This argument does not apply to MIST isochrones, 
 Equivalent Evolutionary Points (EEPs): these are interpolated on their own EEP grid,
 with one point per EEP (e.g.: ~1700 points). The number of points actually used is
 shown in the ``N_points`` line of the output.
+
+The ``mass_interpolation`` argument selects how the interpolation points are
+distributed along the isochrones that do not include EEPs (PARSEC and BASTI):
+
+- ``mass_skewed`` (default): the points are distributed in initial mass, more densely
+  towards the largest masses. This samples the evolved stages (turn-off, giants),
+  where the photometry changes quickly with mass, more finely than the lower main
+  sequence
+- ``mass_uniform``: the points are distributed uniformly in initial mass
+- ``adaptive``: the points are distributed according to the shape of the isochrone in
+  the color-magnitude diagram. This option is still under development
+
+MIST isochrones are always interpolated on their EEP grid, unless ``adaptive`` is
+selected.
 
 The ``parsec_rm_stages`` affects PARSEC isochrones only. Is set to ``9.0`` by default
 and it indicates that the `post_AGB` stage (``label=9``) should be removed. This is

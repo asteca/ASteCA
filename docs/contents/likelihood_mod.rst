@@ -25,7 +25,22 @@ function:
 
     # Define a likelihood object
     likelihood = asteca.Likelihood(my_cluster)
- 
+
+The likelihood compares the observed and synthetic clusters through their Hess diagrams
+(the color-magnitude diagram split into cells). The ``bin_method`` argument selects how
+the cells are defined, from the observed photometry:
+
+- ``knuth`` (default), ``blocks``, ``scott``, ``freedman``: the number and widths of
+  the bins in magnitude and in each color are obtained with the methods of the same
+  name in `astropy <https://docs.astropy.org/en/stable/visualization/histogram.html>`_
+- ``fixed``: the magnitude and color ranges are split into 14 and 9 bins of equal
+  width, respectively
+
+.. code-block:: python
+
+    # Define a likelihood object with a fixed binning
+    likelihood = asteca.Likelihood(my_cluster, bin_method="fixed")
+
 After this, we can evaluate the likelihood of a given synthetic cluster
 using the :py:meth:`asteca.Likelihood.get` method:
 

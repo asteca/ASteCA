@@ -13,13 +13,21 @@ was originally introduced. The method requires ``(ra, dec)``  data and will use 
 data dimensions stored in the :py:class:`Cluster <asteca.cluster.Cluster>` object, i.e.:
 photometry, proper motions, and parallax. At least one extra data dimension beyond
 ``(ra, dec)`` is required (three dimensions total minimum). This method can produce
-membership probabilities on photometric data alone.
+membership probabilities on photometric data alone. It also requires the ``(ra, dec)``
+center (``radec_c``) and the ``radius`` of the cluster, in degrees, to be stored in the
+:py:class:`Cluster <asteca.cluster.Cluster>` object (see :ref:`structure`).
 
 The :py:meth:`fastmp` method was described in detail in the
 `article <https://academic.oup.com/mnras/article/526/3/4107/7276628>`__
 where the `Unified Cluster Catalogue (UCC) <https://ucc.ar/>`__ was introduced. The
 method requires proper motions, and parallax data dimensions stored in the
-:py:class:`Cluster <asteca.cluster.Cluster>` object. Photometric data is not employed.
+:py:class:`Cluster <asteca.cluster.Cluster>` object, along with the center values
+``radec_c, pms_c, plx_c`` (see :ref:`structure`). Photometric data is not employed to
+estimate the probabilities, but the magnitude can be used to correct them: since the
+method resamples the data using their uncertainties, it favors stars with small
+uncertainties (i.e.: brighter stars). With ``mag_correct=True`` the probabilities are
+adjusted so that a ``P>=0.5`` selection follows the magnitude distribution of the
+members selected with no resampling. This requires the ``mag`` attribute.
 
 .. important::
     The only advantage of the :py:meth:`bayesian` method over the :py:meth:`fastmp`

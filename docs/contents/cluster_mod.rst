@@ -35,6 +35,26 @@ can generate a :py:class:`asteca.Cluster` object as follows:
     Loading the file as a `pandas.DataFrame`_  is optional, you can also pass ``numpy``
     arrays or lists/tuples for each of the data dimensions.
 
+All the data arguments are optional, but the ones given must have the same length.
+Every data dimension except ``(ra, dec)`` requires its uncertainty
+(``e_mag, e_color, e_color2, e_plx, e_pmra, e_pmde``), and all the uncertainty values
+must be larger than ``0`` (a ``ValueError`` is raised otherwise). Other arguments that
+can be passed when creating the object are:
+
+- ``color2, e_color2``: a second color and its uncertainty (requires ``color``)
+- ``star_id``: per-star identifiers, stored as strings. They are kept when the
+  members are selected (see :ref:`membership_module`) and returned by
+  :py:meth:`asteca.Synthetic.stellar_parameters`
+- ``probs``: per-star membership probabilities estimated by other means (see
+  :ref:`membership_module`)
+- ``max_mag`` or ``max_mag_perc`` (only one of them): the stars fainter than the given
+  magnitude, or than the given percentile of the magnitude distribution, are removed
+  when the object is created. Stars with no magnitude value (``nan``) are also removed
+  when this cut is applied
+- ``N_clust_min, N_clust_max``: lower and upper limits for the number of members
+  estimated by :py:meth:`asteca.Cluster.get_nmembers` (see :ref:`nmembers`), set to
+  ``25`` and ``2000`` by default
+
 The resulting ``my_field`` object, assumed here to be an observed field containing a
 cluster, can be processed to extract a given cluster's structural properties such as
 its center coordinates and radius (see :ref:`structure`).
@@ -83,10 +103,17 @@ can be accessed as:
     my_field.e_mag   # Error in Gaia G magnitude
     my_field.probs   # Membership probabilities
 
+The radial velocities ``(RV, e_RV)`` are stored as the ``Rv`` and ``e_Rv`` attributes,
+and the star identifiers (``Source`` column of the file) as the ``star_id`` attribute.
+
 At any point, the user can employ the :py:meth:`asteca.Cluster.to_csv` method to save
 the data stored in the :py:class:`asteca.Cluster` object to a CSV file. This is
 helpful, for example, to access the probabilities estimated by the methods in the
-:py:class:`asteca.Membership` class.
+:py:class:`asteca.Membership` class. The file contains the columns
+``ra, dec, mag, e_mag, color, e_color, color2, e_color2, plx, e_plx, pmra, e_pmra, pmde,
+e_pmde, probs`` that are defined in the object (rounded to 5 decimals), plus an
+``index`` column with the position of each star. The ``star_id`` and radial velocity
+values are not saved.
 
 
 .. _pandas.DataFrame: https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html
