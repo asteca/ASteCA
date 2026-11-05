@@ -90,4 +90,9 @@ toc_object_entries_show_parents = "hide"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]
-html_js_files = ["umami.js"]
+html_js_files = [
+    "umami.js",
+    # Click-to-zoom for images (https://github.com/francoischalifour/medium-zoom)
+    "https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js",
+    "zoom.js",
+]

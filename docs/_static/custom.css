@@ -11,3 +11,8 @@ a:hover {
     margin-top: 0px !important;
     margin-bottom: 0px !important;
 }
+/* Keep zoomed images (medium-zoom) above the theme's sticky header */
+.medium-zoom-overlay,
+.medium-zoom-image--opened {
+    z-index: 2000;
+}
