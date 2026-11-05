@@ -204,16 +204,11 @@ def qDistribution(
                 q = rng.power(gammaX + 1, msk.sum())
                 mass_ratios[msk] = q
         else:
-
-            def fQ(xk: np.ndarray, pk: np.ndarray):
-                """
-                Discrete function
-                """
-                pk /= pk.sum()
-                # pyright error: https://github.com/scipy/scipy/issues/22327
-                fq = stats.rv_discrete(a=0.0, b=1.0, values=(xk, pk))
-                return fq
-
+            # The Fisher and Raghavan distributions are histograms of the number of
+            # systems in equal width 'q' bins covering (0, 1]. Values of 'q' are
+            # sampled uniformly within the bins, using the inverse of the
+            # (piecewise linear) cumulative distribution.
+            #
             # Fisher's distribution
             # "fisher_stepped":
             # Fisher, Schröder & Smith (2005); Table 3, stepped
@@ -228,97 +223,46 @@ def qDistribution(
             # https://iopscience.iop.org/article/10.1088/0067-0049/190/1/1
 
             xy_dict = {
-                "fisher_stepped": [
-                    np.linspace(0.0, 1.0, 10),
-                    np.array(
-                        [29.0, 29.0, 30.0, 32.0, 31.0, 32.0, 36.0, 45.0, 27.0, 76.0]
-                    ),
-                ],
-                "fisher_peaked": [
-                    np.linspace(0.0, 1.0, 10),
-                    np.array(
-                        [27.0, 30.0, 34.0, 33.0, 29.0, 26.0, 27.0, 33.0, 41.0, 89.0]
-                    ),
-                ],
-                "raghavan": [
-                    np.linspace(0.0, 1.0, 20),
-                    np.array(
-                        [
-                            0.53,
-                            2.61,
-                            0.53,
-                            4.67,
-                            7.81,
-                            3.64,
-                            9.89,
-                            5.71,
-                            4.69,
-                            5.73,
-                            4.67,
-                            6.76,
-                            5.75,
-                            5.73,
-                            2.61,
-                            5.71,
-                            4.72,
-                            5.71,
-                            3.64,
-                            12.99,
-                        ]
-                    ),
-                ],
+                "fisher_stepped": np.array(
+                    [29.0, 29.0, 30.0, 32.0, 31.0, 32.0, 36.0, 45.0, 27.0, 76.0]
+                ),
+                "fisher_peaked": np.array(
+                    [27.0, 30.0, 34.0, 33.0, 29.0, 26.0, 27.0, 33.0, 41.0, 89.0]
+                ),
+                "raghavan": np.array(
+                    [
+                        0.53,
+                        2.61,
+                        0.53,
+                        4.67,
+                        7.81,
+                        3.64,
+                        9.89,
+                        5.71,
+                        4.69,
+                        5.73,
+                        4.67,
+                        6.76,
+                        5.75,
+                        5.73,
+                        2.61,
+                        5.71,
+                        4.72,
+                        5.71,
+                        3.64,
+                        12.99,
+                    ]
+                ),
             }
 
-            xk, pk = xy_dict[str(gamma)]
-
-            # # Fisher's distribution
-            # if gamma == "fisher_stepped":
-            #     # Fisher, Schröder & Smith (2005); Table 3, stepped
-            #     # https://doi.org/10.1111/j.1365-2966.2005.09193.x
-            #     xk = np.linspace(0.0, 1.0, 10)
-            #     pk = np.array([29.0, 29.0, 30.0, 32.0, 31.0, 32.0, 36.0, 45.0, 27.0, 76.0])
-
-            # elif gamma == "fisher_peaked":
-            #     # Fisher, Schröder & Smith (2005); Table 3, peaked
-            #     # https://doi.org/10.1111/j.1365-2966.2005.09193.x
-            #     xk = np.linspace(0.0, 1.0, 10)
-            #     pk = np.array([27.0, 30.0, 34.0, 33.0, 29.0, 26.0, 27.0, 33.0, 41.0, 89.0])
-
-            # elif gamma == "raghavan":
-            #     # Raghavan et al. (2010); Fig 16 (left)
-            #     # https://iopscience.iop.org/article/10.1088/0067-0049/190/1/1
-            #     xk = np.linspace(0.0, 1.0, 20)
-            #     pk = np.array(
-            #         [
-            #             0.53,
-            #             2.61,
-            #             0.53,
-            #             4.67,
-            #             7.81,
-            #             3.64,
-            #             9.89,
-            #             5.71,
-            #             4.69,
-            #             5.73,
-            #             4.67,
-            #             6.76,
-            #             5.75,
-            #             5.73,
-            #             2.61,
-            #             5.71,
-            #             4.72,
-            #             5.71,
-            #             3.64,
-            #             12.99,
-            #         ]
-            #     )
-
-            fq = fQ(xk, pk)
-            # 'ppf' is the inverse CDF
-            mass_ratios = fq.ppf(
-                # np.random.uniform(0.0, 1.0, N)
-                rng.uniform(0.0, 1.0, N)
-            )
+            pk = xy_dict[str(gamma)]
+            # Bin edges and cumulative distribution evaluated at the edges
+            q_edges = np.linspace(0.0, 1.0, pk.size + 1)
+            cdf = np.concatenate(([0.0], np.cumsum(pk) / pk.sum()))
+            # Use (0, 1] uniform values so that q=0 is never drawn (the first bin
+            # has a non-zero weight in all the distributions)
+            u = 1.0 - rng.uniform(0.0, 1.0, N)
+            mass_ratios = np.interp(u, cdf, q_edges)
 
     return mass_ratios
 
@@ -434,120 +378,6 @@ def ccmo_model(mw: float) -> tuple[float, float]:
         )
 
     return float(a), float(b)
-
-
-# def gaiadr3_precompute(theor_tracks):
-#     """ """
-#     _G_COEFFS = (
-#         0.995969721536602,
-#         -0.159726460302015,
-#         0.0122380738156057,
-#         0.00090726555099859,
-#         -0.0377160263914123,
-#         0.00151347495244888,
-#         -2.52364537395142e-05,
-#         0.0114522658102451,
-#         -0.000936914989014318,
-#         -0.000260296774134201,
-#     )
-#     # "BP" minus "RP" coefficients
-#     _BPRP_COEFFS = (
-#         0.49042409542357,
-#         -0.0634165826723407,
-#         -0.036506793426665456,
-#         0.02189430261385411,
-#         -0.01588332677592224,
-#         0.0008075446901998552,
-#         -1.468074307777017e-05,
-#         0.006681041701047307,
-#         -0.001137927314099498,
-#         -0.0001222634137884233,
-#     )
-
-#     # BP-RP
-#     all_bprp = theor_tracks[:, :, 1, :]
-
-#     ec_G_bprp, ec_BPRP_bprp = [], []
-#     for m in all_bprp:
-#         ec_G_bprp_m, ec_BPRP_bprp_m = [], []
-#         for X in m:
-#             X2 = X * X
-#             X3 = X2 * X
-
-#             ec_G_C1 = (
-#                 _G_COEFFS[0] + _G_COEFFS[1] * X + _G_COEFFS[2] * X2 + _G_COEFFS[3] * X3
-#             )
-#             ec_G_C2 = _G_COEFFS[4] + _G_COEFFS[7] * X + _G_COEFFS[8] * X2
-#             ec_G_C3 = _G_COEFFS[5] + _G_COEFFS[9] * X
-#             ec_G_bprp_m.append((ec_G_C1, ec_G_C2, ec_G_C3))
-
-#             ec_BPRP_C1 = (
-#                 _BPRP_COEFFS[0]
-#                 + _BPRP_COEFFS[1] * X
-#                 + _BPRP_COEFFS[2] * X2
-#                 + _BPRP_COEFFS[3] * X3
-#             )
-#             ec_BPRP_C2 = _BPRP_COEFFS[4] + _BPRP_COEFFS[7] * X + _BPRP_COEFFS[8] * X2
-#             ec_BPRP_C3 = _BPRP_COEFFS[5] + _BPRP_COEFFS[9] * X
-#             ec_BPRP_bprp_m.append((ec_BPRP_C1, ec_BPRP_C2, ec_BPRP_C3))
-
-#         ec_G_bprp.append(ec_G_bprp_m)
-#         ec_BPRP_bprp.append(ec_BPRP_bprp_m)
-
-#     ec_G_bprp, ec_BPRP_bprp = np.array(ec_G_bprp), np.array(ec_BPRP_bprp)
-#     return ec_G_bprp, ec_BPRP_bprp
-
-
-# def GaiaExtinctionLUT(
-#     theor_tracks: np.ndarray,
-#     # bprp_range: tuple[float, float] = (-1, 10),
-#     av_min: float = 0.0,
-#     av_max: float = 10,
-#     av_grid_size: int = 1000,
-# ):
-#     """
-#     Precomputes the Gaia DR3 extinction law into a 2D lookup table.
-
-#     > nanpercentile(UCC_membs['BP-RP'], (0.1, 99.9)) -->[-0.061,  5.236]
-#     > UCC_membs['BP-RP'].min() --> -0.9311
-#     > UCC_membs['BP-RP'].max() --> 8.475
-
-#     :param bprp_range: Tuple defining the minimum and maximum BP-RP color range.
-#     :type bprp_range: tuple[float, float]
-#     :param av_range: Tuple defining the minimum and maximum Av range.
-#     :type av_range: tuple[float, float]
-#     :param grid_size: Number of points in each dimension of the grid.
-#     :type grid_size: int
-
-#     :returns: Tuple containing the minimum BP-RP color, minimum Av, scaling factors
-#         for BP-RP and Av, and the precomputed extinction grids for G and BP-RP.
-#     :rtype: tuple[float, float, float, float, np.ndarray, np.ndarray]
-#     """
-#     from .synth_model import gaiadr3_extlaw
-
-#     # Find the range of the BP-RP array
-#     bp_rp = theor_tracks[:, :, 1, :]
-#     x_min, x_max = np.min(bp_rp), np.max(bp_rp)
-#     x_min = x_min - abs(x_min) * 0.1
-#     x_max = x_max + abs(x_max) * 0.1
-
-#     x_grid_size = int((x_max - x_min) / 0.01)
-
-#     # Generate high-resolution coordinate axes
-#     x_grid = np.linspace(x_min, x_max, x_grid_size)
-#     a_grid = np.linspace(av_min, av_max, av_grid_size)
-
-#     # Generate 2D parameter space mesh
-#     X, A = np.meshgrid(x_grid, a_grid, indexing="ij")
-
-#     # Pre-compute extinction grids using the original function
-#     lut_G, lut_BPRP = gaiadr3_extlaw(X, A)
-
-#     # Pre-compute scalars for fast index mapping
-#     _x_scale = (x_grid_size - 1) / (x_max - x_min)
-#     _a_scale = (av_grid_size - 1) / (av_max - av_min)
-
-#     return x_min, av_min, _x_scale, _a_scale, lut_G, lut_BPRP
 
 
 def randVals(
