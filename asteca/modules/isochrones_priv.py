@@ -89,6 +89,9 @@ def load(
     :param parsec_rm_stages: All stages with values equal or larger than this value
         will be removed from the PARSEC models
     :type parsec_rm_stages: float
+    :param mass_interpolation: Interpolation method, see
+        :py:func:`interp_isochrones`.
+    :type mass_interpolation: str
 
     :return: Array of isochrones, individual filters for each color defined,
         dictionary with metallicities and ages, and number of files read.
@@ -518,17 +521,17 @@ def interp_isochrones(
     :type met_age_sorted: list
     :param isochs_sorted: List of sorted isochrones as numpy arrays.
     :type isochs_sorted: list[np.ndarray]
-    :param mass_interpolation: One of 'mass_uniform', 'mass_skewed', or
-        'curve_uniform'. The latter parameterises points by normalised cumulative
-        arc-length distance along the (color_col, mag_col) curve instead of mass,
-        which better preserves shape in regions of high CMD curvature.
+    :param mass_interpolation: One of 'mass_uniform', 'mass_skewed', or 'adaptive'.
+        The latter parameterises points by the normalised cumulative arc-length
+        distance along the color-magnitude curve instead of mass, which better
+        preserves shape in regions of high CMD curvature.
     :type mass_interpolation: str
-    :param color_col: Column name for the color, required if
-        mass_interpolation == 'curve_uniform'.
-    :type color_col: str | None
-    :param mag_col: Column name for the magnitude, required if
-        mass_interpolation == 'curve_uniform'.
-    :type mag_col: str | None
+    :param all_filters: Names of the magnitude and color filters, used by the
+        'adaptive' interpolation.
+    :type all_filters: list
+    :param mass_tol: Masses that decrease by more than this value along an isochrone
+        raise an error; smaller decreases (numerical noise) are clamped.
+    :type mass_tol: float
 
     :raises ValueError: If the isochrone dtype does not contain column names.
 
@@ -628,6 +631,23 @@ def adaptive_interpolation(
 ) -> dict:
     """
     Interpolate the isochrone data based on normalized cumulative arc-length distance
+
+    :param age: Log age of the isochrone (used in the printed summary)
+    :type age: float
+    :param isoch: Isochrone as a structured array
+    :type isoch: np.ndarray
+    :param all_filters: Names of the magnitude and color filters
+    :type all_filters: list
+    :param mass_col: Column name for the initial mass
+    :type mass_col: str
+    :param N_interp: Number of points in the interpolated isochrone
+    :type N_interp: int
+    :param min_dist: Minimum distance between consecutive points, in the normalized
+        color-magnitude space
+    :type min_dist: float
+
+    :return: Dictionary with the interpolated columns
+    :rtype: dict
     """
     filter_1, filter_2 = isoch[all_filters[1]], isoch[all_filters[2]]
     color = filter_1 - filter_2

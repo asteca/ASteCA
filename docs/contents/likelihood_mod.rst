@@ -159,7 +159,7 @@ the observed and synthetic clusters, and :math:`\Delta G` and :math:`\Delta C` a
 widths of the magnitude and color ranges of the observed Hess diagram. The latter
 put both dimensions on the same scale, so that the magnitude (which usually spans a
 much larger range) does not dominate over the color. Hence any synthetic cluster with
-some overlap (:math:`d<1`) is always considered better than any synthetic cluster wit
+some overlap (:math:`d<1`) is always considered better than any synthetic cluster with
 no overlap (:math:`d\geq 1`), and the latter are pulled towards the region of the
 CMD where the observed cluster is located.
 
@@ -220,7 +220,7 @@ of stars:
   not depend on the number of stars. Hence a given mismatch gives on average the same
   :math:`D` for any number of stars
 
-In tests with simulated clusters a value od :math:`D\leq 0.25` was found to be
+In tests with simulated clusters a value of :math:`D\leq 0.25` was found to be
 a reasonable general threshold for a good fit; for clusters with many stars a
 stricter threshold can be used.
 

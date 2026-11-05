@@ -23,7 +23,7 @@ please `contact me`_ or `open a new issue`_ in the code's repository.
 
 
 .. _contact me: mailto:gabrielperren@gmail.com
-.. _open a new issue: https://github.com/Gabriel-p/asteca/issues/new
+.. _open a new issue: https://github.com/asteca/ASteCA/issues/new
 
 
 Attribution & License
@@ -52,7 +52,7 @@ see the `LICENSE`_.
 
 
 .. _stellar clusters: https://en.wikipedia.org/wiki/Star_cluster
-.. _LICENSE: https://github.com/asteca/ASteCA/blob/master/LICENSE.txt
+.. _LICENSE: https://github.com/asteca/ASteCA/blob/main/LICENSE.txt
 
 
 TOC

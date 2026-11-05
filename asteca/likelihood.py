@@ -26,6 +26,8 @@ class Likelihood:
         ``knuth, blocks, scott, freedman`` methods.  The method ``fixed``
         uses (15, 10) bins in magnitude and color(s) respectively
     :type bin_method: Literal["blocks", "knuth", "scott", "freedman", "fixed"]
+    :param verbose: Verbose level. A value of ``0`` hides all output
+    :type verbose: int
 
     :raises ValueError: If any of the attributes is not recognized as a valid option
     """
@@ -37,9 +39,11 @@ class Likelihood:
         my_cluster: Cluster,
         lkl_name: str = "plr",
         bin_method: Literal["blocks", "knuth", "scott", "freedman", "fixed"] = "knuth",
+        verbose: int = 1,
     ) -> None:
         self.lkl_name = lkl_name
         self.bin_method = bin_method
+        self.verbose = verbose
 
         likelihoods = ("plr",)  # "bins_distance", "chisq")
         if self.lkl_name not in likelihoods:
@@ -125,13 +129,18 @@ class Likelihood:
             # This is equal to evaluating
             # max_lkl = sum([gammaln(2*_ + 0.5) - gammaln(_ + 0.5) for _ in cl_histo_f_z])
 
-        print("\nLikelihood object generated")
+        self._vp("\nLikelihood object generated")
+
+    def _vp(self, mssg: str, level: int = 0) -> None:
+        """Verbose print method"""
+        if self.verbose > level:
+            print(mssg)
 
     def get(self, synth_clust: np.ndarray) -> float:
         """Evaluate the selected likelihood function.
 
         :param synth_clust: Array containing the synthetic cluster data. The
-            shape of this array is assumed to be be: ``[magnitude, color1, (color2)]``,
+            shape of this array is assumed to be: ``[magnitude, color1, (color2)]``,
             where ``magnitude`` and ``color`` are arrays with the synthetic magnitude
             and color photometric data (``color2`` is the optional second color defined)
             If the array contains any extra columns beyond these they will be ignored.

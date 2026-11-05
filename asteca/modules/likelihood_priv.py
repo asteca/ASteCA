@@ -151,7 +151,14 @@ def lkl_data(
 
 def _median(x: np.ndarray) -> float:
     """Median of a 1D array, equal to ``np.median`` but faster as it uses
-    ``np.partition`` directly"""
+    ``np.partition`` directly
+
+    :param x: 1D array (with no ``nan`` values)
+    :type x: np.ndarray
+
+    :return: Median value
+    :rtype: float
+    """
     N = x.shape[0]
     k = N // 2
     if N % 2:

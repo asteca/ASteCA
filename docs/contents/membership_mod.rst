@@ -32,7 +32,7 @@ members selected with no resampling. This requires the ``mag`` attribute.
 .. important::
     The only advantage of the :py:meth:`bayesian` method over the :py:meth:`fastmp`
     method is that the former works with photometric data. Hence it should only be used
-    in cases were only photometric data is available, as :py:meth:`fastmp` is not only
+    in cases where only photometric data is available, as :py:meth:`fastmp` is not only
     much faster but also more precise in those cases where proper motions and/or
     parallax data is available.
 

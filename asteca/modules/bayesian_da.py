@@ -309,7 +309,24 @@ def _likelihood_sum_chunked(
     e_region2: np.ndarray,
     chunk_size: int = 500,
 ) -> np.ndarray:
-    """Summed likelihood per cluster star, chunked over field stars."""
+    """Summed likelihood per cluster star, chunked over field stars (to limit the
+    memory used by :py:func:`_likelihood_matrix`).
+
+    :param cl_region_T: Data of the cluster region stars, shape (N_cl, d)
+    :type cl_region_T: np.ndarray
+    :param e_cl_region2_T: Squared uncertainties of the cluster region stars, shape
+        (N_cl, d)
+    :type e_cl_region2_T: np.ndarray
+    :param region: Data of the stars in the region, shape (d, N_r)
+    :type region: np.ndarray
+    :param e_region2: Squared uncertainties of the stars in the region, shape (d, N_r)
+    :type e_region2: np.ndarray
+    :param chunk_size: Maximum number of region stars processed at once
+    :type chunk_size: int
+
+    :return: Summed likelihood for each cluster region star
+    :rtype: np.ndarray
+    """
     n_f = region.shape[1]
     if n_f <= chunk_size:
         L = _likelihood_matrix(cl_region_T, e_cl_region2_T, region, e_region2)

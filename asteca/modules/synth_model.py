@@ -187,6 +187,9 @@ def get_model(
         :py:func:`mass_idx_lookup`. If ``None``, the search is performed in each
         call (slower, identical results).
     :type mass_idx_lookup: dict | None
+    :param show_errors: If ``True``, print the reason when an empty synthetic cluster
+        is returned
+    :type show_errors: bool
 
     :return: Synthetic isochrone plus synthetic array; if ``isoch_flag=False``,
         an empty array is returned instead of the isochrone.
@@ -596,6 +599,25 @@ def temp_plot(
     Temporary plotting function to visualize the bilinear interpolation of the
     theoretical tracks and the resulting isochrone. This function is intended for
     debugging and verification purposes.
+
+    :param theor_tracks: Theoretical isochrones
+    :type theor_tracks: np.ndarray
+    :param isochrone: Interpolated isochrone
+    :type isochrone: np.ndarray
+    :param m_ini_idx: Index of the initial mass
+    :type m_ini_idx: int
+    :param ml: Index of the lower metallicity grid value
+    :type ml: int
+    :param mh: Index of the upper metallicity grid value
+    :type mh: int
+    :param al: Index of the lower age grid value
+    :type al: int
+    :param ah: Index of the upper age grid value
+    :type ah: int
+    :param z_model: Metallicity of the interpolated isochrone
+    :type z_model: float
+    :param a_model: Age of the interpolated isochrone
+    :type a_model: float
     """
     import matplotlib.pyplot as plt
 
@@ -1024,10 +1046,14 @@ def gaiadr3_ext(X: np.ndarray, A: float | np.ndarray) -> tuple[np.ndarray, np.nd
 
     A_G = ec_G(X, A) * A ; E(BP-RP) = ec_BPRP(X, A) * A
 
-    where ec_G, ec_BPRP are the coefficients given by :py:func:`gaiadr3_extlaw`.
+    where ec_G, ec_BPRP are the coefficients of the law: polynomials in X and A with
+    the coefficients in ``_G_COEFFS`` and ``_BPRP_COEFFS``,
 
-    The result is equal (to floating point rounding, ~1e-15 mag) to
-    ``gaiadr3_extlaw(X, A)`` multiplied by ``A``, but it is evaluated faster by
+    ec = c0 + c1*X + c2*X^2 + c3*X^3 + c4*A + c5*A^2 + c6*A^3 + c7*A*X + c8*A*X^2
+         + c9*X*A^2
+
+    The result is equal (to floating point rounding, ~1e-15 mag) to evaluating these
+    polynomials and multiplying them by ``A``, but it is evaluated faster by
     writing the polynomial in nested (Horner) form, both in X and A, with
     in-place operations to avoid allocating temporary arrays. If ``A`` is a scalar
     (no differential reddening) the powers of ``A`` are absorbed into the
@@ -1058,6 +1084,16 @@ def _ext_horner_XA(c: tuple, X: np.ndarray, A: np.ndarray) -> np.ndarray:
 
     with P0 = c0 + c1*X + c2*X^2 + c3*X^3 ; P1 = c4 + c7*X + c8*X^2 ;
     P2 = c5 + c9*X
+
+    :param c: The 10 coefficients of the extinction law polynomial
+    :type c: tuple
+    :param X: Array of (intrinsic) BP-RP colors
+    :type X: np.ndarray
+    :param A: Array of absorptions, one per color
+    :type A: np.ndarray
+
+    :return: Extinction (or color excess) for each color
+    :rtype: np.ndarray
     """
     # P2(X) + c6 * A
     R = c[9] * X
@@ -1089,6 +1125,16 @@ def _ext_horner_X(c: tuple, X: np.ndarray, A: float) -> np.ndarray:
     k0 + k1*X + k2*X^2 + k3*X^3
 
     where the 'k' coefficients contain all the powers of A.
+
+    :param c: The 10 coefficients of the extinction law polynomial
+    :type c: tuple
+    :param X: Array of (intrinsic) BP-RP colors
+    :type X: np.ndarray
+    :param A: Absorption, the same for all colors
+    :type A: float
+
+    :return: Extinction (or color excess) for each color
+    :rtype: np.ndarray
     """
     k0 = A * (c[0] + A * (c[4] + A * (c[5] + A * c[6])))
     k1 = A * (c[1] + A * (c[7] + A * c[9]))

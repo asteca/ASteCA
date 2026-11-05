@@ -618,8 +618,25 @@ def get_KDE_cent(values: np.ndarray, gd: int) -> tuple[float, float]:
 
 
 def king_radius_LS(x, y, cent, rc_bounds, rt_bounds, fd) -> tuple[float, float]:
-    """
-    Residuals for least-squares optimization.
+    """Fit a King profile to the radial density profile of the stars via least-squares.
+
+    :param x: Array of x coordinates
+    :type x: np.ndarray
+    :param y: Array of y coordinates
+    :type y: np.ndarray
+    :param cent: Center coordinates (x, y)
+    :type cent: tuple[float, float]
+    :param rc_bounds: Lower and upper bounds for the core radius. If ``None``, they are
+        set from the radial range of the profile
+    :type rc_bounds: tuple[float, float] | None
+    :param rt_bounds: Lower and upper bounds for the tidal radius. If ``None``, they
+        are set from the radial range of the profile
+    :type rt_bounds: tuple[float, float] | None
+    :param fd: Field density, subtracted from the radial density profile
+    :type fd: float
+
+    :return: Core and tidal radii
+    :rtype: tuple[float, float]
     """
     x0, y0, sigma = RDPCurve(x, y, cent)
 

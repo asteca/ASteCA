@@ -886,7 +886,7 @@ best fit isochrone. The default BSS region looks like this:
     :align: center
 
 The two-point polygon allows separating the BSS region from lower mass
-stars in the main sequence (the TP point 1 is defined at a smaller color value
+stars in the main sequence (the TO point 1 is defined at a smaller color value
 than TO point 2). These stars can be affected by photometric uncertainties that
 make them look bluer than they actually are, thus mimicking the BSS region.
 

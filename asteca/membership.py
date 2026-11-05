@@ -16,14 +16,14 @@ class Membership:
 
     :py:meth:`bayesian` : The algorithm was described in detail in
     the `article <https://doi.org/10.1051/0004-6361/201424946>`__
-    were we originally introduced ``ASteCA``. The method requires ``(RA, DEC)``
+    where we originally introduced ``ASteCA``. The method requires ``(RA, DEC)``
     data and will use any extra data dimensions stored in the
     :py:class:`Cluster <asteca.cluster.Cluster>` object, i.e.: photometry,
     proper motions, and parallax.
 
     :py:meth:`fastmp` : The algorithm was described in detail in
     the `article <https://academic.oup.com/mnras/article/526/3/4107/7276628>`__
-    were we introduced the `Unified Cluster Catalogue (UCC) <https://ucc.ar/>`__.
+    where we introduced the `Unified Cluster Catalogue (UCC) <https://ucc.ar/>`__.
     The method requires proper motions, and parallax data dimensions stored in the
     :py:class:`Cluster <asteca.cluster.Cluster>` object. Photometry data is not
     employed.

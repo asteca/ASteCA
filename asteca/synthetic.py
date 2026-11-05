@@ -383,7 +383,7 @@ class Synthetic:
         the ``params`` dictionary and the already calibrated
         :py:class:`Synthetic` object.
 
-        The ``params``dictionary can include values for all or some of the parameters.
+        The ``params`` dictionary can include values for all or some of the parameters.
         E.g. of a dictionary with some fundamental parameters:
         ``params = {met: 0.0152, loga: 8.1, Av: 0.2, DR: 0., Rv: 3.1, dm: 9.7}``
         If no ``params`` dictionary is given, an empty one is used and the default values

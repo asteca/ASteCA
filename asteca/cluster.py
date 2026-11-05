@@ -52,7 +52,7 @@ class Cluster:
     :param max_mag: Maximum magnitude to be considered for the cluster
     :type max_mag: float | None
     :param max_mag_perc: Maximum magnitude percentile. Either this or ``max_mag`` (or
-        both) must by None
+        both) must be None
     :type max_mag_perc: float | None
     :param e_mag: Array that contains the magnitude's uncertainty
     :type e_mag: np.ndarray | None
@@ -366,7 +366,20 @@ class Cluster:
     def _max_mag_cut(
         self, cols_read: list, mag_arr: np.ndarray
     ) -> tuple[float | None, int]:
-        """Apply magnitude cut"""
+        """Apply the maximum magnitude cut (``max_mag`` or ``max_mag_perc``) to all the
+        data arrays read.
+
+        :param cols_read: Names of the attributes (data arrays) to cut
+        :type cols_read: list
+        :param mag_arr: Array of magnitudes used to apply the cut
+        :type mag_arr: np.ndarray
+
+        :raises ValueError: If no stars remain after the cut
+
+        :return: Magnitude limit applied (``None`` if no cut is applied) and number of
+            stars kept
+        :rtype: tuple[float | None, int]
+        """
         if self.max_mag is not None:
             mag_lim = self.max_mag
         elif self.max_mag_perc is not None:

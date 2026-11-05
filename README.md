@@ -38,7 +38,5 @@ Bibtex:
 
 [1]: http://www.aanda.org/articles/aa/abs/2015/04/aa24946-14/aa24946-14.html
 [2]: https://opensource.org/license/mit/
-[3]: http://asteca.github.io
-[4]: https://github.com/asteca/asteca/releases/latest
 
 

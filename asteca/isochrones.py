@@ -192,8 +192,13 @@ class Isochrones:
         if self.verbose > level:
             print(mssg)
 
-    def _func_z_to_FeH(self, z_to_FeH):
-        """Convert z to FeH"""
+    def _func_z_to_FeH(self, z_to_FeH: float) -> None:
+        """Convert the metallicity values from z to FeH, in place, rounding them to the
+        smallest number of decimals that keeps them all distinct
+
+        :param z_to_FeH: Solar metallicity (z) of the isochrones
+        :type z_to_FeH: float
+        """
         feh = np.log10(self.met_age_dict["met"] / z_to_FeH)
         N_old = len(feh)
         round_n = 4
