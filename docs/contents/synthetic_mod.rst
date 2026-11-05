@@ -214,12 +214,40 @@ mean physically:
 - ``foreground``: the cluster is free of dust and is seen through a patchy
   foreground screen.
 
+.. list-table::
+   :header-rows: 1
+   :widths: 20 40 40
+
+   * -
+     - ``internal``
+     - ``foreground``
+   * - :math:`A_V`
+     - Uniform foreground absorption, the same for every member
+     - Minimum foreground absorption across the face of the cluster
+   * - :math:`DR`
+     - Absorption of the dust inside the cluster, through its centre from front to
+       back
+     - Full range of the foreground variations across the face of the cluster
+   * - Absorption of a star depends on
+     - Its depth inside the cluster
+     - Its position on the sky
+   * - Suited to
+     - Young clusters that still contain gas and dust
+     - Clusters without internal dust, seen through a patchy foreground (e.g.
+       through or behind a molecular cloud)
+
+
+The figure below shows the geometry of the two models. The top panel shows
+the ``internal`` model, where the absorption of a star depends on how deep it
+sits inside the dusty cluster. The bottom panel shows the ``foreground`` model
+where it depends on the screen thickness along the star's line of sight, not on
+its depth.
+
+
 .. figure:: ../_static/dr_models_geometry.webp
     :align: center
 
-    Top: in the ``internal`` model the absorption of a star depends on how deep it
-    sits inside the dusty cluster. Bottom: in the ``foreground`` model it depends on
-    the screen thickness along the star's line of sight, not on its depth.
+
 
 
 
@@ -367,195 +395,6 @@ photometric uncertainties):
   :math:`A_V+DR` isochrone.
 - With matched mean and spread (right panel), the two models give similar
   sequences. The ``internal`` one keeps its sharper blue edge.
-
-
-
-Converting between the two parametrisations
--------------------------------------------
-
-Since the mean and spread of the absorption are what the photometry constrains
-best, the parameters of one model can be translated into those of the other by
-matching these two moments:
-
-.. math::
-
-   DR_{\rm int} &= \frac{0.164}{0.244}\, DR_{\rm fg} = 0.674\, DR_{\rm fg} \\
-   A_{V,\rm int} &= A_{V,\rm fg} + 0.5\, DR_{\rm fg} - 0.375\, DR_{\rm int}
-   = A_{V,\rm fg} + 0.247\, DR_{\rm fg}
-
-Fits to observed clusters follow this relation closely. For trumpler5, the
-``foreground`` fit gives :math:`A_V=0.46, DR=2.80` (see the table below). These
-convert to :math:`A_V=1.15, DR=1.89`, while the ``internal`` fit gives
-:math:`A_V=1.03, DR=1.89`.
-
-In practice, then, the choice of model mostly changes how the total absorption is
-split between :math:`A_V` and :math:`DR`, and what each of them means physically.
-The mean and spread of the absorption are well constrained by the data in either
-case.
-
-
-
-Interpretation of the parameters
---------------------------------
-
-.. list-table::
-   :header-rows: 1
-   :widths: 20 40 40
-
-   * -
-     - ``internal``
-     - ``foreground``
-   * - :math:`A_V`
-     - Uniform foreground absorption, the same for every member
-     - Minimum foreground absorption across the face of the cluster
-   * - :math:`DR`
-     - Absorption of the dust inside the cluster, through its centre from front to
-       back
-     - Full range of the foreground variations across the face of the cluster
-   * - Absorption of a star depends on
-     - Its depth inside the cluster
-     - Its position on the sky
-   * - Suited to
-     - Young clusters that still contain gas and dust
-     - Clusters without internal dust, seen through a patchy foreground (e.g.
-       through or behind a molecular cloud)
-
-The ``internal`` model's assumptions of uniform dust and uniformly distributed
-stars are simplifications. Real clusters are centrally concentrated, which moves
-:math:`f` towards 0.5, and their dust is clumpy. The ``foreground`` model's normal
-shape is also an assumption: a cloud edge across the cluster, for example, would
-give a bimodal distribution. A combination of both models, a variable foreground
-plus internal dust, was also tested. The photometry could not separate the two
-contributions, so it is not offered.
-
-
-
-Application to observed clusters
---------------------------------
-
-Both models were fitted, with the same settings, to three clusters with very
-different absorption:
-
-- ngc2516: young, nearby, low absorption.
-- berkeley29: old, distant, few members.
-- trumpler5: old, with strong differential reddening.
-
-Median and [16, 84] percentile values:
-
-.. list-table::
-   :header-rows: 1
-
-   * - Cluster
-     - Model
-     - ``loga``
-     - ``dm``
-     - :math:`A_V`
-     - :math:`DR`
-     - :math:`\langle A\rangle`
-     - sd(:math:`A`)
-   * - ngc2516
-     - ``foreground``
-     - 8.21 [8.19, 8.56]
-     - 8.08 [8.06, 8.10]
-     - 0.12 [0.08, 0.29]
-     - 0.29 [0.09, 0.41]
-     - 0.27
-     - 0.05
-   * -
-     - ``internal``
-     - 8.18 [8.10, 8.69]
-     - 8.07 [8.04, 8.10]
-     - 0.22 [0.08, 0.32]
-     - 0.22 [0.09, 0.53]
-     - 0.30
-     - 0.05
-   * - berkeley29
-     - ``foreground``
-     - 9.55 [9.48, 9.63]
-     - 15.67 [15.52, 15.83]
-     - 0.13 [0.04, 0.32]
-     - 0.22 [0.08, 0.49]
-     - 0.24
-     - 0.04
-   * -
-     - ``internal``
-     - 9.59 [9.50, 9.65]
-     - 15.64 [15.50, 15.78]
-     - 0.05 [0.01, 0.24]
-     - 0.31 [0.16, 0.56]
-     - 0.17
-     - 0.08
-   * - trumpler5
-     - ``foreground``
-     - 9.37 [9.34, 9.46]
-     - 12.44 [12.37, 12.52]
-     - 0.46 [0.35, 0.57]
-     - 2.80 [2.61, 2.91]
-     - 1.86
-     - 0.46
-   * -
-     - ``internal``
-     - 9.36 [9.35, 9.51]
-     - 12.54 [12.42, 12.61]
-     - 1.03 [0.94, 1.17]
-     - 1.89 [1.82, 2.02]
-     - 1.73
-     - 0.46
-
-.. figure:: ../_static/dr_models_fits.webp
-    :align: center
-
-    Observed CMDs (left) and the best-fit synthetic clusters of each model (grey:
-    observed stars).
-
-- **Fit quality:** the two models fit equally well. Their best-fit distances are
-  0.066 and 0.065 for ngc2516 and 0.046 for both models on trumpler5. The gap of
-  about 0.01 on berkeley29 (0.141 and 0.132) is smaller than the scatter caused by
-  the random realisation of a synthetic cluster. On trumpler5, the same best-fit
-  parameters evaluated with six other random seeds gave distances with a standard
-  deviation of 0.008 to 0.019, depending on the model.
-- **Age and distance:** these agree between the models within their
-  uncertainties. On trumpler5 the ``internal`` model's lower mean absorption
-  (1.73 against 1.86) is compensated by a distance modulus 0.1 mag larger.
-- **Absorption:** the main difference is how the absorption is split. For
-  trumpler5, an old (about 2.3 Gyr) cluster, the ``internal`` model attributes
-  :math:`DR=1.9` mag to dust inside the cluster. That is not plausible at this
-  age, when the gas and dust left over from star formation have long been
-  dispersed. The ``foreground`` model describes the same absorption as a minimum
-  foreground of 0.46 mag plus a 2.8 mag range of variation across the field.
-
-The choice between the two models therefore can't be made from the quality of the
-fit. It should be made from what is known about the cluster:
-
-- ``internal`` for young clusters that are still embedded in their natal gas and
-  dust.
-- ``foreground`` for clusters without dust of their own, which covers most open
-  clusters older than a few tens of Myr.
-
-
-
-Implementation notes
---------------------
-
-- **Fixed per object:** the fractions :math:`f` are drawn once, when the
-  :py:class:`asteca.Synthetic` object is created, from its pre-generated random
-  values. Every synthetic cluster generated by the same object therefore uses the
-  same fractions, and only :math:`A_V` and :math:`DR` change, so the likelihood is
-  a deterministic function of the parameters.
-- **Extinction per isochrone point:** the absorption is applied to each point of
-  the isochrone, and the synthetic stars are then interpolated between those
-  points according to their masses. Interpolating between two independent draws
-  averages them, which narrows the realised distribution of :math:`f` by about
-  :math:`\sqrt{2/3}\approx 0.82`. Measured from the G-band shift of each synthetic
-  star:
-
-  - ``internal``: standard deviation 0.20 instead of 0.244, and only 5% instead of
-    15% of the stars with :math:`f<0.1`.
-  - ``foreground``: standard deviation 0.14 instead of 0.164.
-
-  Stars of similar mass also share the same pair of draws, so their absorptions
-  are correlated (visible as short streaks along the sequences in the CMD
-  figures). This applies to any differential reddening model in the current code.
 
 
 
