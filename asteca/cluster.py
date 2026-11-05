@@ -9,6 +9,26 @@ import warnings
 import numpy as np
 
 
+def _import_pandas(method: str):
+    """Import pandas, an optional dependency only required by some methods
+
+    :param method: Name of the method that requires pandas, used in the error message
+    :type method: str
+
+    :raises ImportError: If pandas is not installed
+
+    :return: The pandas module
+    """
+    try:
+        import pandas as pd
+    except ImportError as err:
+        raise ImportError(
+            f"{method} requires the optional 'pandas' package, which is not "
+            + "installed.\nInstall it with: python -m pip install pandas"
+        ) from err
+    return pd
+
+
 class Cluster:
     """Define a :py:class:`Cluster` object.
 
@@ -83,6 +103,8 @@ class Cluster:
         - no stars remain after the maximum magnitude cut
     :raises TypeError: If ``UCC_members_file`` is not a ``pandas.DataFrame`` or
         ``cluster_name`` is not a string
+    :raises ImportError: If ``cluster_name`` is given and the optional ``pandas``
+        package is not installed
 
     """
 
@@ -227,7 +249,7 @@ class Cluster:
 
     def _load_UCC_data(self) -> tuple[list, float | None]:
         """Load cluster data from UCC members file"""
-        import pandas as pd
+        pd = _import_pandas("Loading data from the UCC members file")
 
         if not isinstance(self.UCC_members_file, pd.DataFrame):
             raise TypeError("'UCC_members_file' must be a Pandas DataFrame")
@@ -682,8 +704,10 @@ class Cluster:
 
         :param filename: Name of the CSV file to save the cluster data
         :type filename: str
+
+        :raises ImportError: If the optional ``pandas`` package is not installed
         """
-        import pandas as pd
+        pd = _import_pandas("Cluster.to_csv()")
 
         data_dict = {}
         # String column, not rounded

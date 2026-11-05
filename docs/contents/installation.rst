@@ -34,6 +34,19 @@ handle this: `conda`_, `uv`_, or Python's own `venv`_.
 
       python -m pip install numba
 
+.. note::
+
+   `pandas`_ is also optional. It is only required to load a cluster from the
+   `UCC <https://ucc.ar/>`_ members file (see :ref:`cluster_module`) and by the
+   :py:meth:`asteca.Cluster.to_csv` method, which raise an ``ImportError`` explaining
+   how to install it if it is not available. The examples in this documentation use
+   it to read data files, but any other method can be used to load the data. To
+   install it, run:
+
+   .. code-block:: shell
+
+      python -m pip install pandas
+
 To install **ASteCA** in Google Colaboratory, run in a notebook's code cell:
 
 .. code-block:: bash
@@ -53,4 +66,5 @@ installed version number with:
 .. _conda: https://conda.io/docs/index.html
 .. _uv: https://docs.astral.sh/uv/
 .. _Numba: https://numba.pydata.org/
+.. _pandas: https://pandas.pydata.org/
 .. _venv: https://docs.python.org/3/library/venv.html
