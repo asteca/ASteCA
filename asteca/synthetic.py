@@ -49,7 +49,10 @@ class Synthetic:
         color defined in the :py:class:`Isochrones <asteca.isochrones.Isochrones>` and
         :py:class:`Cluster <asteca.cluster.Cluster>` objects are assumed to be Gaia's
         (E)DR3 **G** and **(BP-RP)** respectively. A second color can not be used with
-        this law (a ``ValueError`` is raised if one is defined); use ``CCMO`` instead
+        this law (a ``ValueError`` is raised if one is defined); use ``CCMO`` instead.
+        The ``Rv`` parameter has no effect with this law (its coefficients were derived
+        for a single extinction curve, ``Rv~3.1``); a warning is shown if the default
+        ``Rv`` value in ``def_params`` is not ``3.1``
     :type ext_law: str
     :param DR_distribution: Model for the differential reddening, one of
         ``foreground, internal``. ``foreground``: dust-free cluster behind a patchy
@@ -199,6 +202,13 @@ class Synthetic:
                 raise ValueError(
                     f"\nExtinction law '{self.ext_law}' does not apply to the second color.\n"
                     + "Use the 'CCMO' extinction law if you need to process a second color"
+                )
+
+            # The Rv parameter is not used by this law
+            if self.def_params.get("Rv", 3.1) != 3.1:
+                warnings.warn(
+                    f"\nExtinction law '{self.ext_law}' does not use the 'Rv' parameter: "
+                    + f"the default value Rv={self.def_params['Rv']} will have no effect."
                 )
 
         # Get extinction coefficients for these filters

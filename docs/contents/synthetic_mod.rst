@@ -150,8 +150,12 @@ as the extinction coefficients are already defined for Gaia's photometry.
 .. important::
 
     While ``CCMO`` allows different ratio of total to selective extinction :math:`R_V`
-    values (which means this parameter can even be fitted), ``GAIADR3`` is to
-    be used with :math:`R_V=3.1`. Please read the online documentation and its
+    values (which means this parameter can even be fitted), the coefficients of
+    ``GAIADR3`` were derived from a single extinction curve (:math:`R_V\approx 3.1`).
+    Hence the ``Rv`` parameter has **no effect** when this law is used: it should be
+    kept fixed, since fitting it would just return its prior. A warning is shown if the
+    :py:class:`asteca.Synthetic` object is created with this law and a default
+    ``Rv`` value different from ``3.1``. Please read the online documentation and its
     accompanying articles  to learn more about this law's limitations.
 
 The figure below shows a comparison of the extinction laws implemented in **ASteCA**.
@@ -543,6 +547,9 @@ differential reddening ``DR``. The first two are related through the equation:
 .. math::
 
     A_V = R_V \times E_{B-V}
+
+The ``Rv`` parameter is only used by the ``CCMO`` extinction law; it has no effect when
+the ``GAIADR3`` law is selected (see :ref:`extinction_law`).
 
 Finally, the differential reddening parameter ``DR`` adds random scatter to the
 absorption of the cluster stars. Each star receives an absorption between ``Av`` (the
