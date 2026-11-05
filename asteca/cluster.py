@@ -336,7 +336,7 @@ class Cluster:
         if self.max_mag is not None:
             mag_lim = self.max_mag
         elif self.max_mag_perc is not None:
-            mag_lim = np.percentile(mag_arr, self.max_mag_perc)
+            mag_lim = np.nanpercentile(mag_arr, self.max_mag_perc)
         else:
             return None, len(mag_arr)
 

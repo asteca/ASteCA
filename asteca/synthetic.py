@@ -334,7 +334,7 @@ class Synthetic:
             )
 
         # Calibrate parameters using the observed cluster
-        self.max_mag_syn_obs = max(cluster.mag)
+        self.max_mag_syn_obs = float(np.nanmax(cluster.mag))
         self.N_stars_obs = cluster.N_stars - cluster.N_nan_phot
         self.err_dist_obs = scp.error_distribution(
             cluster.mag,
