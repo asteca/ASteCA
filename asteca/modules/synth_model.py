@@ -30,6 +30,10 @@ _BPRP_COEFFS = (
     -0.001137927314099498,
     -0.0001222634137884233,
 )
+# Range of intrinsic BP-RP colors for which the coefficients above were fitted. The
+# coefficients should not be extrapolated beyond it (the polynomials diverge), so
+# the colors used to evaluate them are clamped to this range
+_X_MIN, _X_MAX = -0.06, 2.5
 
 
 def main(N_repeat: int = 25_000):
@@ -934,7 +938,13 @@ if _HAS_NUMBA:
         i_mb = m_ini_idx + 2
         i_cb = m_ini_idx + 3
         for i in range(isochrone.shape[1]):
+            # Clamped to the range of validity of the coefficients, as in
+            # gaiadr3_ext()
             X = isochrone[1, i]
+            if X < _X_MIN:
+                X = _X_MIN
+            elif X > _X_MAX:
+                X = _X_MAX
 
             if dr_kind == 0:
                 Ax = gk3 * X
@@ -1016,7 +1026,11 @@ def gaiadr3_ext(X: np.ndarray, A: float | np.ndarray) -> tuple[np.ndarray, np.nd
     (no differential reddening) the powers of ``A`` are absorbed into the
     coefficients and only a cubic polynomial in X is evaluated.
 
-    :param X: Array of BP-RP colors.
+    The coefficients are evaluated with the colors clamped to the range for which
+    they were fitted, ``[_X_MIN, _X_MAX]``: stars outside of it are assigned the
+    coefficients of the closest valid color.
+
+    :param X: Array of (intrinsic) BP-RP colors.
     :type X: np.ndarray
     :param A: Total absorption (eventually containing differential reddening).
     :type A: float | np.ndarray
@@ -1024,6 +1038,7 @@ def gaiadr3_ext(X: np.ndarray, A: float | np.ndarray) -> tuple[np.ndarray, np.nd
     :returns: Extinction in G and color excess in BP-RP.
     :rtype: tuple[np.ndarray, np.ndarray]
     """
+    X = np.clip(X, _X_MIN, _X_MAX)
     if isinstance(A, np.ndarray):
         return _ext_horner_XA(_G_COEFFS, X, A), _ext_horner_XA(_BPRP_COEFFS, X, A)
     return _ext_horner_X(_G_COEFFS, X, A), _ext_horner_X(_BPRP_COEFFS, X, A)
