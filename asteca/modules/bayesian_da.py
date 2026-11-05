@@ -77,6 +77,7 @@ def bayesian_mp(
 
     N_break = 50
     r, probs = 0, []
+    converged = False
     for r in range(bayesda_runs):
         # Select cluster members according to current probability estimates
         if N_cl_region > N_cluster:
@@ -91,7 +92,8 @@ def bayesian_mp(
                     p=sum_cl_probs / sum_cl_probs.sum(),
                 )
         else:
-            p = np.ones(N_cl_region, dtype=int)
+            # Use all the stars in the cluster region
+            p = np.arange(N_cl_region)
 
         # Generate a random field region and compute its likelihood
         fl_region, e_fl_region2 = generate_field_region(
@@ -118,10 +120,11 @@ def bayesian_mp(
         msk = probs > 0.5
         # Check that all P>0.5 probabilities converged to 1%
         if (abs(prob_old_arr[msk] - probs[msk]) < 0.01).all() and r > N_break:
+            converged = True
             break
         prob_old_arr = probs.copy()
 
-    if r < bayesda_runs:
+    if converged:
         out_mssg = f"Convergence reached at {r + 1} runs"
     else:
         out_mssg = f"Maximum number of runs reached: {bayesda_runs}"
