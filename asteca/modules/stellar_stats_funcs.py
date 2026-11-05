@@ -292,6 +292,14 @@ def get_bss_probabilities(
     to_mag_2 = to_mag + mag_offset_2
 
     bss_probs = np.zeros_like(cluster_mag)
+
+    # The magnitude range below can not contain more stars than those with a valid
+    # magnitude. Cap the required number to avoid an infinite loop
+    min_stars = min(min_stars, int(np.isfinite(cluster_mag).sum()))
+    if min_stars == 0:
+        # No stars with valid magnitudes, no BSS can be identified
+        return bss_probs
+
     for to_c, to_m, to_m1, to_m2 in zip(to_col, to_mag, to_mag_1, to_mag_2):
         # Define a magnitude range around the identified turn-off magnitude.
         # Iteratively increase the magnitude range until at least `min_stars` are found
