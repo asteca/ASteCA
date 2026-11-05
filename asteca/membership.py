@@ -369,6 +369,9 @@ class Membership:
         # Count the nan values in the photometry of the selected stars only (the
         # value copied above is that of the full field)
         new_cluster.N_nan_phot = new_cluster._count_nan_phot()
+        # The 'membership' object copied above belongs to the full field: replace it
+        # with one tied to the new object
+        new_cluster.membership = Membership(new_cluster)
         self._vp("New Cluster object created", 1)
         self._vp(f"N_cluster      : {new_cluster.N_cluster} (kept)", 1)
         self._vp(f"Field stars    : {N_all - new_cluster.N_cluster} (removed)", 1)
