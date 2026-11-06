@@ -113,8 +113,8 @@ do not change for different synthetic data.
 The last term depends on :math:`M`, the total number of synthetic stars. Once the
 :py:class:`asteca.Synthetic` object is calibrated, every synthetic cluster generated
 by :py:meth:`asteca.Synthetic.generate` contains the same number of stars as the
-observed cluster (with valid photometry), i.e.: :math:`M=N`, and this term is a
-constant that can also be discarded.
+observed cluster (with valid photometry), i.e.: :math:`M=N` (except in the case
+described below), and this term is a constant that can also be discarded.
 
 .. important::
 

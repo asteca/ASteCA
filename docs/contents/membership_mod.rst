@@ -35,8 +35,8 @@ stars whose probabilities are moved across ``P=0.5`` by the correction (promoted
 demoted). Right: magnitude distribution of the ``P>=0.5`` members with and without the
 correction, compared to the members selected with no resampling (reference). Without
 the correction, the faintest magnitudes are under-represented in the ``P>=0.5``
-selection. The correction changes only a few stars in this example, but its effect
-grows with the range of uncertainties in the field.
+selection. The correction changes only a few stars in this example, but it can have
+a larger effect in fields with a wider range of uncertainties.
 
 .. figure:: ../_static/mag_correct.webp
     :align: center

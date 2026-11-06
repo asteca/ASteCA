@@ -45,7 +45,7 @@ class Likelihood:
         self.bin_method = bin_method
         self.verbose = verbose
 
-        likelihoods = ("plr",)  # "bins_distance", "chisq")
+        likelihoods = ("plr",)
         if self.lkl_name not in likelihoods:
             raise ValueError(
                 f"'{self.lkl_name}' not recognized. Should be one of {likelihoods}"
@@ -170,18 +170,7 @@ class Likelihood:
                 self.min_lkl,
                 synth_clust,
             )
-        # if self.lkl_name == "visual":
-        #     return lpriv.visual(self, synth_clust)
-        # if self.lkl_name == "mean_dist":
-        #     return lpriv.mean_dist(self, synth_clust)
-        elif self.lkl_name == "bins_distance":
-            return lpriv.bins_distance(self.mag, self.color, synth_clust)
-        elif self.lkl_name == "chisq":
-            return lpriv.chi_square(
-                self.ranges, self.Nbins, self.cl_z_idx, self.cl_histo_f_z, synth_clust
-            )
-        else:
-            raise ValueError(f"Likelihood '{self.lkl_name}' not recognized")
+        raise ValueError(f"Likelihood '{self.lkl_name}' not recognized")
 
     def cmd_overlap(
         self, synth_clust: np.ndarray, h_mag: float = 0.3, h_col: float = 0.075
