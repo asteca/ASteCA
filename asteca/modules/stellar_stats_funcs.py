@@ -83,10 +83,13 @@ def to_point_find(
         dx = savgol_filter(x, window_length=window, polyorder=polyorder, deriv=deriv)
         confirm = max(confirm_min, int(window * confirm_frac))
         to_idx = n - 1
-        for i in range(n - confirm):
-            if np.all(dx[i : i + confirm] > eps):
-                to_idx = i
-                break
+        # First index i (in range(n - confirm)) where the 'confirm' consecutive
+        # derivative values dx[i : i + confirm] are all > eps
+        if n > confirm:
+            windows = np.lib.stride_tricks.sliding_window_view(dx > eps, confirm)
+            idx = np.flatnonzero(windows[: n - confirm].all(axis=1))
+            if idx.size > 0:
+                to_idx = int(idx[0])
 
     # If no sustained positive trend is found, use the leftmost point in the isochrone.
     # This is a fallback mechanism to ensure that a semi-reasonable turn-off point is

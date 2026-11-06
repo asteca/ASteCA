@@ -7,6 +7,148 @@ Changelog
 #########
 
 
+`[v0.8.0] <https://github.com/asteca/asteca/releases/tag/v0.8.0>`__ - 2026-11-06
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+This is a very large update, with many breaking changes and bug fixes, hence the
+jump to 0.8.0. The most important changes are:
+
+- New differential reddening models, selected with ``DR_distribution``: ``foreground``
+  (new default; dust-free cluster behind a patchy foreground screen) and ``internal``
+  (dust mixed with the cluster stars, behind a uniform foreground screen). In both the
+  absorption of each star is ``Av + f * DR`` with ``f`` in ``[0, 1]``, so ``Av`` is now
+  the minimum absorption. The ``uniform`` (previous default) and ``normal`` models were
+  removed: their clipping at zero produced a spurious population of unreddened stars
+- ``Synthetic.stellar_parameters()`` (**breaking change**): the returned keys
+  ``m1, m1_std, m2, m2_std`` were renamed to
+  ``mass_single, mass_single_std, mass_binar, mass_binar_std``, and the new keys
+  ``single_prob, mass_bss, mass_bss_std`` (and ``star_id``, if available) were added.
+  The three probabilities ``single_prob, binar_prob, bss_prob`` now add up to ``1``
+  (``binar_prob`` is multiplied by ``1-bss_prob``)
+- Added estimation of BSSs masses, via the new ``isochs_young`` argument of
+  ``Synthetic.stellar_parameters()`` (an ``Isochrones`` object with ``log(age)<=7``
+  isochrones)
+- Stellar masses estimated by ``Synthetic.stellar_parameters()`` now take into account
+  the photometric uncertainties, and the turn-off point used to identify BSSs is
+  estimated more robustly
+- Generating a synthetic cluster with a negative ``alpha, beta, Av, DR, dm`` or with
+  ``Rv <= 0`` now raises a ``ValueError`` (as ``met, loga`` outside of the isochrones'
+  ranges already did)
+- ``Synthetic.get_models()`` (and the estimation of BSSs masses) now samples each
+  parameter from a normal distribution truncated to its valid range, instead of
+  allowing negative values (e.g.: ``Av<0``) or clipping ``met, loga`` to the limits of
+  the isochrones
+- ``Synthetic.calibrate()`` now sets the number of synthetic stars to the number of
+  observed stars with valid photometry (before: all the stars, including those with
+  ``nan`` photometry)
+- Added ``show_errors`` argument to ``Synthetic.generate()``, to print the reason when
+  an empty synthetic cluster is returned
+- A warning is shown when the ``GAIADR3`` extinction law is used with a default ``Rv``
+  value different from ``3.1``, since this law does not use the ``Rv`` parameter
+- Added the ``Likelihood.cmd_overlap()`` method, a goodness of fit value that can be
+  compared across clusters with any number of stars
+- The likelihood distance is now normalized so that ``1`` always means no overlap
+  between the observed and synthetic clusters (before, its maximum value depended on
+  the cluster)
+- The CMD median-based penalty in the likelihood distance is now only applied to
+  synthetic clusters with no overlap with the observed cluster (before: when the
+  distance was larger than ``0.5``). This fixes stalled fits for small clusters. The
+  magnitude and color differences are now scaled by the widths of the Hess diagram
+  ranges, so that the magnitude no longer dominates the penalty
+- ``Likelihood`` now only accepts ``lkl_name="plr"`` (the undocumented
+  ``bins_distance, chisq`` options were removed)
+- Added ``verbose`` argument to ``Likelihood`` (it always printed a message before)
+- Added ``mag_correct`` argument to ``Membership.fastmp()`` to remove the bias towards
+  stars with small uncertainties (i.e.: brighter stars). The probabilities are adjusted
+  so that a ``P>=0.5`` cut follows the magnitude distribution of the members selected
+  with no error resampling
+- Added ``star_id`` argument (and attribute) to ``Cluster`` class to store the original
+  star IDs from the input data (also returned by ``Synthetic.stellar_parameters()``)
+- The radial velocities read from the UCC members file are now stored as the
+  ``Rad_v, eRad_v`` attributes of ``Cluster`` (before: ``Rv, e_Rv``, which could be
+  confused with the extinction parameter ``Rv``)
+- ``Cluster.to_csv()`` now also saves the ``star_id`` column, and the radial
+  velocities (``Rad_v, eRad_v``) if they were loaded from the UCC members file
+- ``pandas`` is an optional dependency: loading data from the UCC members file and
+  ``Cluster.to_csv()`` now raise an informative ``ImportError`` if it is not installed
+- Added ``mass_interpolation`` argument to ``Isochrones``, to select how the
+  interpolation points are distributed along the isochrones with no EEPs (i.e.: PARSEC
+  and BASTI): ``mass_skewed`` (default, more points towards the largest masses, which
+  gives a better interpolation), or ``mass_uniform``
+- More checks and warnings when loading the isochrones. The ``N_points`` value shown
+  when loading them is now the number of points actually used (for MIST isochrones
+  this is the number of EEPs, not the ``N_points`` argument)
+- ``numba`` (optional) is used if installed, to compile the most demanding functions.
+  Speed improvements, with or without it:
+
+  - Faster generation of synthetic clusters (~2X with ``numba``)
+  - Faster ``Likelihood.get()`` (~30%)
+  - Faster IMF sampling when instantiating ``Synthetic`` (~5X with numba, ~3X
+    without); the sampled masses are unchanged for a given seed
+  - Faster isochrone loading and ``Membership.fastmp()``
+
+- Loading the sampled IMF masses now uses half the memory
+- Fixed: stars very close to the edges of the Hess diagram were discarded, which
+  (combined with ``nan`` photometry) could produce negative likelihood distances for
+  some small clusters. A small buffer is now added to the edges of the Hess diagram
+- Fixed: a ``nan`` magnitude could make ``Synthetic.calibrate()`` store a ``nan``
+  maximum magnitude (all synthetic clusters were then empty), and made the
+  ``max_mag_perc`` argument of ``Cluster`` fail
+- Fixed: the ``membership`` attribute of the ``Cluster`` object returned by
+  ``Membership.select_members()`` still pointed to the full field, so that running a
+  membership method on the selected members overwrote the field's probabilities
+- Fixed: ``Membership.select_members(N_prob_max=...)`` raised an error unless
+  ``prob_min=None`` was also passed. ``prob_min`` now defaults to ``None``, and
+  ``prob_min=0.5`` is used when neither argument is given
+- Fixed: the ``GAIADR3`` extinction law was extrapolated for stars outside of the
+  intrinsic color range of its coefficients (``-0.06 < BP-RP < 2.5``), where its
+  polynomials diverge (e.g.: ``E(BP-RP)/A_V`` grew from ``0.44`` to ``~2`` for
+  ``BP-RP=5`` red dwarfs). The coefficients are now evaluated with the colors clamped
+  to that range
+- Fixed: wrong ``M_actual`` STDDEV value (was returning the median)
+- Fixed: wrong identification of BSSs when ``DR!=0``
+- Fixed: ``stage=9`` points were not being removed from PARSEC isochrones
+- Fixed: ``Membership.fastmp()`` used the same random draw to resample ``pmRA``,
+  ``pmDE``, and ``plx``; they are now resampled independently. The number of stars
+  with ``P>=0.5`` now matches ``N_cluster`` (before: ~4% larger). Results for a
+  fixed seed differ from previous versions
+- Fixed: the differential reddening was ignored (``DR=0`` was used) in the synthetic
+  clusters generated together with their isochrone, i.e.: those used by
+  ``Synthetic.get_models()``, and thus by ``Synthetic.stellar_parameters()`` and
+  ``Synthetic.cluster_masses()``. The isochrone itself is still generated with
+  ``DR=0``
+- Fixed: the BSSs masses were overestimated when two colors were used with the
+  ``CCMO`` extinction law (the extinction of the second color was added to the masses)
+- Fixed: ``Synthetic.stellar_parameters()`` never returned for clusters with fewer
+  than 5 stars with a valid magnitude
+- Fixed: ``Membership.bayesian()`` used a single star (repeated) as the cluster
+  members when ``N_cluster`` was larger than or equal to the number of stars in the
+  cluster region; all of them are now used
+- Fixed: ``Membership.bayesian()`` always reported that convergence was reached, even
+  when the maximum number of runs was reached
+- Fixed: ``Synthetic.get_isochrone()`` raised an error when the synthetic cluster for
+  the given parameters was empty; a warning is now shown and the full isochrone is
+  returned
+- Fixed: secondary stars with masses below the isochrone's minimum mass were assigned
+  the photometry of the lowest mass star in the isochrone. They now add no flux to the
+  binary system
+- Fixed: the ``fisher_stepped, fisher_peaked, raghavan`` mass-ratio distributions
+  (``gamma`` argument of ``Synthetic``) assigned the weight of each histogram bin to a
+  single ``q`` value, including ``q=0`` (binaries with no secondary star) and ``q=1``.
+  The mass ratios are now sampled within the bins, in the range ``(0, 1]``
+- Fixed: ``Synthetic.get_models()`` modified the ``model_std`` dictionary passed by
+  the user
+- Fixed: the check for isochrones with different numbers of points after the
+  interpolation never raised an error
+- Fixed: the arrays of random values used to generate synthetic clusters were sized
+  using only the first age of each metallicity, and could be shorter than the IMF
+  samples of other ages. This was masked by the isochrones' minimum masses being
+  larger than the IMF's (``0.08`` Msun). Synthetic clusters for a fixed seed differ
+  from previous versions
+
+
+
+
 `[v0.7.0] <https://github.com/asteca/asteca/releases/tag/v0.7.0>`__ - 2026-07-29
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
