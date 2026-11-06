@@ -2,7 +2,7 @@ import tomllib
 
 # -- Project information -----------------------------------------------------
 project = "ASteCA"
-copyright = "2024, Gabriel I Perren"
+copyright = "2024-2026, Gabriel I Perren"
 author = "Gabriel I Perren"
 
 # 'pyproject.toml' is one dir up
@@ -55,6 +55,11 @@ automodapi_toctreedirnm = "build/api"
 nb_execution_mode = "off"
 # nb_execution_excludepatterns = ["*membership"]
 # nb_execution_timeout = -1
+
+# Ignore the output of local builds into 'docs/build/' (otherwise their copies of the
+# notebooks produce duplicate labels). 'build/api' is not excluded: it holds the
+# 'automodapi' pages
+exclude_patterns = ["build/html", "build/doctrees", "build/jupyter_execute"]
 
 
 # -- Options for HTML output -------------------------------------------------

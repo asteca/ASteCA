@@ -8,6 +8,14 @@ authors = [
 readme = "README.md"
 license = "MIT"
 keywords = ["cluster", "astrophysics"]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Astronomy",
+]
 requires-python = ">=3.12"
 dependencies = [
     "astropy>=7.2.0",
@@ -15,6 +23,13 @@ dependencies = [
     "numpy>=2.4.0",
     "scipy>=1.17.0"
 ]
+
+[project.optional-dependencies]
+# Compiles the most demanding functions (faster synthetic clusters and likelihood)
+numba = ["numba"]
+# Required to load the UCC members file and by Cluster.to_csv()
+pandas = ["pandas"]
+all = ["numba", "pandas"]
 
 [tool.pyrefly]
 project-includes = [
@@ -36,20 +51,3 @@ exclude = ["docs/"]
 
 [tool.hatch.build.targets.sdist]
 exclude = ["docs/"]
-
-# [build-system]
-# requires = ["setuptools>=64", "numpy>=2.4.0"]
-# build-backend = "setuptools.build_meta"
-
-# [tool.cibuildwheel]
-# build = "cp312-*"          # only CPython 3.12, matching your requires-python
-
-# [tool.cibuildwheel.linux]
-# archs = ["x86_64", "aarch64"]
-# environment = { CC = "gcc" }
-
-# [tool.cibuildwheel.macos]
-# archs = ["x86_64", "arm64"]
-
-# [tool.cibuildwheel.windows]
-# # msvc is the default compiler on Windows, no extra config needed

@@ -9,7 +9,7 @@
 [![AA](https://img.shields.io/badge/A%26A-576--A6,%202015-yellowgreen.svg)][1]
 [![License](https://img.shields.io/badge/license-MIT-blue)][2]
 
-**ASteCA** is a package designed to automatize the usual analysis applied on star
+**ASteCA** is a package designed to automate the usual analysis applied on star
 clusters, in order to estimate their characteristics and fundamental parameters.
 
 Install with:

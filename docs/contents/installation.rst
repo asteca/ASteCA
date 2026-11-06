@@ -22,6 +22,23 @@ run the following `pip`_ command in a terminal session:
 It is recommended to set up a local environment first. There are several tools that
 handle this: `conda`_, `uv`_, or Python's own `venv`_.
 
+To also install the optional dependencies described below (`Numba`_ and `pandas`_),
+use:
+
+.. tab:: Unix/macOS
+
+   .. code-block:: shell
+
+      python -m pip install "asteca[all]"
+
+.. tab:: Windows
+
+   .. code-block:: shell
+
+      py -m pip install "asteca[all]"
+
+Each one can also be installed on its own with ``asteca[numba]`` or ``asteca[pandas]``.
+
 .. note::
 
    `Numba`_ is not required but it is highly recommended. If it is installed, **ASteCA**
@@ -33,6 +50,8 @@ handle this: `conda`_, `uv`_, or Python's own `venv`_.
    .. code-block:: shell
 
       python -m pip install numba
+
+   or install **ASteCA** with ``python -m pip install "asteca[numba]"``.
 
 .. note::
 
@@ -46,6 +65,15 @@ handle this: `conda`_, `uv`_, or Python's own `venv`_.
    .. code-block:: shell
 
       python -m pip install pandas
+
+   or install **ASteCA** with ``python -m pip install "asteca[pandas]"``. Reading the
+   UCC members file with ``pandas.read_parquet()`` (as shown in :ref:`cluster_module`)
+   also requires `pyarrow`_ or `fastparquet`_, which are not installed with
+   ``pandas``:
+
+   .. code-block:: shell
+
+      python -m pip install pyarrow
 
 To install **ASteCA** in Google Colaboratory, run in a notebook's code cell:
 
@@ -67,4 +95,6 @@ installed version number with:
 .. _uv: https://docs.astral.sh/uv/
 .. _Numba: https://numba.pydata.org/
 .. _pandas: https://pandas.pydata.org/
+.. _pyarrow: https://arrow.apache.org/docs/python/
+.. _fastparquet: https://fastparquet.readthedocs.io/
 .. _venv: https://docs.python.org/3/library/venv.html
