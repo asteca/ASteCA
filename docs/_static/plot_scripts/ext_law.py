@@ -27,16 +27,31 @@ def main():
     axes[0].set_xlabel(r"$\lambda^{-1} \; [\mu m^{-1}$]")
     axes[0].legend()
 
-    # If this model is used the first color is always expected to be BP-RP
-    BP_RP = np.linspace(-0.05, 2.5, 100)
+    # If this model is used the first color is always expected to be BP-RP.
+    # The coefficients were fitted for X_MIN < (BP-RP)_0 < X_MAX; ASteCA clamps the
+    # colors outside of this range to the closest limit (see 'gaiadr3_ext()' in
+    # 'asteca/modules/synth_model.py'). The solid lines show the values used by
+    # ASteCA, the dotted lines the polynomials extrapolated outside the valid range.
+    X_MIN, X_MAX = -0.06, 2.5
+    BP_RP = np.linspace(-0.5, 5.0, 500)
+    axes[1].axvspan(BP_RP[0], X_MIN, color="grey", alpha=0.15, lw=0)
+    axes[1].axvspan(X_MAX, BP_RP[-1], color="grey", alpha=0.15, lw=0)
     for Av in (0.5, 1, 2):
-        ec_mag, ec_col1 = gaiadr3_ext_law(BP_RP, Av)
-        # Ex1 = ec_col1 * Av
-        # BP_RP_Av = BP_RP + Ex1
-        plt.plot(BP_RP, ec_mag, label=f"Av={Av:.1f}")
+        ec_mag_raw, _ = gaiadr3_ext_law(BP_RP, Av)
+        ec_mag, _ = gaiadr3_ext_law(np.clip(BP_RP, X_MIN, X_MAX), Av)
+        (line,) = axes[1].plot(BP_RP, ec_mag, label=f"Av={Av:.1f}")
+        out = (BP_RP < X_MIN) | (BP_RP > X_MAX)
+        axes[1].plot(
+            np.where(out, BP_RP, np.nan),
+            ec_mag_raw,
+            ls=":",
+            c=line.get_color(),
+        )
+    axes[1].plot([], [], ls=":", c="k", label="Extrapolated")
+    axes[1].set_xlim(BP_RP[0], BP_RP[-1])
 
     axes[1].set_title("Gaia (E)DR3")
-    axes[1].set_xlabel("BP-RP")
+    axes[1].set_xlabel(r"$(BP-RP)_0$")
     axes[1].set_ylabel(r"$A_G/A_V$")
     axes[1].legend()
 

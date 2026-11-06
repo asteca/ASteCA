@@ -623,7 +623,8 @@ class Cluster:
         - ``ripley``: Originally introduced with the ``fastMP`` membership method
           in `Perren et al.
           (2023) <https://academic.oup.com/mnras/article/526/3/4107/7276628>`__.
-          Requires ``(ra, dec, pmra, pmde, plx)`` and their center estimates.
+          Requires ``(ra, dec, pmra, pmde, plx)`` and their center estimates
+          (``radec_c, pms_c, plx_c``).
         - ``density``: Simple algorithm that counts the number of stars within the
           cluster region (center+radius) and subtracts the expected number of field
           stars within that region. Requires the ``(ra, dec)`` center and the radius of

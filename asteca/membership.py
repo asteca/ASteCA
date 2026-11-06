@@ -26,7 +26,8 @@ class Membership:
     where we introduced the `Unified Cluster Catalogue (UCC) <https://ucc.ar/>`__.
     The method requires proper motions, and parallax data dimensions stored in the
     :py:class:`Cluster <asteca.cluster.Cluster>` object. Photometry data is not
-    employed.
+    used to estimate the probabilities; the magnitude is only used to correct them
+    if ``mag_correct=True``.
 
     :param my_field: :py:class:`Cluster <asteca.cluster.Cluster>` object with the
         loaded data for the observed field
@@ -166,7 +167,8 @@ class Membership:
 
         Estimate the probability of being a true cluster member for all observed
         stars using the fastMP algorithm. The following data dimensions are required:
-        ``(pmRA, pmDE, plx)``; photometry is not employed. Center estimates in
+        ``(pmRA, pmDE, plx)``; photometry is not employed (except for the magnitude
+        if ``mag_correct=True``). Center estimates in
         ``(RA, DEC)``, as well as ``(pmRA, pmDE)`` and ``plx`` are required.
 
         :param fixed_centers: If ``True`` the center values (radec_c, pms_c, plx_c)

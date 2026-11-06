@@ -178,7 +178,9 @@ Left panel: the ``CCMO`` law showing the normalized extinction curve
 :math:`R_V`.
 Right panel: ``GAIADR3`` color-dependent extinction law for main-sequence stars,
 applicable only to Gaia mission photometry, showing the variation of :math:`A_G/A_V`
-with intrinsic :math:`BP-RP` color for different extinction values.
+with intrinsic :math:`BP-RP` color for different extinction values. The grey regions are
+outside the range where the coefficients were fitted: the solid lines show the
+(clamped) values used by **ASteCA**, the dotted lines the extrapolated polynomials.
 
 .. figure:: ../_static/ext_law.webp
     :align: center
@@ -743,22 +745,22 @@ tutorial):
 .. code-block:: python
 
           mass_single  mass_single_std  mass_binar  mass_binar_std   mass_bss  \
-    0        0.523066         0.012542    0.172024        0.028333   0.455759
-    1        1.438580         0.057697    0.374469        0.227820   1.525796
-    2        1.070895         0.040243    0.402593        0.086267   1.294216
+    0        0.519571         0.011828    0.156324        0.027051   0.455759
+    1        1.425991         0.055783    0.387919        0.242119   1.525796
+    2        1.061928         0.038365    0.442999        0.168763   1.294216
     ...           ...              ...         ...             ...        ...
-    1425     4.654422         0.160930    1.129809        1.406911   8.852999
-    1426     5.174737         0.066102    1.700512        1.356713  12.462478
-    1427     5.207315         0.044258    1.700512        1.145802  15.453795
+    1425     4.654422         0.184646    1.129809        1.143190   8.782175
+    1426     5.174737         0.105975    1.700512        1.433408  12.355175
+    1427     5.207315         0.084610    1.700512        1.116148  15.382971
 
           mass_bss_std  single_prob  binar_prob  bss_prob
-    0         0.042102      0.51500     0.48500     0.000
-    1         0.076385      0.37500     0.62500     0.000
-    2         0.066010      0.97000     0.03000     0.000
+    0         0.041988      0.36000     0.64000      0.00
+    1         0.077110      0.43000     0.57000      0.00
+    2         0.066440      0.89000     0.11000      0.00
     ...            ...          ...         ...       ...
-    1425      0.329228      0.00000     0.00000     1.000
-    1426      0.339142      0.00000     0.00000     1.000
-    1427      0.548481      0.00000     0.00000     1.000
+    1425      0.308121      0.00000     0.00000      1.00
+    1426      0.331792      0.00000     0.00000      1.00
+    1427      0.543575      0.00000     0.00000      1.00
 
 
 The sub-sections that follow explain in more detail how the stellar masses are
@@ -885,11 +887,21 @@ defined as the region towards lower values of two points:
 .. code-block:: python
 
     # The two points that define the BSS regions are defined as:
-    to_point_1 = [to_col + col_offset_1, to_mag + mag_offset_1]
-    to_point_2 = [to_col + col_offset_2, to_mag + mag_offset_2]
+    to_point_1 = [min(to_col_obs, to_col + col_offset_1), to_mag + mag_offset_1]
+    to_point_2 = [min(to_col_obs, to_col + col_offset_2), to_mag + mag_offset_2]
 
-where the turn-off point ``(to_col, to_mag)`` is estimated by ASteCA given the
-best fit isochrone. The default BSS region looks like this:
+where the turn-off point ``(to_col, to_mag)`` is estimated by ASteCA for each of the
+synthetic clusters sampled by :py:meth:`asteca.Synthetic.get_models`, and
+``to_col_obs`` is the 5th percentile of the colors of the observed stars with
+magnitudes within ``±0.25`` mag of ``to_mag`` (this range grows in steps of ``0.05``
+mag until it holds at least 5 stars). This means the BSS region never extends redder
+than the bluest edge of the observed stars around the turn-off magnitude. As a result,
+main sequence stars are not classified as BSSs if the turn-off of the fitted isochrone
+is redder than the observed one (e.g. because of a small error in the fitted ``Av`` or
+``loga``). The ``bss_prob`` value of each observed star is the fraction of sampled
+synthetic clusters for which the star falls inside the BSS region.
+
+The default BSS region looks like this:
 
 .. figure:: ../_static/bss_region.webp
     :scale: 50%
@@ -1062,6 +1074,10 @@ effects) which we estimate simply using Eq :eq:`eq_Mi1` as:
 
     \Delta M_{dyn}(t) = M_{i} - M_{a} - \Delta M_{evol}(t)
 
-The distributions for these masses are obtained through a bootstrap process that
-takes the uncertainties in the fundamental parameters into account.
+These masses are computed for each of the ``N_models`` synthetic clusters generated
+by :py:meth:`asteca.Synthetic.get_models`, whose fundamental parameters are sampled
+from the ``model`` and ``model_std`` dictionaries. The resulting distributions thus
+take the uncertainties in the fundamental parameters into account. By default the
+method returns their median and STDDEV values; the full distributions are returned
+with ``return_arrays=True``.
 

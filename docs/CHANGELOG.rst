@@ -79,13 +79,15 @@ jump to 0.8.0. The most important changes are:
   when loading them is now the number of points actually used (for MIST isochrones
   this is the number of EEPs, not the ``N_points`` argument)
 - ``numba`` (optional) is used if installed, to compile the most demanding functions.
-  Speed improvements, with or without it:
+  Speed improvements compared to v0.7.0:
 
-  - Faster generation of synthetic clusters (~2X with ``numba``)
-  - Faster ``Likelihood.get()`` (~30%)
-  - Faster IMF sampling when instantiating ``Synthetic`` (~5X with numba, ~3X
+  - Faster generation of synthetic clusters (~2.8X with ``numba``, ~30% without)
+  - Faster ``Likelihood.get()`` (~2X with ``numba``, same speed without)
+  - Faster IMF sampling when instantiating ``Synthetic`` (~5X with ``numba``, ~3X
     without); the sampled masses are unchanged for a given seed
-  - Faster isochrone loading and ``Membership.fastmp()``
+  - Faster ``Synthetic.get_models()`` (~2X, with or without ``numba``)
+  - Faster isochrone loading (~7X) and ``Membership.fastmp()`` (~30%), with or
+    without ``numba``
 
 - Loading the sampled IMF masses now uses half the memory
 - Fixed: stars very close to the edges of the Hess diagram were discarded, which

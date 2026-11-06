@@ -53,7 +53,7 @@ The :ref:`post_process_ntbk` notebook shows how to apply the following methods:
 - :meth:`asteca.Synthetic.cluster_masses`: determine various associated cluster masses
   (initial, actual, dynamical, etc.)
 - :meth:`asteca.Synthetic.stellar_parameters`: estimate per-star masses and
-  probabilities of being binary systems and blue straggler star
+  probabilities of being binary systems and blue straggler stars
 
 
 

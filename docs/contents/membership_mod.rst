@@ -29,6 +29,18 @@ uncertainties (i.e.: brighter stars). With ``mag_correct=True`` the probabilitie
 adjusted so that a ``P>=0.5`` selection follows the magnitude distribution of the
 members selected with no resampling. This requires the ``mag`` attribute.
 
+The figure below shows the effect of ``mag_correct=True`` on the field used in the
+:ref:`membership_ntbk` tutorial. Left: probabilities with no correction (grey) and the
+stars whose probabilities are moved across ``P=0.5`` by the correction (promoted or
+demoted). Right: magnitude distribution of the ``P>=0.5`` members with and without the
+correction, compared to the members selected with no resampling (reference). Without
+the correction, the faintest magnitudes are under-represented in the ``P>=0.5``
+selection. The correction changes only a few stars in this example, but its effect
+grows with the range of uncertainties in the field.
+
+.. figure:: ../_static/mag_correct.webp
+    :align: center
+
 .. important::
     The only advantage of the :py:meth:`bayesian` method over the :py:meth:`fastmp`
     method is that the former works with photometric data. Hence it should only be used

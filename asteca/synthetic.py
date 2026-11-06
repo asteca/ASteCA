@@ -390,13 +390,22 @@ class Synthetic:
         defined in the :py:class:`Synthetic` object are used to generate the synthetic
         cluster.
 
+        If the object was calibrated with :py:meth:`calibrate`, the synthetic cluster
+        contains up to the same number of stars as the observed cluster (with valid
+        photometry), and is cut at its maximum magnitude and assigned its
+        uncertainties. Otherwise, ``N_stars`` stars are generated with no magnitude
+        cut and no uncertainties.
+
         A ``ValueError`` is raised if ``met`` or ``loga`` are outside of the ranges of
         the loaded isochrones, if any of ``alpha, beta, Av, DR, dm`` is negative, or if
         ``Rv<=0``.
 
         :param params: Dictionary containing the values for the fundamental parameters.
         :type params: dict | None
-        :param N_stars: Number of synthetic stars to generate.
+        :param N_stars: Number of synthetic stars to generate. Only used if the
+            object was not calibrated; after calling :py:meth:`calibrate` the
+            synthetic clusters contain up to as many stars as the observed cluster
+            (with valid photometry) and this argument is ignored.
         :type N_stars: int
         :param show_errors: If ``True``, possible errors will be printed to the screen.
             Useful for debugging.
@@ -632,6 +641,12 @@ class Synthetic:
         - Probabilities of being a single system, a binary system, or a blue
           straggler (``single_prob, binar_prob, bss_prob``; these add up to ``1``)
 
+        The BSS region is defined by the turn-off point of each sampled synthetic
+        cluster plus the ``mag_offset_X, col_offset_X`` offsets. Its color limits are
+        capped at the bluest edge (5th percentile) of the observed colors around the
+        turn-off magnitude, so that the region never extends into the observed main
+        sequence.
+
         :param isochs_young: Isochrones object (same photometric system) that contains
             isochrones with ``log(age)<=7``. These are used to estimate the
             ``mass_bss`` values. If ``None``, these values are ``nan``
@@ -832,8 +847,8 @@ class Synthetic:
             <https://www.aanda.org/articles/aa/abs/2005/01/aa1476/aa1476.html>`__)
         :type C_env: float
         :param gamma: Constant related to the disruption time (no units); defaults to
-            ``0.62`` (from `Lamers, Gieles & Zwart 2005
-            <https://www.aanda.org/articles/aa/abs/2005/01/aa1476/aa1476.html>`__)
+            ``0.62`` (from `Boutloukos & Lamers 2003
+            <https://academic.oup.com/mnras/article/338/3/717/1458721>`__)
         :type gamma: float
         :param epsilon: Eccentricity of the orbit (no units); defaults to ``0.08`` (from
             `Angelo et al. (2023) <https://doi.org/10.1093/mnras/stad1038>`__)

@@ -195,7 +195,7 @@ There are currently two algorithms available for the estimation of the true numb
 of members associated to a given cluster. The default algorithm is called ``ripley``. It was originally introduced along with the ``fastMP`` membership method
 in `Perren et al. (2023) <https://academic.oup.com/mnras/article/526/3/4107/7276628>`__.
 It requires ``(ra, dec, pmra, pmde, plx)`` data and their center estimates
-(``pms_c, plx_c``).
+(``radec_c, pms_c, plx_c``).
 
 The other algorithm is called ``density`` and it is a simple algorithm that counts the
 number of stars within the cluster region (center+radius) and subtracts the expected
@@ -208,7 +208,7 @@ Again, the methods can be accessed from the ``my_field`` object as:
 
     # Will apply the default `ripley` algorithm on `(ra, dec, pmra, pmde, plx)` data
     # This assumes that the `get_center()` method was already applied or the
-    # (pms_c, plx_c) center values were stored as attributes by the user
+    # (radec_c, pms_c, plx_c) center values were stored as attributes by the user
     my_field.get_nmembers()
 
     # Will apply the `density` algorithm on `(ra, dec)` data. This also assumes that

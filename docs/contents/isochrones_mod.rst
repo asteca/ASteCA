@@ -44,7 +44,7 @@ of the :py:class:`asteca.Isochrones` class as follows:
         verbose=3
     )
 
-    Instantiating isochrones...
+    Instantiating isochrones
     Model          : PARSEC
     N_files        : 1
     N_mets         : 3
