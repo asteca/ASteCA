@@ -162,9 +162,9 @@ def _median(x: np.ndarray) -> float:
     N = x.shape[0]
     k = N // 2
     if N % 2:
-        return np.partition(x, k)[k]
+        return float(np.partition(x, k)[k])
     xp = np.partition(x, (k - 1, k))
-    return 0.5 * (xp[k - 1] + xp[k])
+    return float(0.5 * (xp[k - 1] + xp[k]))
 
 
 def tremmel(
@@ -337,7 +337,7 @@ if _HAS_NUMBA:
             # Clip counts beyond the table's last column (see tremmel())
             m = min(counts[nz_pos[p]], m_max)
             lkl += table_flat[row_off[p] + m]
-        return lkl
+        return float(lkl)
 
 
 def bins_distance(

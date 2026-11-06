@@ -193,8 +193,10 @@ def sampleInv(
     # Rewind and advance the generator by the number of values kept. Each
     # uniform float consumes a single 64 bit value of the generator
     rng.bit_generator.state = state
-    if hasattr(rng.bit_generator, "advance"):
-        rng.bit_generator.advance(N_kept)
+    # Not all bit generators implement 'advance()' (e.g.: PCG64 and Philox do)
+    advance = getattr(rng.bit_generator, "advance", None)
+    if advance is not None:
+        advance(N_kept)
     else:
         rng.uniform(0.0, 1.0, N_kept)
 
