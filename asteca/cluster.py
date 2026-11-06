@@ -3,13 +3,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from types import ModuleType
+
     import pandas as pd
 import warnings
 
 import numpy as np
 
 
-def _import_pandas(method: str):
+def _import_pandas(method: str) -> ModuleType:
     """Import pandas, an optional dependency only required by some methods
 
     :param method: Name of the method that requires pandas, used in the error message
@@ -18,6 +20,7 @@ def _import_pandas(method: str):
     :raises ImportError: If pandas is not installed
 
     :return: The pandas module
+    :rtype: ModuleType
     """
     try:
         import pandas as pd
@@ -34,6 +37,11 @@ class Cluster:
 
     This object contains the basic data required to load a group of observed stars
     that could represent a cluster or an entire field.
+
+    If the data is loaded from the UCC members file, a ``TypeError`` is raised if
+    ``UCC_members_file`` is not a ``pandas.DataFrame`` or ``cluster_name`` is not a
+    string, and an ``ImportError`` is raised if the optional ``pandas`` package is not
+    installed.
 
     :param cluster_name: Name of the cluster, only required if the data is to be
         loaded from the UCC members file. If provided, the ``UCC_members_file`` argument
@@ -101,10 +109,6 @@ class Cluster:
           that are not ``>0``,
         - the data arrays have different lengths, or are empty,
         - no stars remain after the maximum magnitude cut
-    :raises TypeError: If ``UCC_members_file`` is not a ``pandas.DataFrame`` or
-        ``cluster_name`` is not a string
-    :raises ImportError: If ``cluster_name`` is given and the optional ``pandas``
-        package is not installed
 
     """
 
@@ -199,9 +203,8 @@ class Cluster:
         if self.max_mag is not None and self.max_mag_perc is not None:
             raise ValueError("Only one of 'max_mag' or 'max_mag_perc' can be provided")
 
-        if self.cluster_name is not None and self.UCC_members_file is not None:
+        if self.cluster_name is not None:
             self._vp(f"\nInstantiating cluster '{self.cluster_name}'")
-            self._vp("Loading data from 'UCC_members_file'")
             cols_read, mag_lim = self._load_UCC_data()
         else:
             self._vp("\nInstantiating cluster from data")
@@ -249,6 +252,13 @@ class Cluster:
 
     def _load_UCC_data(self) -> tuple[list, float | None]:
         """Load cluster data from UCC members file"""
+        if self.UCC_members_file is None:
+            raise ValueError(
+                "If a cluster name is provided, the 'UCC_members_file' must also be provided"
+            )
+
+        self._vp("Loading data from 'UCC_members_file'")
+
         pd = _import_pandas("Loading data from the UCC members file")
 
         if not isinstance(self.UCC_members_file, pd.DataFrame):
@@ -715,10 +725,11 @@ class Cluster:
     def to_csv(self, filename: str) -> None:
         """Save cluster data to a CSV file
 
+        Requires the optional ``pandas`` package; an ``ImportError`` is raised if it is
+        not installed.
+
         :param filename: Name of the CSV file to save the cluster data
         :type filename: str
-
-        :raises ImportError: If the optional ``pandas`` package is not installed
         """
         pd = _import_pandas("Cluster.to_csv()")
 

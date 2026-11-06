@@ -617,7 +617,14 @@ def get_KDE_cent(values: np.ndarray, gd: int) -> tuple[float, float]:
     return x_c, y_c
 
 
-def king_radius_LS(x, y, cent, rc_bounds, rt_bounds, fd) -> tuple[float, float]:
+def king_radius_LS(
+    x: np.ndarray,
+    y: np.ndarray,
+    cent: tuple[float, float],
+    rc_bounds: tuple[float, float] | None,
+    rt_bounds: tuple[float, float] | None,
+    fd: float,
+) -> tuple[float, float]:
     """Fit a King profile to the radial density profile of the stars via least-squares.
 
     :param x: Array of x coordinates

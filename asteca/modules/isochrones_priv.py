@@ -627,7 +627,12 @@ def interp_isochrones(
 
 
 def adaptive_interpolation(
-    age: float, isoch: np.ndarray, all_filters, mass_col, N_interp, min_dist=0.001
+    age: float,
+    isoch: np.ndarray,
+    all_filters: list,
+    mass_col: str,
+    N_interp: int,
+    min_dist: float = 0.001,
 ) -> dict:
     """
     Interpolate the isochrone data based on normalized cumulative arc-length distance

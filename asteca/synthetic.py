@@ -390,6 +390,10 @@ class Synthetic:
         defined in the :py:class:`Synthetic` object are used to generate the synthetic
         cluster.
 
+        A ``ValueError`` is raised if ``met`` or ``loga`` are outside of the ranges of
+        the loaded isochrones, if any of ``alpha, beta, Av, DR, dm`` is negative, or if
+        ``Rv<=0``.
+
         :param params: Dictionary containing the values for the fundamental parameters.
         :type params: dict | None
         :param N_stars: Number of synthetic stars to generate.
@@ -405,10 +409,6 @@ class Synthetic:
             of the binary systems, respectively (if generated). If the system is a
             single star, then ``mass_b==np.nan``.
         :rtype: np.ndarray
-
-        :raises ValueError: If ``met`` or ``loga`` are outside of the ranges of the
-            loaded isochrones, if any of ``alpha, beta, Av, DR, dm`` is negative, or if
-            ``Rv<=0``
         """
         from .modules import synth_model as sm
 

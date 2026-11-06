@@ -208,6 +208,9 @@ class Likelihood:
         CMDs are compared, so the same values must be used for all the clusters
         whose ``D`` values are compared.
 
+        A ``ValueError`` is raised if the observed cluster has fewer than two stars
+        with valid photometry.
+
         :param synth_clust: Array containing the synthetic cluster data. The
             shape of this array is assumed to be: ``[magnitude, color1, ...]``. Only
             the magnitude and the first color are used.
@@ -216,9 +219,6 @@ class Likelihood:
         :type h_mag: float
         :param h_col: Width of the Gaussian kernel in color, defaults to ``0.075``
         :type h_col: float
-
-        :raises ValueError: If the observed cluster has fewer than two stars with
-            valid photometry
 
         :return: ``(D, D_std)``, where ``D_std`` is the approximate standard
             deviation of ``D`` for a synthetic cluster drawn from the same

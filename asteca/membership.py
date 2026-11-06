@@ -328,12 +328,10 @@ class Membership:
             raise ValueError(
                 "Only one of 'prob_min' or 'N_prob_max' should be provided"
             )
-        # Default selection
-        if prob_min is None and N_prob_max is None:
-            prob_min = 0.5
 
         N_all = len(self.my_field.probs)
 
+        # If only 'N_prob_max' is not None, use it
         if N_prob_max is not None:
             if N_prob_max > N_all:
                 raise ValueError(
@@ -349,6 +347,10 @@ class Membership:
             msk[sorted_indices[:N_prob_max]] = True
             self._vp(f"\nTop {N_prob_max} members selected based on probability")
         else:
+            # If bot are None, or only 'prob_min' is provided, use 'prob_min'
+            # Default selection
+            if prob_min is None:
+                prob_min = 0.5
             if not (0.0 <= prob_min <= 1.0):
                 raise ValueError("'prob_min' should be between 0 and 1")
             msk = self.my_field.probs >= prob_min
