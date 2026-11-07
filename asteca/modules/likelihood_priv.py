@@ -149,6 +149,112 @@ def lkl_data(
     return cl_z_idx, cl_histo_f_z, table2d
 
 
+def tremmel(
+    hist_args: np.ndarray,
+    nz_pos: np.ndarray,
+    row_off: np.ndarray,
+    table_flat: np.ndarray,
+    m_max: int,
+    synth_clust: np.ndarray,
+) -> float:
+    r"""Poisson likelihood ratio as defined in Tremmel et al (2013), Eq 10 with
+    v_{i,j}=1 (see documentation). This is the core shared by
+    :py:meth:`asteca.Likelihood.dist` and :py:meth:`asteca.Likelihood.log_lkl`.
+
+    :param hist_args: Per-color ``(nx, xmin, xmax, ny, ymin, ymax)`` arguments for
+        the 2D histogram, shape ``(N_colors, 6)``
+    :type hist_args: np.ndarray
+    :param nz_pos: Positions in the flattened Hess diagram of the bins where the
+        number of observed stars is not 0
+    :type nz_pos: np.ndarray
+    :param row_off: Offset in ``table_flat`` of the row associated to the number of
+        observed stars in each non-empty bin
+    :type row_off: np.ndarray
+    :param table_flat: Flattened pre-computed table for likelihood calculation
+    :type table_flat: np.ndarray
+    :param m_max: Largest number of synthetic stars per bin covered by the table
+        (number of columns minus 1). Larger counts are clipped to this value
+    :type m_max: int
+    :param synth_clust: Synthetic cluster data, ``[magnitude, color1, (color2)]``.
+        Must not be empty
+    :type synth_clust: np.ndarray
+
+    :return: Log likelihood value (up to the constant terms that only depend on the
+        observed cluster)
+    :rtype: float
+    """
+    mag = synth_clust[0]
+    # The 1/2 term arises from using a Jeffreys prior (Eq 8 in Tremmel et al). Using a
+    # flat prior instead, that 1/2 term becomes a 1
+    # Equivalent to table2d[cl_histo_f_z, syn_histo_f_z].sum()
+    if _HAS_NUMBA:
+        return _tremmel_lkl_nb(
+            mag, synth_clust[1:], hist_args, nz_pos, row_off, table_flat, m_max
+        )
+
+    # Obtain histogram for the synthetic cluster.
+    syn_histo_f = np.concatenate(
+        [
+            _histogram2d(
+                mag,
+                synth_clust[i + 1],
+                int(h[0]),
+                h[1],
+                h[2],
+                int(h[3]),
+                h[4],
+                h[5],
+            ).ravel()
+            for i, h in enumerate(hist_args)
+        ]
+    )
+    # Remove all bins where n_i = 0 (no observed stars). Counts beyond the
+    # table's last column are clipped, otherwise they would read the next row
+    syn_histo_f_z = np.minimum(syn_histo_f.take(nz_pos).astype(np.intp), m_max)
+    return table_flat.take(row_off + syn_histo_f_z).sum()
+
+
+def no_overlap_dist(
+    obs_mag_median: float,
+    obs_col_median: float,
+    cmd_widths: tuple[float, float],
+    synth_clust: np.ndarray,
+) -> float:
+    """Distance assigned to a synthetic cluster with no stars in any of the observed
+    bins.
+
+    In that case the likelihood is constant (``min_lkl``) no matter where the
+    synthetic stars are. When most of the models sampled from the priors are in this
+    situation (e.g.: small clusters in a small region of the CMD) this tie stalls
+    the optimizer (pyABC's epsilon stays at 1). To break the tie, a penalty based on
+    the photometric distance between the synthetic and observed clusters is added to
+    the 'no match' distance of ``1``. This "pulls" the solution towards the region of
+    the CMD where the observed cluster is located. The penalty is only applied to the
+    no-overlap models, so that any model with some overlap (distance<1) is always
+    better than any model with no overlap (distance>=1), and the former are ranked by
+    the likelihood alone. Each dimension is scaled by the width of the Hess diagram
+    range, so that the magnitude (usually spanning a much larger range) does not
+    dominate the color.
+
+    :param obs_mag_median: Median observed magnitude
+    :type obs_mag_median: float
+    :param obs_col_median: Median observed color
+    :type obs_col_median: float
+    :param cmd_widths: Widths of the Hess diagram ranges for the magnitude and
+        (first) color
+    :type cmd_widths: tuple[float, float]
+    :param synth_clust: Synthetic cluster data, ``[magnitude, color1, (color2)]``
+    :type synth_clust: np.ndarray
+
+    :return: Distance, ``>= 1``
+    :rtype: float
+    """
+    cmd_dist = ((obs_mag_median - _median(synth_clust[0])) / cmd_widths[0]) ** 2 + (
+        (obs_col_median - _median(synth_clust[1])) / cmd_widths[1]
+    ) ** 2
+    return 1 + cmd_dist
+
+
 def _median(x: np.ndarray) -> float:
     """Median of a 1D array, equal to ``np.median`` but faster as it uses
     ``np.partition`` directly
@@ -165,128 +271,6 @@ def _median(x: np.ndarray) -> float:
         return float(np.partition(x, k)[k])
     xp = np.partition(x, (k - 1, k))
     return float(0.5 * (xp[k - 1] + xp[k]))
-
-
-def tremmel(
-    hist_args: np.ndarray,
-    nz_pos: np.ndarray,
-    row_off: np.ndarray,
-    table_flat: np.ndarray,
-    m_max: int,
-    obs_mag_median: float,
-    obs_col_median: float,
-    cmd_widths: tuple[float, float],
-    max_lkl: float,
-    min_lkl: float,
-    synth_clust: np.ndarray,
-) -> float:
-    r"""Poisson likelihood ratio as defined in Tremmel et al (2013), Eq 10 with
-    v_{i,j}=1 (see documentation). This returns the log likelihood.
-
-    :param hist_args: Per-color ``(nx, xmin, xmax, ny, ymin, ymax)`` arguments for
-        the 2D histogram, shape ``(N_colors, 6)``
-    :type hist_args: np.ndarray
-    :param nz_pos: Positions in the flattened Hess diagram of the bins where the
-        number of observed stars is not 0
-    :type nz_pos: np.ndarray
-    :param row_off: Offset in ``table_flat`` of the row associated to the number of
-        observed stars in each non-empty bin
-    :type row_off: np.ndarray
-    :param table_flat: Flattened pre-computed table for likelihood calculation
-    :type table_flat: np.ndarray
-    :param m_max: Largest number of synthetic stars per bin covered by the table
-        (number of columns minus 1). Larger counts are clipped to this value
-    :type m_max: int
-    :param obs_mag_median: Median observed magnitude
-    :type obs_mag_median: float
-    :param obs_col_median: Median observed color
-    :type obs_col_median: float
-    :param cmd_widths: Widths of the Hess diagram ranges for the magnitude and
-        (first) color, used to scale the no-overlap penalty
-    :type cmd_widths: tuple[float, float]
-    :param max_lkl: Maximum likelihood value, used for normalization
-    :type max_lkl: float
-    :param min_lkl: Minimum likelihood value, obtained when no synthetic star falls
-        in any observed bin. Used for normalization
-    :type min_lkl: float
-    :param synth_clust: Synthetic cluster data.
-    :type synth_clust: np.ndarray
-
-    :return: Log likelihood value.
-    :rtype: float
-    """
-    # If synthetic cluster is empty, assign '10' indicating a large distance
-    if synth_clust.size == 0:
-        return 10
-
-    mag = synth_clust[0]
-    # The 1/2 term arises from using a Jeffreys prior (Eq 8 in Tremmel et al). Using a
-    # flat prior instead, that 1/2 term becomes a 1
-    # Equivalent to table2d[cl_histo_f_z, syn_histo_f_z].sum()
-    if _HAS_NUMBA:
-        tremmel_lkl = _tremmel_lkl_nb(
-            mag, synth_clust[1:], hist_args, nz_pos, row_off, table_flat, m_max
-        )
-    else:
-        # Obtain histogram for the synthetic cluster.
-        syn_histo_f = np.concatenate(
-            [
-                _histogram2d(
-                    mag,
-                    synth_clust[i + 1],
-                    int(h[0]),
-                    h[1],
-                    h[2],
-                    int(h[3]),
-                    h[4],
-                    h[5],
-                ).ravel()
-                for i, h in enumerate(hist_args)
-            ]
-        )
-        # Remove all bins where n_i = 0 (no observed stars). Counts beyond the
-        # table's last column are clipped, otherwise they would read the next row
-        syn_histo_f_z = np.minimum(syn_histo_f.take(nz_pos).astype(np.intp), m_max)
-        tremmel_lkl = table_flat.take(row_off + syn_histo_f_z).sum()
-
-    # If this is the call made to calibrate the likelihood (max_lkl not yet set)
-    if np.isinf(max_lkl):
-        return tremmel_lkl
-
-    # Normalize and invert the likelihood so that its values are equivalent to a
-    # distance that goes from 0 (exact match) to 1 (no match). The 'no match' value
-    # (min_lkl) is the likelihood obtained when no synthetic star falls in any of the
-    # observed bins, i.e.: sum(table2d[cl_histo_f_z, 0]). Since table2d[n, m] grows with
-    # m for n>0, tremmel_lkl >= min_lkl and thus dist <= 1 always.
-    # This is only a rescaling of '1 - tremmel_lkl / max_lkl', it does not change the
-    # ordering of the distances but puts the values on the same 0–1 scale for all
-    # clusters (1 = no overlap)
-    dist = (max_lkl - tremmel_lkl) / (max_lkl - min_lkl)
-
-    # If m_i==0 and n_i<3, the term
-    # gammaln(cl_histo_f_z + syn_histo_f_z + 0.5) - gammaln(syn_histo_f_z + 0.5)
-    # will be negative, thus reducing the final likelihood value.
-
-    # If no synthetic star falls in any observed bin (no overlap), the likelihood is
-    # constant (min_lkl) no matter where the synthetic stars are, i.e.: dist=1 for all
-    # these models. When most of the models sampled from the priors are in this
-    # situation (e.g.: small clusters in a small region of the CMD) this tie stalls
-    # the optimizer (pyABC's epsilon stays at 1). To break the tie, a penalty based on
-    # the photometric distance between the synthetic and observed clusters is added.
-    # This "pulls" the solution towards the region of the CMD where the observed
-    # cluster is located. The penalty is only applied to the no-overlap models, so
-    # that any model with some overlap (dist<1) is always better than any model with
-    # no overlap (dist>=1), and the former are ranked by the likelihood alone.
-    # Each dimension is scaled by the width of the Hess diagram range, so that the
-    # magnitude (usually spanning a much larger range) does not dominate the color.
-    # Both sums are computed identically, so they are exactly equal for no overlap
-    if tremmel_lkl <= min_lkl:
-        cmd_dist = ((obs_mag_median - _median(mag)) / cmd_widths[0]) ** 2 + (
-            (obs_col_median - _median(synth_clust[1])) / cmd_widths[1]
-        ) ** 2
-        return 1 + cmd_dist
-
-    return dist
 
 
 if _HAS_NUMBA:

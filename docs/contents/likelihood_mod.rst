@@ -43,19 +43,50 @@ dimension.
     # Define a likelihood object with a fixed binning
     likelihood = asteca.Likelihood(my_cluster, bin_method="fixed")
 
-After this, we can evaluate the likelihood of a given synthetic cluster
-using the :py:meth:`asteca.Likelihood.get` method:
+After this, we can compare a given synthetic cluster with the observed one. The
+:py:class:`Likelihood <asteca.Likelihood>` object offers two methods for this, which
+share the same core: one for distance-based samplers or optimizers (e.g.: ABC,
+differential evolution) and one for likelihood-based samplers (e.g.: MCMC, sequential
+Monte Carlo, nested sampling).
+
+The :py:meth:`asteca.Likelihood.dist` method returns a **normalized and inverted**
+likelihood, which serves as a distance measure between the observed and the synthetic
+data:
 
 .. code-block:: python
 
     # Generate an array with synthetic data, as described in previous sections
     synth_cluster_arr = synthcl.generate(params)
 
-    # Evaluate versus a synthetic cluster
-    lkl = likelihood.get(synth_cluster_arr)
+    # Distance between the observed and synthetic clusters
+    dist = likelihood.dist(synth_cluster_arr)
 
-The result is a **normalized and inverted** likelihood which serves as a distance
-measure between the observed and the synthetic data, where the best value is then ``0``.
+The best value is ``0`` (exact match) and a value of ``1`` means that no synthetic star
+falls in any of the observed bins. Synthetic clusters with no overlap get ``1`` plus a
+penalty that grows with their photometric distance to the observed cluster, which
+guides the samplers towards the region of the observed cluster, and empty synthetic
+clusters get a distance of ``10``.
+
+The :py:meth:`asteca.Likelihood.log_lkl` method returns the log-likelihood relative to
+its maximum value (the observed cluster evaluated against itself), so that ``0`` is
+again the best value:
+
+.. code-block:: python
+
+    # Log-likelihood of the synthetic cluster
+    lnl = likelihood.log_lkl(synth_cluster_arr)
+
+    # Tempered log-likelihood, which widens the posterior
+    lnl = likelihood.log_lkl(synth_cluster_arr, temperature=2)
+
+Its ``temperature`` argument divides the log-likelihood, which widens the posterior by
+a factor of about :math:`\sqrt{T}`. Values larger than ``1`` can be used to account for
+sources of uncertainty that are not included in the likelihood, such as the random
+sampling of the synthetic clusters or the mismatch between the models and the observed
+data. These dominate for clusters with many members, where a ``temperature`` of ``1``
+gives uncertainties that are too small (see :ref:`paramfit_pocomc_ntbk` for an example).
+No-overlap and empty synthetic clusters are given the log-likelihood that corresponds
+to their distance, ``-dist * (max_lkl - min_lkl) / temperature``.
 
 
 

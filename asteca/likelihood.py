@@ -80,7 +80,7 @@ class Likelihood:
         if color2 is not None:
             colors += [color2]
 
-        # Obtain data used by the ``likelihood.get()`` method
+        # Obtain data used by the ``dist()`` and ``log_lkl()`` methods
         self.ranges, self.Nbins = lpriv.bin_edges_f(bin_method, self.mag, colors)
         self.cl_z_idx, self.cl_histo_f_z, self.table2d = lpriv.lkl_data(
             self.mag, colors, self.ranges, self.Nbins
@@ -118,16 +118,33 @@ class Likelihood:
         self.row_off = self.cl_histo_f_z.astype(np.intp) * self.table2d.shape[1]
         # Largest number of synthetic stars per bin covered by the table
         self.m_max = int(self.table2d.shape[1] - 1)
+        tremmel_args = (
+            self.hist_args,
+            self.nz_pos,
+            self.row_off,
+            self.table_flat,
+            self.m_max,
+        )
         # Minimum likelihood, obtained when no synthetic star falls in any observed
-        # bin (all m_i=0). Used to normalize the distance so that 1 means no match
-        self.min_lkl = float(self.table_flat.take(self.row_off).sum())
+        # bin (all m_i=0). Used to normalize the distance so that 1 means no match.
+        # This is equal to 'table_flat.take(row_off).sum()' but it is obtained with
+        # the same core that evaluates the synthetic clusters (a single star below
+        # the lower limit of every range), so that the sum is performed in the same
+        # order and the 'lkl <= min_lkl' check in _eval() is not affected by rounding
+        no_overlap_star = np.array(
+            [[self.hist_args[0, 1] - 1.0]]
+            + [[ymin - 1.0] for ymin in self.hist_args[:, 4]]
+        )
+        self.min_lkl = float(lpriv.tremmel(*tremmel_args, no_overlap_star))
 
-        self.max_lkl = np.inf
-        if self.lkl_name == "plr":
-            # Evaluate cluster against itself to obtain the maximum likelihood.
-            self.max_lkl = self.get(np.array([self.mag, *colors]))
-            # This is equal to evaluating
-            # max_lkl = sum([gammaln(2*_ + 0.5) - gammaln(_ + 0.5) for _ in cl_histo_f_z])
+        # Maximum likelihood, obtained evaluating the cluster against itself. This is
+        # equal to: sum([gammaln(2*_ + 0.5) - gammaln(_ + 0.5) for _ in cl_histo_f_z])
+        self.max_lkl = float(
+            lpriv.tremmel(*tremmel_args, np.array([self.mag, *colors]))
+        )
+        # Range of the likelihood for synthetic clusters that overlap the observed
+        # one, used to convert between log-likelihoods and distances
+        self.lkl_range = self.max_lkl - self.min_lkl
 
         self._vp("\nLikelihood object generated")
 
@@ -136,8 +153,15 @@ class Likelihood:
         if self.verbose > level:
             print(mssg)
 
-    def get(self, synth_clust: np.ndarray) -> float:
-        """Evaluate the selected likelihood function.
+    def dist(self, synth_clust: np.ndarray) -> float:
+        """Distance between the observed cluster and a synthetic cluster, for
+        distance-based samplers or optimizers (e.g.: ABC, differential evolution).
+
+        This is the normalized and inverted likelihood:
+        ``(max_lkl - lkl) / (max_lkl - min_lkl)``, which goes from ``0`` (exact match)
+        to ``1`` (no synthetic star in any of the observed bins). Synthetic clusters
+        with no overlap get ``1`` plus a penalty that grows with their photometric
+        distance to the observed cluster, and empty synthetic clusters get ``10``.
 
         :param synth_clust: Array containing the synthetic cluster data. The
             shape of this array is assumed to be: ``[magnitude, color1, (color2)]``,
@@ -146,9 +170,62 @@ class Likelihood:
             If the array contains any extra columns beyond these they will be ignored.
         :type synth_clust: np.ndarray
 
-        :raise ValueError: If the likelihood function is not recognized
+        :return: Distance value, ``0`` is the best value
+        :rtype: float
+        """
+        # lkl = self._eval(synth_clust)
+        # Since table2d[n, m] grows with m for n>0, lkl >= min_lkl and thus dist <= 1
+        # for synthetic clusters that overlap the observed one (see _eval() for the
+        # rest).
+        # This is only a rescaling of '1 - lkl / max_lkl', it does not change the
+        # ordering of the distances but puts the values on the same 0–1 scale for all
+        # clusters (1 = no overlap)
+        return (self.max_lkl - self._eval(synth_clust)) / self.lkl_range
 
-        :return: Likelihood value
+    def log_lkl(self, synth_clust: np.ndarray, temperature: float = 1.0) -> float:
+        """Log-likelihood of a synthetic cluster, for likelihood-based samplers
+        (e.g.: MCMC, sequential Monte Carlo, nested sampling).
+
+        The value is ``(lkl - max_lkl) / temperature``, i.e.: the log-likelihood
+        relative to its maximum (the observed cluster evaluated against itself), so
+        that ``0`` is the best value. This equals ``-dist * (max_lkl - min_lkl) /
+        temperature``, where ``dist`` is the value returned by :py:meth:`dist`, which
+        is also used for synthetic clusters with no overlap with the observed one
+        (and for empty ones), so that these are not all assigned the same value.
+
+        The ``temperature`` flattens the likelihood (tempered or "power" likelihood),
+        which widens the posterior by a factor of about ``sqrt(temperature)``. Values
+        larger than ``1`` can be used to account for sources of uncertainty not
+        included in the likelihood, e.g.: the random sampling of the synthetic
+        clusters or the mismatch between the model and the observed data, which
+        dominate for clusters with many members.
+
+        :param synth_clust: Array containing the synthetic cluster data, same as in
+            :py:meth:`dist`
+        :type synth_clust: np.ndarray
+        :param temperature: Likelihood temperature, must be positive. Defaults to
+            ``1`` (no tempering)
+        :type temperature: float
+
+        :return: Log-likelihood value, ``0`` is the best value
+        :rtype: float
+        """
+        return (self._eval(synth_clust) - self.max_lkl) / temperature
+
+    def _eval(self, synth_clust: np.ndarray) -> float:
+        """Core shared by :py:meth:`dist` and :py:meth:`log_lkl`.
+
+        Returns the log-likelihood of the synthetic cluster if it overlaps the
+        observed bins. Otherwise the raw value would be ``min_lkl`` for every such
+        model, so a 'no match' distance ``d >= 1`` is assigned instead (``10`` for an
+        empty synthetic cluster, or a penalty that grows with its photometric
+        distance to the observed cluster) and converted to log-likelihood units as
+        ``max_lkl - d * (max_lkl - min_lkl)``, so that :py:meth:`dist` returns ``d``.
+
+        :param synth_clust: Array containing the synthetic cluster data
+        :type synth_clust: np.ndarray
+
+        :return: Log-likelihood value
         :rtype: float
         """
         from .modules import likelihood_priv as lpriv
@@ -156,21 +233,31 @@ class Likelihood:
         # Ignore any extra columns beyond the main photometry
         synth_clust = synth_clust[: self.m_ini_idx]
 
-        if self.lkl_name == "plr":
-            return lpriv.tremmel(
-                self.hist_args,
-                self.nz_pos,
-                self.row_off,
-                self.table_flat,
-                self.m_max,
-                self.obs_mag_median,
-                self.obs_col_median,
-                self.cmd_widths,
-                self.max_lkl,
-                self.min_lkl,
-                synth_clust,
+        # Empty synthetic cluster, assign '10' indicating a large distance
+        if synth_clust.size == 0:
+            # no_match_dist = 10.0
+            # Convert penalty from distance scale to log-likelihood scale
+            return self.max_lkl - 10.0 * self.lkl_range
+
+        # Compute the Tremmel log-likelihood of the synthetic cluster
+        lkl = lpriv.tremmel(
+            self.hist_args,
+            self.nz_pos,
+            self.row_off,
+            self.table_flat,
+            self.m_max,
+            synth_clust,
+        )
+
+        # No synthetic star falls in any observed bin
+        if lkl <= self.min_lkl:
+            no_match_dist = lpriv.no_overlap_dist(
+                self.obs_mag_median, self.obs_col_median, self.cmd_widths, synth_clust
             )
-        raise ValueError(f"Likelihood '{self.lkl_name}' not recognized")
+            # Convert penalty from distance scale to log-likelihood scale
+            return self.max_lkl - no_match_dist * self.lkl_range
+
+        return lkl
 
     def cmd_overlap(
         self, synth_clust: np.ndarray, h_mag: float = 0.3, h_col: float = 0.075
