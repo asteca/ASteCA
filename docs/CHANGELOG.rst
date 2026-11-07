@@ -45,6 +45,13 @@ jump to 0.8.0. The most important changes are:
   an empty synthetic cluster is returned
 - A warning is shown when the ``GAIADR3`` extinction law is used with a default ``Rv``
   value different from ``3.1``, since this law does not use the ``Rv`` parameter
+- ``Likelihood.get()`` was renamed to ``Likelihood.dist()`` (**breaking change**),
+  which returns the same normalized distance as before. Added the
+  ``Likelihood.log_lkl()`` method, which returns the log-likelihood (relative to its
+  maximum) for likelihood-based samplers, with an optional ``temperature`` argument
+  that flattens the likelihood to widen the posterior. Both methods share the same
+  core, so ``log_lkl()`` no longer requires converting the distance back with
+  ``max_lkl - min_lkl``
 - Added the ``Likelihood.cmd_overlap()`` method, a goodness of fit value that can be
   compared across clusters with any number of stars
 - The likelihood distance is now normalized so that ``1`` always means no overlap
@@ -82,7 +89,8 @@ jump to 0.8.0. The most important changes are:
   Speed improvements compared to v0.7.0:
 
   - Faster generation of synthetic clusters (~2.8X with ``numba``, ~30% without)
-  - Faster ``Likelihood.get()`` (~2X with ``numba``, same speed without)
+  - Faster ``Likelihood.dist()`` (formerly ``get()``; ~2X with ``numba``, same speed
+    without)
   - Faster IMF sampling when instantiating ``Synthetic`` (~5X with ``numba``, ~3X
     without); the sampled masses are unchanged for a given seed
   - Faster ``Synthetic.get_models()`` (~2X, with or without ``numba``)
