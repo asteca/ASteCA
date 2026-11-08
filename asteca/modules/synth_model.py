@@ -879,6 +879,24 @@ def extinction(
         )
         return isochrone
 
+    if _HAS_NUMBA and ext_law == "CCMO":
+        # Compiled version: identical results, see _extinction_ccmo_nb()
+        ec_mag, ec_col1, ec_col2 = ccmo_coefs(ext_coefs, Rv)
+        _extinction_ccmo_nb(
+            isochrone,
+            dr_frac,
+            1 if dr > 0.0 else 0,
+            Av,
+            dr,
+            m_ini_idx,
+            binar_flag,
+            ec_mag,
+            ec_col1,
+            ec_col2,
+            len(ext_coefs) > 2,
+        )
+        return isochrone
+
     Av_dr = Av
     if dr > 0.0:
         Ns = isochrone.shape[-1]
@@ -1038,6 +1056,76 @@ if _HAS_NUMBA:
             if binar_flag:
                 isochrone[i_mb, i] += Ax  # Magnitude (binary system)
                 isochrone[i_cb, i] += Ex  # First color (binary system)
+
+    @njit(cache=True)
+    def _extinction_ccmo_nb(
+        isochrone: np.ndarray,
+        dr_frac: np.ndarray,
+        dr_kind: int,
+        Av: float,
+        dr: float,
+        m_ini_idx: int,
+        binar_flag: bool,
+        ec_mag: float,
+        ec_col1: float,
+        ec_col2: float,
+        col2_flag: bool,
+    ) -> None:
+        """Compiled (numba) version of the CCMO branch of :py:func:`extinction`,
+        modifying 'isochrone' in place. The coefficients ``ec_*`` (``a + b / Rv``
+        values, see :py:func:`ccmo_coefs`) multiply the (differentially reddened)
+        absorption of each point. The floating point operations are the same and in
+        the same order as in the NumPy version, so the results are identical.
+
+        dr_kind: 0 -> scalar absorption Av (no differential reddening),
+        1 -> differential reddening A = Av + f * dr, with f from 'dr_frac'.
+        """
+        i_mb = m_ini_idx + 2
+        i_cb = m_ini_idx + 3
+        i_c2b = m_ini_idx + 4
+        A = Av
+        for i in range(isochrone.shape[1]):
+            if dr_kind == 1:
+                A = dr_frac[i] * dr
+                A += Av
+            Ax = ec_mag * A
+            Ex1 = ec_col1 * A
+            isochrone[0, i] += Ax  # Magnitude
+            isochrone[1, i] += Ex1  # First color
+            if binar_flag:
+                isochrone[i_mb, i] += Ax  # Magnitude (binary system)
+                isochrone[i_cb, i] += Ex1  # First color (binary system)
+            if col2_flag:
+                Ex2 = ec_col2 * A
+                isochrone[2, i] += Ex2  # Second color
+                if binar_flag:
+                    isochrone[i_c2b, i] += Ex2  # Second color (binary system)
+
+
+def ccmo_coefs(ext_coefs: list | np.ndarray, Rv: float) -> tuple[float, float, float]:
+    """Coefficients of the CCMO extinction law for a given ``Rv``: the ratios
+    ``A_mag / Av`` and ``E(color) / Av`` for the magnitude and the color(s), see
+    :py:func:`extinction`.
+
+    :param ext_coefs: List of extinction coefficients, ``[ec_mag, ec_col1, ...]``
+    :type ext_coefs: list | np.ndarray
+    :param Rv: Total-to-selective extinction ratio.
+    :type Rv: float
+
+    :returns: Coefficients for the magnitude, the first color and the second color
+        (``0`` if there is no second color).
+    :rtype: tuple[float, float, float]
+    """
+    ec_mag = ext_coefs[0][0] + ext_coefs[0][1] / Rv
+    ec_col1 = (ext_coefs[1][0][0] + ext_coefs[1][0][1] / Rv) - (
+        ext_coefs[1][1][0] + ext_coefs[1][1][1] / Rv
+    )
+    ec_col2 = 0.0
+    if len(ext_coefs) > 2:
+        ec_col2 = (ext_coefs[2][0][0] + ext_coefs[2][0][1] / Rv) - (
+            ext_coefs[2][1][0] + ext_coefs[2][1][1] / Rv
+        )
+    return float(ec_mag), float(ec_col1), float(ec_col2)
 
 
 def gaiadr3_ext(X: np.ndarray, A: float | np.ndarray) -> tuple[np.ndarray, np.ndarray]:
