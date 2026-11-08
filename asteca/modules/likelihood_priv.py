@@ -249,10 +249,11 @@ def no_overlap_dist(
     :return: Distance, ``>= 1``
     :rtype: float
     """
-    cmd_dist = ((obs_mag_median - _median(synth_clust[0])) / cmd_widths[0]) ** 2 + (
-        (obs_col_median - _median(synth_clust[1])) / cmd_widths[1]
-    ) ** 2
-    return 1 + cmd_dist
+    d_mag = (obs_mag_median - _median(synth_clust[0])) / cmd_widths[0]
+    d_col = (obs_col_median - _median(synth_clust[1])) / cmd_widths[1]
+    # x*x instead of x**2: the latter (libm's pow) can differ by one ulp, and the
+    # same operation is used in synth_batch._lnl_one()
+    return 1 + (d_mag * d_mag + d_col * d_col)
 
 
 def _median(x: np.ndarray) -> float:
