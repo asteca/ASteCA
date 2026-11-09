@@ -457,6 +457,219 @@ class Synthetic:
 
         return synth_arr
 
+    def generate_batch(
+        self, params: dict | None = None, N_stars: int = 100
+    ) -> list[np.ndarray]:
+        """Generate a batch of synthetic clusters.
+
+        Same as calling :py:meth:`generate` for each set of parameters, with identical
+        results, but faster: with `numba <https://numba.pydata.org/>`__ installed the
+        whole batch is generated in a single compiled call, which removes the Python
+        overhead of each call (the gain is largest for clusters with few stars).
+        **Without numba there is no speedup**: :py:meth:`generate` is called for each
+        model, which is equivalent to (and as fast as) calling it in a loop.
+
+        The ``params`` dictionary holds an array of values for each parameter, all
+        with the same length (the number of models), or a single value shared by all
+        the models. Parameters not included take the default values defined in the
+        :py:class:`Synthetic` object. E.g., for an array ``x`` of shape
+        ``(N_models, N_params)`` with the values of the parameters in ``names``:
+        ``params = dict(zip(names, x.T))``
+
+        A ``ValueError`` is raised in the same cases as in :py:meth:`generate`, for
+        any of the models.
+
+        :param params: Dictionary with the values of the fundamental parameters for
+            each model
+        :type params: dict | None
+        :param N_stars: Number of synthetic stars to generate if the object was not
+            calibrated, see :py:meth:`generate`
+        :type N_stars: int
+
+        :return: List with one synthetic cluster per model, each one equal to the
+            array returned by :py:meth:`generate`
+        :rtype: list[np.ndarray]
+        """
+        from .modules import synth_batch as sb
+
+        P = self._batch_params(params)
+        if not sb.available(self.ext_law):
+            return [
+                self.generate(dict(zip(sb.FULL_PARAMS, p)), N_stars=N_stars) for p in P
+            ]
+
+        out = sb._generate_batch(*self._batch_args(P, N_stars))
+        # generate() returns an empty 1D array for an empty synthetic cluster
+        return [a if a.shape[1] else np.array([]) for a in out]
+
+    def _log_lkl_batch(
+        self,
+        likelihood,
+        params: dict | None,
+        temperature: float,
+        parallel: bool,
+        n_threads: int | None,
+    ) -> np.ndarray:
+        """Log-likelihoods of a batch of synthetic clusters.
+
+        This is the implementation of :py:meth:`asteca.Likelihood.log_lkl_batch`,
+        which is the public method (see its docstring for the arguments and the
+        exceptions raised) and simply forwards its call here.
+
+        It is defined in this class, and not in :py:class:`asteca.Likelihood`,
+        because almost all of the work is the generation of the synthetic clusters,
+        and the likelihood of each one is only its last step. The compiled functions
+        in :py:mod:`synth_batch` generate each synthetic cluster and evaluate its
+        likelihood in the same call (the synthetic clusters never go back to Python,
+        which is where the gain comes from), so this can not be split into a
+        ``Synthetic`` part and a ``Likelihood`` part. Nearly all of the arrays used
+        belong to this object (isochrones, IMF samples, pre-drawn random values,
+        default parameters, calibrated errors, plus the ``_batch_data`` cache stored
+        here), while only a few, small, arrays come from the
+        :py:class:`asteca.Likelihood` object. Reading those from ``likelihood`` here
+        keeps the generation machinery in one place, instead of having
+        :py:class:`asteca.Likelihood` access many private attributes of this class.
+        The public method is exposed in :py:class:`asteca.Likelihood` because it
+        returns log-likelihoods, which is where users look for it.
+
+        Without numba, :py:meth:`generate` and :py:meth:`asteca.Likelihood.log_lkl`
+        are called for each model, and ``parallel`` and ``n_threads`` are ignored.
+
+        :return: Array with the log-likelihood of each model, ``0`` is the best value
+        :rtype: np.ndarray
+        """
+        from .modules import synth_batch as sb
+
+        self._check_calibrated()
+        if not temperature > 0:
+            raise ValueError(f"'temperature' must be positive, got {temperature}")
+        if likelihood.m_ini_idx != self.m_ini_idx:
+            raise ValueError(
+                "The number of colors in the 'Likelihood' and 'Synthetic' objects "
+                + "do not match"
+            )
+
+        P = self._batch_params(params)
+        if not sb.available(self.ext_law):
+            return np.array(
+                [
+                    likelihood.log_lkl(
+                        self.generate(dict(zip(sb.FULL_PARAMS, p))), temperature
+                    )
+                    for p in P
+                ]
+            )
+
+        lk = likelihood
+        args = (
+            *self._batch_args(P),
+            lk.m_ini_idx,
+            lk.hist_args,
+            lk.nz_pos,
+            lk.row_off,
+            lk.table_flat,
+            lk.m_max,
+            lk.min_lkl,
+            lk.max_lkl,
+            lk.lkl_range,
+            float(lk.obs_mag_median),
+            float(lk.obs_col_median),
+            float(lk.cmd_widths[0]),
+            float(lk.cmd_widths[1]),
+            float(temperature),
+        )
+        if not parallel:
+            return sb._lnl_batch_serial(*args)
+        if n_threads is None:
+            return sb._lnl_batch_parallel(*args)
+
+        import numba
+
+        # 'n_threads' is only validated here, where it is used
+        if (
+            isinstance(n_threads, bool)
+            or not isinstance(n_threads, (int, np.integer))
+            or n_threads < 1
+        ):
+            raise ValueError(f"'n_threads' must be a positive integer, got {n_threads}")
+        if n_threads > numba.config.NUMBA_NUM_THREADS:
+            raise ValueError(
+                f"'n_threads={n_threads}' can not be larger than NUMBA_NUM_THREADS="
+                + f"{numba.config.NUMBA_NUM_THREADS}"
+            )
+        # Set the number of threads for this call only
+        prev_threads = numba.get_num_threads()
+        numba.set_num_threads(int(n_threads))
+        try:
+            return sb._lnl_batch_parallel(*args)
+        finally:
+            numba.set_num_threads(prev_threads)
+
+    def _check_calibrated(self) -> None:
+        """Raise a ``ValueError`` if :py:meth:`calibrate` was not called"""
+        if not (
+            hasattr(self, "max_mag_syn_obs")
+            and hasattr(self, "err_dist_obs")
+            and hasattr(self, "N_stars_obs")
+        ):
+            raise ValueError(
+                "This method requires running the 'calibrate()' method first\n"
+                + "with an observed 'Cluster' object"
+            )
+
+    def _batch_params(self, params: dict | None) -> np.ndarray:
+        """Full parameter array for the batch methods, see synth_batch.full_params()"""
+        from .modules import synth_batch as sb
+
+        return sb.full_params(
+            {} if params is None else params,
+            self.def_params,
+            self.met_age_dict,
+            self.met_tol,
+            self.age_tol,
+        )
+
+    def _batch_args(self, P: np.ndarray, N_stars: int = 100) -> tuple:
+        """Arguments of the compiled batch functions in synth_batch"""
+        from .modules import synth_batch as sb
+
+        # Data that does not change after the object is created, obtained once
+        if getattr(self, "_batch_data", None) is None:
+            self._batch_data = sb.batch_data(self)
+        bd = self._batch_data
+
+        # Same as in generate()
+        try:
+            max_mag_syn = self.max_mag_syn_obs
+            err_dist_synth = self.err_dist_obs
+            N_synth_stars = self.N_stars_obs
+        except AttributeError:
+            max_mag_syn = np.inf
+            err_dist_synth = []
+            N_synth_stars = int(N_stars)
+        if len(err_dist_synth):
+            err = np.array(err_dist_synth, dtype=float)
+        else:
+            err = np.empty((0, 0))
+
+        return (
+            P,
+            bd["met_grid"],
+            bd["age_grid"],
+            self.theor_tracks,
+            self.m_ini_idx,
+            bd["st_list"],
+            bd["midx_list"],
+            bd["N_a"],
+            bd["dr_frac"],
+            bd["ext_kind"],
+            bd["ccm"],
+            bd["unif1"],
+            float(max_mag_syn),
+            err,
+            int(N_synth_stars),
+        )
+
     def get_models(
         self,
         model: dict[str, float],
@@ -488,15 +701,7 @@ class Synthetic:
             - If the `calibrate()` method was not previously called
             - If all the synthetic arrays generated are empty
         """
-        if (
-            hasattr(self, "max_mag_syn_obs") is False
-            or hasattr(self, "err_dist_obs") is False
-            or hasattr(self, "N_stars_obs") is False
-        ):
-            raise ValueError(
-                "This method requires running the 'calibrate()' method first\n"
-                + "with an observed 'Cluster' object"
-            )
+        self._check_calibrated()
 
         from .modules import stellar_stats_funcs as ssf
         from .modules import synth_cluster_priv as scp
