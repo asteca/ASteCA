@@ -43,7 +43,7 @@ class Isochrones:
         used to generate the synthetic clusters. If ``float``, it must represent the
         solar metallicity for these isochrones. The metallicity values will then be
         converted to ``[FeH]`` values, to be used by the
-        :py:meth:`Synthetic.generate` method
+        :py:meth:`asteca.Synthetic.generate` method
     :type z_to_FeH: float | None
     :param N_points: Number of interpolation points used to ensure that all isochrones
         are the same shape. Ignored for isochrones with EEPs (MIST), which are

@@ -558,11 +558,11 @@ def mass_idx_lookup(
     theor_tracks: np.ndarray, st_dist_mass: list, m_ini_idx: int
 ) -> dict:
     """Pre-compute the search indexes of each sampled IMF mass distribution into
-    the mass grid of the isochrones, used by :py:func:`mass_interp`.
+    the mass grid of the isochrones, used by :py:func:`synth_model.mass_interp`.
 
-    In :py:func:`get_model` the masses of the isochrone are always taken from a
-    single node of the (z, log(age)) grid: the closest node (m0, a0) to the model,
-    with m0 in (ml, mh) and a0 in (al, ah). The IMF sample used is
+    In :py:func:`synth_model.get_model` the masses of the isochrone are always taken
+    from a single node of the (z, log(age)) grid: the closest node (m0, a0) to the
+    model, with m0 in (ml, mh) and a0 in (al, ah). The IMF sample used is
     ``st_dist_mass[ml][al]``. Hence, for each IMF sample (ml, al) only the (up to)
     four nodes (ml or ml+1, al or al+1) are required.
 

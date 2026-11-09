@@ -31,7 +31,7 @@ a comparison Color-Magnitude Diagram (CMD).
 pyABC versus pocoMC
 -------------------
 
-**pyABC** uses the distance returned by :py:meth:`asteca.Likelihood.get` directly,
+**pyABC** uses the distance returned by :py:meth:`asteca.Likelihood.dist` directly,
 with no likelihood scaling to choose. Its uncertainties are usually somewhat wider,
 which in our tests with simulated clusters gave better calibrated error bars for
 clusters with many members. On the other hand it is slower, its results depend on
