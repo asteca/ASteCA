@@ -142,6 +142,8 @@ def sampleInv(
     inv_cdf: BSpline,
     N_chunk: int,
     N_draw: int,
+    lut: np.ndarray | None = None,
+    buf: np.ndarray | None = None,
 ) -> np.ndarray:
     """Sample the inverse CDF up to `Max_mass`
 
@@ -163,19 +165,32 @@ def sampleInv(
     :param N_draw: Number of uniform values drawn at once (a multiple of `N_chunk`).
         It is doubled if it is not enough to reach `Max_mass`
     :type N_draw: int
+    :param lut: Bucket lookup table of the inverse CDF knots, as returned by
+        :py:func:`invCDF_lut` (numba only). Computed if not given; pass it to
+        avoid re-computing it when this function is called repeatedly.
+    :type lut: np.ndarray | None
+    :param buf: Work array of at least `N_draw` elements, re-used to hold the
+        uniform values (avoids allocating a new array in each call).
+    :type buf: np.ndarray | None
 
     :return: Array of sampled masses.
     :rtype: np.ndarray
     """
+    if _HAS_NUMBA:
+        # The spline is of order k=1 (linear) so its knots without the
+        # boundary repetitions and its coefficients are the (x, y) points
+        x, y = inv_cdf.t[1:-1], inv_cdf.c
+        if lut is None:
+            lut = invCDF_lut(x)
+
     state = rng.bit_generator.state
     while True:
-        u_vals = rng.uniform(0.0, 1.0, N_draw)
+        if buf is None or buf.size < N_draw:
+            buf = np.empty(N_draw)
+        # Same values as rng.uniform(0.0, 1.0, N_draw)
+        u_vals = rng.random(out=buf[:N_draw])
         if _HAS_NUMBA:
-            # The spline is of order k=1 (linear) so its knots without the
-            # boundary repetitions and its coefficients are the (x, y) points
-            N_kept = _sample_chunks_nb(
-                u_vals, inv_cdf.t[1:-1], inv_cdf.c, Max_mass, N_chunk
-            )
+            N_kept = _sample_chunks_nb(u_vals, x, y, lut, Max_mass, N_chunk)  # pyright: ignore[reportPossiblyUnboundVariable]
             masses = u_vals
         else:
             masses = inv_cdf(u_vals)
@@ -200,8 +215,30 @@ def sampleInv(
     else:
         rng.uniform(0.0, 1.0, N_kept)
 
-    # Copy to release the values not kept
+    # Copy to release the values not kept (and the work array)
     return masses[:N_kept].copy()
+
+
+def invCDF_lut(x: np.ndarray, N_buckets: int = 4096) -> np.ndarray:
+    """Bucket lookup table for the knots of the inverse CDF.
+
+    The [0, 1] range is split into `N_buckets` equal buckets, and for each bucket
+    edge ``b / N_buckets`` the table stores the largest index ``k`` such that
+    ``x[k] < b / N_buckets`` (i.e.: ``np.searchsorted(x, b / N_buckets) - 1``).
+    This gives a starting point for the knot search of a uniform value that is
+    (almost always) at most a few knots away from the result, replacing the
+    binary search over all the knots.
+
+    :param x: Sorted knots of the inverse CDF (CDF values).
+    :type x: np.ndarray
+    :param N_buckets: Number of buckets, defaults to 4096
+    :type N_buckets: int
+
+    :return: Lookup table of `N_buckets + 1` indexes.
+    :rtype: np.ndarray
+    """
+    edges = np.arange(N_buckets + 1) / N_buckets
+    return (np.searchsorted(x, edges) - 1).astype(np.int64)
 
 
 if _HAS_NUMBA:
@@ -211,6 +248,7 @@ if _HAS_NUMBA:
         u_vals: np.ndarray,
         x: np.ndarray,
         y: np.ndarray,
+        lut: np.ndarray,
         Max_mass: float,
         N_chunk: int,
     ) -> int:
@@ -222,17 +260,27 @@ if _HAS_NUMBA:
         the original one chunk at a time loop did, and the conversion stops at
         the end of the first chunk that reaches 'Max_mass'.
 
+        The knot of each value is located starting from the bucket lookup table
+        'lut' (see :py:func:`invCDF_lut`) and walking to the largest 'k' with
+        x[k] < u, the same index given by ``np.searchsorted(x, u) - 1``. The
+        backward walk only guards against the rounding of ``u * N_buckets``.
+
         Returns the number of masses converted, or -1 if 'Max_mass' was not
         reached.
         """
         N_x = x.size
+        N_b = lut.size - 1
         Mass_tot = 0.0
         i = 0
         while i + N_chunk <= u_vals.size:
             chunk_mass = 0.0
             for _ in range(N_chunk):
                 u = u_vals[i]
-                k = np.searchsorted(x, u) - 1
+                k = lut[min(int(u * N_b), N_b)]
+                while k + 1 < N_x and x[k + 1] < u:
+                    k += 1
+                while k >= 0 and x[k] >= u:
+                    k -= 1
                 k = min(max(k, 0), N_x - 2)
                 m = y[k] + (u - x[k]) * (y[k + 1] - y[k]) / (x[k + 1] - x[k])
                 u_vals[i] = m

@@ -2,7 +2,7 @@ import numpy as np
 import numpy.typing as npt
 from scipy import stats
 
-from .imfs import invTrnsfSmpl, sampleInv
+from .imfs import invCDF_lut, invTrnsfSmpl, sampleInv
 
 
 def sample_imf(
@@ -36,11 +36,17 @@ def sample_imf(
     mean_mass = float(inv_cdf.integrate(0.0, 1.0))
     N_draw = (int(1.2 * max_mass / (mean_mass * N_chunk)) + 2) * N_chunk
 
+    # Knot lookup table and work array, shared by all the samples
+    lut = invCDF_lut(inv_cdf.t[1:-1])
+    buf = np.empty(N_draw)
+
     st_dist_mass = []
     for i in range(Nmets):
         met_lst = []
         for j in range(Nages):
-            sampled_IMF = sampleInv(rng, max_mass, inv_cdf, N_chunk, N_draw)
+            sampled_IMF = sampleInv(
+                rng, max_mass, inv_cdf, N_chunk, N_draw, lut=lut, buf=buf
+            )
             met_lst.append(sampled_IMF)
         st_dist_mass.append(met_lst)
 
