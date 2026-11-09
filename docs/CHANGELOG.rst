@@ -7,7 +7,7 @@ Changelog
 #########
 
 
-`[v0.8.0] <https://github.com/asteca/asteca/releases/tag/v0.8.0>`__ - 2026-11-06
+`[v0.8.0] <https://github.com/asteca/asteca/releases/tag/v0.8.0>`__ - 2026-11-XX
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 This is a very large update, with many breaking changes and bug fixes, hence the
@@ -96,6 +96,14 @@ jump to 0.8.0. The most important changes are:
   - Faster ``Synthetic.get_models()`` (~2X, with or without ``numba``)
   - Faster isochrone loading (~7X) and ``Membership.fastmp()`` (~30%), with or
     without ``numba``
+
+- Added the ``Synthetic.generate_batch()`` and ``Likelihood.log_lkl_batch()`` methods,
+  to generate many synthetic clusters (or their log-likelihoods) in a single call, with
+  identical results to calling ``Synthetic.generate()`` (and ``Likelihood.log_lkl()``)
+  for each model. With ``numba`` the whole batch is evaluated in one compiled call, and
+  ``log_lkl_batch()`` can distribute the models among several threads
+  (``parallel=True``), e.g.: for pocoMC with ``vectorize=True``. Without ``numba``
+  there is no speedup
 
 - Loading the sampled IMF masses now uses half the memory
 - Fixed: stars very close to the edges of the Hess diagram were discarded, which
