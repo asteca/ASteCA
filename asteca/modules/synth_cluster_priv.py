@@ -2,6 +2,8 @@ import numpy as np
 import numpy.typing as npt
 from scipy import stats
 
+from . import HAS_NUMBA as _HAS_NUMBA
+from . import njit
 from .imfs import invCDF_lut, invTrnsfSmpl, sampleInv
 
 
@@ -575,7 +577,8 @@ def mass_idx_lookup(
     The indexes are ``np.searchsorted(mass_grid, st_dist_mass[ml][al])`` where
     ``mass_grid = theor_tracks[m0][a0][m_ini_idx]``, i.e.: the full mass grid
     before the maximum magnitude cut. These are stored with the smallest integer
-    type that can hold them, to reduce memory usage.
+    type that can hold them, to reduce memory usage. With numba the (identical)
+    indexes are obtained by :py:func:`_mass_idx_nb`, using numba's threads.
 
     :param theor_tracks: Array of theoretical isochrones.
     :type theor_tracks: np.ndarray
@@ -592,12 +595,94 @@ def mass_idx_lookup(
     N_interp = theor_tracks.shape[-1]
     dtype = np.int16 if N_interp <= np.iinfo(np.int16).max else np.int32
 
-    lookup = {}
+    if not _HAS_NUMBA:
+        lookup = {}
+        for ml in range(N_z):
+            for al in range(N_a):
+                for m0 in sorted({ml, min(ml + 1, N_z - 1)}):
+                    for a0 in sorted({al, min(al + 1, N_a - 1)}):
+                        lookup[(ml, al, m0, a0)] = np.searchsorted(
+                            theor_tracks[m0][a0][m_ini_idx], st_dist_mass[ml][al]
+                        ).astype(dtype)
+        return lookup
+
+    from numba.typed import List
+
+    # Output arrays are allocated here and filled by the compiled function. They
+    # are passed in a typed list where the indexes for the (ml, al) sample and the
+    # node (m0, a0) are at position ((ml * N_a + al) * 2 + (m0 - ml)) * 2 + (a0 - al),
+    # the same layout used by synth_batch.batch_data(). Nodes beyond the grid's
+    # edges repeat the key (and the array) of the node inside the grid
+    lookup, st_list, midx_list = {}, List(), List()
     for ml in range(N_z):
         for al in range(N_a):
-            for m0 in sorted({ml, min(ml + 1, N_z - 1)}):
-                for a0 in sorted({al, min(al + 1, N_a - 1)}):
-                    lookup[(ml, al, m0, a0)] = np.searchsorted(
-                        theor_tracks[m0][a0][m_ini_idx], st_dist_mass[ml][al]
-                    ).astype(dtype)
+            st_list.append(st_dist_mass[ml][al])
+            for dz in (0, 1):
+                for da in (0, 1):
+                    key = (ml, al, min(ml + dz, N_z - 1), min(al + da, N_a - 1))
+                    if key not in lookup:
+                        lookup[key] = np.empty(st_dist_mass[ml][al].size, dtype)
+                    midx_list.append(lookup[key])
+
+    _mass_idx_nb(theor_tracks, m_ini_idx, st_list, midx_list, 4 * N_interp)
+
     return lookup
+
+
+if _HAS_NUMBA:
+    from numba import prange
+
+    @njit(inline="always")
+    def _sorted_idx_nb(g, lut, g0, inv_w, N_b, v):
+        """Left insertion index of 'v' in the sorted array 'g', i.e.:
+        ``np.searchsorted(g, v)``. The bucket table 'lut' only gives the
+        starting point, the walks that follow make the result exact."""
+        N = g.size
+        f = (v - g0) * inv_w
+        if f < 0.0:
+            b = 0
+        elif f >= N_b:
+            b = N_b
+        else:
+            b = int(f)
+        i = lut[b]
+        while i < N and g[i] < v:
+            i += 1
+        while i > 0 and g[i - 1] >= v:
+            i -= 1
+        return i
+
+    @njit(parallel=True, cache=True)
+    def _mass_idx_nb(theor_tracks, m_ini_idx, st_list, midx_list, N_b):
+        """Compiled (numba) version of :py:func:`mass_idx_lookup`, writing the
+        indexes into the arrays of 'midx_list'.
+
+        The loop runs over the nodes (m0, a0), distributed among numba's threads by
+        metallicity. Each node's mass grid is searched by the (up to) four IMF
+        samples (ml, al) with ml in (m0 - 1, m0) and al in (a0 - 1, a0). The search
+        starts from a table of ``N_b + 1`` equal width buckets over the grid's mass
+        range, built once per node, instead of a binary search over all the grid.
+        """
+        N_z, N_a = theor_tracks.shape[:2]
+        N = theor_tracks.shape[-1]
+        for m0 in prange(N_z):
+            lut = np.empty(N_b + 1, np.int64)
+            for a0 in range(N_a):
+                g = theor_tracks[m0, a0, m_ini_idx]
+                g0 = g[0]
+                w = (g[N - 1] - g0) / N_b
+                inv_w = 1.0 / w if w > 0.0 else 0.0
+                # lut[b] = np.searchsorted(g, g0 + b * w)
+                j = 0
+                for b in range(N_b + 1):
+                    edge = g0 + b * w
+                    while j < N and g[j] < edge:
+                        j += 1
+                    lut[b] = j
+                for ml in range(max(m0 - 1, 0), m0 + 1):
+                    for al in range(max(a0 - 1, 0), a0 + 1):
+                        s = ml * N_a + al
+                        masses = st_list[s]
+                        out = midx_list[(s * 2 + m0 - ml) * 2 + a0 - al]
+                        for i in range(masses.size):
+                            out[i] = _sorted_idx_nb(g, lut, g0, inv_w, N_b, masses[i])
