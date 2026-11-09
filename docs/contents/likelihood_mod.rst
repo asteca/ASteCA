@@ -90,6 +90,70 @@ to their distance, ``-dist * (max_lkl - min_lkl) / temperature``.
 
 
 
+.. _ref_log_lkl_batch:
+
+Log-likelihoods in batches
+==========================
+
+Some samplers evaluate many models at once, e.g.: pocoMC with ``vectorize=True``
+passes all the particles of a step to the log-likelihood as a single array. For these,
+the :py:meth:`asteca.Likelihood.log_lkl_batch` method takes a
+:py:class:`asteca.Synthetic` object and a set of parameters per model, generates the
+synthetic clusters, and returns an array with their log-likelihoods:
+
+.. code-block:: python
+
+    # Array x of shape (N_models, N_params), with the values of the parameters
+    # in the list 'names'
+    lnl = likelihood.log_lkl_batch(synthcl, dict(zip(names, x.T)), temperature=2)
+
+The results are identical to calling
+``likelihood.log_lkl(synthcl.generate(p), temperature)`` for each set of parameters
+``p``, but the synthetic clusters are not returned. The ``synthcl`` object must be
+calibrated with the same observed cluster used to define the ``likelihood`` object
+(a ``ValueError`` is raised if it was not calibrated).
+The parameters dictionary is defined as in :py:meth:`asteca.Synthetic.generate_batch`
+(see :ref:`ref_generating_batch`): an array of values for each parameter, all with the
+same length, or a single value shared by all the models; the parameters not included
+take the default values of the ``synthcl`` object.
+
+With `numba <https://numba.pydata.org/>`__ installed, the synthetic clusters and their
+log-likelihoods are obtained in a single compiled call, which removes the Python
+overhead of each model (the gain is largest for clusters with few stars).
+
+.. important::
+
+    **Without numba there is no speedup**: :py:meth:`asteca.Synthetic.generate` and
+    :py:meth:`asteca.Likelihood.log_lkl` are called for each model, which is
+    equivalent to (and as fast as) calling them in a loop. The code works the same in
+    both cases.
+
+With ``parallel=True`` the models are distributed among numba's threads: each thread
+generates the synthetic clusters of its models and evaluates their log-likelihoods,
+which also speeds up clusters with many stars, where the cost of each model is
+dominated by the actual computation. The ``parallel`` argument is ignored if numba is
+not installed.
+
+.. code-block:: python
+
+    # Evaluate the models in parallel threads, four threads for this call only
+    lnl = likelihood.log_lkl_batch(
+        synthcl, dict(zip(names, x.T)), temperature=2, parallel=True, n_threads=4
+    )
+
+The number of threads is set with ``n_threads``, for that call only. By default
+(``n_threads=None``) numba's own setting is used, which is one thread per CPU core
+unless changed with the ``NUMBA_NUM_THREADS`` environment variable (set before
+importing ``asteca``) or with ``numba.set_num_threads()``; ``n_threads`` can not be
+larger than ``NUMBA_NUM_THREADS``. If several fits are run at the same time, give each
+one a fraction of the CPU cores so that they do not compete for them. Each thread
+needs several models per call to be used efficiently, so the batch should be larger
+than the number of threads (for pocoMC the batch is ``n_active`` particles).
+
+See the :ref:`paramfit_pocomc_ntbk` notebook for a complete example.
+
+
+
 
 .. _plr:
 
@@ -212,7 +276,7 @@ cluster).
 Goodness of fit
 ===============
 
-The distance returned by :py:meth:`asteca.Likelihood.get` is useful to compare
+The distance returned by :py:meth:`asteca.Likelihood.dist` is useful to compare
 synthetic clusters for the *same* observed cluster, but its value can not be compared
 across clusters: even a perfect model gives :math:`d>0` because of the finite number of
 stars, and this "noise floor" depends on the number of stars and on the binning of the

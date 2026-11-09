@@ -646,6 +646,52 @@ approximately 50% of binary systems, distributed uniformly across masses
 
 
 
+.. _ref_generating_batch:
+
+Generating in batches
+=====================
+
+Many synthetic clusters can be generated at once with the
+:py:meth:`asteca.Synthetic.generate_batch` method. It returns a list with one synthetic
+cluster per set of parameters, each one identical to the array returned by
+:py:meth:`asteca.Synthetic.generate` for those parameters.
+
+The parameters are passed as a dictionary with an array of values for each parameter,
+all with the same length (the number of models). A single value is shared by all the
+models, and the parameters not included take the default values of the
+:obj:`synthcl` object, as in :py:meth:`asteca.Synthetic.generate`. For example, to
+generate three synthetic clusters that only differ in their distance modulus:
+
+.. code-block:: python
+
+    params = {"met": 0.0152, "loga": 8.0, "Av": 0.1, "dm": [7.5, 8.0, 8.5]}
+    synth_list = synthcl.generate_batch(params, N_stars=2000)
+
+For an array ``x`` of shape ``(N_models, N_params)`` with the values of the
+parameters in the list ``names``, the dictionary is simply
+``params = dict(zip(names, x.T))``.
+
+With `numba`_ installed, the whole batch is generated in a single compiled call, which
+removes the Python overhead of each call to :py:meth:`asteca.Synthetic.generate` (the
+gain is largest for clusters with few stars). The batch is always generated in a single
+thread.
+
+.. important::
+
+    **Without numba there is no speedup**: :py:meth:`asteca.Synthetic.generate` is
+    called for each model, which is equivalent to (and as fast as) calling it in a
+    loop. The code works the same in both cases.
+
+To fit parameters with samplers that evaluate many models at once, the
+:py:meth:`asteca.Likelihood.log_lkl_batch` method generates the synthetic clusters
+and evaluates their log-likelihoods in the same compiled call, optionally in parallel
+threads, without returning the synthetic clusters. See :ref:`ref_log_lkl_batch` for
+details, and the :ref:`paramfit_pocomc_ntbk` notebook for an example.
+
+.. _numba: https://numba.pydata.org/
+
+
+
 
 
 
