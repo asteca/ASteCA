@@ -27,6 +27,25 @@ def available(ext_law: str) -> bool:
     return _HAS_NUMBA and ext_law in ("GAIADR3", "CCMO")
 
 
+def check_n_threads(n_threads) -> None:
+    """Raise a ``ValueError`` if ``n_threads`` is not an integer between ``1`` and
+    ``NUMBA_NUM_THREADS``. Only called when the threads are actually used (numba
+    installed and ``parallel=True``)."""
+    import numba
+
+    if (
+        isinstance(n_threads, bool)
+        or not isinstance(n_threads, (int, np.integer))
+        or n_threads < 1
+    ):
+        raise ValueError(f"'n_threads' must be a positive integer, got {n_threads!r}")
+    if n_threads > numba.config.NUMBA_NUM_THREADS:
+        raise ValueError(
+            f"'n_threads={n_threads}' can not be larger than NUMBA_NUM_THREADS="
+            + f"{numba.config.NUMBA_NUM_THREADS}"
+        )
+
+
 def ccmo_array(ext_law: str, ext_coefs: list) -> np.ndarray:
     """CCMO extinction coefficients as an array for the compiled functions: one row
     ``[a, b, 0, 0]`` for the magnitude and one row ``[a1, b1, a2, b2]`` for each
