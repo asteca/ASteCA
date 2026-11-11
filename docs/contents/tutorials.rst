@@ -39,8 +39,9 @@ parameters. Optionally, the generator can be calibrated with observed cluster da
 the :py:meth:`asteca.Synthetic.calibrate` method to enhance realism in terms of star count, magnitude limits, and errors. The process culminates in visualizing the resulting synthetic Color-Magnitude Diagrams (CMDs), often distinguishing stellar systems and potentially overlaying the underlying isochrone.
 
 The :ref:`paramfit_section` section contains two notebooks that provide a
-step-by-step guide to estimating the fundamental parameters of a stellar cluster
-by combining **ASteCA** with the `pyABC`_ and `pocoMC`_ libraries. They show how to set
+step-by-step guide to estimating the fundamental parameters of a stellar cluster,
+with the `pyABC`_ library and with the :py:class:`asteca.Sampler` class (adapted from
+the `pocoMC`_ library). They show how to set
 up the fitting process, run it, and interpret the results, including the final
 parameter estimates (medians and standard deviations), the goodness of fit (CMD
 overlap), and a comparison Color-Magnitude Diagram (CMD).

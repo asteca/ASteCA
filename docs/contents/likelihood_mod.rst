@@ -95,8 +95,9 @@ to their distance, ``-dist * (max_lkl - min_lkl) / temperature``.
 Log-likelihoods in batches
 ==========================
 
-Some samplers evaluate many models at once, e.g.: pocoMC with ``vectorize=True``
-passes all the particles of a step to the log-likelihood as a single array. For these,
+Some samplers evaluate many models at once, e.g.: :py:class:`asteca.Sampler` (which
+uses this method internally) or pocoMC with ``vectorize=True``, which pass all the
+particles of a step to the log-likelihood as a single array. For these,
 the :py:meth:`asteca.Likelihood.log_lkl_batch` method takes a
 :py:class:`asteca.Synthetic` object and a set of parameters per model, generates the
 synthetic clusters, and returns an array with their log-likelihoods:

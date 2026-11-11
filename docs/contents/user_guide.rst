@@ -19,6 +19,7 @@ their functionalities:
    isochrones_mod
    synthetic_mod
    likelihood_mod
+   sampler_mod
 
 
 .. seealso::

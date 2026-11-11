@@ -6,6 +6,7 @@ from .cluster import Cluster
 from .isochrones import Isochrones
 from .likelihood import Likelihood
 from .membership import Membership
+from .sampler import Sampler
 from .synthetic import Synthetic
 
 __all__ = [
@@ -13,6 +14,7 @@ __all__ = [
     "Isochrones",
     "Likelihood",
     "Membership",
+    "Sampler",
     "Synthetic",
 ]
 
