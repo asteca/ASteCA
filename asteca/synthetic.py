@@ -586,17 +586,7 @@ class Synthetic:
         import numba
 
         # 'n_threads' is only validated here, where it is used
-        if (
-            isinstance(n_threads, bool)
-            or not isinstance(n_threads, (int, np.integer))
-            or n_threads < 1
-        ):
-            raise ValueError(f"'n_threads' must be a positive integer, got {n_threads}")
-        if n_threads > numba.config.NUMBA_NUM_THREADS:
-            raise ValueError(
-                f"'n_threads={n_threads}' can not be larger than NUMBA_NUM_THREADS="
-                + f"{numba.config.NUMBA_NUM_THREADS}"
-            )
+        sb.check_n_threads(n_threads)
         # Set the number of threads for this call only
         prev_threads = numba.get_num_threads()
         numba.set_num_threads(int(n_threads))
