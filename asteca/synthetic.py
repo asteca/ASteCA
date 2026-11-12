@@ -285,6 +285,9 @@ class Synthetic:
 
         Use the data obtained from your observed cluster, stored in the
         :py:class:`Cluster` object, to calibrate a :py:class:`Synthetic` object.
+        The observed cluster is also binned into a Hess diagram (with Knuth's rule
+        for the number of bins), used by the likelihood of the
+        :py:class:`asteca.Sampler` (see :ref:`sampler_module`).
 
         See the :ref:`synthetic_module` section for more details.
 
@@ -297,6 +300,7 @@ class Synthetic:
             - If the number of colors defined in the :py:class:`Cluster` and
               :py:class:`Synthetic` objects do not match
         """
+        from .modules import likelihood_priv as lpriv
         from .modules import synth_cluster_priv as scp
 
         if cluster.mag is None:
@@ -366,6 +370,12 @@ class Synthetic:
         self.cluster_ra = cluster.ra
         self.cluster_dec = cluster.dec
 
+        # Data used by the likelihood (asteca.Sampler)
+        colors = [cluster.color]
+        if cluster.color2 is not None:
+            colors += [cluster.color2]
+        self._lkl = lpriv.Tremmel(cluster.mag, colors)
+
         self._vp("\nCalibrated observed cluster")
         self._vp(f"N_stars_obs    : {self.N_stars_obs}", 1)
         self._vp(f"Max magnitude  : {self.max_mag_syn_obs:.2f}", 1)
@@ -373,7 +383,7 @@ class Synthetic:
 
     def generate(
         self,
-        params: dict | None = None,
+        params: dict[str, float] | None = None,
         N_stars: int = 100,
         show_errors: bool = False,
     ) -> np.ndarray:
@@ -469,6 +479,10 @@ class Synthetic:
         **Without numba there is no speedup**: :py:meth:`generate` is called for each
         model, which is equivalent to (and as fast as) calling it in a loop.
 
+        This method (or :py:meth:`generate`) is the entry point to combine the
+        synthetic clusters with a likelihood or distance and a sampler of the user's
+        choosing (see :ref:`own_lkl_sampler`).
+
         The ``params`` dictionary holds an array of values for each parameter, all
         with the same length (the number of models), or a single value shared by all
         the models. Parameters not included take the default values defined in the
@@ -502,38 +516,95 @@ class Synthetic:
         # generate() returns an empty 1D array for an empty synthetic cluster
         return [a if a.shape[1] else np.array([]) for a in out]
 
-    def _log_lkl_batch(
+    def cmd_overlap(  # noqa: DOC502, RUF100
+        self, synth_clust: np.ndarray, h_mag: float = 0.3, h_col: float = 0.075
+    ) -> tuple[float, float]:
+        """Goodness of fit of a synthetic cluster, that can be compared across
+        observed clusters with any number of stars.
+
+        The value is ``D = 1 - 2 * K_os / (K_oo + K_ss)``, where ``K_os`` is the mean
+        value of a Gaussian kernel (with widths ``h_mag`` and ``h_col``) over all the
+        pairs of observed and synthetic stars, and ``K_oo`` and ``K_ss`` are the mean
+        values over the pairs of distinct observed stars and of distinct synthetic
+        stars. ``D`` is the normalized squared difference between the observed and
+        synthetic densities in the CMD (magnitude and first color), both smoothed
+        with the kernel: ``0`` means the same distribution and ``1`` means no overlap.
+
+        Since stars are never compared with themselves, a synthetic cluster drawn
+        from the same distribution as the observed one gives ``D=0`` on average for
+        any number of stars, and a given mismatch gives on average the same ``D`` for
+        any number of stars. Individual values fluctuate around ``0`` and can be
+        negative: ``D<0`` is a match within the noise (compare it with ``D_std``),
+        not an error. Values are not clipped to ``0``, as this would bias their
+        average upwards. ``D<=0.25`` is a reasonable general threshold for a good
+        fit (see :ref:`cmd_overlap`). The kernel widths set the scale at which the
+        CMDs are compared, so the same values must be used for all the clusters
+        whose ``D`` values are compared.
+
+        The observed cluster is the one passed to :py:meth:`calibrate`.
+
+        :param synth_clust: Array containing the synthetic cluster data, as returned
+            by :py:meth:`generate`. Only the magnitude and the first color are used.
+        :type synth_clust: np.ndarray
+        :param h_mag: Width of the Gaussian kernel in magnitude, defaults to ``0.3``
+        :type h_mag: float
+        :param h_col: Width of the Gaussian kernel in color, defaults to ``0.075``
+        :type h_col: float
+
+        :raises ValueError: If :py:meth:`calibrate` was not called, or if the
+            observed cluster has fewer than two stars with valid photometry
+
+        :return: ``(D, D_std)``, where ``D_std`` is the approximate standard
+            deviation of ``D`` for a synthetic cluster drawn from the same
+            distribution as the observed one (it decreases with the number of stars).
+            If the synthetic cluster has fewer than two stars, ``D=1`` and ``D_std=0``
+        :rtype: tuple[float, float]
+        """
+        self._check_calibrated()
+
+        from .modules import likelihood_priv as lpriv
+
+        return lpriv.cmd_overlap(
+            self.cluster_mag, self.cluster_colors[0], synth_clust, h_mag, h_col
+        )
+
+    def _log_lkl_batch(  # noqa: DOC502, RUF100
         self,
-        likelihood,
         params: dict | None,
         temperature: float,
         parallel: bool,
         n_threads: int | None,
     ) -> np.ndarray:
-        """Log-likelihoods of a batch of synthetic clusters.
+        """Log-likelihoods of a batch of synthetic clusters, used by
+        :py:class:`asteca.Sampler`.
 
-        This is the implementation of :py:meth:`asteca.Likelihood.log_lkl_batch`,
-        which is the public method (see its docstring for the arguments and the
-        exceptions raised) and simply forwards its call here.
+        Same as ``self._lkl.log_lkl(self.generate(p), temperature)`` for each set of
+        parameters ``p`` in ``params`` (defined as in :py:meth:`generate_batch`),
+        with identical results. With numba, the compiled functions in
+        :py:mod:`synth_batch` generate each synthetic cluster and evaluate its
+        likelihood in the same call (the synthetic clusters never go back to
+        Python, which is where the gain comes from), optionally distributing the
+        models among ``n_threads`` threads if ``parallel=True`` (if ``None``,
+        numba's current setting is used). Without numba, ``parallel`` and
+        ``n_threads`` are ignored. The ``temperature`` is assumed positive (it is
+        validated by :py:class:`asteca.Sampler`).
 
-        It is defined in this class, and not in :py:class:`asteca.Likelihood`,
-        because almost all of the work is the generation of the synthetic clusters,
-        and the likelihood of each one is only its last step. The compiled functions
-        in :py:mod:`synth_batch` generate each synthetic cluster and evaluate its
-        likelihood in the same call (the synthetic clusters never go back to Python,
-        which is where the gain comes from), so this can not be split into a
-        ``Synthetic`` part and a ``Likelihood`` part. Nearly all of the arrays used
-        belong to this object (isochrones, IMF samples, pre-drawn random values,
-        default parameters, calibrated errors, plus the ``_batch_data`` cache stored
-        here), while only a few, small, arrays come from the
-        :py:class:`asteca.Likelihood` object. Reading those from ``likelihood`` here
-        keeps the generation machinery in one place, instead of having
-        :py:class:`asteca.Likelihood` access many private attributes of this class.
-        The public method is exposed in :py:class:`asteca.Likelihood` because it
-        returns log-likelihoods, which is where users look for it.
+        :param params: Dictionary with an array of values (or a single value) for each
+            parameter, as in :py:meth:`generate_batch`. If ``None``, the default
+            parameters are used
+        :type params: dict | None
+        :param temperature: Likelihood temperature, assumed positive (validated by
+            :py:class:`asteca.Sampler`)
+        :type temperature: float
+        :param parallel: Evaluate the models in parallel threads (requires numba)
+        :type parallel: bool
+        :param n_threads: Number of threads used if ``parallel=True``. If ``None``,
+            numba's current setting is used
+        :type n_threads: int | None
 
-        Without numba, :py:meth:`generate` and :py:meth:`asteca.Likelihood.log_lkl`
-        are called for each model, and ``parallel`` and ``n_threads`` are ignored.
+        :raises ValueError: In the same cases as :py:meth:`generate` for any of the
+            models, if :py:meth:`calibrate` was not called, or if ``n_threads`` is
+            used and it is not an integer between ``1`` and ``NUMBA_NUM_THREADS``
 
         :return: Array with the log-likelihood of each model, ``0`` is the best value
         :rtype: np.ndarray
@@ -541,27 +612,18 @@ class Synthetic:
         from .modules import synth_batch as sb
 
         self._check_calibrated()
-        if not temperature > 0:
-            raise ValueError(f"'temperature' must be positive, got {temperature}")
-        if likelihood.m_ini_idx != self.m_ini_idx:
-            raise ValueError(
-                "The number of colors in the 'Likelihood' and 'Synthetic' objects "
-                + "do not match"
-            )
 
+        lk = self._lkl
         P = self._batch_params(params)
         if not sb.available(self.ext_law):
             return np.array(
                 [
-                    likelihood.log_lkl(
-                        self.generate(dict(zip(sb.FULL_PARAMS, p))), temperature
-                    )
+                    lk.log_lkl(self.generate(dict(zip(sb.FULL_PARAMS, p))), temperature)
                     for p in P
                 ]
             )
 
-        lk = likelihood
-        args = (
+        args: tuple = (
             *self._batch_args(P),
             lk.m_ini_idx,
             lk.hist_args,
@@ -601,6 +663,7 @@ class Synthetic:
             hasattr(self, "max_mag_syn_obs")
             and hasattr(self, "err_dist_obs")
             and hasattr(self, "N_stars_obs")
+            and hasattr(self, "_lkl")
         ):
             raise ValueError(
                 "This method requires running the 'calibrate()' method first\n"

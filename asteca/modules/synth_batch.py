@@ -361,7 +361,8 @@ if _HAS_NUMBA:
         w_col,
         temperature,
     ):
-        """Same as :py:meth:`asteca.Likelihood.log_lkl` for one synthetic cluster"""
+        """Same as :py:meth:`likelihood_priv.Tremmel.log_lkl`, for one synthetic
+        cluster"""
         if synth.shape[1] == 0:
             lkl = max_lkl - 10.0 * lkl_range
         else:

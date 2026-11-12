@@ -1,5 +1,3 @@
-from typing import Literal
-
 import numpy as np
 from astropy.stats import calculate_bin_edges
 from fast_histogram import histogram2d
@@ -18,18 +16,12 @@ except ImportError:  # private module, fall back to the public function
         return histogram2d(x, y, bins=[nx, ny], range=[[xmin, xmax], [ymin, ymax]])
 
 
-def bin_edges_f(
-    bin_method: Literal["blocks", "knuth", "scott", "freedman", "fixed"],
-    mag: np.ndarray,
-    colors: list[np.ndarray],
-) -> tuple[list, list]:
+def bin_edges_f(mag: np.ndarray, colors: list[np.ndarray]) -> tuple[list, list]:
     """Calculate bin edges for the Hess diagram.
 
-    This function calculates the bin edges for the Hess diagram, using
-    different methods.
+    The number of bins in magnitude and in each color is set with Knuth's rule (see
+    ``astropy.stats.calculate_bin_edges``), and the bins span the observed range.
 
-    :param bin_method: Method used for binning the data.
-    :type bin_method: Literal["blocks", "knuth", "scott", "freedman", "fixed"]
     :param mag: Array of magnitudes.
     :type mag: np.ndarray
     :param colors: List of arrays of colors.
@@ -39,21 +31,9 @@ def bin_edges_f(
     :rtype: tuple[list, list]
     """
 
-    bin_edges = []
-
-    if bin_method == "fixed":
-        N_mag, N_col = 15, 10
-        # Magnitude
-        mag_min, mag_max = np.nanmin(mag), np.nanmax(mag)
-        bin_edges.append(np.linspace(mag_min, mag_max, N_mag))
-        # Colors
-        for col in colors:
-            col_min, col_max = np.nanmin(col), np.nanmax(col)
-            bin_edges.append(np.linspace(col_min, col_max, N_col))
-    else:
-        bin_edges.append(calculate_bin_edges(mag[~np.isnan(mag)], bins=bin_method))
-        for col in colors:
-            bin_edges.append(calculate_bin_edges(col[~np.isnan(col)], bins=bin_method))
+    bin_edges = [calculate_bin_edges(mag[~np.isnan(mag)], bins="knuth")]
+    for col in colors:
+        bin_edges.append(calculate_bin_edges(col[~np.isnan(col)], bins="knuth"))
 
     # Extract ranges and number of bins for each dimension (magnitude and colors),
     # used by histogram2d
@@ -158,8 +138,7 @@ def tremmel(
     synth_clust: np.ndarray,
 ) -> float:
     r"""Poisson likelihood ratio as defined in Tremmel et al (2013), Eq 10 with
-    v_{i,j}=1 (see documentation). This is the core shared by
-    :py:meth:`asteca.Likelihood.dist` and :py:meth:`asteca.Likelihood.log_lkl`.
+    v_{i,j}=1 (see documentation). This is the core of :py:meth:`Tremmel.log_lkl`.
 
     :param hist_args: Per-color ``(nx, xmin, xmax, ny, ymin, ymax)`` arguments for
         the 2D histogram, shape ``(N_colors, 6)``
@@ -334,7 +313,7 @@ def cmd_overlap(
     chunk: int = 500,
 ) -> tuple[float, float]:
     """Overlap distance between the observed and synthetic clusters in the CMD
-    (magnitude and first color), see :py:meth:`asteca.Likelihood.cmd_overlap`.
+    (magnitude and first color), see :py:meth:`asteca.Synthetic.cmd_overlap`.
 
     :param mag: Array of observed magnitudes.
     :type mag: np.ndarray
@@ -450,3 +429,148 @@ if _HAS_NUMBA:
                 dy = yi - y[j, 1]
                 s1 += np.exp(-0.25 * (dx * dx + dy * dy))
         return s1
+
+
+class Tremmel:
+    """Poisson likelihood ratio (Tremmel et al. 2013) of synthetic clusters given an
+    observed cluster.
+
+    Internal class, created by :py:meth:`asteca.Synthetic.calibrate` (stored in its
+    ``_lkl`` attribute) and used by :py:class:`asteca.Sampler`. It holds the binned
+    observed cluster and the pre-computed data used to evaluate the synthetic
+    clusters (see :py:meth:`log_lkl`).
+
+    :param mag: Observed magnitudes
+    :type mag: np.ndarray
+    :param colors: List with the observed color(s)
+    :type colors: list[np.ndarray]
+    """
+
+    def __init__(
+        self,
+        mag: np.ndarray,
+        colors: list[np.ndarray],
+    ) -> None:
+        # Index of the initial mass column (the photometry is the rows before it),
+        # used by `log_lkl()` to drop the extra columns of the synthetic clusters
+        # (0->mag, 1->color, (2->color2), 2|3->mass_ini)
+        self.m_ini_idx = 1 + len(colors)
+
+        # Binned observed cluster
+        self.ranges, self.Nbins = bin_edges_f(mag, colors)
+        self.cl_z_idx, self.cl_histo_f_z, self.table2d = lkl_data(
+            mag, colors, self.ranges, self.Nbins
+        )
+        self.obs_mag_median = np.nanmedian(mag).astype(float)
+        self.obs_col_median = np.nanmedian(colors[0]).astype(float)
+        # Widths of the Hess diagram ranges for the magnitude and (first) color, used
+        # to scale the dimensions of the no-overlap penalty
+        self.cmd_widths = (
+            float(self.ranges[0][1] - self.ranges[0][0]),
+            float(self.ranges[1][1] - self.ranges[1][0]),
+        )
+
+        # Pre-compute 'tremmel' parameters
+        # Per-color histogram2d arguments: (nx, xmin, xmax, ny, ymin, ymax)
+        self.hist_args = np.array(
+            [
+                (
+                    self.Nbins[0],
+                    self.ranges[0][0],
+                    self.ranges[0][1],
+                    self.Nbins[i],
+                    self.ranges[i][0],
+                    self.ranges[i][1],
+                )
+                for i in range(1, len(self.Nbins))
+            ],
+            dtype=float,
+        )
+        # Positions of the non-empty observed bins in the flattened Hess diagram
+        self.nz_pos = np.flatnonzero(self.cl_z_idx)
+        # Flattened table and row offsets, so that table2d[n, m] becomes
+        # table_flat[row_off + m]
+        self.table_flat = self.table2d.ravel()
+        self.row_off = self.cl_histo_f_z.astype(np.intp) * self.table2d.shape[1]
+        # Largest number of synthetic stars per bin covered by the table
+        self.m_max = int(self.table2d.shape[1] - 1)
+        tremmel_args = (
+            self.hist_args,
+            self.nz_pos,
+            self.row_off,
+            self.table_flat,
+            self.m_max,
+        )
+        # Minimum likelihood, obtained when no synthetic star falls in any observed
+        # bin (all m_i=0). Used to normalize the distance so that 1 means no match.
+        # This is equal to 'table_flat.take(row_off).sum()' but it is obtained with
+        # the same core that evaluates the synthetic clusters (a single star below
+        # the lower limit of every range), so that the sum is performed in the same
+        # order and the 'lkl <= min_lkl' check in log_lkl() is not affected by rounding
+        no_overlap_star = np.array(
+            [[self.hist_args[0, 1] - 1.0]]
+            + [[ymin - 1.0] for ymin in self.hist_args[:, 4]]
+        )
+        self.min_lkl = float(tremmel(*tremmel_args, no_overlap_star))
+
+        # Maximum likelihood, obtained evaluating the cluster against itself. This is
+        # equal to: sum([gammaln(2*_ + 0.5) - gammaln(_ + 0.5) for _ in cl_histo_f_z])
+        self.max_lkl = float(tremmel(*tremmel_args, np.array([mag, *colors])))
+        # Range of the likelihood for synthetic clusters that overlap the observed
+        # one, used to convert between log-likelihoods and distances (the distance
+        # of a log-likelihood value 'lnl' at temperature T is -lnl * T / lkl_range)
+        self.lkl_range = self.max_lkl - self.min_lkl
+
+    def log_lkl(self, synth_clust: np.ndarray, temperature: float = 1.0) -> float:
+        """Log-likelihood relative to its maximum, divided by the ``temperature``:
+        ``(lkl - max_lkl) / temperature``, so that ``0`` is the best value.
+
+        This equals ``-d * (max_lkl - min_lkl) / temperature``, where
+        ``d = (max_lkl - lkl) / (max_lkl - min_lkl)`` is the normalized distance
+        (``0`` for an exact match, ``1`` when no synthetic star falls in any of the
+        observed bins, see the documentation). Since ``table2d[n, m]`` grows with
+        ``m`` for ``n>0``, ``d <= 1`` for synthetic clusters that overlap the
+        observed one. Otherwise the raw value would be ``min_lkl`` for every such
+        model, so a 'no match' distance ``d >= 1`` is assigned instead: ``10`` for an
+        empty synthetic cluster, or ``1`` plus a penalty that grows with its
+        photometric distance to the observed cluster.
+
+        :param synth_clust: Synthetic cluster ``[mag, color1, (color2), ...]``, extra
+            columns are ignored
+        :type synth_clust: np.ndarray
+        :param temperature: Likelihood temperature, assumed positive (validated by
+            :py:class:`asteca.Sampler`)
+        :type temperature: float
+
+        :return: Log-likelihood value, ``0`` is the best value
+        :rtype: float
+        """
+        # Ignore any extra columns beyond the main photometry
+        synth_clust = synth_clust[: self.m_ini_idx]
+
+        # The 'no match' distances are converted to log-likelihood units as
+        # 'max_lkl - d * lkl_range'. Same operations (in the same order) as in
+        # synth_batch, so that the values are identical
+        if synth_clust.size == 0:
+            # Empty synthetic cluster, distance of '10'
+            lkl = self.max_lkl - 10.0 * self.lkl_range
+        else:
+            lkl = tremmel(
+                self.hist_args,
+                self.nz_pos,
+                self.row_off,
+                self.table_flat,
+                self.m_max,
+                synth_clust,
+            )
+            # No synthetic star falls in any observed bin
+            if lkl <= self.min_lkl:
+                d = no_overlap_dist(
+                    self.obs_mag_median,
+                    self.obs_col_median,
+                    self.cmd_widths,
+                    synth_clust,
+                )
+                lkl = self.max_lkl - d * self.lkl_range
+
+        return (lkl - self.max_lkl) / temperature

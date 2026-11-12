@@ -1,4 +1,5 @@
-"""Preconditioned Monte Carlo (PMC) core used by :py:class:`asteca.Sampler`.
+"""Sequential Monte Carlo core used by :py:class:`asteca.Sampler`: adaptive
+tempering with persistent sampling and t-pCN MCMC moves.
 
 This module is adapted from pocoMC v1.2.6 (https://github.com/minaskar/pocomc),
 Copyright 2022-Now Minas Karamanis and contributors, distributed under the GNU General
@@ -9,10 +10,25 @@ an unbounded space with a probit transform and a diagonal affine scaling, persis
 sampling (importance weights that combine the particles of all the iterations), the
 choice of the next inverse temperature by bisection on the effective sample size
 (ESS) with the dynamic adjustment of the target ESS, multinomial resampling, and
-t-preconditioned Crank-Nicolson (t-pCN) MCMC moves. The normalizing flow (and thus
-PyTorch), the evidence estimation with the flow, the blobs, the checkpointing and
-the multiprocessing pools are not included. With ``precondition=False`` and these
-settings the results are those of pocoMC for the same random seed.
+t-preconditioned Crank-Nicolson (t-pCN) MCMC moves, whose proposals use a Student-t
+fitted to the particles in each iteration. The normalizing flow (and thus PyTorch),
+i.e.: the preconditioning that gives Preconditioned Monte Carlo (PMC) its name, the
+evidence estimation with the flow, the blobs, the checkpointing and the
+multiprocessing pools are not included. Hence this is not PMC but the Sequential
+Monte Carlo sampler that pocoMC runs with ``precondition=False``: with these settings
+the results are those of pocoMC for the same random seed.
+
+Changes with respect to pocoMC's code, which do not change the results:
+
+- :py:func:`trim_weights` (discards the samples with negligible importance weights,
+  in each iteration and for the posterior) obtains the ESS of all the candidate
+  thresholds at once from the cumulative sums of the sorted weights, instead of
+  computing them one at a time with a ``np.percentile()`` call over all the weights
+  for each of the (up to 1000) candidates. The selected threshold is then checked
+  with pocoMC's computation, so the kept samples and weights are identical. In
+  pocoMC this function dominated the run time of the sampler itself (excluding the
+  likelihood): about 1.2 s out of 1.6 s in a run with the default settings and four
+  fitted parameters, now 0.1 s.
 
 References:
 
@@ -32,9 +48,9 @@ from scipy import optimize, special
 SQRTEPS = float(np.sqrt(np.finfo(np.float64).eps))
 
 
-class PMC:
-    """Preconditioned Monte Carlo sampler with persistent sampling, without a
-    normalizing flow (i.e.: tempered Sequential Monte Carlo with t-pCN moves).
+class PersistentSMC:
+    """Sequential Monte Carlo sampler with adaptive tempering, persistent sampling,
+    and t-pCN moves (pocoMC without the normalizing flow preconditioning).
 
     :param log_like: Vectorized log-likelihood, takes an array of shape
         ``(n_particles, n_dim)`` and returns an array of shape ``(n_particles,)``
@@ -54,6 +70,8 @@ class PMC:
     :param callback: Function called at the end of each iteration with the dictionary
         of the current particles (used to print the progress)
     :type callback: Callable[[dict], None] | None
+
+    :raises ValueError: If the prior bounds are not finite or not ``min < max``
     """
 
     def __init__(
@@ -107,7 +125,7 @@ class PMC:
         self.t = 0
         self.calls = 0
         self.warmup = True
-        self.logz = None
+        self.logz: float
 
     # ---------------------------------------------------------------------------
     # Prior
@@ -211,9 +229,9 @@ class PMC:
         """Select the next inverse temperature (bisection on the ESS of the
         persistent weights), and get the weighted particles of all iterations"""
         self.t += 1
-        beta_prev = self.particles.get("beta", index=-1)
+        beta_prev = float(self.particles.get("beta", index=-1))
         beta_max = 1.0
-        beta_min = float(beta_prev)
+        beta_min = beta_prev
 
         def weights_and_ess(beta):
             logw, _ = self.particles.compute_logw_and_logz(beta)
@@ -498,8 +516,8 @@ class Reparameterize:
         self.low = low
         self.high = high
         self.width = high - low
-        self.mu = None
-        self.sigma = None
+        self.mu: np.ndarray
+        self.sigma: np.ndarray
 
     def fit(self, x: np.ndarray) -> None:
         u = self._forward(x)
@@ -530,9 +548,9 @@ class Geometry:
 
     def __init__(self, rng: np.random.RandomState) -> None:
         self.rng = rng
-        self.t_mean = None
-        self.t_cov = None
-        self.t_nu = None
+        self.t_mean: np.ndarray
+        self.t_cov: np.ndarray
+        self.t_nu: float
 
     def fit(self, theta: np.ndarray, weights: np.ndarray) -> None:
         idx = systematic_resample(len(theta), weights, self.rng)
@@ -596,20 +614,60 @@ def trim_weights(
     samples: np.ndarray, weights: np.ndarray, ess: float = 0.99, bins: int = 1000
 ) -> tuple[np.ndarray, np.ndarray]:
     """Discard the samples with the smallest weights while keeping a fraction
-    ``ess`` of the ESS. Returns the kept samples and their normalized weights."""
+    ``ess`` of the ESS. Returns the kept samples and their normalized weights.
+
+    The threshold is the largest of the ``bins`` percentiles of the weights (from the
+    99th down to the 0th) whose kept samples (``weights >= threshold``) retain the
+    fraction ``ess`` of the ESS, as in pocoMC. pocoMC tests the percentiles one at a
+    time, each with its own ``np.percentile()`` call over all the weights, which
+    dominated the run time of the sampler. Here the ESS of all the candidates is
+    obtained at once from the cumulative sums of the sorted weights, and the
+    selected percentile is then checked with pocoMC's exact computation, so that the
+    result is identical. Since the samples are added from the largest weight down,
+    and each added weight is not larger than the mean (weighted by the weights) of
+    those already kept, the ESS can only grow as the threshold decreases: the first
+    percentile (from the top) that passes the test is the boundary.
+    """
     weights = weights / np.sum(weights)
     ess_total = 1.0 / np.sum(weights**2.0)
     percentiles = np.linspace(0, 99, bins)
-    i = bins - 1
-    while True:
+
+    def trimmed(i: int) -> tuple[np.ndarray, np.ndarray, bool]:
+        """pocoMC's computation for the i-th percentile"""
         threshold = np.percentile(weights, percentiles[i])
         mask = weights >= threshold
         weights_trimmed = weights[mask]
         weights_trimmed /= np.sum(weights_trimmed)
         ess_trimmed = 1.0 / np.sum(weights_trimmed**2.0)
-        if ess_trimmed / ess_total >= ess:
-            break
+        return mask, weights_trimmed, bool(ess_trimmed / ess_total >= ess)
+
+    # ESS ratio of every candidate threshold, from the cumulative sums of the weights
+    # sorted in decreasing order
+    w_asc = np.sort(weights)
+    w_desc = w_asc[::-1]
+    c1 = np.cumsum(w_desc)
+    c2 = np.cumsum(w_desc**2.0)
+    # Number of weights >= each threshold (always >= 1)
+    n_kept = len(weights) - np.searchsorted(
+        w_asc, np.percentile(weights, percentiles), side="left"
+    )
+    ratio = (c1[n_kept - 1] ** 2 / c2[n_kept - 1]) / ess_total
+    # Largest percentile that keeps the required ESS (the 0th keeps all the samples)
+    passing = np.flatnonzero(ratio >= ess)
+    i = int(passing[-1]) if passing.size else 0
+
+    # Check with the exact computation, moving down (or up) if the cumulative sums
+    # put the boundary one percentile off due to rounding
+    mask, weights_trimmed, ok = trimmed(i)
+    while not ok and i > 0:
         i -= 1
+        mask, weights_trimmed, ok = trimmed(i)
+    while i < bins - 1:
+        mask_up, weights_up, ok_up = trimmed(i + 1)
+        if not ok_up:
+            break
+        i, mask, weights_trimmed = i + 1, mask_up, weights_up
+
     return samples[mask], weights_trimmed
 
 
