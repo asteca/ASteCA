@@ -517,10 +517,21 @@ class Synthetic:
         return [a if a.shape[1] else np.array([]) for a in out]
 
     def cmd_overlap(  # noqa: DOC502, RUF100
-        self, synth_clust: np.ndarray, h_mag: float = 0.3, h_col: float = 0.075
+        self,
+        params: dict[str, float],
+        h_mag: float = 0.3,
+        h_col: float = 0.075,
+        to_box_mag: tuple[float, float] = (-1.0, 0.5),
+        to_box_col: tuple[float, float] = (-0.2, 0.8),
     ) -> tuple[float, float]:
-        """Goodness of fit of a synthetic cluster, that can be compared across
-        observed clusters with any number of stars.
+        """Goodness of fit of the synthetic cluster generated with the ``params``
+        parameters, that can be compared across observed clusters with any number of
+        stars. The method also checks that the turn-off region of the observed cluster
+        is reproduced by the synthetic cluster, and shows a warning if it is not.
+
+        The synthetic cluster is generated internally with :py:meth:`generate`, i.e.
+        ``params`` is defined in the same way (e.g.: the best fit or median
+        parameters returned by :py:meth:`asteca.Sampler.summary`).
 
         The value is ``D = 1 - 2 * K_os / (K_oo + K_ss)``, where ``K_os`` is the mean
         value of a Gaussian kernel (with widths ``h_mag`` and ``h_col``) over all the
@@ -543,16 +554,42 @@ class Synthetic:
 
         The observed cluster is the one passed to :py:meth:`calibrate`.
 
-        :param synth_clust: Array containing the synthetic cluster data, as returned
-            by :py:meth:`generate`. Only the magnitude and the first color are used.
-        :type synth_clust: np.ndarray
+        Turn-off check: the turn-off point of the isochrone of the synthetic cluster
+        is located (as in :py:meth:`get_models`) and a box is defined around it,
+        from ``to_box_mag[0]`` to ``to_box_mag[1]`` mag in magnitude and from
+        ``to_box_col[0]`` to ``to_box_col[1]`` mag in color, relative to the
+        turn-off (by default from 1 mag brighter to 0.5 mag fainter, including the
+        subgiant and lower red giant branches). The distributions of the observed and
+        synthetic stars inside this box are compared with the same ``D`` statistic,
+        using narrower kernels (``0.1`` mag in magnitude and ``0.025`` mag in color)
+        to resolve the turn-off. A warning is shown if this ``D`` is larger than
+        four times its standard deviation, i.e. if the turn-off region is clearly
+        not reproduced. Since the faint main sequence contains most of the stars, it
+        dominates the likelihood (and ``D``), and the fit can sacrifice the turn-off
+        region, which constrains the age and metallicity. This happens e.g. when the
+        observed luminosity function is flatter than the one of the synthetic
+        cluster (dynamically evolved clusters that lost low-mass stars, or an
+        incomplete faint end), see :ref:`cmd_overlap`. The check requires at least
+        ``30`` observed and ``30`` synthetic stars in the box, i.e. it is not
+        performed for most young clusters, whose turn-off is sparsely populated.
+
+        :param params: Dictionary with the values of the fundamental parameters used
+            to generate the synthetic cluster, see :py:meth:`generate`
+        :type params: dict[str, float]
         :param h_mag: Width of the Gaussian kernel in magnitude, defaults to ``0.3``
         :type h_mag: float
         :param h_col: Width of the Gaussian kernel in color, defaults to ``0.075``
         :type h_col: float
+        :param to_box_mag: Magnitude limits of the turn-off box, relative to the
+            magnitude of the turn-off point, defaults to ``(-1.0, 0.5)``
+        :type to_box_mag: tuple[float, float]
+        :param to_box_col: Color limits of the turn-off box, relative to the color of
+            the turn-off point, defaults to ``(-0.2, 0.8)``
+        :type to_box_col: tuple[float, float]
 
-        :raises ValueError: If :py:meth:`calibrate` was not called, or if the
-            observed cluster has fewer than two stars with valid photometry
+        :raises ValueError: If :py:meth:`calibrate` was not called, if the observed
+            cluster has fewer than two stars with valid photometry, or in the same
+            cases as :py:meth:`generate`
 
         :return: ``(D, D_std)``, where ``D_std`` is the approximate standard
             deviation of ``D`` for a synthetic cluster drawn from the same
@@ -563,10 +600,60 @@ class Synthetic:
         self._check_calibrated()
 
         from .modules import likelihood_priv as lpriv
+        from .modules import stellar_stats_funcs as ssf
+        from .modules import synth_model as sm
 
-        return lpriv.cmd_overlap(
+        # Same synthetic cluster as generate(params); the isochrone (with DR=0) is
+        # used to locate the turn-off point
+        isochrone, synth_clust = sm.get_model(
+            params,
+            self.met_age_dict,
+            self.met_tol,
+            self.age_tol,
+            self.def_params,
+            self.m_ini_idx,
+            self.theor_tracks,
+            self.ext_law,
+            self.ext_coefs,
+            self.rand_floats,
+            self.st_dist_mass,
+            self.mass_idx,
+            self.max_mag_syn_obs,
+            self.err_dist_obs,
+            self.N_stars_obs,
+            isoch_flag=True,
+        )
+
+        D, D_std = lpriv.cmd_overlap(
             self.cluster_mag, self.cluster_colors[0], synth_clust, h_mag, h_col
         )
+        if synth_clust.size == 0:
+            return D, D_std
+
+        # Turn-off point of the isochrone up to the maximum mass of the synthetic
+        # cluster, as in get_models()
+        msk = isochrone[self.m_ini_idx] < synth_clust[self.m_ini_idx].max()
+        if msk.sum() < 2:
+            return D, D_std
+        to_col, to_mag, _ = ssf.to_point_find(
+            isochrone[1][msk], isochrone[0][msk], self.isochs.model, 0
+        )
+
+        # Turn-off check: the observed and synthetic stars inside a box around the
+        # turn-off are compared with the cmd_overlap() statistic. The check is skipped
+        # if the box contains few stars.
+        lpriv.turnoff_box(
+            self.cluster_mag,
+            self.cluster_colors[0],
+            synth_clust[0],
+            synth_clust[1],
+            to_mag,
+            to_col,
+            to_box_mag,
+            to_box_col,
+        )
+
+        return D, D_std
 
     def _log_lkl_batch(  # noqa: DOC502, RUF100
         self,

@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 from astropy.stats import calculate_bin_edges
 from fast_histogram import histogram2d
@@ -302,6 +304,89 @@ if _HAS_NUMBA:
             m = min(counts[nz_pos[p]], m_max)
             lkl += table_flat[row_off[p] + m]
         return float(lkl)
+
+
+def turnoff_box(
+    mag: np.ndarray,
+    color: np.ndarray,
+    syn_mag: np.ndarray,
+    syn_color: np.ndarray,
+    to_mag: float,
+    to_col: float,
+    box_mag: tuple[float, float],
+    box_col: tuple[float, float],
+    h_mag: float = 0.1,
+    h_col: float = 0.025,
+    sigma_min: float = 4.0,
+    min_stars: int = 30,
+) -> None:
+    """Compare the observed and synthetic stars in a box around the turn-off point
+    and warn if they differ, see :py:meth:`asteca.Synthetic.cmd_overlap`.
+
+    The stars inside the box are compared with the :py:func:`cmd_overlap` statistic
+    ``D``. A warning is shown if ``D`` is larger than ``sigma_min`` times its
+    standard deviation. Nothing is done if the box contains fewer than
+    ``min_stars`` observed or synthetic stars.
+
+    :param mag: Array of observed magnitudes.
+    :type mag: np.ndarray
+    :param color: Array of observed colors.
+    :type color: np.ndarray
+    :param syn_mag: Array of synthetic magnitudes.
+    :type syn_mag: np.ndarray
+    :param syn_color: Array of synthetic colors.
+    :type syn_color: np.ndarray
+    :param to_mag: Magnitude of the turn-off point.
+    :type to_mag: float
+    :param to_col: Color of the turn-off point.
+    :type to_col: float
+    :param box_mag: Magnitude limits of the box, relative to ``to_mag``.
+    :type box_mag: tuple[float, float]
+    :param box_col: Color limits of the box, relative to ``to_col``.
+    :type box_col: tuple[float, float]
+    :param h_mag: Width of the Gaussian kernel in magnitude, defaults to ``0.1``
+    :type h_mag: float
+    :param h_col: Width of the Gaussian kernel in color, defaults to ``0.025``
+    :type h_col: float
+    :param sigma_min: Number of standard deviations of ``D`` above which the
+        warning is shown, defaults to ``4.0``
+    :type sigma_min: float
+    :param min_stars: Minimum number of observed and of synthetic stars inside the
+        box required to perform the check (must be at least ``1``), defaults to
+        ``30``
+    :type min_stars: int
+    """
+
+    def in_box(m: np.ndarray, c: np.ndarray) -> tuple[np.ndarray, np.ndarray, int]:
+        valid = np.isfinite(m) & np.isfinite(c)
+        m, c = m[valid], c[valid]
+        msk = (
+            (m > to_mag + box_mag[0])
+            & (m < to_mag + box_mag[1])
+            & (c > to_col + box_col[0])
+            & (c < to_col + box_col[1])
+        )
+        return m[msk], c[msk], len(m)
+
+    mo, co, N = in_box(np.asarray(mag), np.asarray(color))
+    ms, cs, M = in_box(np.asarray(syn_mag), np.asarray(syn_color))
+    # This also skips empty boxes (N, M > 0 since min_stars >= 1)
+    if len(mo) < min_stars or len(ms) < min_stars:
+        return
+
+    D, D_std = cmd_overlap(mo, co, np.array([ms, cs]), h_mag, h_col)
+    if D > sigma_min * D_std > 0:
+        ratio = (len(ms) / M) / (len(mo) / N)
+        warnings.warn(
+            "\nThe turn-off region of the observed cluster is not reproduced by\n"
+            + f"the synthetic cluster (D={D:.3f}, {D / D_std:.0f} times its standard\n"
+            + f"deviation; synthetic/observed fraction of stars: {ratio:.2f}).\n"
+            + "The fit may have sacrificed the turn-off region (age, metallicity)\n"
+            + "to match the more populated main sequence, e.g. if the observed\n"
+            + "luminosity function is flatter than the synthetic one (low-mass\n"
+            + "stars lost by dynamical evolution, or faint-end incompleteness).",
+            stacklevel=2,
+        )
 
 
 def cmd_overlap(
