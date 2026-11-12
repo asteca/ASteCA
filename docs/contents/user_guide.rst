@@ -18,7 +18,6 @@ their functionalities:
    membership_mod
    isochrones_mod
    synthetic_mod
-   likelihood_mod
    sampler_mod
 
 

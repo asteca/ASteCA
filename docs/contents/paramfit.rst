@@ -4,38 +4,48 @@ Parameters fit
 ##############
 
 **ASteCA** includes its own sampler, :py:class:`asteca.Sampler` (see
-:ref:`sampler_module`), which estimates the fundamental parameters with Preconditioned
-Monte Carlo. The synthetic clusters and the likelihood can also be combined with any
-other sampler of the user's choosing (see this list of Python-based
-`MCMC and ABC packages`_). The following tutorials show both options.
+:ref:`sampler_module`), which estimates the fundamental parameters with Sequential
+Monte Carlo and a built-in likelihood. The synthetic clusters can also be combined
+with a likelihood (or distance) and a sampler of the user's choosing (see
+:ref:`own_lkl_sampler` and this list of Python-based `MCMC and ABC packages`_). The
+following tutorials show both options.
 
 .. toctree::
    :titlesonly:
 
+   notebooks/paramfit_sampler
    notebooks/paramfit_pyabc
    notebooks/paramfit_pocomc
+   notebooks/paramfit_gof
 
+
+The :ref:`paramfit_sampler_ntbk` notebook uses the :py:class:`asteca.Sampler` class
+(Sequential Monte Carlo, adapted from the `pocoMC`_ library), with the likelihood
+built into **ASteCA** (see :ref:`sampler_lkl`). This is the recommended option.
 
 The :ref:`paramfit_ntbk` notebook uses the `pyABC`_ library (Approximate Bayesian
-Computation), where the **ASteCA** likelihood is used as a distance to be minimized.
+Computation), with a simple distance defined by the user, which pyABC minimizes.
 
-The :ref:`paramfit_pocomc_ntbk` notebook uses the :py:class:`asteca.Sampler` class,
-adapted from the `pocoMC`_ library (Preconditioned Monte Carlo), where the **ASteCA**
-likelihood is turned into a log-likelihood.
+The :ref:`paramfit_pocomc_ntbk` notebook uses the `pocoMC`_ library itself, with a
+Poisson likelihood defined by the user.
 
-Both tutorials show how to set up the fitting process, run it, and extract the
-parameter estimates (medians and standard deviations) from the results. They finish by
-assessing the goodness of fit of the synthetic cluster generated with the median
-parameters via its CMD overlap with the observed cluster (see :ref:`cmd_overlap`), and
-a comparison Color-Magnitude Diagram (CMD).
+All the tutorials show how to set up the fitting process, run it, and extract the
+parameter estimates (medians and standard deviations) from the results.
+
+The :ref:`paramfit_gof_ntbk` notebook shows how to assess the goodness of fit of the
+synthetic cluster generated with the fitted parameters (whichever method was used to
+obtain them) via its CMD overlap with the observed cluster (see :ref:`cmd_overlap`),
+and a comparison Color-Magnitude Diagram (CMD).
 
 pyABC versus asteca.Sampler
 ---------------------------
 
-**pyABC** uses the distance returned by :py:meth:`asteca.Likelihood.dist` directly,
-with no likelihood scaling to choose. Its uncertainties are usually somewhat wider,
-which in our tests with simulated clusters gave better calibrated error bars for
-clusters with many members. On the other hand it is slower, its results depend on
+**pyABC** minimizes a distance directly, with no likelihood scaling to choose. In our
+tests, where the distance used was the one that corresponds to the likelihood of
+:py:class:`asteca.Sampler` (see :ref:`plr`) instead of the simple one used in the
+tutorial, its uncertainties were usually somewhat wider, which with simulated clusters
+gave better calibrated error bars for clusters with many members. These results
+depend on the distance used. On the other hand it is slower, its results depend on
 when the run is stopped (maximum time, number of populations, or minimum distance),
 it needs a database file, and its runs are only reproducible with the (slower) single
 core sampler.

@@ -36,15 +36,16 @@ concluding with a visual comparison of their results.
 The :ref:`synth_ntbk` notebook demonstrates the process of generating synthetic star
 clusters via the :py:meth:`asteca.Synthetic.generate` method using specified fundamental
 parameters. Optionally, the generator can be calibrated with observed cluster data using
-the :py:meth:`asteca.Synthetic.calibrate` method to enhance realism in terms of star count, magnitude limits, and errors. The process culminates in visualizing the resulting synthetic Color-Magnitude Diagrams (CMDs), often distinguishing stellar systems and potentially overlaying the underlying isochrone.
+the :py:meth:`asteca.Synthetic.calibrate` method to enhance realism in terms of star count, magnitude limits, and errors. The process culminates in visualizing the resulting synthetic Color-Magnitude Diagrams (CMDs), often distinguishing stellar systems and overlaying the underlying isochrone obtained with the :py:meth:`asteca.Synthetic.get_isochrone` method.
 
-The :ref:`paramfit_section` section contains two notebooks that provide a
+The :ref:`paramfit_section` section contains three notebooks that provide a
 step-by-step guide to estimating the fundamental parameters of a stellar cluster,
-with the `pyABC`_ library and with the :py:class:`asteca.Sampler` class (adapted from
-the `pocoMC`_ library). They show how to set
-up the fitting process, run it, and interpret the results, including the final
-parameter estimates (medians and standard deviations), the goodness of fit (CMD
-overlap), and a comparison Color-Magnitude Diagram (CMD).
+with the :py:class:`asteca.Sampler` class (adapted from the `pocoMC`_ library), and
+with user-defined likelihoods combined with the `pyABC`_ and `pocoMC`_ libraries.
+They show how to set up the fitting process, run it, and extract the final parameter
+estimates (medians and standard deviations). A fourth notebook shows how to assess the
+goodness of fit (CMD overlap) of the fitted synthetic cluster, with a comparison
+Color-Magnitude Diagram (CMD).
 
 
 The :ref:`post_process_ntbk` notebook shows how to apply the following methods:

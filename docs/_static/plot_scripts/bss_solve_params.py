@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import pandas as pd
-from scipy.optimize import differential_evolution
 
 import asteca
 
@@ -33,18 +32,17 @@ def main():
 
     synthcl.calibrate(my_cluster)
 
-    likelihood = asteca.Likelihood(my_cluster)
-
-    loga_min, loga_max = isochs.amin, isochs.amax
-    dm_min, dm_max = 7.5, 8.5
-
-    loga, dm, Av, final_dist = first_pass_DE(
-        synthcl, likelihood, loga_min, loga_max, dm_min, dm_max
-    )
-    print(f"Final distance: {final_dist:.3f}")
-    print(f"Estimated parameters: loga={loga:.3f}, dm={dm:.3f}, Av={Av:.3f}")
-    model_means = {"loga": loga, "dm": dm, "Av": Av}
-    model_std = {"loga": 0.1, "dm": 0.1, "Av": 0.05}
+    priors = {
+        "loga": (isochs.amin, isochs.amax),
+        "dm": (7.5, 8.5),
+        "Av": (0.0, 5.0),
+    }
+    sampler = asteca.Sampler(synthcl, priors, temperature="auto", seed=42)
+    sampler.run()
+    summ = sampler.summary()
+    print(f"Best distance: {sampler.best_dist:.3f}")
+    print(f"Estimated parameters: {summ['median']}")
+    model_means, model_std = summ["median"], summ["std"]
 
     synthcl.get_models(model_means, model_std)
     stellar_data = synthcl.stellar_parameters()
@@ -53,39 +51,6 @@ def main():
     print(f"Estimated number of BSS: {N_bss}")
 
     make_plots(my_cluster, synthcl, model_means, bss_probs)
-
-
-def first_pass_DE(synthcl, likelihood, loga_min, loga_max, dm_min, dm_max):
-    """ """
-    bounds = (
-        (loga_min, loga_max),  # loga
-        (dm_min, dm_max),  # dn
-        (0.0, 5.0),  # Av
-    )
-    result = differential_evolution(
-        objective,
-        bounds,
-        popsize=50,
-        recombination=0.8,
-        args=(synthcl, likelihood),
-        polish=True,
-        seed=42,
-    )
-
-    loga, dm, Av = result.x
-    return loga, dm, Av, result.fun
-
-
-def objective(params, synthcl, likelihood):
-    loga, dm, Av = params
-    fit_params = {
-        "loga": loga,
-        "dm": dm,
-        "Av": Av,
-    }
-    synth_data = synthcl.generate(fit_params)
-    lkl = likelihood.get(synth_data)
-    return lkl
 
 
 def make_plots(my_cluster, synthcl, model_means, bss_probs):
