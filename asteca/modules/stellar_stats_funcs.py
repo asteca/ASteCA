@@ -4,6 +4,9 @@ import numpy as np
 from scipy.signal import savgol_filter
 from scipy.spatial import KDTree
 
+from . import HAS_NUMBA as _HAS_NUMBA
+from . import njit
+
 
 def to_point_find(
     x: np.ndarray,
@@ -413,11 +416,12 @@ def get_bss_masses(
     }
 
     n_stars = cluster_mag.size
-
-    # One column per isochrone/model realization.
-    masses = []
-
     valid = np.isfinite(cluster_mag) & np.isfinite(cluster_color)
+    star_mag = np.ascontiguousarray(cluster_mag[valid], dtype=float)
+    star_color = np.ascontiguousarray(cluster_color[valid], dtype=float)
+
+    # One column per isochrone/model realization, valid stars only.
+    masses = []
 
     for isoch_age in isoch_youngs_arrs:
         for isochrone in isoch_age:
@@ -448,35 +452,128 @@ def get_bss_masses(
                     isoch_moved,
                 )
 
-                isoch_mag = np.asarray(isoch[0])
-                isoch_color = np.asarray(isoch[1])
+                isoch_mag = np.asarray(isoch[0], dtype=float)
+                isoch_color = np.asarray(isoch[1], dtype=float)
                 isoch_mass = np.asarray(isoch[2])
 
-                # Distance from every cluster star to every isochrone point.
-                d2 = (cluster_mag[valid, None] - isoch_mag[None, :]) ** 2 + (
-                    cluster_color[valid, None] - isoch_color[None, :]
-                ) ** 2
+                # Closest point on THIS isochrone for each star
+                closest_idx = closest_isoch_point(
+                    star_mag, star_color, isoch_mag, isoch_color
+                )
+                masses.append(isoch_mass[closest_idx])
 
-                # Closest point on THIS isochrone for each star.
-                closest_idx = np.argmin(d2, axis=1)
-
-                mass = np.full(n_stars, np.nan)
-                mass[valid] = isoch_mass[closest_idx]
-                masses.append(mass)
-
-    # (N_stars, N_realizations)
+    # (N_valid_stars, N_realizations)
     bss_masses = np.column_stack(masses)
+
+    bss_mass_median = np.full(n_stars, np.nan)
+    bss_mass_stddev = np.full(n_stars, np.nan)
+    if np.isfinite(bss_masses).all():
+        # Fast path (the usual case): no NaN masses. Same results as the
+        # nan-aware functions below, ~3x faster
+        bss_mass_median[valid] = np.median(bss_masses, axis=1)
+        if bss_masses.shape[1] > 1:
+            bss_mass_stddev[valid] = np.std(bss_masses, axis=1)
+        return bss_mass_median, bss_mass_stddev
 
     # Extract medians and STDDEVs
     n_valid = np.sum(np.isfinite(bss_masses), axis=1)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", RuntimeWarning)
-        bss_mass_median = np.nanmedian(bss_masses, axis=1)
-        bss_mass_stddev = np.nanstd(bss_masses, axis=1)
+        med = np.nanmedian(bss_masses, axis=1)
+        std = np.nanstd(bss_masses, axis=1)
     # 0 valid masses: median = NaN, stddev = NaN
     # 1 valid mass: median = that mass, stddev = NaN
     # ≥2 valid masses: median and stddev are calculated normally.
-    bss_mass_median[n_valid == 0] = np.nan
-    bss_mass_stddev[n_valid < 2] = np.nan
+    med[n_valid == 0] = np.nan
+    std[n_valid < 2] = np.nan
+    bss_mass_median[valid] = med
+    bss_mass_stddev[valid] = std
 
     return bss_mass_median, bss_mass_stddev
+
+
+def closest_isoch_point(
+    star_mag: np.ndarray,
+    star_color: np.ndarray,
+    isoch_mag: np.ndarray,
+    isoch_color: np.ndarray,
+) -> np.ndarray:
+    """Index of the closest isochrone point (Euclidean distance in the
+    magnitude-color plane) for each star.
+
+    Equivalent to ``np.argmin(d2, axis=1)`` with ``d2`` the full
+    ``(N_stars, N_points)`` matrix of squared distances, without building it. With
+    numba installed the isochrone is sorted by magnitude and, for each star, the scan
+    moves outwards from the star's magnitude and stops once the magnitude difference
+    alone exceeds the best distance found (ties resolved to the lowest index, as
+    ``np.argmin``). Otherwise a KD-tree is used.
+
+    :param star_mag: Magnitudes of the stars (all finite).
+    :type star_mag: np.ndarray
+    :param star_color: Colors of the stars (all finite).
+    :type star_color: np.ndarray
+    :param isoch_mag: Magnitudes of the isochrone points.
+    :type isoch_mag: np.ndarray
+    :param isoch_color: Colors of the isochrone points.
+    :type isoch_color: np.ndarray
+
+    :return: Index of the closest isochrone point for each star.
+    :rtype: np.ndarray
+    """
+    if _HAS_NUMBA:
+        order = np.argsort(isoch_mag, kind="stable")
+        return _closest_isoch_point_nb(
+            star_mag,
+            star_color,
+            np.ascontiguousarray(isoch_mag[order]),
+            np.ascontiguousarray(isoch_color[order]),
+            order.astype(np.int64),
+        )
+
+    tree = KDTree(np.column_stack((isoch_mag, isoch_color)))
+    _, idx = tree.query(np.column_stack((star_mag, star_color)))
+    return idx
+
+
+if _HAS_NUMBA:
+
+    @njit(cache=True)
+    def _closest_isoch_point_nb(star_mag, star_color, iso_mag_s, iso_col_s, iso_idx_s):
+        """Pruned nearest-point search. ``iso_mag_s`` is sorted in increasing
+        order and ``iso_idx_s`` holds the original index of each sorted point.
+        Squared distances are computed exactly as in the NumPy version, so the
+        selected points are identical."""
+        n = star_mag.size
+        Ni = iso_mag_s.size
+        out = np.empty(n, np.int64)
+        for i in range(n):
+            m = star_mag[i]
+            c = star_color[i]
+            j = np.searchsorted(iso_mag_s, m)
+            best = np.inf
+            b = Ni
+            # Brighter-to-fainter half: |m - mag| grows with k
+            k = j
+            while k < Ni:
+                dm2 = (m - iso_mag_s[k]) ** 2
+                if dm2 > best:
+                    break
+                d2 = dm2 + (c - iso_col_s[k]) ** 2
+                if d2 < best or (d2 == best and iso_idx_s[k] < b):
+                    best = d2
+                    b = iso_idx_s[k]
+                k += 1
+            # Other half: |m - mag| grows as k decreases
+            k = j - 1
+            while k >= 0:
+                dm2 = (m - iso_mag_s[k]) ** 2
+                if dm2 > best:
+                    break
+                d2 = dm2 + (c - iso_col_s[k]) ** 2
+                if d2 < best or (d2 == best and iso_idx_s[k] < b):
+                    best = d2
+                    b = iso_idx_s[k]
+                k -= 1
+            # All-NaN isochrone: fall back to index 0 (as np.argmin would)
+            out[i] = b if b < Ni else 0
+        return out
