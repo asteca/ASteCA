@@ -14,6 +14,11 @@ Only available with numba; the :py:class:`asteca.Synthetic` methods fall back to
 loop over :py:meth:`asteca.Synthetic.generate` otherwise.
 """
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..synthetic import Synthetic
+
 import numpy as np
 
 from . import HAS_NUMBA as _HAS_NUMBA
@@ -39,10 +44,12 @@ def check_n_threads(n_threads) -> None:
         or n_threads < 1
     ):
         raise ValueError(f"'n_threads' must be a positive integer, got {n_threads!r}")
-    if n_threads > numba.config.NUMBA_NUM_THREADS:
+    # NUMBA_NUM_THREADS is set dynamically in numba.config (unknown to type checkers)
+    max_threads = numba.config.NUMBA_NUM_THREADS  # pyright: ignore[reportPrivateImportUsage, reportAttributeAccessIssue]
+    if n_threads > max_threads:
         raise ValueError(
             f"'n_threads={n_threads}' can not be larger than NUMBA_NUM_THREADS="
-            + f"{numba.config.NUMBA_NUM_THREADS}"
+            + f"{max_threads}"
         )
 
 
@@ -67,7 +74,7 @@ def ccmo_array(ext_law: str, ext_coefs: list) -> np.ndarray:
     return np.array(rows, dtype=float)
 
 
-def batch_data(synthcl) -> dict:
+def batch_data(synthcl: "Synthetic") -> dict:
     """Arrays used by the compiled functions that do not change after the
     :py:class:`asteca.Synthetic` object is created. The typed lists hold references
     to the existing IMF samples and mass indexes (no copies).
@@ -78,7 +85,7 @@ def batch_data(synthcl) -> dict:
     :return: Dictionary with the data
     :rtype: dict
     """
-    from numba.typed import List
+    from numba.typed.typedlist import List
 
     N_z, N_a = synthcl.theor_tracks.shape[:2]
     st_list = List()
@@ -186,7 +193,7 @@ def full_params(
 
 if _HAS_NUMBA:
     from numba import njit, prange
-    from numba.typed import List
+    from numba.typed.typedlist import List
 
     from .likelihood_priv import _tremmel_lkl_nb
     from .synth_model import (

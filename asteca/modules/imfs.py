@@ -180,8 +180,7 @@ def sampleInv(
         # The spline is of order k=1 (linear) so its knots without the
         # boundary repetitions and its coefficients are the (x, y) points
         x, y = inv_cdf.t[1:-1], inv_cdf.c
-        if lut is None:
-            lut = invCDF_lut(x)
+        lut_nb = invCDF_lut(x) if lut is None else lut
 
     state = rng.bit_generator.state
     while True:
@@ -190,7 +189,7 @@ def sampleInv(
         # Same values as rng.uniform(0.0, 1.0, N_draw)
         u_vals = rng.random(out=buf[:N_draw])
         if _HAS_NUMBA:
-            N_kept = _sample_chunks_nb(u_vals, x, y, lut, Max_mass, N_chunk)  # pyright: ignore[reportPossiblyUnboundVariable]
+            N_kept = _sample_chunks_nb(u_vals, x, y, lut_nb, Max_mass, N_chunk)  # pyright: ignore[reportPossiblyUnboundVariable]
             masses = u_vals
         else:
             masses = inv_cdf(u_vals)

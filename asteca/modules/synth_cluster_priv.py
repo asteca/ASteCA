@@ -606,7 +606,7 @@ def mass_idx_lookup(
                         ).astype(dtype)
         return lookup
 
-    from numba.typed import List
+    from numba.typed.typedlist import List
 
     # Output arrays are allocated here and filled by the compiled function. They
     # are passed in a typed list where the indexes for the (ml, al) sample and the

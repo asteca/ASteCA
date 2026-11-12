@@ -535,52 +535,6 @@ def zaWAverage(
     return isochrone, m0, a0
 
 
-if _HAS_NUMBA:
-
-    @njit(cache=True)
-    def _zaWAverage_nb(
-        theor_tracks: np.ndarray,
-        ml: int,
-        mh: int,
-        al: int,
-        ah: int,
-        w11: float,
-        w12: float,
-        w21: float,
-        w22: float,
-        m0: int,
-        a0: int,
-        m_ini_idx: int,
-    ) -> np.ndarray:
-        """Compiled (numba) version of the weighted average in
-        :py:func:`zaWAverage`. A single pass reads the four grid isochrones and
-        writes the weighted sum, with the same operations in the same order as
-        the NumPy version (identical results), without temporary arrays. The
-        two mass rows are copied from the closest node (m0, a0) instead of being
-        averaged and then overwritten.
-        """
-        t11 = theor_tracks[ml, al]
-        t12 = theor_tracks[ml, ah]
-        t21 = theor_tracks[mh, al]
-        t22 = theor_tracks[mh, ah]
-        t00 = theor_tracks[m0, a0]
-        N_rows, N_pts = t11.shape
-        isochrone = np.empty((N_rows, N_pts), dtype=t11.dtype)
-        for r in range(N_rows):
-            if r == m_ini_idx or r == m_ini_idx + 1:
-                # DO NOT average the masses (see zaWAverage())
-                for k in range(N_pts):
-                    isochrone[r, k] = t00[r, k]
-            else:
-                for k in range(N_pts):
-                    v = t11[r, k] * w11
-                    v += t12[r, k] * w12
-                    v += t21[r, k] * w21
-                    v += t22[r, k] * w22
-                    isochrone[r, k] = v
-        return isochrone
-
-
 def temp_plot(
     theor_tracks: np.ndarray,
     isochrone: np.ndarray,
@@ -756,6 +710,52 @@ def temp_plot(
     # plt.scatter(theor_tracks[mh][ah][2], theor_tracks[mh][ah][0], c='orange')
     # plt.scatter(isochrone[2], isochrone[0], c='g', ls='--')
     # plt.gca().invert_yaxis()
+
+
+if _HAS_NUMBA:
+
+    @njit(cache=True)
+    def _zaWAverage_nb(
+        theor_tracks: np.ndarray,
+        ml: int,
+        mh: int,
+        al: int,
+        ah: int,
+        w11: float,
+        w12: float,
+        w21: float,
+        w22: float,
+        m0: int,
+        a0: int,
+        m_ini_idx: int,
+    ) -> np.ndarray:
+        """Compiled (numba) version of the weighted average in
+        :py:func:`zaWAverage`. A single pass reads the four grid isochrones and
+        writes the weighted sum, with the same operations in the same order as
+        the NumPy version (identical results), without temporary arrays. The
+        two mass rows are copied from the closest node (m0, a0) instead of being
+        averaged and then overwritten.
+        """
+        t11 = theor_tracks[ml, al]
+        t12 = theor_tracks[ml, ah]
+        t21 = theor_tracks[mh, al]
+        t22 = theor_tracks[mh, ah]
+        t00 = theor_tracks[m0, a0]
+        N_rows, N_pts = t11.shape
+        isochrone = np.empty((N_rows, N_pts), dtype=t11.dtype)
+        for r in range(N_rows):
+            if r == m_ini_idx or r == m_ini_idx + 1:
+                # DO NOT average the masses (see zaWAverage())
+                for k in range(N_pts):
+                    isochrone[r, k] = t00[r, k]
+            else:
+                for k in range(N_pts):
+                    v = t11[r, k] * w11
+                    v += t12[r, k] * w12
+                    v += t21[r, k] * w21
+                    v += t22[r, k] * w22
+                    isochrone[r, k] = v
+        return isochrone
 
 
 def move_isochrone(

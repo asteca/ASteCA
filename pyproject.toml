@@ -51,3 +51,9 @@ exclude = ["docs/"]
 
 [tool.hatch.build.targets.sdist]
 exclude = ["docs/"]
+
+[tool.pydoclint]
+style = "sphinx"
+check-style-mismatch = true
+exclude = "(.venv|helpers*|docs)"
+native-mode-noqa-location = "definition"
