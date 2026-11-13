@@ -203,7 +203,12 @@ if _HAS_NUMBA:
         _mass_interp_nb,
         _scatter_add_nb,
         _zaWAverage_nb,
+        per_star_pool,
+        per_star_pool_next,
     )
+
+    _per_star_pool_nb = njit(cache=True)(per_star_pool)
+    _per_star_pool_next_nb = njit(cache=True)(per_star_pool_next)
 
     @njit(cache=True)
     def _synth_one(
@@ -279,27 +284,30 @@ if _HAS_NUMBA:
         if binar_flag:
             isochrone[m_ini_idx + 2] += dm
 
-        # extinction()
-        dr_kind = 1 if dr > 0.0 else 0
-        if ext_kind == 0:
-            _extinction_gaiadr3_nb(
-                isochrone, dr_frac, dr_kind, av, av, dr, m_ini_idx, binar_flag
-            )
-        else:
-            # synth_model.ccmo_coefs()
+        # synth_model.ccmo_coefs()
+        ec_mag = ec_col1 = ec_col2 = 0.0
+        col2_flag = False
+        if ext_kind == 1:
             rv = p[6]
             ec_mag = ccm[0, 0] + ccm[0, 1] / rv
             ec_col1 = (ccm[1, 0] + ccm[1, 1] / rv) - (ccm[1, 2] + ccm[1, 3] / rv)
-            ec_col2 = 0.0
             col2_flag = ccm.shape[0] > 2
             if col2_flag:
                 ec_col2 = (ccm[2, 0] + ccm[2, 1] / rv) - (ccm[2, 2] + ccm[2, 3] / rv)
+
+        # extinction() with the minimum absorption Av, on a copy of the isochrone
+        isoch_av = isochrone.copy()
+        if ext_kind == 0:
+            _extinction_gaiadr3_nb(
+                isoch_av, dr_frac, 0, av, av, 0.0, m_ini_idx, binar_flag
+            )
+        else:
             _extinction_ccmo_nb(
-                isochrone,
+                isoch_av,
                 dr_frac,
-                dr_kind,
+                0,
                 av,
-                dr,
+                0.0,
                 m_ini_idx,
                 binar_flag,
                 ec_mag,
@@ -309,31 +317,72 @@ if _HAS_NUMBA:
             )
 
         # cut_max_mag()
-        msk_cut = isochrone[0] < max_mag
+        msk_cut = isoch_av[0] < max_mag
         idx_cut = np.flatnonzero(msk_cut)
         if idx_cut.size == 0:
             return np.empty((isochrone.shape[0], 0))[:N_rows]
 
-        # mass_interp()
+        # Pool of candidate stars, grown until N_synth stars are brighter than the
+        # maximum magnitude after their extinction (see synth_model.get_model())
         k = ((ml * N_a + al) * 2 + (m0 - ml)) * 2 + (a0 - al)
-        isoch_mass = _mass_interp_nb(
-            isochrone,
-            idx_cut,
-            msk_cut,
-            m_ini_idx,
-            st_list[ml * N_a + al],
-            N_synth,
-            midx_list[k],
-        )
-        if isoch_mass.shape[1] == 0:
-            return np.empty((isochrone.shape[0], 0))[:N_rows]
+        st_mass = st_list[ml * N_a + al]
+        dr_kind = 1 if dr > 0.0 else 0
+        N_pool = _per_star_pool_nb(N_synth, dr)
+        while True:
+            # mass_interp()
+            isoch_mass = _mass_interp_nb(
+                isochrone,
+                idx_cut,
+                msk_cut,
+                m_ini_idx,
+                st_mass,
+                N_pool,
+                midx_list[k],
+            )
+            if isoch_mass.shape[1] == 0:
+                return np.empty((isochrone.shape[0], 0))[:N_rows]
+            N_stars = isoch_mass.shape[1]
 
-        # binarity()
-        if not binar_flag:
-            isoch_mass[m_ini_idx + 1] = np.nan
-        else:
-            _binarity_nb(alpha, beta, m_ini_idx, unif1, isoch_mass)
-        isoch_binar = isoch_mass[:N_rows]
+            # binarity()
+            if not binar_flag:
+                isoch_mass[m_ini_idx + 1] = np.nan
+            else:
+                _binarity_nb(alpha, beta, m_ini_idx, unif1, isoch_mass)
+            isoch_all = isoch_mass[:N_rows]
+
+            # extinction() of each star
+            if ext_kind == 0:
+                _extinction_gaiadr3_nb(
+                    isoch_all, dr_frac, dr_kind, av, av, dr, m_ini_idx, False
+                )
+            else:
+                _extinction_ccmo_nb(
+                    isoch_all,
+                    dr_frac,
+                    dr_kind,
+                    av,
+                    dr,
+                    m_ini_idx,
+                    False,
+                    ec_mag,
+                    ec_col1,
+                    ec_col2,
+                    col2_flag,
+                )
+
+            keep = np.flatnonzero(isoch_all[0] < max_mag)
+            if keep.size >= N_synth or N_stars < N_pool:
+                break
+            N_new = _per_star_pool_next_nb(
+                N_pool, keep.size, N_stars, N_synth, st_mass.size
+            )
+            if N_new <= N_pool:
+                break
+            N_pool = N_new
+
+        if keep.size == 0:
+            return np.empty((isochrone.shape[0], 0))[:N_rows]
+        isoch_binar = isoch_all[:, keep[:N_synth]]
 
         # add_errors()
         if err.shape[0] > 0:

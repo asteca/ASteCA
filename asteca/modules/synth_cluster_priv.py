@@ -476,7 +476,7 @@ def truncnorm_sample(
 
 def dr_fractions(rand_unif: np.ndarray, DR_distribution: str) -> np.ndarray:
     """Fractions 'f' (in [0, 1]) of the differential reddening applied to each
-    point, A_i = Av + f_i * DR.
+    synthetic star, A_i = Av + f_i * DR.
 
     internal: stars and dust uniformly mixed in a sphere, behind a uniform
     foreground screen (Av). DR is the absorption through the centre of the

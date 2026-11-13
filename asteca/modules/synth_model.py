@@ -240,46 +240,28 @@ def get_model(
     # Move theoretical isochrone using the distance modulus
     isoch_moved = move_isochrone(isochrone, binar_flag, m_ini_idx, dm)
 
-    isoch_extin_dr_0 = np.array([])
-    if isoch_flag:
-        # Use DR=0 to avoid disrupting the isochrone. The 'dr' variable is not
-        # modified because it is used below for the synthetic cluster
-        isoch_extin_dr_0 = extinction(
-            ext_law,
-            ext_coefs,
-            rand_floats["dr_frac"],
-            m_ini_idx,
-            binar_flag,
-            av,
-            0.0,
-            rv,
-            isoch_moved.copy(),  # IMPORTANT, avoids double perturbing
-        )
-
-    # Apply extinction correction.
-    # NOTE: the differential reddening is drawn for each isochrone point, and the
-    # synthetic stars are interpolated between two points in mass_interp(). A star's
-    # absorption is thus a weighted average of two independent draws, which makes the
-    # realized spread of the absorption ~sqrt(2/3) (~18% narrower) that of the
-    # selected DR model, and correlates the absorption of stars with similar masses.
-    # Applying the DR per star (after the interpolation and binarity) gives the
-    # nominal distributions, but was found to be ~1.4-1.6X slower per model
-    isoch_extin = extinction(
+    # Isochrone with the minimum absorption Av (no differential reddening). It is
+    # only used to identify the isochrone points that can produce stars brighter
+    # than the maximum magnitude (a larger absorption only makes a star fainter),
+    # and returned as the isochrone if requested. The copy avoids reddening
+    # 'isoch_moved', which is interpolated below
+    isoch_av = extinction(
         ext_law,
         ext_coefs,
         rand_floats["dr_frac"],
         m_ini_idx,
         binar_flag,
         av,
-        dr,
+        0.0,
         rv,
-        isoch_moved,
+        isoch_moved.copy(),
     )
+    isoch_extin_dr_0 = isoch_av if isoch_flag else np.array([])
 
     # Identify the isochrone points below the maximum magnitude. The isochrone
     # itself is not cut (which would copy it): the points are selected through
     # their indexes in mass_interp()
-    idx_cut, msk_cut = cut_max_mag(isoch_extin, max_mag_syn)
+    idx_cut, msk_cut = cut_max_mag(isoch_av, max_mag_syn)
     if idx_cut.size == 0:
         if show_errors:
             print(
@@ -290,40 +272,137 @@ def get_model(
 
     # Pre-computed search indexes for this IMF sample and grid node
     mass_idx = mass_idx_lookup[(ml, al, m0, a0)]
+    st_mass = st_dist_mass[ml][al]
 
-    # Interpolate IMF's sampled masses into the isochrone.
-    isoch_mass = mass_interp(
-        isoch_extin,
-        idx_cut,
-        msk_cut,
-        m_ini_idx,
-        st_dist_mass[ml][al],
-        N_synth_stars,
-        mass_idx,
-        # binar_flag,
-    )
-    if isoch_mass.size == 0:
+    # The extinction is applied to each synthetic star (after the interpolation and
+    # the binarity), so that each star gets its own differential reddening draw
+    # (see per_star_pool()). As some stars end up below the maximum magnitude, a
+    # pool of candidates is generated: the first stars of the IMF sample within the
+    # isochrone's mass range. The pool is grown until 'N_synth_stars' stars are
+    # brighter than the maximum magnitude, or the IMF sample is exhausted. The
+    # stars (and their random values) are always taken in the same order, so the
+    # result does not depend on the pool sizes
+    N_pool = per_star_pool(N_synth_stars, dr)
+    while True:
+        # Interpolate IMF's sampled masses into the isochrone.
+        isoch_mass = mass_interp(
+            isoch_moved,
+            idx_cut,
+            msk_cut,
+            m_ini_idx,
+            st_mass,
+            N_pool,
+            mass_idx,
+        )
+        if isoch_mass.size == 0:
+            if show_errors:
+                print(
+                    f"No stars left after IMF interpolation (met={met:.5f},"
+                    + f"log(age)={loga:.3f}, Av={av:.3f}, DR={dr:.3f}, dm={dm:.3f})"
+                )
+            return isoch_extin_dr_0, np.array([])
+        N_stars = isoch_mass.shape[1]
+
+        # Assignment of binarity.
+        isoch_binar = binarity(
+            alpha,
+            beta,
+            binar_flag,
+            m_ini_idx,
+            rand_floats["unif"][1],
+            isoch_mass,
+        )
+
+        # Extinction of each star, from the intrinsic color of the system. The
+        # binary photometry was already combined, hence 'binar_flag=False'
+        isoch_binar = extinction(
+            ext_law,
+            ext_coefs,
+            rand_floats["dr_frac"],
+            m_ini_idx,
+            False,
+            av,
+            dr,
+            rv,
+            isoch_binar,
+        )
+
+        keep = np.flatnonzero(isoch_binar[0] < max_mag_syn)
+        # Enough stars, or IMF sample exhausted
+        if keep.size >= N_synth_stars or N_stars < N_pool:
+            break
+        N_new = per_star_pool_next(
+            N_pool, keep.size, N_stars, N_synth_stars, st_mass.size
+        )
+        if N_new <= N_pool:
+            break
+        N_pool = N_new
+
+    if keep.size == 0:
         if show_errors:
             print(
-                f"No stars left after IMF interpolation (met={met:.5f},"
+                f"No stars left after the extinction (met={met:.5f},"
                 + f"log(age)={loga:.3f}, Av={av:.3f}, DR={dr:.3f}, dm={dm:.3f})"
             )
         return isoch_extin_dr_0, np.array([])
-
-    # Assignment of binarity.
-    isoch_binar = binarity(
-        alpha,
-        beta,
-        binar_flag,
-        m_ini_idx,
-        rand_floats["unif"][1],
-        isoch_mass,
-    )
+    isoch_binar = isoch_binar[:, keep[:N_synth_stars]]
 
     # Assign errors according to errors distribution.
     synth_clust = add_errors(isoch_binar, err_dist_synth)
 
     return isoch_extin_dr_0, synth_clust
+
+
+def per_star_pool(N_synth_stars: int, dr: float) -> int:
+    """Initial number of candidate stars generated by :py:func:`get_model`.
+
+    Each synthetic star gets its own absorption ``A = Av + f * DR``, applied after
+    the interpolation of the IMF masses into the isochrone. The stars are selected
+    with the magnitude of the isochrone at the minimum absorption ``Av``, so with
+    ``DR > 0`` some of them end up below the maximum magnitude and are discarded.
+    50% more candidates (plus 10) are generated in that case, and 5% more without
+    differential reddening (where only stars interpolated close to the magnitude
+    limit can be lost).
+
+    :param N_synth_stars: Number of synthetic stars required
+    :type N_synth_stars: int
+    :param dr: Differential reddening
+    :type dr: float
+
+    :return: Number of candidates
+    :rtype: int
+    """
+    if dr > 0.0:
+        return N_synth_stars + N_synth_stars // 2 + 10
+    return N_synth_stars + N_synth_stars // 20 + 10
+
+
+def per_star_pool_next(
+    N_pool: int, N_kept: int, N_stars: int, N_synth_stars: int, N_max: int
+) -> int:
+    """Size of the next pool of candidates in :py:func:`get_model`, when the
+    current one gave too few stars above the maximum magnitude: the size required
+    by the observed fraction of surviving stars, plus a 20% margin (at least 1.5x
+    the current size), and at most the size of the IMF sample.
+
+    :param N_pool: Current number of candidates
+    :type N_pool: int
+    :param N_kept: Number of candidates that survived the magnitude cut
+    :type N_kept: int
+    :param N_stars: Number of candidates generated (``<= N_pool``)
+    :type N_stars: int
+    :param N_synth_stars: Number of synthetic stars required
+    :type N_synth_stars: int
+    :param N_max: Size of the IMF sample
+    :type N_max: int
+
+    :return: Number of candidates
+    :rtype: int
+    """
+    # 1.2 * N_synth_stars / (N_kept / N_stars), in integer arithmetic
+    N_new = (12 * N_synth_stars * N_stars) // (10 * max(N_kept, 1)) + 10
+    N_new = max(N_new, N_pool + N_pool // 2)
+    return min(N_new, N_max)
 
 
 def properModel(
@@ -818,7 +897,8 @@ def extinction(
     and:
     ccm_coef = a + b / Rv = ext_coefs[i][0] + ext_coefs[i][1] / Rv
 
-    With differential reddening (dr>0) the total absorption of each point is:
+    With differential reddening (dr>0) the total absorption of each column (a
+    synthetic star, see :py:func:`get_model`) is:
 
     A_i = Av + f_i * dr
 
@@ -845,7 +925,7 @@ def extinction(
     :type ext_law: str
     :param ext_coefs: List of extinction coefficients.
     :type ext_coefs: list | np.ndarray
-    :param dr_frac: Fractions of the differential reddening applied to each point.
+    :param dr_frac: Fractions of the differential reddening applied to each column.
     :type dr_frac: np.ndarray
     :param m_ini_idx: Index of the initial mass.
     :type m_ini_idx: int

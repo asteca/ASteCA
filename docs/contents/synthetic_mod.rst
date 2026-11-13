@@ -385,13 +385,19 @@ How the two distributions differ
 
 .. note::
 
-   The values above describe the distributions from which :math:`f` is drawn. In the
-   synthetic clusters, :math:`f` is drawn once for each point of the isochrone, and
-   each synthetic star is interpolated between two adjacent points. A star's
-   absorption is thus a weighted average of two independent draws. This leaves the
-   mean absorption unchanged, but makes its spread about :math:`\sqrt{2/3}\approx 0.82`
-   times the values listed (i.e.: ~18% narrower), softens the edges of the
-   distributions, and correlates the absorption of stars with similar masses.
+   Each synthetic star gets its own value of :math:`f`, drawn independently. The
+   absorption is applied after the star's mass is interpolated into the isochrone
+   and its binary companion (if any) is added, and the extinction coefficients of
+   the ``GAIADR3`` law are evaluated at the intrinsic color of the system. The stars
+   of the synthetic cluster thus follow the distributions above exactly, and stars
+   of similar masses are reddened independently, as in a real cluster.
+
+   Since a star's absorption is only known after it is generated, the stars that
+   end up fainter than the maximum magnitude of the observed cluster are discarded,
+   and more stars are generated until the synthetic cluster has as many stars as
+   the observed one. With a large :math:`DR` the number of stars required from
+   the IMF sample grows accordingly, so a larger ``max_mass`` value may be needed
+   (see :ref:`ref_defining`).
 
 The figure below shows the two distributions of :math:`f` (left). The middle
 panel shows the absorption they produce for the same parameters,
