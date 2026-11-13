@@ -46,7 +46,7 @@ The fitted parameters and their uniform priors are given as a dictionary of
         "dm": (8.0, 10.5),
         "Av": (0.0, 2.0),
     }
-    sampler = asteca.Sampler(synthcl, priors, temperature="auto", seed=1)
+    sampler = asteca.Sampler(synthcl, priors, temperature="auto")
     sampler.run(n_total=512)
 
 The run ends when the particles sample the posterior and the effective sample size of
@@ -57,8 +57,9 @@ In our tests, these values and ``n_total=512`` took about half the time of twice
 many particles, with the same accuracy and uncertainties, while halving them again
 made the uncertainties too small.
 
-The results depend on the ``seed`` of the sampler and also on the seed of the
-``synthcl`` object, which fixes the random sampling of its synthetic clusters.
+The sampler inherits the ``seed`` of the ``synthcl`` object, which also fixes the
+random sampling of its synthetic clusters, so setting that seed is enough to make the
+results reproducible.
 
 
 Temperature

@@ -34,8 +34,9 @@ class Sampler:
     parameters that are not included in ``priors`` keep the default values of the
     ``synthcl`` object.
 
-    The results depend on the seed of this object and also on the seed of the
-    ``synthcl`` object, which fixes the random sampling of its synthetic clusters.
+    The random seed is inherited from the ``synthcl`` object (its ``seed``
+    attribute), which also fixes the random sampling of its synthetic clusters. The
+    results are thus reproducible by setting the ``seed`` of the ``synthcl`` object.
 
     :param synthcl: :py:class:`asteca.Synthetic` object, calibrated with the observed
         cluster via :py:meth:`asteca.Synthetic.calibrate`
@@ -67,8 +68,6 @@ class Sampler:
         (before importing ``asteca``) or with ``numba.set_num_threads()``. It can not
         be larger than ``NUMBA_NUM_THREADS``
     :type n_threads: int | None
-    :param seed: Random seed. If ``None`` a random integer will be generated and used
-    :type seed: int | None
     :param verbose: Verbose level. A value of ``0`` hides all output
     :type verbose: int
 
@@ -87,7 +86,6 @@ class Sampler:
         n_active: int = 128,
         parallel: bool = False,
         n_threads: int | None = None,
-        seed: int | None = None,
         verbose: int = 1,
     ) -> None:
         self.synthcl = synthcl
@@ -95,15 +93,14 @@ class Sampler:
         self.n_active = int(n_active)
         self.parallel = parallel
         self.n_threads = n_threads
-        self.seed = seed
+        # The seed is inherited from the Synthetic object
+        self.seed = int(synthcl.seed)
         self.verbose = verbose
 
         self.names = list(priors)
         self.bounds = np.array([priors[k] for k in self.names], dtype=float)
         self._check_args(temperature)
 
-        if self.seed is None:
-            self.seed = int(np.random.randint(0, 100_000))
         # A legacy RandomState is used so that the results match those of pocoMC
         # (with precondition=False) for the same seed
         self.rng = np.random.RandomState(self.seed)

@@ -37,7 +37,7 @@ def main():
         "dm": (7.5, 8.5),
         "Av": (0.0, 5.0),
     }
-    sampler = asteca.Sampler(synthcl, priors, temperature="auto", seed=42)
+    sampler = asteca.Sampler(synthcl, priors, temperature="auto")
     sampler.run()
     summ = sampler.summary()
     print(f"Best distance: {sampler.best_dist:.3f}")
