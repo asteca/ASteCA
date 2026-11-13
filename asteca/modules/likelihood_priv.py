@@ -3,10 +3,22 @@ import warnings
 import numpy as np
 from astropy.stats import calculate_bin_edges
 from fast_histogram import histogram2d
+from scipy.ndimage import convolve1d
 from scipy.special import gammaln
 
 from . import HAS_NUMBA as _HAS_NUMBA
 from . import njit
+
+# cmd_overlap(): the kernel sums are computed on a grid (see _k_sums_grid) if the
+# number of observed-synthetic pairs is at least _GRID_MIN_PAIRS (below it the exact
+# pair sums are as fast) and the grid has at most _GRID_MAX_CELLS cells (otherwise,
+# e.g. with very distant outliers, the exact sums are used)
+_GRID_MIN_PAIRS = 300_000
+_GRID_MAX_CELLS = 1_000_000
+# Grid spacing, in units of the kernel widths
+_GRID_STEP = 0.2
+# The kernel exp(-d^2/4) is truncated at d=7 in each dimension (k<5e-6)
+_GRID_KERNEL_CUT = 7.0
 
 try:
     # C core of fast_histogram, skips the (costly) argument validation performed by
@@ -400,6 +412,10 @@ def cmd_overlap(
     """Overlap distance between the observed and synthetic clusters in the CMD
     (magnitude and first color), see :py:meth:`asteca.Synthetic.cmd_overlap`.
 
+    The sums of the kernel over the pairs of stars are computed exactly (cost
+    proportional to the number of pairs) for small clusters, and on a grid (cost
+    independent of the number of stars) for large ones, see :py:func:`_k_sums_grid`.
+
     :param mag: Array of observed magnitudes.
     :type mag: np.ndarray
     :param color: Array of observed colors.
@@ -450,7 +466,12 @@ def cmd_overlap(
             s2 += (k * k).sum()
         return s1, s2
 
-    if _HAS_NUMBA:
+    sums = None
+    if N * M >= _GRID_MIN_PAIRS:
+        sums = _k_sums_grid(obs, syn)
+    if sums is not None:
+        s_oo, s2_oo, s_ss, s2_ss, s_os = sums
+    elif _HAS_NUMBA:
         s_oo, s2_oo = _k_sums_self_nb(obs)
         s_ss, s2_ss = _k_sums_self_nb(syn)
         s_os = _k_sums_cross_nb(obs, syn)
@@ -478,6 +499,71 @@ def cmd_overlap(
     D_std = np.sqrt(var) / (k_oo + k_ss)
 
     return float(D), float(D_std)
+
+
+def _k_sums_grid(
+    obs: np.ndarray, syn: np.ndarray
+) -> tuple[float, float, float, float, float] | None:
+    """Sums of the kernel ``k = exp(-d^2/4)`` (and of ``k^2``) over the pairs of
+    stars used by :py:func:`cmd_overlap`, computed on a grid.
+
+    The stars (coordinates already scaled by the kernel widths) are binned on a grid
+    of spacing ``_GRID_STEP`` that spans all of them, and the sum over the pairs of
+    two sets of stars becomes ``sum(H_a * (K * H_b))``, where ``H`` are their
+    histograms and ``*`` is the convolution with the kernel (separable, so it is done
+    one dimension at a time). The cost depends on the size of the grid, not on the
+    number of stars.
+
+    Moving each star to the nearest grid point is equivalent to using the kernel
+    ``k(g(x), g(y))``, with ``g`` the binning: still a positive definite kernel with
+    ``k=1`` for a star paired with itself. Hence the self-pairs are removed exactly as
+    in the pair sums, and the resulting ``D`` keeps its properties (e.g.: ``0`` on
+    average for a synthetic cluster drawn from the same distribution as the observed
+    one). The binning only widens the kernel by a negligible amount (it adds a
+    variance of ``~_GRID_STEP^2/6`` kernel widths squared to the separation of two
+    stars, per dimension).
+
+    :param obs: Scaled observed stars, shape ``(N, 2)``
+    :type obs: np.ndarray
+    :param syn: Scaled synthetic stars, shape ``(M, 2)``
+    :type syn: np.ndarray
+
+    :return: ``(s_oo, s2_oo, s_ss, s2_ss, s_os)``, sums of ``k`` and ``k^2`` over all
+        the observed pairs and all the synthetic pairs (including the pairs of a star
+        with itself), and of ``k`` over the observed-synthetic pairs. ``None`` if the
+        grid would have more than ``_GRID_MAX_CELLS`` cells
+    :rtype: tuple[float, float, float, float, float] | None
+    """
+    step = _GRID_STEP
+    lo = np.minimum(obs.min(axis=0), syn.min(axis=0))
+    hi = np.maximum(obs.max(axis=0), syn.max(axis=0))
+    n0, n1 = (np.rint((hi - lo) / step).astype(np.intp) + 1).tolist()
+    if n0 * n1 > _GRID_MAX_CELLS:
+        return None
+
+    L = int(np.ceil(_GRID_KERNEL_CUT / step))
+    lag = np.arange(-L, L + 1) * step
+    k1 = np.exp(-0.25 * lag * lag)
+    k1_sq = k1 * k1
+
+    def hist(x: np.ndarray) -> np.ndarray:
+        idx = np.rint((x - lo) / step).astype(np.intp)
+        flat = idx[:, 0] * n1 + idx[:, 1]
+        return np.bincount(flat, minlength=n0 * n1).reshape(n0, n1).astype(float)
+
+    def conv(H: np.ndarray, k: np.ndarray) -> np.ndarray:
+        return convolve1d(
+            convolve1d(H, k, axis=0, mode="constant"), k, axis=1, mode="constant"
+        )
+
+    H_o, H_s = hist(obs), hist(syn)
+    G_o = conv(H_o, k1)
+    s_oo = float((H_o * G_o).sum())
+    s_os = float((H_s * G_o).sum())
+    s_ss = float((H_s * conv(H_s, k1)).sum())
+    s2_oo = float((H_o * conv(H_o, k1_sq)).sum())
+    s2_ss = float((H_s * conv(H_s, k1_sq)).sum())
+    return s_oo, s2_oo, s_ss, s2_ss, s_os
 
 
 if _HAS_NUMBA:

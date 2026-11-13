@@ -868,6 +868,15 @@ Notes:
   contaminants have a very small effect on it, but differences in sparsely populated
   regions (e.g.: a turn-off or a few giants) also contribute little (see the turn-off
   check below)
+- The cost of the sums over all the pairs of stars grows with the product of the
+  numbers of observed and synthetic stars. For large clusters (more than about
+  300,000 pairs, i.e. ~550 stars each) the stars are binned on a grid with a
+  spacing of 0.2 kernel widths and the sums are obtained by convolving the binned
+  CMDs with the kernel, at a cost that does not depend on the number of stars (e.g.:
+  ~20 ms instead of ~600 ms for 4,000 stars). This is equivalent to using a very
+  slightly wider kernel, with the self-pairs removed exactly, so the properties
+  above are preserved. In tests with real clusters, ``D`` and ``D_std`` differed
+  from the exact values by less than 0.1 times ``D_std``
 
 Turn-off check
 --------------

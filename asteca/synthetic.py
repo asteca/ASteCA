@@ -552,6 +552,10 @@ class Synthetic:
         CMDs are compared, so the same values must be used for all the clusters
         whose ``D`` values are compared.
 
+        For large clusters (more than ~550 observed and synthetic stars) the sums
+        over the pairs of stars are computed on a grid, which is much faster and
+        gives the same ``D`` up to a small fraction of ``D_std``.
+
         The observed cluster is the one passed to :py:meth:`calibrate`.
 
         Turn-off check: the turn-off point of the isochrone of the synthetic cluster
