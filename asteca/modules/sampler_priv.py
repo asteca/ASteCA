@@ -27,17 +27,19 @@ Changes with respect to pocoMC's code, which do not change the results:
   for each of the (up to 1000) candidates. The selected threshold is then checked
   with pocoMC's computation, so the kept samples and weights are identical. In
   pocoMC this function dominated the run time of the sampler itself (excluding the
-  likelihood): about 1.2 s out of 1.6 s in a run with the default settings and four
-  fitted parameters, now 0.1 s.
+  likelihood).
 
 References:
 
 - Karamanis et al. (2022), MNRAS, 516, 1644: "Accelerating astronomical and
   cosmological inference with preconditioned Monte Carlo"
-- Karamanis et al. (2022), arXiv:2207.05660: "pocoMC: A Python package for
+  https://academic.oup.com/mnras/article/516/2/1644/6670808
+- Karamanis et al. (2022), JOSS, 7, 79: "pocoMC: A Python package for
   accelerated Bayesian inference in astronomy and cosmology"
+  https://joss.theoj.org/papers/10.21105/joss.04634
 - Karamanis & Seljak (2025), Stat. Comput., 35, 144: "Persistent sampling: enhancing
   the efficiency of sequential Monte Carlo"
+  https://link.springer.com/article/10.1007/s11222-025-10682-y
 """
 
 from collections.abc import Callable
