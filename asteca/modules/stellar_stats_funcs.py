@@ -1,4 +1,5 @@
 import warnings
+from typing import TYPE_CHECKING
 
 import numpy as np
 from scipy.signal import savgol_filter
@@ -6,6 +7,9 @@ from scipy.spatial import KDTree
 
 from . import HAS_NUMBA as _HAS_NUMBA
 from . import njit
+
+if TYPE_CHECKING:
+    from ..isochrones import Isochrones
 
 
 def to_point_find(
@@ -104,6 +108,126 @@ def to_point_find(
     to_col, to_mag = float(x[to_idx]), float(y[to_idx])
 
     return to_col, to_mag, to_idx
+
+
+def stellar_parameters(
+    cluster_mag: np.ndarray,
+    cluster_e_mag: np.ndarray,
+    cluster_colors: list,
+    cluster_e_colors: list,
+    m_ini_idx: int,
+    synthcls: list[np.ndarray],
+    turn_off_points: dict,
+    bss_box: tuple[float, float, float, float],
+    isochs_young: "Isochrones | None",
+    extrinsic_pars: dict,
+    ext_law: str,
+    ext_coefs: list | np.ndarray,
+    rng: np.random.Generator,
+) -> tuple[dict, np.ndarray, np.ndarray]:
+    """Per-star masses and probabilities of the observed stars, used by
+    :py:meth:`asteca.Synthetic.cluster_properties`
+
+    :param cluster_mag: Magnitudes of the observed stars
+    :type cluster_mag: np.ndarray
+    :param cluster_e_mag: Magnitude uncertainties of the observed stars
+    :type cluster_e_mag: np.ndarray
+    :param cluster_colors: Colors of the observed stars, ``[color, color2]``
+    :type cluster_colors: list
+    :param cluster_e_colors: Color uncertainties of the observed stars
+    :type cluster_e_colors: list
+    :param m_ini_idx: Index of the initial mass in the synthetic clusters
+    :type m_ini_idx: int
+    :param synthcls: Synthetic clusters of the sampled models
+    :type synthcls: list[np.ndarray]
+    :param turn_off_points: Turn-off points of the synthetic clusters
+    :type turn_off_points: dict
+    :param bss_box: Offsets that define the BSS region, ``(mag_offset_1,
+        col_offset_1, mag_offset_2, col_offset_2)``
+    :type bss_box: tuple[float, float, float, float]
+    :param isochs_young: Isochrones with ``log(age)<=7``, or ``None``
+    :type isochs_young: Isochrones | None
+    :param extrinsic_pars: Values and STDDEVs of the extrinsic parameters
+    :type extrinsic_pars: dict
+    :param ext_law: Extinction law
+    :type ext_law: str
+    :param ext_coefs: Extinction coefficients
+    :type ext_coefs: list | np.ndarray
+    :param rng: Random number generator
+    :type rng: np.random.Generator
+
+    :return: Dictionary of per-star arrays, the secondary masses assigned to the
+        observed stars by each synthetic cluster (``nan`` for single systems), and
+        the mask of the stars with valid photometry
+    :rtype: tuple[dict, np.ndarray, np.ndarray]
+    """
+    # Stellar masses
+    m1_med, m1_std, m2_med, m2_std, nan_msk, m2_obs = get_stellar_masses(
+        cluster_mag,
+        cluster_e_mag,
+        cluster_colors,
+        cluster_e_colors,
+        m_ini_idx,
+        synthcls,
+    )
+
+    # Binary probabilities
+    binar_probs = get_binar_probabilities(m2_obs)
+
+    # BSS probabilities
+    mag_offset_1, col_offset_1, mag_offset_2, col_offset_2 = bss_box
+    bss_probs = get_bss_probabilities(
+        cluster_mag,
+        cluster_colors,
+        turn_off_points,
+        len(synthcls),
+        mag_offset_1,
+        mag_offset_2,
+        col_offset_1,
+        col_offset_2,
+    )
+
+    binar_probs = (1 - bss_probs) * binar_probs
+    single_probs = 1 - binar_probs - bss_probs
+
+    N_cluster = len(cluster_mag)
+    bss_mass_median, bss_mass_stddev = (
+        np.full(N_cluster, np.nan),
+        np.full(N_cluster, np.nan),
+    )
+    if isochs_young is not None:
+        bss_mass_median, bss_mass_stddev = get_bss_masses(
+            cluster_mag,
+            cluster_colors[0],
+            extrinsic_pars,
+            ext_law,
+            ext_coefs,
+            rng,
+            isochs_young.met_age_dict,
+            isochs_young.theor_tracks,
+        )
+    else:
+        warnings.warn(
+            "No young isochrones were provided, BSSs masses can not be estimated"
+        )
+
+    data = {
+        "mass_single": m1_med,
+        "mass_single_std": m1_std,
+        "mass_binar": m2_med,
+        "mass_binar_std": m2_std,
+        "mass_bss": bss_mass_median,
+        "mass_bss_std": bss_mass_stddev,
+        "single_prob": single_probs,
+        "binar_prob": binar_probs,
+        "bss_prob": bss_probs,
+    }
+
+    # Assign all nans to stars with a photometric nan in any dimension
+    for value in data.values():
+        value[nan_msk] = np.nan
+
+    return data, m2_obs, ~nan_msk
 
 
 def get_stellar_masses(

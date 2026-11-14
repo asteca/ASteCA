@@ -805,9 +805,32 @@ class Synthetic:
             model, model_std, N_models, color_idx
         )
 
-        stars, m2_obs, valid = self._stellar_parameters(
-            synthcls, turn_off_points, extrinsic_pars, isochs_young, bss_box
+        stars, m2_obs, valid = ssf.stellar_parameters(
+            self.cluster_mag,
+            self.cluster_e_mag,
+            self.cluster_colors,
+            self.cluster_e_colors,
+            self.m_ini_idx,
+            synthcls,
+            turn_off_points,
+            bss_box,
+            isochs_young,
+            extrinsic_pars,
+            self.ext_law,
+            self.ext_coefs,
+            self.rng,
         )
+        # Add ID column if it exists
+        if self.star_id is not None:
+            stars = {"star_id": self.star_id, **stars}
+        N_nan = int((~valid).sum())
+        if N_nan > 0:
+            self._vp("", 0)
+            warnings.warn(
+                f"\nN={N_nan} stars found with no valid photometric data. "
+                + "These will be assigned 'nan' values\nfor masses and "
+                + "probabilities"
+            )
 
         # Binary fraction and number of BSSs, from the stars with valid photometry
         N_valid = int(valid.sum())
@@ -820,8 +843,42 @@ class Synthetic:
             axis=1
         ) / N_valid
 
-        masses = self._cluster_masses(
-            models, synthcls, radec_c, rho_amb, gal_pot, disrup
+        # The number of stars in the synthetic clusters is not constant so we estimate
+        # its median, and compare it with the number of observed stars
+        N_stars_isoch = int(np.median([np.shape(_)[-1] for _ in synthcls]))
+        if N_stars_isoch < self.N_stars_obs:
+            warnings.warn(
+                f"\nThe number of synthetic stars ({N_stars_isoch}) is smaller than "
+                + f"the number of\nobserved stars ({self.N_stars_obs}). Increase "
+                + "the 'max_mass' argument in `asteca.Synthetic()`\nfor a more "
+                + "accurate mass estimation"
+            )
+        # Use the position of the observed cluster if no ambient density or
+        # coordinates are given
+        if (
+            rho_amb is None
+            and radec_c is None
+            and self.cluster_ra is not None
+            and self.cluster_dec is not None
+        ):
+            radec_c = (
+                float(np.median(self.cluster_ra)),
+                float(np.median(self.cluster_dec)),
+            )
+            self._vp(
+                "\nUsing ambient density estimated from observed cluster (ra, dec)", 1
+            )
+        masses = cmf.cluster_masses(
+            models,
+            synthcls,
+            self.rng,
+            self.m_ini_idx,
+            self.st_dist_mass,
+            self.isochs.z_to_FeH,
+            radec_c,
+            rho_amb,
+            gal_pot,
+            disrup,
         )
 
         per_model = {"binar_fr_models": binar_fr_models, **masses}
@@ -987,248 +1044,6 @@ class Synthetic:
         self._vp(f"N_models       : {N_models_non_empty}", 1)
 
         return models_no_empty, synthcls, turn_off_points, extrinsic_pars
-
-    def _stellar_parameters(
-        self,
-        synthcls: list[np.ndarray],
-        turn_off_points: dict,
-        extrinsic_pars: dict,
-        isochs_young: Isochrones | None,
-        bss_box: tuple[float, float, float, float],
-    ) -> tuple[dict, np.ndarray, np.ndarray]:
-        """Per-star masses and probabilities, used by :py:meth:`cluster_properties`
-
-        :param synthcls: Synthetic clusters of the sampled models
-        :type synthcls: list[np.ndarray]
-        :param turn_off_points: Turn-off points of the synthetic clusters
-        :type turn_off_points: dict
-        :param extrinsic_pars: Values and STDDEVs of the extrinsic parameters
-        :type extrinsic_pars: dict
-        :param isochs_young: Isochrones with ``log(age)<=7``, or ``None``
-        :type isochs_young: Isochrones | None
-        :param bss_box: Offsets that define the BSS region
-        :type bss_box: tuple[float, float, float, float]
-
-        :return: Dictionary of per-star arrays, the secondary masses assigned to the
-            observed stars by each synthetic cluster (``nan`` for single systems),
-            and the mask of the stars with valid photometry
-        :rtype: tuple[dict, np.ndarray, np.ndarray]
-        """
-        from .modules import stellar_stats_funcs as ssf
-
-        # Stellar masses
-        m1_med, m1_std, m2_med, m2_std, nan_msk, m2_obs = ssf.get_stellar_masses(
-            self.cluster_mag,
-            self.cluster_e_mag,
-            self.cluster_colors,
-            self.cluster_e_colors,
-            self.m_ini_idx,
-            synthcls,
-        )
-
-        # Binary probabilities
-        binar_probs = ssf.get_binar_probabilities(m2_obs)
-
-        # BSS probabilities
-        mag_offset_1, col_offset_1, mag_offset_2, col_offset_2 = bss_box
-        bss_probs = ssf.get_bss_probabilities(
-            self.cluster_mag,
-            self.cluster_colors,
-            turn_off_points,
-            len(synthcls),
-            mag_offset_1,
-            mag_offset_2,
-            col_offset_1,
-            col_offset_2,
-        )
-
-        binar_probs = (1 - bss_probs) * binar_probs
-        single_probs = 1 - binar_probs - bss_probs
-
-        N_cluster = len(self.cluster_mag)
-        bss_mass_median, bss_mass_stddev = (
-            np.full(N_cluster, np.nan),
-            np.full(N_cluster, np.nan),
-        )
-        if isochs_young is not None:
-            bss_mass_median, bss_mass_stddev = ssf.get_bss_masses(
-                self.cluster_mag,
-                self.cluster_colors[0],
-                extrinsic_pars,
-                self.ext_law,
-                self.ext_coefs,
-                self.rng,
-                isochs_young.met_age_dict,
-                isochs_young.theor_tracks,
-            )
-        else:
-            warnings.warn(
-                "No young isochrones were provided, BSSs masses can not be estimated"
-            )
-
-        # Store as dictionary
-        data = {
-            "mass_single": m1_med,
-            "mass_single_std": m1_std,
-            "mass_binar": m2_med,
-            "mass_binar_std": m2_std,
-            "mass_bss": bss_mass_median,
-            "mass_bss_std": bss_mass_stddev,
-            "single_prob": single_probs,
-            "binar_prob": binar_probs,
-            "bss_prob": bss_probs,
-        }
-
-        # Assign all nans to stars with a photometric nan in any dimension
-        for value in data.values():
-            value[nan_msk] = np.nan
-
-        # Add ID column if it exists
-        if self.star_id is not None:
-            data = {"star_id": self.star_id, **data}
-
-        if nan_msk.sum() > 0:
-            self._vp("", 0)
-            warnings.warn(
-                f"\nN={nan_msk.sum()} stars found with no valid photometric data. "
-                + "These will be assigned 'nan' values\nfor masses and "
-                + "probabilities"
-            )
-
-        return data, m2_obs, ~nan_msk
-
-    def _cluster_masses(
-        self,
-        models: list[dict],
-        synthcls: list[np.ndarray],
-        radec_c: tuple[float, float] | None,
-        rho_amb: float | None,
-        gal_pot: dict[str, float],
-        disrup: dict[str, float],
-    ) -> dict[str, np.ndarray]:
-        """Masses of the cluster for each sampled model, used by
-        :py:meth:`cluster_properties`
-
-        :param models: Sampled models
-        :type models: list[dict]
-        :param synthcls: Synthetic clusters of the sampled models
-        :type synthcls: list[np.ndarray]
-        :param radec_c: Center coordinates in ``(RA, DEC)``, or ``None``
-        :type radec_c: tuple[float, float] | None
-        :param rho_amb: Ambient density, or ``None``
-        :type rho_amb: float | None
-        :param gal_pot: Parameters of the Galaxy's potential
-        :type gal_pot: dict[str, float]
-        :param disrup: Parameters of the cluster's disruption
-        :type disrup: dict[str, float]
-
-        :return: Dictionary with an array of values (one per model) for each mass
-        :rtype: dict[str, np.ndarray]
-        """
-        from .modules import cluster_mass_funcs as cmf
-
-        # The number of stars in the synthetic clusters is not constant so we estimate
-        # its median
-        N_stars_isoch = int(np.median([np.shape(_)[-1] for _ in synthcls]))
-        # Compare the number of observed vs generated synthetic stars
-        if N_stars_isoch < self.N_stars_obs:
-            warnings.warn(
-                f"\nThe number of synthetic stars ({N_stars_isoch}) is smaller than "
-                + f"the number of\nobserved stars ({self.N_stars_obs}). Increase "
-                + "the 'max_mass' argument in `asteca.Synthetic()`\nfor a more "
-                + "accurate mass estimation"
-            )
-
-        # Resolve radec_c if not explicitly provided
-        if (
-            rho_amb is None
-            and radec_c is None
-            and self.cluster_ra is not None
-            and self.cluster_dec is not None
-        ):
-            radec_c = (
-                float(np.median(self.cluster_ra)),
-                float(np.median(self.cluster_dec)),
-            )
-            self._vp(
-                "\nUsing ambient density estimated from observed cluster (ra, dec)", 1
-            )
-
-        # Ambient density for each model
-        rho_amb_arr = None
-        if rho_amb is not None:
-            rho_amb_arr = np.full(len(models), rho_amb)
-        elif radec_c is not None:
-            rho_amb_arr = cmf.ambient_density(
-                models,
-                radec_c,
-                gal_pot["M_B"],
-                gal_pot["r_B"],
-                gal_pot["M_D"],
-                gal_pot["a"],
-                gal_pot["b"],
-                gal_pot["r_s"],
-                gal_pot["M_s"],
-            )
-        else:
-            warnings.warn(
-                "\nNo 'rho_amb', 'radec_c', or (ra, dec) values in the calibrated "
-                + "Cluster object:\nthe initial, evolutionary and dynamical masses "
-                + "can not be estimated"
-            )
-
-        C_env, gamma, epsilon = disrup["C_env"], disrup["gamma"], disrup["epsilon"]
-        masses_all = []
-        for i, model in enumerate(models):
-            # Estimate the actual mass, ie: the sum of the observed and photometric
-            # masses
-            M_obs, M_phot, M_a = cmf.get_M_actual(
-                self.rng,
-                self.m_ini_idx,
-                self.st_dist_mass,
-                synthcls[i],
-            )
-
-            if rho_amb_arr is None:
-                masses_all.append([M_obs, M_phot, np.nan, np.nan])
-                continue
-
-            # Extract met and loga
-            z_met, loga = model["met"], model["loga"]
-            # Convert back to Z if values are stored as FeH. This is required for the
-            # 'mu_ev' estimation in the stellar_evol_mass_loss() function
-            if self.isochs.z_to_FeH is not None:
-                z_met = self.isochs.z_to_FeH * 10**z_met
-
-            # Dissolution parameter
-            t0 = cmf.dissolution_param(C_env, epsilon, gamma, rho_amb_arr[i])
-
-            # Fraction of the initial mass that remains after the mass loss by stellar
-            # evolution
-            mu_ev = cmf.stellar_evol_mass_loss(z_met, loga)
-
-            # Initial mass
-            M_i = cmf.minit_LGB05(loga, M_a, gamma, t0, mu_ev)
-
-            # Obtain evolutionary and dynamical masses
-            M_evol = max(0, M_i * (1 - mu_ev))
-            M_dyn = max(0, M_i - M_evol - M_a)
-
-            masses_all.append([M_obs, M_phot, M_evol, M_dyn])
-
-        masses_all = np.array(masses_all, dtype=float).T
-
-        M_actual = masses_all[0] + masses_all[1]
-        M_init = M_actual + masses_all[2] + masses_all[3]
-
-        return {
-            "M_init": M_init,
-            "M_actual": M_actual,
-            "M_obs": masses_all[0],
-            "M_phot": masses_all[1],
-            "M_evol": masses_all[2],
-            "M_dyn": masses_all[3],
-        }
 
     def get_isochrone(
         self,

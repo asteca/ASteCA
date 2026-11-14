@@ -1,3 +1,5 @@
+import warnings
+
 import astropy.coordinates as coord
 import numpy as np
 import numpy.typing as npt
@@ -46,6 +48,122 @@ def update_pars(name: str, defaults: dict, pars: dict | None) -> dict:
             + f"Should be any of {list(defaults)}"
         )
     return defaults | pars
+
+
+def cluster_masses(
+    models: list[dict],
+    synthcls: list[np.ndarray],
+    rng: np.random.Generator,
+    m_ini_idx: int,
+    st_dist_mass: list[list],
+    z_to_FeH: float | None,
+    radec_c: tuple[float, float] | None,
+    rho_amb: float | None,
+    gal_pot: dict[str, float],
+    disrup: dict[str, float],
+) -> dict[str, np.ndarray]:
+    """Masses of the cluster for each sampled model, used by
+    :py:meth:`asteca.Synthetic.cluster_properties`.
+
+    The initial, evolutionary and dynamical masses require the ambient density:
+    ``rho_amb`` if given, else estimated from the position ``radec_c``. If both are
+    ``None`` these masses are ``nan`` and a warning is shown.
+
+    :param models: Sampled models
+    :type models: list[dict]
+    :param synthcls: Synthetic clusters of the sampled models
+    :type synthcls: list[np.ndarray]
+    :param rng: Random number generator
+    :type rng: np.random.Generator
+    :param m_ini_idx: Index of the initial mass in the synthetic clusters
+    :type m_ini_idx: int
+    :param st_dist_mass: Sampled IMF masses
+    :type st_dist_mass: list[list]
+    :param z_to_FeH: Factor to convert [Fe/H] back to Z, ``None`` if the
+        metallicity is given as Z
+    :type z_to_FeH: float | None
+    :param radec_c: Center coordinates in ``(RA, DEC)``, or ``None``
+    :type radec_c: tuple[float, float] | None
+    :param rho_amb: Ambient density, or ``None``
+    :type rho_amb: float | None
+    :param gal_pot: Parameters of the Galaxy's potential, see ``GALAXY_POTENTIAL``
+    :type gal_pot: dict[str, float]
+    :param disrup: Parameters of the cluster's disruption, see ``DISRUPTION``
+    :type disrup: dict[str, float]
+
+    :return: Dictionary with an array of values (one per model) for each mass
+    :rtype: dict[str, np.ndarray]
+    """
+    # Ambient density for each model
+    rho_amb_arr = None
+    if rho_amb is not None:
+        rho_amb_arr = np.full(len(models), rho_amb)
+    elif radec_c is not None:
+        rho_amb_arr = ambient_density(
+            models,
+            radec_c,
+            gal_pot["M_B"],
+            gal_pot["r_B"],
+            gal_pot["M_D"],
+            gal_pot["a"],
+            gal_pot["b"],
+            gal_pot["r_s"],
+            gal_pot["M_s"],
+        )
+    else:
+        warnings.warn(
+            "\nNo 'rho_amb', 'radec_c', or (ra, dec) values in the calibrated "
+            + "Cluster object:\nthe initial, evolutionary and dynamical masses "
+            + "can not be estimated"
+        )
+
+    C_env, gamma, epsilon = disrup["C_env"], disrup["gamma"], disrup["epsilon"]
+    masses_all = []
+    for i, model in enumerate(models):
+        # Estimate the actual mass, ie: the sum of the observed and photometric
+        # masses
+        M_obs, M_phot, M_a = get_M_actual(rng, m_ini_idx, st_dist_mass, synthcls[i])
+
+        if rho_amb_arr is None:
+            masses_all.append([M_obs, M_phot, np.nan, np.nan])
+            continue
+
+        # Extract met and loga
+        z_met, loga = model["met"], model["loga"]
+        # Convert back to Z if values are stored as FeH. This is required for the
+        # 'mu_ev' estimation in the stellar_evol_mass_loss() function
+        if z_to_FeH is not None:
+            z_met = z_to_FeH * 10**z_met
+
+        # Dissolution parameter
+        t0 = dissolution_param(C_env, epsilon, gamma, rho_amb_arr[i])
+
+        # Fraction of the initial mass that remains after the mass loss by stellar
+        # evolution
+        mu_ev = stellar_evol_mass_loss(z_met, loga)
+
+        # Initial mass
+        M_i = minit_LGB05(loga, M_a, gamma, t0, mu_ev)
+
+        # Obtain evolutionary and dynamical masses
+        M_evol = max(0, M_i * (1 - mu_ev))
+        M_dyn = max(0, M_i - M_evol - M_a)
+
+        masses_all.append([M_obs, M_phot, M_evol, M_dyn])
+
+    masses_all = np.array(masses_all, dtype=float).T
+
+    M_actual = masses_all[0] + masses_all[1]
+    M_init = M_actual + masses_all[2] + masses_all[3]
+
+    return {
+        "M_init": M_init,
+        "M_actual": M_actual,
+        "M_obs": masses_all[0],
+        "M_phot": masses_all[1],
+        "M_evol": masses_all[2],
+        "M_dyn": masses_all[3],
+    }
 
 
 def galactic_coords(
