@@ -44,9 +44,8 @@ def main():
     print(f"Estimated parameters: {summ['median']}")
     model_means, model_std = summ["median"], summ["std"]
 
-    synthcl.get_models(model_means, model_std)
-    stellar_data = synthcl.stellar_parameters()
-    bss_probs = stellar_data["bss_prob"]
+    props = synthcl.cluster_properties(model_means, model_std)
+    bss_probs = props["stars"]["bss_prob"]
     N_bss = (bss_probs > 0.5).sum()
     print(f"Estimated number of BSS: {N_bss}")
 

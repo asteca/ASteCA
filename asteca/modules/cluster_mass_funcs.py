@@ -4,6 +4,49 @@ import numpy.typing as npt
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
+# Default parameters of the Galaxy's potential, used to estimate the ambient density.
+# Bulge and disc: Haghi et al. (2015), Table 1; dark matter halo: Sanderson et al.
+# (2017), Table 1
+GALAXY_POTENTIAL = {
+    "M_B": 2.5e10,
+    "r_B": 0.5e3,
+    "M_D": 7.5e10,
+    "a": 5.4e3,
+    "b": 0.3e3,
+    "M_s": 1.87e11,
+    "r_s": 15.19e3,
+}
+
+# Default parameters of the cluster's disruption: C_env from Lamers, Gieles & Zwart
+# (2005), gamma from Boutloukos & Lamers (2003), epsilon from Angelo et al. (2023)
+DISRUPTION = {"C_env": 810e6, "gamma": 0.62, "epsilon": 0.08}
+
+
+def update_pars(name: str, defaults: dict, pars: dict | None) -> dict:
+    """Update a dictionary of default parameters with the values given by the user.
+
+    :param name: Name of the argument, used in the error message
+    :type name: str
+    :param defaults: Dictionary of default values
+    :type defaults: dict
+    :param pars: Dictionary with the values given by the user, or ``None``
+    :type pars: dict | None
+
+    :raises ValueError: If ``pars`` contains keys not present in ``defaults``
+
+    :return: New dictionary with the default values updated
+    :rtype: dict
+    """
+    if pars is None:
+        return dict(defaults)
+    unknown = set(pars) - set(defaults)
+    if unknown:
+        raise ValueError(
+            f"Unknown keys in '{name}': {sorted(unknown)}. "
+            + f"Should be any of {list(defaults)}"
+        )
+    return defaults | pars
+
 
 def galactic_coords(
     sampled_models: list[dict],

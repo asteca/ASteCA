@@ -237,6 +237,37 @@ def get_binar_probabilities(m2_obs: np.ndarray) -> np.ndarray:
     return binar_prob
 
 
+def poisson_binomial_percentiles(
+    probs: np.ndarray, percentiles: tuple = (50, 16, 84)
+) -> np.ndarray:
+    """Percentiles of the number of successes in independent trials with different
+    probabilities (Poisson-binomial distribution).
+
+    The probability mass function is computed exactly by adding one trial at a
+    time, ``O(N**2)`` operations for ``N`` trials. Each percentile is the smallest
+    number of successes whose cumulative probability reaches it.
+
+    :param probs: Probability of success of each trial, in ``[0, 1]``
+    :type probs: np.ndarray
+    :param percentiles: Percentiles to return, in ``[0, 100]``
+    :type percentiles: tuple
+
+    :return: Number of successes for each percentile
+    :rtype: np.ndarray
+    """
+    pmf = np.zeros(probs.size + 1)
+    pmf[0] = 1.0
+    for i, p in enumerate(probs):
+        # The right-hand side is evaluated (with the previous values) before the
+        # assignment
+        pmf[1 : i + 2] = pmf[1 : i + 2] * (1.0 - p) + pmf[: i + 1] * p
+        pmf[0] *= 1.0 - p
+    cdf = np.cumsum(pmf)
+    idx = np.searchsorted(cdf, np.asarray(percentiles) / 100.0)
+    # Guard against a total probability slightly below 1 from rounding
+    return np.minimum(idx, probs.size).astype(float)
+
+
 def get_bss_probabilities(
     cluster_mag: np.ndarray,
     cluster_colors: list[np.ndarray | None],

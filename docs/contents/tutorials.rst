@@ -48,14 +48,12 @@ goodness of fit (CMD overlap) of the fitted synthetic cluster, with a comparison
 Color-Magnitude Diagram (CMD).
 
 
-The :ref:`post_process_ntbk` notebook shows how to apply the following methods:
-
-- :meth:`asteca.Synthetic.get_models`: sample a set of synthetic clusters
-  with the same parameters as the observed cluster (previously calibrated and fitted)
-- :meth:`asteca.Synthetic.cluster_masses`: determine various associated cluster masses
-  (initial, actual, dynamical, etc.)
-- :meth:`asteca.Synthetic.stellar_parameters`: estimate per-star masses and
-  probabilities of being binary systems and blue straggler stars
+The :ref:`post_process_ntbk` notebook shows how to apply the
+:meth:`asteca.Synthetic.cluster_properties` method, which samples a set of synthetic
+clusters around the fitted parameters of the observed cluster and uses them to
+estimate per-star masses and probabilities of being binary systems and blue straggler
+stars, the cluster's binary fraction and number of blue stragglers, and various
+associated cluster masses (initial, actual, dynamical, etc.)
 
 
 

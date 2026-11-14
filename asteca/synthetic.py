@@ -359,7 +359,7 @@ class Synthetic:
             self.rand_floats["norm"][1],
         )
 
-        # Used by the `get_models()` and `stellar_parameters()` methods
+        # Used by the `cluster_properties()` method
         self.star_id = cluster.star_id
         self.cluster_mag = cluster.mag
         self.cluster_colors = [cluster.color, cluster.color2]
@@ -367,7 +367,7 @@ class Synthetic:
         self.cluster_e_mag = cluster.e_mag
         self.cluster_e_colors = [cluster.e_color, cluster.e_color2]
 
-        # Used by the `cluster_masses()` method
+        # Used by the `cluster_properties()` method
         self.cluster_ra = cluster.ra
         self.cluster_dec = cluster.dec
 
@@ -570,7 +570,7 @@ class Synthetic:
         The observed cluster is the one passed to :py:meth:`calibrate`.
 
         Turn-off check: the turn-off point of the isochrone of the synthetic cluster
-        is located (as in :py:meth:`get_models`) and a box is defined around it,
+        is located (as in :py:meth:`cluster_properties`) and a box is defined around it,
         from ``to_box_mag[0]`` to ``to_box_mag[1]`` mag in magnitude and from
         ``to_box_col[0]`` to ``to_box_col[1]`` mag in color, relative to the
         turn-off (by default from 1 mag brighter to 0.5 mag fainter, including the
@@ -646,7 +646,7 @@ class Synthetic:
             return D, D_std
 
         # Turn-off point of the isochrone up to the maximum mass of the synthetic
-        # cluster, as in get_models()
+        # cluster, as in cluster_properties()
         msk = isochrone[self.m_ini_idx] < synth_clust[self.m_ini_idx].max()
         if msk.sum() < 2:
             return D, D_std
@@ -825,20 +825,205 @@ class Synthetic:
             int(N_synth_stars),
         )
 
-    def get_models(
+    def cluster_properties(
         self,
         model: dict[str, float],
         model_std: dict[str, float],
         N_models: int = 200,
         color_idx: int = 0,
-    ) -> None:
-        """Generate random sampled models from the selected solution. Use these models
-        to generate full synthetic clusters.
+        isochs_young: Isochrones | None = None,
+        bss_box: tuple[float, float, float, float] = (0.5, -0.1, -0.5, -0.05),
+        radec_c: tuple[float, float] | None = None,
+        rho_amb: float | None = None,
+        galaxy_potential: dict[str, float] | None = None,
+        disruption: dict[str, float] | None = None,
+        return_arrays: bool = False,
+    ) -> dict:
+        r"""Estimate the per-star and the cluster properties of the observed cluster,
+        from synthetic clusters sampled around a given solution.
 
-        The values of each parameter are sampled from a normal distribution with mean
-        and STDDEV given by ``model`` and ``model_std``, truncated to the valid range of
-        the parameter: the isochrones' ranges for ``met, loga``, ``>=0`` for
-        ``alpha, beta, Av, DR, dm``, and ``>0`` for ``Rv``.
+        ``N_models`` sets of parameters are sampled from a normal distribution with
+        mean and STDDEV given by ``model`` and ``model_std``, truncated to the valid
+        range of each parameter: the isochrones' ranges for ``met, loga``, ``>=0`` for
+        ``alpha, beta, Av, DR, dm``, and ``>0`` for ``Rv``. A synthetic cluster is
+        generated for each set, and all the properties below are estimated from the
+        same synthetic clusters.
+
+        Per-star properties (``stars`` key of the returned dictionary), one array per
+        property with a value for each observed star:
+
+        - Primary mass (``mass_single``), and secondary mass (``mass_binar``) if
+          binary systems were generated
+        - Mass assuming the star is a blue straggler (``mass_bss``), if
+          ``isochs_young`` is given
+        - Probabilities of being a single system, a binary system, or a blue
+          straggler (``single_prob, binar_prob, bss_prob``; these add up to ``1``)
+
+        Cluster properties (``cluster`` key of the returned dictionary):
+
+        - ``binar_fr``: total binary fraction. The number of binary systems among the
+          observed stars follows a Poisson-binomial distribution given by their
+          ``binar_prob`` values, which is computed exactly
+        - ``binar_fr_models``: total binary fraction of each sampled synthetic
+          cluster, i.e.: the fraction of the observed stars matched to a binary
+          system (weighted by ``1-bss_prob``). Unlike ``binar_fr``, its spread
+          includes the uncertainty in the fundamental parameters
+        - ``N_bss``: number of blue stragglers, from the Poisson-binomial distribution
+          given by the ``bss_prob`` values
+        - ``M_init, M_actual, M_obs, M_phot, M_evol, M_dyn``: initial, actual,
+          observed, photometric, evolutionary and dynamical masses, where
+          ``M_actual = M_obs + M_phot`` and ``M_init = M_actual + M_evol + M_dyn``
+
+        Each cluster property is given as its ``(median, 16th, 84th)`` percentiles.
+        With ``return_arrays=True`` the per-model values of ``binar_fr_models`` and of
+        the masses are returned instead.
+
+        The BSS region is defined by the turn-off point of each sampled synthetic
+        cluster plus the offsets in ``bss_box``. Its color limits are capped at the
+        bluest edge (5th percentile) of the observed colors around the turn-off
+        magnitude, so that the region never extends into the observed main sequence.
+
+        The initial, evolutionary and dynamical masses require the ambient density
+        ``rho_amb``. If it is not given, it is estimated using the cluster's position
+        ``radec_c`` and a model for the Galaxy's potential. If ``radec_c`` is not given
+        either, the median ``(ra, dec)`` of the observed cluster stored by
+        :py:meth:`calibrate` are used. If no coordinates are available these three
+        masses are ``nan`` and a warning is shown.
+
+        Stars with no valid photometry are assigned ``nan`` values and excluded from
+        the cluster properties.
+
+        :param model: Dictionary with the values for the fundamental parameters.
+            Parameters not included take the default values of the object
+        :type model: dict[str, float]
+        :param model_std: Dictionary with the standard deviations for the fundamental
+            parameters in the ``model`` argument. Parameters not included are fixed
+        :type model_std: dict[str, float]
+        :param N_models: Number of sampled models
+        :type N_models: int
+        :param color_idx: Index of the color used to locate the turn-off point (and
+            the BSS region). If two colors are defined, set to ``0`` to use the first
+            color, or ``1`` to use the second color. Defaults to ``0``.
+        :type color_idx: int
+        :param isochs_young: Isochrones object (same photometric system) that contains
+            isochrones with ``log(age)<=7``. These are used to estimate the
+            ``mass_bss`` values. If ``None``, these values are ``nan``
+        :type isochs_young: Isochrones | None
+        :param bss_box: Offsets applied to the turn-off point to define the two points
+            of the BSS region: ``(mag_offset_1, col_offset_1, mag_offset_2,
+            col_offset_2)``
+        :type bss_box: tuple[float, float, float, float]
+        :param radec_c: Center coordinates in ``(RA, DEC)``
+        :type radec_c: tuple[float, float] | None
+        :param rho_amb: Ambient density [:math:`M_{\odot}\,pc^{-3}`]. If ``None``, it
+            is estimated using the cluster's position and a model for the Galaxy's
+            potential
+        :type rho_amb: float | None
+        :param galaxy_potential: Parameters of the Galaxy's potential used to estimate
+            the ambient density. Keys not given take their default values:
+            ``M_B=2.5e10`` [:math:`M_{\odot}`] and ``r_B=0.5e3`` [pc] (bulge mass and
+            characteristic radius), ``M_D=7.5e10`` [:math:`M_{\odot}`], ``a=5.4e3``
+            [pc] and ``b=0.3e3`` [pc] (disc mass, scale radius and scaleheight), from
+            `Haghi et al. 2015 <https://doi.org/10.1093/mnras/stv827>`__, Table 1;
+            ``M_s=1.87e11`` [:math:`M_{\odot}`] and ``r_s=15.19e3`` [pc] (dark matter
+            halo mass and scale radius), from `Sanderson et al. 2017
+            <https://iopscience.iop.org/article/10.3847/1538-4357/aa5eb4>`__, Table 1
+        :type galaxy_potential: dict[str, float] | None
+        :param disruption: Parameters of the cluster's disruption. Keys not given take
+            their default values: ``C_env=810e6`` [yr] (constant related to the
+            disruption time, from `Lamers, Gieles & Zwart 2005
+            <https://www.aanda.org/articles/aa/abs/2005/01/aa1476/aa1476.html>`__),
+            ``gamma=0.62`` (constant related to the disruption time, from
+            `Boutloukos & Lamers 2003
+            <https://academic.oup.com/mnras/article/338/3/717/1458721>`__), and
+            ``epsilon=0.08`` (eccentricity of the orbit, from `Angelo et al. (2023)
+            <https://doi.org/10.1093/mnras/stad1038>`__)
+        :type disruption: dict[str, float] | None
+        :param return_arrays: If ``True``, return the per-model values of
+            ``binar_fr_models`` and of the masses instead of their percentiles
+        :type return_arrays: bool
+
+        :raises ValueError:
+            - If the `calibrate()` method was not previously called
+            - If ``bss_box`` does not contain four values, or ``galaxy_potential`` or
+              ``disruption`` contain unknown keys
+            - If ``isochs_young`` contains no isochrones with ``log(age)<=7``
+            - If all the synthetic arrays generated are empty
+
+        :return: Dictionary with the keys ``stars`` (dictionary of per-star arrays:
+            ``star_id`` if the :py:class:`Cluster` object contains it, ``mass_single,
+            mass_single_std, mass_binar, mass_binar_std, mass_bss, mass_bss_std,
+            single_prob, binar_prob, bss_prob``) and ``cluster`` (dictionary with the
+            keys ``binar_fr, binar_fr_models, N_bss, M_init, M_actual, M_obs, M_phot,
+            M_evol, M_dyn``)
+        :rtype: dict
+        """
+        self._check_calibrated()
+
+        from .modules import cluster_mass_funcs as cmf
+        from .modules import stellar_stats_funcs as ssf
+
+        # Check the arguments before generating the synthetic clusters
+        if len(bss_box) != 4:
+            raise ValueError(
+                "'bss_box' must contain four values: (mag_offset_1, col_offset_1, "
+                + "mag_offset_2, col_offset_2)"
+            )
+        gal_pot = cmf.update_pars(
+            "galaxy_potential", cmf.GALAXY_POTENTIAL, galaxy_potential
+        )
+        disrup = cmf.update_pars("disruption", cmf.DISRUPTION, disruption)
+        if isochs_young is not None and isochs_young.amin > 7:
+            raise ValueError("No isochrones with log(ages)<=7 found in 'isochs_young'")
+
+        models, synthcls, turn_off_points, extrinsic_pars = self._sample_models(
+            model, model_std, N_models, color_idx
+        )
+
+        stars, m2_obs, valid = self._stellar_parameters(
+            synthcls, turn_off_points, extrinsic_pars, isochs_young, bss_box
+        )
+
+        # Binary fraction and number of BSSs, from the stars with valid photometry
+        N_valid = int(valid.sum())
+        binar_p, bss_p = stars["binar_prob"][valid], stars["bss_prob"][valid]
+        binar_fr = ssf.poisson_binomial_percentiles(binar_p) / N_valid
+        N_bss = ssf.poisson_binomial_percentiles(bss_p)
+        # Binary fraction of each sampled model. The binary systems are weighted by
+        # (1 - bss_prob), as the 'binar_prob' values
+        binar_fr_models = (np.isfinite(m2_obs[:, valid]) * (1.0 - bss_p)).sum(
+            axis=1
+        ) / N_valid
+
+        masses = self._cluster_masses(
+            models, synthcls, radec_c, rho_amb, gal_pot, disrup
+        )
+
+        per_model = {"binar_fr_models": binar_fr_models, **masses}
+        if not return_arrays:
+            per_model = {
+                k: tuple(float(_) for _ in np.percentile(v, (50, 16, 84)))
+                for k, v in per_model.items()
+            }
+        cluster = {
+            "binar_fr": tuple(float(_) for _ in binar_fr),
+            "N_bss": tuple(int(_) for _ in N_bss),
+            **per_model,
+        }
+
+        self._vp("\nCluster properties estimated", 1)
+
+        return {"stars": stars, "cluster": cluster}
+
+    def _sample_models(
+        self,
+        model: dict[str, float],
+        model_std: dict[str, float],
+        N_models: int,
+        color_idx: int,
+    ) -> tuple[list[dict], list[np.ndarray], dict, dict]:
+        """Sample models around the given solution and generate their synthetic
+        clusters, used by :py:meth:`cluster_properties`
 
         :param model: Dictionary with the values for the fundamental parameters
         :type model: dict[str, float]
@@ -847,17 +1032,16 @@ class Synthetic:
         :type model_std: dict[str, float]
         :param N_models: Number of sampled models
         :type N_models: int
-        :param color_idx: Index of the color used to define the CMD. If only one color is
-            defined, set to ``0``. If two colors are defined, set to ``0`` to use the
-            first color, or ``1`` to use the second color. Defaults to ``0``.
+        :param color_idx: Index of the color used to locate the turn-off point
         :type color_idx: int
 
-        :raises ValueError:
-            - If the `calibrate()` method was not previously called
-            - If all the synthetic arrays generated are empty
-        """
-        self._check_calibrated()
+        :raises ValueError: If all the synthetic arrays generated are empty
 
+        :return: The sampled models and their synthetic clusters (empty ones are
+            discarded), the turn-off points of the synthetic clusters, and the values
+            and STDDEVs of the extrinsic parameters
+        :rtype: tuple[list[dict], list[np.ndarray], dict, dict]
+        """
         from .modules import stellar_stats_funcs as ssf
         from .modules import synth_cluster_priv as scp
         from .modules import synth_model as sm
@@ -884,18 +1068,18 @@ class Synthetic:
             "met": (self.met_age_dict["met"][0], self.met_age_dict["met"][-1]),
             "loga": (self.met_age_dict["loga"][0], self.met_age_dict["loga"][-1]),
         }
-        sampled_models = {}
+        sampled_pars = {}
         for k, f_val in model.items():
             low, high = bounds.get(k, (scp.PARAMS_MIN.get(k, -np.inf), np.inf))
-            sampled_models[k] = scp.truncnorm_sample(
+            sampled_pars[k] = scp.truncnorm_sample(
                 self.rng, f_val, model_std[k], low, high, N_models
             )
         sampled_models = [
-            dict(zip(sampled_models, t)) for t in zip(*sampled_models.values())
+            dict(zip(sampled_pars, t)) for t in zip(*sampled_pars.values())
         ]
 
         # Generate the synthetic arrays using the above models
-        sampled_models_no_empty, sampled_synthcls = [], []
+        models_no_empty, synthcls = [], []
         turn_off_points = {
             "color_idx": color_idx,
             "to_col": [],
@@ -929,8 +1113,8 @@ class Synthetic:
             if not synth_arr.any():
                 continue
 
-            sampled_models_no_empty.append(smodel)
-            sampled_synthcls.append(synth_arr)
+            models_no_empty.append(smodel)
+            synthcls.append(synth_arr)
 
             # Estimate turn-off point(s)
             # Extract maximum mass
@@ -957,22 +1141,16 @@ class Synthetic:
             turn_off_points["to_col"].append(to_col)
             turn_off_points["to_mag"].append(to_mag)
 
-        N_models_non_empty = len(sampled_models_no_empty)
+        N_models_non_empty = len(models_no_empty)
         if N_models_non_empty == 0:
             raise ValueError("All sampled models produced empty synthetic clusters.")
-        if len(sampled_models_no_empty) < N_models:
+        if N_models_non_empty < N_models:
             warnings.warn(
                 f"Empty synthetic arrays generated: {N_models - N_models_non_empty}"
             )
 
-        # Used by: cluster_masses
-        self.sampled_models = sampled_models_no_empty
-        # Used by: stellar_parameters, cluster_masses
-        self.sampled_synthcls = sampled_synthcls
-        # Used by: stellar_parameters (get_bss_probabilities)
-        self.turn_off_points = turn_off_points
-        # Used by: stellar_parameters (get_bss_masses)
-        self.extrinsic_pars = {
+        # Used to estimate the BSS masses
+        extrinsic_pars = {
             "values": {"Av": model["Av"], "dm": model["dm"], "Rv": model["Rv"]},
             "stddevs": {
                 "Av": model_std["Av"],
@@ -981,64 +1159,36 @@ class Synthetic:
             },
         }
 
-        self._vp(f"N_models       : {len(sampled_models_no_empty)}", 1)
-        self._vp("Attributes stored in Synthetic object", 1)
+        self._vp(f"N_models       : {N_models_non_empty}", 1)
 
-    def stellar_parameters(
+        return models_no_empty, synthcls, turn_off_points, extrinsic_pars
+
+    def _stellar_parameters(
         self,
-        isochs_young: Isochrones | None = None,
-        mag_offset_1: float = 0.5,
-        col_offset_1: float = -0.1,
-        mag_offset_2: float = -0.5,
-        col_offset_2: float = -0.05,
-    ) -> dict:
-        """Estimate parameters for the observed stars:
+        synthcls: list[np.ndarray],
+        turn_off_points: dict,
+        extrinsic_pars: dict,
+        isochs_young: Isochrones | None,
+        bss_box: tuple[float, float, float, float],
+    ) -> tuple[dict, np.ndarray, np.ndarray]:
+        """Per-star masses and probabilities, used by :py:meth:`cluster_properties`
 
-        - Primary mass (``mass_single``), and secondary mass (``mass_binar``) if
-          binary systems were generated
-        - Mass assuming the star is a blue straggler (``mass_bss``), if
-          ``isochs_young`` is given
-        - Probabilities of being a single system, a binary system, or a blue
-          straggler (``single_prob, binar_prob, bss_prob``; these add up to ``1``)
-
-        The BSS region is defined by the turn-off point of each sampled synthetic
-        cluster plus the ``mag_offset_X, col_offset_X`` offsets. Its color limits are
-        capped at the bluest edge (5th percentile) of the observed colors around the
-        turn-off magnitude, so that the region never extends into the observed main
-        sequence.
-
-        :param isochs_young: Isochrones object (same photometric system) that contains
-            isochrones with ``log(age)<=7``. These are used to estimate the
-            ``mass_bss`` values. If ``None``, these values are ``nan``
+        :param synthcls: Synthetic clusters of the sampled models
+        :type synthcls: list[np.ndarray]
+        :param turn_off_points: Turn-off points of the synthetic clusters
+        :type turn_off_points: dict
+        :param extrinsic_pars: Values and STDDEVs of the extrinsic parameters
+        :type extrinsic_pars: dict
+        :param isochs_young: Isochrones with ``log(age)<=7``, or ``None``
         :type isochs_young: Isochrones | None
-        :param mag_offset_1: Offset applied to the turn-off magnitude to define the
-            first BSS region
-        :type mag_offset_1: float
-        :param col_offset_1: Offset applied to the turn-off color to define the
-            first BSS region
-        :type col_offset_1: float
-        :param mag_offset_2: Offset applied to the turn-off magnitude to define the
-            second BSS region
-        :type mag_offset_2: float
-        :param col_offset_2: Offset applied to the turn-off color to define the
-            second BSS region
-        :type col_offset_2: float
+        :param bss_box: Offsets that define the BSS region
+        :type bss_box: tuple[float, float, float, float]
 
-        :return: Dictionary of per-star arrays with keys: ``star_id`` (if the
-            :py:class:`Cluster` object contains it), ``mass_single, mass_single_std,
-            mass_binar, mass_binar_std, mass_bss, mass_bss_std, single_prob,
-            binar_prob, bss_prob``. Stars with no valid photometry are assigned
-            ``nan`` values
-        :rtype: dict
-
-        :raises ValueError: If the `get_models()` method was not previously called, or
-            if ``isochs_young`` contains no isochrones with ``log(age)<=7``
+        :return: Dictionary of per-star arrays, the secondary masses assigned to the
+            observed stars by each synthetic cluster (``nan`` for single systems),
+            and the mask of the stars with valid photometry
+        :rtype: tuple[dict, np.ndarray, np.ndarray]
         """
-        if not hasattr(self, "sampled_synthcls"):
-            raise ValueError(
-                "This method requires running the 'get_models()' method first"
-            )
-
         from .modules import stellar_stats_funcs as ssf
 
         # Stellar masses
@@ -1048,19 +1198,19 @@ class Synthetic:
             self.cluster_colors,
             self.cluster_e_colors,
             self.m_ini_idx,
-            self.sampled_synthcls,
+            synthcls,
         )
 
         # Binary probabilities
         binar_probs = ssf.get_binar_probabilities(m2_obs)
 
         # BSS probabilities
-        N_sampled_synthcls = len(self.sampled_synthcls)
+        mag_offset_1, col_offset_1, mag_offset_2, col_offset_2 = bss_box
         bss_probs = ssf.get_bss_probabilities(
             self.cluster_mag,
             self.cluster_colors,
-            self.turn_off_points,
-            N_sampled_synthcls,
+            turn_off_points,
+            len(synthcls),
             mag_offset_1,
             mag_offset_2,
             col_offset_1,
@@ -1076,14 +1226,10 @@ class Synthetic:
             np.full(N_cluster, np.nan),
         )
         if isochs_young is not None:
-            # Check that at least one isochrone with loga<=7 exists
-            if isochs_young.amin > 7:
-                raise ValueError("No isochrones with log(ages)<=7 found")
-
             bss_mass_median, bss_mass_stddev = ssf.get_bss_masses(
                 self.cluster_mag,
                 self.cluster_colors[0],
-                self.extrinsic_pars,
+                extrinsic_pars,
                 self.ext_law,
                 self.ext_coefs,
                 self.rng,
@@ -1121,119 +1267,44 @@ class Synthetic:
             warnings.warn(
                 f"\nN={nan_msk.sum()} stars found with no valid photometric data. "
                 + "These will be assigned 'nan' values\nfor masses and "
-                + "binarity probability"
+                + "probabilities"
             )
 
-        self._vp("\nStellar masses and probabilities estimated", 1)
+        return data, m2_obs, ~nan_msk
 
-        return data
-
-    def cluster_masses(
+    def _cluster_masses(
         self,
-        radec_c: tuple | None = None,
-        rho_amb: float | None = None,
-        M_B: float = 2.5e10,
-        r_B: float = 0.5e3,
-        M_D: float = 7.5e10,
-        a: float = 5.4e3,
-        b: float = 0.3e3,
-        M_s: float = 1.87e11,
-        r_s: float = 15.19e3,
-        C_env: float = 810e6,
-        gamma: float = 0.62,
-        epsilon: float = 0.08,
-        return_arrays: bool = False,
-    ) -> dict:
-        r"""Estimate the different total masses for the observed cluster.
+        models: list[dict],
+        synthcls: list[np.ndarray],
+        radec_c: tuple[float, float] | None,
+        rho_amb: float | None,
+        gal_pot: dict[str, float],
+        disrup: dict[str, float],
+    ) -> dict[str, np.ndarray]:
+        """Masses of the cluster for each sampled model, used by
+        :py:meth:`cluster_properties`
 
-        The returned dictionary contains distributions for
-        ``M_init, M_actual, M_obs, M_phot, M_evol, M_dyn``, where:
-
-        - ``M_init`` : Initial mass
-        - ``M_actual`` : Actual mass
-        - ``M_obs`` : Observed mass
-        - ``M_phot``: Photometric mass, ie: mass not observed that is located below the
-          maximum observed magnitude
-        - ``M_evol``: Mass lost via stellar evolution
-        - ``M_dyn`` : Mass lost via dynamical effects
-
-        The actual and initial masses can also be obtained as:
-
-        - ``M_actual = M_obs + M_phot``
-        - ``M_init = M_actual + M_evol + M_dyn``
-
-        If ``rho_amb`` is not provided (``None``), then the method will try to estimate
-        it using the cluster's position and a model for the Galaxy's potential.
-        In this case, the coordinates of the cluster ``radec_c`` are required to
-        estimate the ambient density. If these are also ``None``, the method
-        will try to resolve the coordinates from the ``cluster_ra`` and ``cluster_dec``
-        attributes, stored when calling the ``calibrate()`` method with a
-        :py:class:`Cluster` object.
-        If these attributes are missing, a ValueError is raised because the
-        ambient density cannot be estimated without coordinates.
-
-        :param radec_c: Center coordinates in ``(RA, DEC)``
-        :type radec_c: tuple | None
-        :param rho_amb: Ambient density [:math:`M_{\odot}\,pc^{-3}`]. If ``None``, it
-            is estimated using the cluster's position (``radec_c``) and a model for the
-            Galaxy's potential
+        :param models: Sampled models
+        :type models: list[dict]
+        :param synthcls: Synthetic clusters of the sampled models
+        :type synthcls: list[np.ndarray]
+        :param radec_c: Center coordinates in ``(RA, DEC)``, or ``None``
+        :type radec_c: tuple[float, float] | None
+        :param rho_amb: Ambient density, or ``None``
         :type rho_amb: float | None
-        :param M_B: Bulge mass; defaults to ``2.5e10`` [:math:`M_{\odot}`] (from
-            `Haghi et al. 2015 <https://doi.org/10.1093/mnras/stv827>`__, Table 1)
-        :type M_B: float
-        :param r_B: Characteristic radius of the bulge; defaults to ``0.5e3`` [pc]
-            (from `Haghi et al. 2015 <https://doi.org/10.1093/mnras/stv827>`__,
-            Table 1)
-        :type r_B: float
-        :param M_D: Disc mass; defaults to ``7.5e10`` [:math:`M_{\odot}`] (from
-            `Haghi et al. 2015 <https://doi.org/10.1093/mnras/stv827>`__, Table 1)
-        :type M_D: float
-        :param a: Disc scale radius; defaults to ``5400`` [pc] (from
-            `Haghi et al. 2015 <https://doi.org/10.1093/mnras/stv827>`__, Table 1)
-        :type a: float
-        :param b: Disc scaleheight; defaults to ``300`` [pc] (from
-            `Haghi et al. 2015 <https://doi.org/10.1093/mnras/stv827>`__, Table 1)
-        :type b: float
-        :param M_s: Dark matter halo mass; defaults to ``1.87e11`` [:math:`M_{\odot}`]
-            (from `Sanderson et al. 2017
-            <https://iopscience.iop.org/article/10.3847/1538-4357/aa5eb4>`__, Table 1)
-        :type M_s: float
-        :param r_s: Dark matter halo scale radius; defaults to ``15.19e3`` [pc] (from
-            `Sanderson et al. 2017
-            <https://iopscience.iop.org/article/10.3847/1538-4357/aa5eb4>`__, Table 1)
-        :type r_s: float
-        :param C_env: Constant related to the disruption time; defaults to
-            ``810e6`` [yr] (i.e.: 810 Myr, from `Lamers, Gieles & Zwart 2005
-            <https://www.aanda.org/articles/aa/abs/2005/01/aa1476/aa1476.html>`__)
-        :type C_env: float
-        :param gamma: Constant related to the disruption time (no units); defaults to
-            ``0.62`` (from `Boutloukos & Lamers 2003
-            <https://academic.oup.com/mnras/article/338/3/717/1458721>`__)
-        :type gamma: float
-        :param epsilon: Eccentricity of the orbit (no units); defaults to ``0.08`` (from
-            `Angelo et al. (2023) <https://doi.org/10.1093/mnras/stad1038>`__)
-        :type epsilon: float
-        :param return_arrays: If ``True``, return arrays with the mass values for
-            each model instead of the median and STDDEV values
-        :type return_arrays: bool
+        :param gal_pot: Parameters of the Galaxy's potential
+        :type gal_pot: dict[str, float]
+        :param disrup: Parameters of the cluster's disruption
+        :type disrup: dict[str, float]
 
-        :return: Dictionary with the mass distributions for the initial, actual,
-            observed, photometric, evolutionary, and dynamical masses:
-            ``M_init, M_actual, M_obs, M_phot, M_evol, M_dyn``
-        :rtype: dict
-
-        :raises ValueError: If the `get_models()` method was not previously called
+        :return: Dictionary with an array of values (one per model) for each mass
+        :rtype: dict[str, np.ndarray]
         """
-        if hasattr(self, "sampled_synthcls") is False:
-            raise ValueError(
-                "This method requires running the get_models() method first"
-            )
-
         from .modules import cluster_mass_funcs as cmf
 
         # The number of stars in the synthetic clusters is not constant so we estimate
         # its median
-        N_stars_isoch = int(np.median([np.shape(_)[-1] for _ in self.sampled_synthcls]))
+        N_stars_isoch = int(np.median([np.shape(_)[-1] for _ in synthcls]))
         # Compare the number of observed vs generated synthetic stars
         if N_stars_isoch < self.N_stars_obs:
             warnings.warn(
@@ -1244,54 +1315,65 @@ class Synthetic:
             )
 
         # Resolve radec_c if not explicitly provided
-        msg = None
         if (
             rho_amb is None
             and radec_c is None
-            and (
-                hasattr(self, "cluster_ra")
-                and hasattr(self, "cluster_dec")
-                and self.cluster_ra is not None
-                and self.cluster_dec is not None
-            )
+            and self.cluster_ra is not None
+            and self.cluster_dec is not None
         ):
-            radec_c = (np.median(self.cluster_ra), np.median(self.cluster_dec))
-            msg = "\nUsing ambient density estimated from observed cluster (ra, dec)"
+            radec_c = (
+                float(np.median(self.cluster_ra)),
+                float(np.median(self.cluster_dec)),
+            )
+            self._vp(
+                "\nUsing ambient density estimated from observed cluster (ra, dec)", 1
+            )
 
-        # Compute rho_amb_arr
+        # Ambient density for each model
+        rho_amb_arr = None
         if rho_amb is not None:
-            rho_amb_arr = np.full(len(self.sampled_models), rho_amb)
+            rho_amb_arr = np.full(len(models), rho_amb)
         elif radec_c is not None:
             rho_amb_arr = cmf.ambient_density(
-                self.sampled_models, radec_c, M_B, r_B, M_D, a, b, r_s, M_s
+                models,
+                radec_c,
+                gal_pot["M_B"],
+                gal_pot["r_B"],
+                gal_pot["M_D"],
+                gal_pot["a"],
+                gal_pot["b"],
+                gal_pot["r_s"],
+                gal_pot["M_s"],
             )
-            if msg is not None:
-                self._vp(msg, 1)
         else:
-            raise ValueError(
-                "This method requires 'rho_amb', 'radec_c', or a previous calibration "
-                "with valid 'ra' and 'dec' values defined in the Cluster() object"
+            warnings.warn(
+                "\nNo 'rho_amb', 'radec_c', or (ra, dec) values in the calibrated "
+                + "Cluster object:\nthe initial, evolutionary and dynamical masses "
+                + "can not be estimated"
             )
 
+        C_env, gamma, epsilon = disrup["C_env"], disrup["gamma"], disrup["epsilon"]
         masses_all = []
-        for i, model in enumerate(self.sampled_models):
-            # Extract met and loga
-            z_met, loga = model["met"], model["loga"]
-
-            # Convert back to Z if values are stored as FeH. This is required for the
-            # 'mu_ev' estimation in the stellar_evol_mass_loss() function
-            if self.isochs.z_to_FeH is not None:
-                z_met = self.isochs.z_to_FeH * 10**z_met
-
+        for i, model in enumerate(models):
             # Estimate the actual mass, ie: the sum of the observed and photometric
             # masses
-            sampled_synthcl = self.sampled_synthcls[i]
             M_obs, M_phot, M_a = cmf.get_M_actual(
                 self.rng,
                 self.m_ini_idx,
                 self.st_dist_mass,
-                sampled_synthcl,
+                synthcls[i],
             )
+
+            if rho_amb_arr is None:
+                masses_all.append([M_obs, M_phot, np.nan, np.nan])
+                continue
+
+            # Extract met and loga
+            z_met, loga = model["met"], model["loga"]
+            # Convert back to Z if values are stored as FeH. This is required for the
+            # 'mu_ev' estimation in the stellar_evol_mass_loss() function
+            if self.isochs.z_to_FeH is not None:
+                z_met = self.isochs.z_to_FeH * 10**z_met
 
             # Dissolution parameter
             t0 = cmf.dissolution_param(C_env, epsilon, gamma, rho_amb_arr[i])
@@ -1309,30 +1391,18 @@ class Synthetic:
 
             masses_all.append([M_obs, M_phot, M_evol, M_dyn])
 
-        masses_all = np.array(masses_all).T
+        masses_all = np.array(masses_all, dtype=float).T
 
         M_actual = masses_all[0] + masses_all[1]
         M_init = M_actual + masses_all[2] + masses_all[3]
 
-        self._vp("\nMass values estimated", 1)
-
-        if return_arrays:
-            return {
-                "M_init": M_init,
-                "M_actual": M_actual,
-                "M_obs": masses_all[0],
-                "M_phot": masses_all[1],
-                "M_evol": masses_all[2],
-                "M_dyn": masses_all[3],
-            }
-
         return {
-            "M_init": (np.median(M_init), np.std(M_init)),
-            "M_actual": (np.median(M_actual), np.std(M_actual)),
-            "M_obs": (np.median(masses_all[0]), np.std(masses_all[0])),
-            "M_phot": (np.median(masses_all[1]), np.std(masses_all[1])),
-            "M_evol": (np.median(masses_all[2]), np.std(masses_all[2])),
-            "M_dyn": (np.median(masses_all[3]), np.std(masses_all[3])),
+            "M_init": M_init,
+            "M_actual": M_actual,
+            "M_obs": masses_all[0],
+            "M_phot": masses_all[1],
+            "M_evol": masses_all[2],
+            "M_dyn": masses_all[3],
         }
 
     def get_isochrone(

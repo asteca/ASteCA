@@ -290,7 +290,7 @@ class Sampler:
         :py:meth:`run`.
 
         The dictionaries can be passed directly to other methods, e.g.:
-        ``synthcl.get_models(summ["median"], summ["std"])``
+        ``synthcl.cluster_properties(summ["median"], summ["std"])``
 
         Raises a ``ValueError`` if the sampler has not been run.
 

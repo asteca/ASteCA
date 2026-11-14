@@ -896,7 +896,7 @@ overpopulated.
 
 To alert of this situation, :py:meth:`asteca.Synthetic.cmd_overlap` locates the
 turn-off point of the isochrone used to generate the synthetic cluster (as done by
-:py:meth:`asteca.Synthetic.get_models`) and defines a box around it, by default from
+:py:meth:`asteca.Synthetic.cluster_properties`) and defines a box around it, by default from
 1 mag brighter to 0.5 mag fainter than the turn-off and from 0.2 mag bluer to 0.8 mag
 redder (arguments ``to_box_mag`` and ``to_box_col``). The observed and synthetic stars
 inside the box are compared with the same :math:`D` statistic described above, using
@@ -928,21 +928,21 @@ Post-process parameters
 
 **ASteCA** is able to estimate extra cluster and stellar parameters, assuming that
 proper fundamental parameters have been obtained for the observed cluster.
-For these analyses the first step is to call the
-:py:meth:`asteca.Synthetic.calibrate()` and
-:py:meth:`asteca.Synthetic.get_models()` methods. 
+All of them are obtained with the :py:meth:`asteca.Synthetic.cluster_properties`
+method, after calling :py:meth:`asteca.Synthetic.calibrate()`.
 
 The :py:meth:`asteca.Synthetic.calibrate()` method is explained in
 :ref:`ref_calibrating`, it is aimed at extracting information from the observed cluster
 to generate synthetic clusters such that they are as similar as possible to the observed
 cluster.
 
-The :py:meth:`asteca.Synthetic.get_models()` method requires two input arguments:
-a ``model`` dictionary, which is a dictionary of fundamental parameters assigned to
-the observed cluster (however obtained), and a ``model_std`` dictionary, which contains
-the uncertainties (standard deviations) associated to each parameter in ``model``. 
-This method will store in the :class:`asteca.Synthetic` object a number of synthetic
-clusters, sampled from a normal distribution centered on the ``model`` values with
+The :py:meth:`asteca.Synthetic.cluster_properties()` method requires two input
+arguments: a ``model`` dictionary, which is a dictionary of fundamental parameters
+assigned to the observed cluster (however obtained), and a ``model_std`` dictionary,
+which contains the uncertainties (standard deviations) associated to each parameter in
+``model``. These can be taken directly from the :py:meth:`asteca.Sampler.summary`
+of a fit. The method generates ``N_models`` (``200`` by default) synthetic clusters,
+sampled from a normal distribution centered on the ``model`` values with
 STDDEVs taken from the ``model_std`` values. The distribution of each parameter is
 truncated to its valid range: the ranges of the loaded isochrones for ``met`` and
 ``loga``, values ``>=0`` for ``alpha, beta, Av, DR, dm``, and ``>0`` for ``Rv``. Unlike
@@ -950,16 +950,21 @@ clipping, this does not pile up models at the limits of the ranges; note however
 for a parameter close to a limit (e.g.: ``Av=0.05`` with a STDDEV of ``0.1``) the mean of
 the sampled values is shifted away from it.
 
-After calling these methods, we are ready to estimate:
+From these synthetic clusters the method estimates, for each observed star:
 
-1. The per-star masses (for single and binary systems, and for probable BSSs)
-2. The per-star probability of being part of a binary system
-3. The per-star probability of being a blue straggler (BSS)
-4. The initial, actual, and lost masses associated to the cluster
+1. Its masses (for single and binary systems, and for probable BSSs)
+2. Its probability of being part of a binary system
+3. Its probability of being a blue straggler (BSS)
 
-From the per-star binary probabilities we can estimate the total binary fraction of the
-cluster, and from the per-star blue straggler probabilities we can estimate the total
-number of BSSs in the cluster.
+and for the cluster:
+
+4. The total binary fraction
+5. The total number of BSSs
+6. The initial, actual, and lost masses
+
+The per-star values are returned under the ``stars`` key of the returned dictionary,
+and the cluster values under the ``cluster`` key. All of them are obtained from the same
+sampled synthetic clusters.
 
 The :ref:`post_process_ntbk` tutorial contains examples on how to perform these analyses.
 The following sub-sections explain in more detail the methods used to estimate these parameters.
@@ -976,7 +981,7 @@ Stellar parameters
 **ASteCA** provides a simple method to assign, for each member star of your observed
 cluster, its individual masses and probabilities of belonging to a binary system
 and/or of being a blue straggler star (BSS). The method is called
-:py:meth:`asteca.Synthetic.stellar_parameters`, and it applies the following algorithm:
+:py:meth:`asteca.Synthetic.cluster_properties`, and it applies the following algorithm:
 
 1. Starting from an observed cluster
 2. Generate a synthetic cluster with some fundamental parameters
@@ -989,8 +994,7 @@ and/or of being a blue straggler star (BSS). The method is called
 7. Classify as a BSS if the observed star is located inside the BSS region of the CMD
    (see :ref:`bss_total_number`)
 8. Repeat for all stars in the observed cluster
-9. Repeat for ``N_models`` synthetic clusters (obtained previously via the
-   :py:meth:`asteca.Synthetic.get_models` method)
+9. Repeat for the ``N_models`` sampled synthetic clusters
 
 .. important::
 
@@ -1049,7 +1053,7 @@ performed for an observed cluster.
 Stellar masses
 --------------
 
-For a given observed star ``i`` the :py:meth:`asteca.Synthetic.stellar_parameters`
+For a given observed star ``i`` the :py:meth:`asteca.Synthetic.cluster_properties`
 method will assign two arrays of masses of ``N_models`` length each:
 
 .. code-block:: python
@@ -1133,14 +1137,30 @@ distribution), or they can be fitted, to obtain values that more closely matches
 observed cluster's binary system distribution.
 
 There is thus no *total binary fraction* parameter used when generating synthetic
-clusters. This parameter can be estimated via the binary system probabilities obtained
-by the :py:meth:`asteca.Synthetic.stellar_parameters` method. The binary probability of
-each star is the fraction of the ``N_models`` synthetic clusters in which its closest
-synthetic star is a binary system, multiplied by ``1-bss_prob``, so that probable BSSs
-are not counted as binary systems.
-The :ref:`post_process_ntbk` tutorial shows how the median and standard deviation of the
-total cluster binary fraction for an observed cluster can be computed from these
-probabilities.
+clusters. This parameter is estimated by the
+:py:meth:`asteca.Synthetic.cluster_properties` method from the binary system
+probabilities. The binary probability of each star is the fraction of the ``N_models``
+synthetic clusters in which its closest synthetic star is a binary system, multiplied by
+``1-bss_prob``, so that probable BSSs are not counted as binary systems.
+
+Two estimates of the total binary fraction are returned:
+
+- ``binar_fr``: if each observed star is a binary system with probability
+  ``binar_prob``, independently of the other stars, the number of binary systems follows
+  a `Poisson-binomial distribution`_. This distribution is computed exactly, and the
+  ``(median, 16th, 84th)`` percentiles of the number of binary systems are divided by
+  the number of observed stars (with valid photometry).
+- ``binar_fr_models``: the fraction of the observed stars matched to a binary system in
+  each of the sampled synthetic clusters (each one weighted by ``1-bss_prob``), and its
+  ``(median, 16th, 84th)`` percentiles across the synthetic clusters.
+
+Both have the same mean, but ``binar_fr`` treats the stars as independent, while the
+binary systems assigned by a given synthetic cluster are not: they all share its
+fundamental parameters (e.g.: ``alpha, beta``). The spread of ``binar_fr_models``
+includes the uncertainty in these parameters, and it is usually much larger than that
+of ``binar_fr``, which only reflects the number of stars.
+
+.. _Poisson-binomial distribution: https://en.wikipedia.org/wiki/Poisson_binomial_distribution
 
 
 
@@ -1163,7 +1183,7 @@ defined as the region towards lower values of two points:
     to_point_2 = [min(to_col_obs, to_col + col_offset_2), to_mag + mag_offset_2]
 
 where the turn-off point ``(to_col, to_mag)`` is estimated by ASteCA for each of the
-synthetic clusters sampled by :py:meth:`asteca.Synthetic.get_models`, and
+synthetic clusters sampled by :py:meth:`asteca.Synthetic.cluster_properties`, and
 ``to_col_obs`` is the 5th percentile of the colors of the observed stars with
 magnitudes within ``±0.25`` mag of ``to_mag`` (this range grows in steps of ``0.05``
 mag until it holds at least 5 stars). This means the BSS region never extends redder
@@ -1184,9 +1204,9 @@ stars in the main sequence (the TO point 1 is defined at a smaller color value
 than TO point 2). These stars can be affected by photometric uncertainties that
 make them look bluer than they actually are, thus mimicking the BSS region.
 
-The values for the offsets ``(col_offset_1, mag_offset_1, col_offset_2, mag_offset_2)``
-can be modified by the user via the arguments of the
-:py:meth:`asteca.Synthetic.stellar_parameters` method.
+The values for the offsets ``(mag_offset_1, col_offset_1, mag_offset_2, col_offset_2)``
+can be modified by the user via the ``bss_box`` argument of the
+:py:meth:`asteca.Synthetic.cluster_properties` method.
 
 
 BSSs are not described by the isochrone of the rest of the cluster: they behave as
@@ -1194,19 +1214,21 @@ younger, more massive stars. Hence the ``mass_single`` and ``mass_binar`` values
 assigned to probable BSSs are not meaningful. To estimate their masses, an
 :py:class:`asteca.Isochrones` object with the same photometric system and isochrones
 with ``log(age)<=7`` can be passed to
-:py:meth:`asteca.Synthetic.stellar_parameters` via its ``isochs_young`` argument (a
+:py:meth:`asteca.Synthetic.cluster_properties` via its ``isochs_young`` argument (a
 ``ValueError`` is raised if it has no such isochrones). For each observed star, the
 closest point on each young isochrone (all metallicities and all ages with
 ``log(age)<=7``) is found, after moving the isochrone by distance modulus and
 extinction values sampled from the ``model`` and ``model_std`` dictionaries given to
-:py:meth:`asteca.Synthetic.get_models`. The median and STDDEV of the masses of these
+:py:meth:`asteca.Synthetic.cluster_properties`. The median and STDDEV of the masses of these
 points are returned as ``mass_bss`` and ``mass_bss_std``. These values are computed for
 all the observed stars, but they are only meaningful for those with large ``bss_prob``
 values. If ``isochs_young`` is not given, they are ``NaN`` and a warning is shown.
 
-The blue straggler probability assigned to each observed star can be easily
-used to obtain the total number of probable BSSs in the cluster. See the
-:ref:`post_process_ntbk` tutorial for an example of how this is done.
+The total number of BSSs in the cluster is returned as ``N_bss``: the
+``(median, 16th, 84th)`` percentiles of the Poisson-binomial distribution given by the
+``bss_prob`` values (see :ref:`binary_fraction`). A number of BSSs can also be obtained
+by applying a probability cut to the ``bss_prob`` values, as shown in the
+:ref:`post_process_ntbk` tutorial.
 
 
 
@@ -1217,9 +1239,9 @@ Cluster mass
 ============
 
 **ASteCA** is able to estimate different masses for an observed cluster via the
-:py:meth:`asteca.Synthetic.cluster_masses` method. This method uses the position
-of the observed cluster, as well as the synthetic clusters generated
-via the :py:meth:`asteca.Synthetic.get_models` method, to estimate the initial mass of
+:py:meth:`asteca.Synthetic.cluster_properties` method. This method uses the position
+of the observed cluster, as well as the sampled synthetic clusters, to estimate the
+initial mass of
 the cluster, the actual mass, and the mass lost via stellar evolution and dynamical
 effects.
 
@@ -1347,9 +1369,13 @@ effects) which we estimate simply using Eq :eq:`eq_Mi1` as:
     \Delta M_{dyn}(t) = M_{i} - M_{a} - \Delta M_{evol}(t)
 
 These masses are computed for each of the ``N_models`` synthetic clusters generated
-by :py:meth:`asteca.Synthetic.get_models`, whose fundamental parameters are sampled
-from the ``model`` and ``model_std`` dictionaries. The resulting distributions thus
-take the uncertainties in the fundamental parameters into account. By default the
-method returns their median and STDDEV values; the full distributions are returned
-with ``return_arrays=True``.
+by :py:meth:`asteca.Synthetic.cluster_properties`, whose fundamental parameters are
+sampled from the ``model`` and ``model_std`` dictionaries. The resulting distributions
+thus take the uncertainties in the fundamental parameters into account. By default the
+method returns their ``(median, 16th, 84th)`` percentiles; the full distributions are
+returned with ``return_arrays=True``. The observed, photometric and actual masses do not
+depend on the cluster's position; if neither the ambient density (``rho_amb``) nor the
+cluster's coordinates are available, the initial, evolutionary and dynamical masses are
+``NaN``. The parameters of the Galaxy's potential and of the cluster's disruption can be
+changed via the ``galaxy_potential`` and ``disruption`` arguments.
 

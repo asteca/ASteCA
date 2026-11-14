@@ -140,8 +140,8 @@ the ``n_total`` value passed to :py:meth:`asteca.Sampler.run`:
     summ = sampler.summary()
     print(summ["median"], summ["std"], summ["ess"])
 
-    # Synthetic clusters sampled from the fitted solution
-    synthcl.get_models(summ["median"], summ["std"])
+    # Per-star and cluster properties from the fitted solution
+    props = synthcl.cluster_properties(summ["median"], summ["std"])
 
 The posterior samples are returned by :py:meth:`asteca.Sampler.posterior`, with their
 importance weights, or resampled to equally weighted samples with ``resample=True``

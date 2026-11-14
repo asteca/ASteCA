@@ -44,7 +44,7 @@ can be passed when creating the object are:
 - ``color2, e_color2``: a second color and its uncertainty (requires ``color``)
 - ``star_id``: per-star identifiers, stored as strings. They are kept when the
   members are selected (see :ref:`membership_module`) and returned by
-  :py:meth:`asteca.Synthetic.stellar_parameters`
+  :py:meth:`asteca.Synthetic.cluster_properties`
 - ``probs``: per-star membership probabilities estimated by other means (see
   :ref:`membership_module`)
 - ``max_mag`` or ``max_mag_perc`` (only one of them): the stars fainter than the given
