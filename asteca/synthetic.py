@@ -1,5 +1,4 @@
 import warnings
-from typing import Literal, overload
 
 import numpy as np
 
@@ -160,23 +159,6 @@ class Synthetic:
             self.isochs.theor_tracks,
             self.isochs.color_filters,
         )
-
-        # import sys
-        # def memory_size(obj):
-        #     if isinstance(obj, np.ndarray):
-        #         return obj.nbytes
-
-        #     if isinstance(obj, (list, tuple)):
-        #         return sys.getsizeof(obj) + sum(memory_size(x) for x in obj)
-
-        #     return sys.getsizeof(obj)
-        # for name, obj in (
-        #     ("st_dist_mass", self.st_dist_mass),
-        #     ("theor_tracks", self.theor_tracks),
-        # ):
-        #     size = memory_size(obj)
-        #     print(f"{name}: {size / 1024**2:.2f} MiB")
-        # # 'st_dist_mass' occupies ~4.5X more memory than 'theor_tracks'
 
         # Data used by the `generate()` method
         self.m_ini_idx = 2  # (0->mag, 1->color, 2->mass_ini)
@@ -381,25 +363,6 @@ class Synthetic:
         self._vp(f"N_stars_obs    : {self.N_stars_obs}", 1)
         self._vp(f"Max magnitude  : {self.max_mag_syn_obs:.2f}", 1)
         self._vp("Error distribution loaded", 1)
-
-    @overload
-    def generate(
-        self,
-        params: dict | None = None,
-        N_stars: int = 100,
-        batch: Literal[False] = False,
-        show_errors: bool = False,
-    ) -> np.ndarray: ...
-
-    @overload
-    def generate(
-        self,
-        params: dict | None = None,
-        N_stars: int = 100,
-        *,
-        batch: Literal[True],
-        show_errors: bool = False,
-    ) -> list[np.ndarray]: ...
 
     def generate(
         self,
