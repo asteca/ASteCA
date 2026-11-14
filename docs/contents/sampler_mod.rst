@@ -130,15 +130,28 @@ Results
 
 The :py:meth:`asteca.Sampler.summary` method returns the median, mean, standard
 deviation, and 16th and 84th percentiles of each fitted parameter, as dictionaries
-that can be passed directly to other methods, and the effective sample size (ESS) of
-the importance weighted posterior samples used to compute them. The ESS is the number
-of independent samples they are equivalent to, and it should not be much smaller than
-the ``n_total`` value passed to :py:meth:`asteca.Sampler.run`:
+that can be passed directly to other methods. It also returns, for each parameter,
+the fraction of the posterior close to the lower and upper limits of its prior
+(``edge_low, edge_high``), and a ``diagnostics`` dictionary for the run:
+
+- ``ess``: effective sample size (ESS) of the importance weighted posterior samples,
+  i.e.: the number of independent samples they are equivalent to. It should not be
+  much smaller than the ``n_total`` value passed to :py:meth:`asteca.Sampler.run`
+- ``ess_unique``: the ESS after merging identical samples. Resampling and rejected
+  MCMC moves produce copies of the same point, which ``ess`` counts as independent
+- ``accept, steps``: acceptance rate and number of steps of the MCMC moves of the
+  last iteration
+- ``no_overlap_frac``: fraction of the likelihood evaluations whose synthetic cluster
+  does not overlap the observed one (see :ref:`plr`)
+
+A posterior piled up against a prior limit (large ``edge_low`` or ``edge_high``) that
+is not a physical one (e.g.: ``Av=0``) means that the prior is too narrow. See
+:py:meth:`asteca.Sampler.summary` for the interpretation of each value.
 
 .. code-block:: python
 
     summ = sampler.summary()
-    print(summ["median"], summ["std"], summ["ess"])
+    print(summ["median"], summ["std"], summ["diagnostics"]["ess"])
 
     # Per-star and cluster properties from the fitted solution
     props = synthcl.cluster_properties(summ["median"], summ["std"])

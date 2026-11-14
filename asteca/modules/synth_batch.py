@@ -110,7 +110,10 @@ def batch_data(synthcl: "Synthetic") -> dict:
         "N_a": N_a,
         "st_list": st_list,
         "midx_list": midx_list,
-        "dr_frac": np.ascontiguousarray(synthcl.rand_floats["dr_frac"]),
+        "dr_frac": {
+            k: np.ascontiguousarray(v)
+            for k, v in synthcl.rand_floats["dr_frac"].items()
+        },
         "ext_kind": 0 if synthcl.ext_law == "GAIADR3" else 1,
         "ccm": ccmo_array(synthcl.ext_law, synthcl.ext_coefs),
         "unif1": np.ascontiguousarray(synthcl.rand_floats["unif"][1]),
@@ -213,7 +216,12 @@ def batch_params(synthcl: "Synthetic", params: dict | None) -> np.ndarray:
     )
 
 
-def batch_args(synthcl: "Synthetic", P: np.ndarray, N_stars: int = 100) -> tuple:
+def batch_args(
+    synthcl: "Synthetic",
+    P: np.ndarray,
+    N_stars: int = 100,
+    DR_distribution: str | None = None,
+) -> tuple:
     """Arguments of the compiled batch functions :py:func:`_generate_batch`,
     :py:func:`_lnl_batch_serial` and :py:func:`_lnl_batch_parallel` (the
     likelihood arguments are added by :py:func:`log_lkl_batch`). The data that does
@@ -227,6 +235,9 @@ def batch_args(synthcl: "Synthetic", P: np.ndarray, N_stars: int = 100) -> tuple
     :param N_stars: Number of synthetic stars to generate if the object was not
         calibrated, see :py:meth:`asteca.Synthetic.generate`
     :type N_stars: int
+    :param DR_distribution: Differential reddening model. If ``None``, the default
+        model of the object is used
+    :type DR_distribution: str | None
 
     :return: Tuple of arguments
     :rtype: tuple
@@ -251,7 +262,7 @@ def batch_args(synthcl: "Synthetic", P: np.ndarray, N_stars: int = 100) -> tuple
         bd["st_list"],
         bd["midx_list"],
         bd["N_a"],
-        bd["dr_frac"],
+        bd["dr_frac"][synthcl._dr_name(DR_distribution)],
         bd["ext_kind"],
         bd["ccm"],
         bd["unif1"],
@@ -267,6 +278,7 @@ def log_lkl_batch(  # noqa: DOC502, RUF100
     temperature: float,
     parallel: bool,
     n_threads: int | None,
+    DR_distribution: str | None = None,
 ) -> np.ndarray:
     """Log-likelihoods of a batch of synthetic clusters, used by
     :py:class:`asteca.Sampler`.
@@ -296,6 +308,9 @@ def log_lkl_batch(  # noqa: DOC502, RUF100
     :param n_threads: Number of threads used if ``parallel=True``. If ``None``,
         numba's current setting is used
     :type n_threads: int | None
+    :param DR_distribution: Differential reddening model. If ``None``, the default
+        model of the object is used
+    :type DR_distribution: str | None
 
     :raises ValueError: In the same cases as :py:meth:`asteca.Synthetic.generate` for
         any of the models, if :py:meth:`asteca.Synthetic.calibrate` was not called, or
@@ -312,13 +327,18 @@ def log_lkl_batch(  # noqa: DOC502, RUF100
     if not available(synthcl.ext_law):
         return np.array(
             [
-                lk.log_lkl(synthcl.generate(dict(zip(FULL_PARAMS, p))), temperature)
+                lk.log_lkl(
+                    synthcl.generate(
+                        dict(zip(FULL_PARAMS, p)), DR_distribution=DR_distribution
+                    ),
+                    temperature,
+                )
                 for p in P
             ]
         )
 
     args: tuple = (
-        *batch_args(synthcl, P),
+        *batch_args(synthcl, P, DR_distribution=DR_distribution),
         lk.m_ini_idx,
         lk.hist_args,
         lk.nz_pos,

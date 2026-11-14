@@ -68,6 +68,10 @@ class Sampler:
         (before importing ``asteca``) or with ``numba.set_num_threads()``. It can not
         be larger than ``NUMBA_NUM_THREADS``
     :type n_threads: int | None
+    :param DR_distribution: Differential reddening model of the synthetic clusters,
+        one of ``foreground, internal`` (see :py:class:`asteca.Synthetic`). If
+        ``None``, the default model of the ``synthcl`` object is used
+    :type DR_distribution: str | None
     :param verbose: Verbose level. A value of ``0`` hides all output
     :type verbose: int
 
@@ -86,9 +90,12 @@ class Sampler:
         n_active: int = 128,
         parallel: bool = False,
         n_threads: int | None = None,
+        DR_distribution: str | None = None,
         verbose: int = 1,
     ) -> None:
         self.synthcl = synthcl
+        # Differential reddening model of the synthetic clusters (validated here)
+        self.DR_distribution = synthcl._dr_name(DR_distribution)
         self.n_effective = int(n_effective)
         self.n_active = int(n_active)
         self.parallel = parallel
@@ -108,6 +115,10 @@ class Sampler:
         # Best solution found during the run (largest log-likelihood)
         self.best_lnl = -np.inf
         self.best_params = {}
+        # Number of log-likelihood evaluations, and of those whose synthetic cluster
+        # does not overlap the observed one, used by summary()
+        self._n_lnl = 0
+        self._n_lnl_no_overlap = 0
 
         from .modules.sampler_priv import PersistentSMC
 
@@ -123,6 +134,7 @@ class Sampler:
         self._vp("\nSampler object generated")
         self._vp(f"Fitted params  : {self.names}", 1)
         self._vp(f"Temperature    : {self.temperature:g}", 1)
+        self._vp(f"Diff reddening : {self.DR_distribution}", 1)
         self._vp(f"n_effective    : {self.n_effective}", 1)
         self._vp(f"n_active       : {self.n_active}", 1)
         if self.parallel:
@@ -205,9 +217,17 @@ class Sampler:
             self.temperature,
             self.parallel,
             self.n_threads,
+            self.DR_distribution,
         )
         lnl = np.asarray(lnl, dtype=float)
         lnl[~np.isfinite(lnl)] = -np.inf
+        # Normalized distances 'd' (see likelihood_priv.Tremmel.log_lkl()): 'd >= 1'
+        # if no synthetic star falls in any bin of the observed Hess diagram, or
+        # if the synthetic cluster is empty ('d = 10'). The small tolerance absorbs
+        # the rounding of the conversion
+        dist = -lnl * self.temperature / self.synthcl._lkl.lkl_range
+        self._n_lnl += lnl.size
+        self._n_lnl_no_overlap += int(np.sum(dist >= 1.0 - 1e-9))
 
         i = int(np.argmax(lnl))
         if lnl[i] > self.best_lnl:
@@ -279,37 +299,80 @@ class Sampler:
         samples, weights, _ = self._smc.posterior(resample)
         return samples, weights
 
-    def summary(self) -> dict[str, dict[str, float] | float]:
-        """Summary statistics of the posterior of each fitted parameter, after
-        :py:meth:`run`.
+    def summary(self) -> dict[str, dict[str, float]]:  # noqa: DOC502, RUF100
+        """Summary statistics of the posterior of each fitted parameter, and
+        diagnostics of the run, after :py:meth:`run`.
 
         The statistics are computed from the importance weighted samples returned by
         :py:meth:`posterior` (no resampling, so the result does not depend on the
         random state). The percentiles use the inverse of the weighted empirical
-        CDF. The effective sample size (ESS) of these samples, ``sum(w)**2 /
-        sum(w**2)`` for the weights ``w``, is the number of independent samples
-        they are equivalent to: it indicates how precise the statistics are, and it
-        should not be much smaller than the ``n_total`` value passed to
-        :py:meth:`run`.
+        CDF. The dictionaries of statistics can be passed directly to other methods,
+        e.g.: ``synthcl.cluster_properties(summ["median"], summ["std"])``
 
-        The dictionaries can be passed directly to other methods, e.g.:
-        ``synthcl.cluster_properties(summ["median"], summ["std"])``
+        Statistics (one value per fitted parameter):
 
-        Raises a ``ValueError`` if the sampler has not been run.
+        - ``median, mean, std, p16, p84``: median, mean, standard deviation, and
+          16th and 84th percentiles.
+        - ``edge_low, edge_high``: fraction of the posterior (sum of the weights)
+          within ``1%`` of the width of the prior from its lower and upper limits.
+          A flat posterior gives ``~0.01``. Much larger values mean that the
+          posterior piles up against that limit: the prior is too narrow (or the
+          fit is stuck at its limit), and the statistics of that parameter are
+          truncated. This is expected for limits that are physical (e.g.: ``Av=0``
+          or ``DR=0``) or that are those of the isochrones (``met, loga``).
 
-        :return: Dictionary with the keys ``median, mean, std, p16, p84``, each one
-            a dictionary with the value of that statistic for each fitted parameter,
-            and the key ``ess`` with the effective sample size (a single value for
-            all the parameters)
-        :rtype: dict[str, dict[str, float] | float]
+        Diagnostics of the run (``diagnostics`` key, single values):
+
+        - ``ess``: effective sample size of the posterior samples, ``sum(w)**2 /
+          sum(w**2)`` for the weights ``w``, i.e.: the number of independent
+          samples they are equivalent to. It indicates how precise the statistics
+          are, and it should not be much smaller than the ``n_total`` value passed
+          to :py:meth:`run`.
+        - ``ess_unique``: the ESS after merging the samples with identical values
+          (summing their weights). The samples of all the iterations are kept, and
+          resampling and rejected MCMC moves produce copies of the same point,
+          which ``ess`` counts as independent. If ``ess_unique`` is much smaller
+          than ``ess``, the posterior rests on few distinct points and the
+          statistics are noisier than ``ess`` suggests: run longer (larger
+          ``n_total``) or with more particles (``n_effective, n_active``).
+        - ``accept``: mean acceptance rate of the MCMC moves of the last iteration
+          (the sampler adapts the moves towards ``~0.23``). Values close to ``0``
+          mean that the particles barely moved in the posterior.
+        - ``steps``: number of MCMC steps of the last iteration. The MCMC stops
+          when the mean log-posterior of the particles no longer increases, or
+          after ``10 * (N // 2)`` steps for ``N`` fitted parameters. Reaching this
+          limit means that the particles had not settled.
+        - ``no_overlap_frac``: fraction of the log-likelihood evaluations of the run
+          whose synthetic cluster does not overlap the observed one: no synthetic
+          star falls in any bin of the observed Hess diagram, or the synthetic
+          cluster is empty (e.g.: all its stars are fainter than the maximum
+          magnitude). These models get a 'no match' distance ``>= 1`` (see
+          :ref:`plr`) instead of a likelihood. A large fraction means that much of
+          the prior volume can not reproduce the observed cluster: the run spends
+          evaluations there, and narrower priors make it faster.
+
+        :raises ValueError: If the sampler has not been run
+
+        :return: Dictionary with the keys ``median, mean, std, p16, p84, edge_low,
+            edge_high``, each one a dictionary with the value of that statistic for
+            each fitted parameter, and the key ``diagnostics``, a dictionary with
+            the keys ``ess, ess_unique, accept, steps, no_overlap_frac``
+        :rtype: dict[str, dict[str, float]]
         """
         samples, weights = self.posterior()
+        w_sum = np.sum(weights)
 
-        mean = np.sum(weights[:, None] * samples, axis=0) / np.sum(weights)
-        var = np.sum(weights[:, None] * (samples - mean) ** 2, axis=0) / np.sum(weights)
+        mean = np.sum(weights[:, None] * samples, axis=0) / w_sum
+        var = np.sum(weights[:, None] * (samples - mean) ** 2, axis=0) / w_sum
         p16, p50, p84 = np.percentile(
             samples, (16, 50, 84), axis=0, weights=weights, method="inverted_cdf"
         )
+
+        # Posterior mass close to the limits of the priors
+        low, high = self.bounds.T
+        edge = 0.01 * (high - low)
+        edge_low = np.sum(weights[:, None] * (samples <= low + edge), axis=0) / w_sum
+        edge_high = np.sum(weights[:, None] * (samples >= high - edge), axis=0) / w_sum
 
         stats = {
             "median": p50,
@@ -317,10 +380,23 @@ class Sampler:
             "std": np.sqrt(var),
             "p16": p16,
             "p84": p84,
+            "edge_low": edge_low,
+            "edge_high": edge_high,
         }
-        summ: dict[str, dict[str, float] | float] = {
+        summ = {
             stat: dict(zip(self.names, map(float, vals)))
             for stat, vals in stats.items()
         }
-        summ["ess"] = float(weights.sum() ** 2 / (weights**2).sum())
+
+        # ESS of the distinct samples: the weights of identical samples are summed
+        _, inv = np.unique(samples, axis=0, return_inverse=True)
+        w_unique = np.bincount(inv.ravel(), weights=weights)
+
+        summ["diagnostics"] = {
+            "ess": float(w_sum**2 / np.sum(weights**2)),
+            "ess_unique": float(np.sum(w_unique) ** 2 / np.sum(w_unique**2)),
+            "accept": float(self._smc.current["accept"]),
+            "steps": float(self._smc.current["steps"]),
+            "no_overlap_frac": self._n_lnl_no_overlap / max(self._n_lnl, 1),
+        }
         return summ

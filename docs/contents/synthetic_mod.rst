@@ -208,8 +208,24 @@ Differential reddening
 
 The ``DR_distribution`` argument selects the model used for the differential
 reddening (assuming :math:`DR>0`, see Section :ref:`ref_generating`). It accepts one
-of two string values: ``foreground`` (the default) or ``internal``. Both models
-assign to each star :math:`i` the absorption
+of two string values: ``foreground`` (the default) or ``internal``. The value given
+when the :py:class:`asteca.Synthetic` object is created is the default model, which
+can be changed for a given call with the ``DR_distribution`` argument of
+:py:meth:`asteca.Synthetic.generate` (also with ``batch=True``),
+:py:meth:`asteca.Synthetic.cmd_overlap`, :py:meth:`asteca.Synthetic.get_isochrone`,
+:py:meth:`asteca.Synthetic.cluster_properties`, and :py:class:`asteca.Sampler`.
+For example, to fit the same observed cluster with both models:
+
+.. code-block:: python
+
+    for model in ("foreground", "internal"):
+        sampler = asteca.Sampler(synthcl, priors, DR_distribution=model)
+        sampler.run()
+
+The fractions of both models are obtained once, when the object is created, from the
+same random values: changing the model has no cost, and the synthetic clusters of the
+two models differ only in the model, not in the random sampling. Both models assign
+to each star :math:`i` the absorption
 
 .. math::
 

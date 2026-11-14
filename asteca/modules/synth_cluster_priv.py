@@ -392,7 +392,6 @@ def randVals(
     rng: np.random.Generator,
     theor_tracks: np.ndarray,
     st_dist_mass: list,
-    DR_distribution: str,
 ) -> dict:
     """Generate lists of random values used by the synthetic cluster generating
     function.
@@ -403,11 +402,10 @@ def randVals(
     :type theor_tracks: np.ndarray
     :param st_dist_mass: List of sampled masses.
     :type st_dist_mass: list
-    :param DR_distribution: Differential reddening model, see
-        :py:func:`dr_fractions`.
-    :type DR_distribution: str
 
-    :returns: Dictionary of random values.
+    :returns: Dictionary of random values. The ``dr_frac`` key holds a dictionary
+        with the fractions of the differential reddening for each model in
+        ``DR_MODELS``, all obtained from the same uniform values.
     :rtype: dict
     """
     # This is the maximum number of stars that will ever be interpolated into
@@ -426,8 +424,10 @@ def randVals(
     # rand_unif_vals = np.random.uniform(0.0, 1.0, (2, N_mass))
     rand_unif_vals = rng.uniform(0.0, 1.0, (2, N_mass))
 
-    # Used by `extinction()`
-    dr_frac = dr_fractions(rand_unif_vals[0], DR_distribution)
+    # Used by `extinction()`. The fractions of every differential reddening model
+    # are obtained (from the same uniform values) so that the model can be selected
+    # when a synthetic cluster is generated, at no cost
+    dr_frac = {m: dr_fractions(rand_unif_vals[0], m) for m in DR_MODELS}
 
     rand_floats = {"norm": rand_norm_vals, "unif": rand_unif_vals, "dr_frac": dr_frac}
     return rand_floats
@@ -510,6 +510,10 @@ def sample_params(
         low, high = bounds.get(k, (PARAMS_MIN.get(k, -np.inf), np.inf))
         sampled[k] = truncnorm_sample(rng, f_val, model_std[k], low, high, N_models)
     return [dict(zip(sampled, t)) for t in zip(*sampled.values())]
+
+
+# Differential reddening models, see dr_fractions()
+DR_MODELS = ("foreground", "internal")
 
 
 def dr_fractions(rand_unif: np.ndarray, DR_distribution: str) -> np.ndarray:

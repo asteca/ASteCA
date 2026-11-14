@@ -119,7 +119,8 @@ def get_model(
     theor_tracks: np.ndarray,
     ext_law: str,
     ext_coefs: list | np.ndarray,
-    rand_floats: dict[str, np.ndarray],
+    rand_floats: dict,
+    dr_frac: np.ndarray,
     st_dist_mass: list,
     mass_idx_lookup: dict,
     max_mag_syn: float,
@@ -154,7 +155,10 @@ def get_model(
     :param ext_coefs: Extinction coefficients.
     :type ext_coefs: list | np.ndarray
     :param rand_floats: Pre-generated random values used during synthesis.
-    :type rand_floats: dict[str, np.ndarray]
+    :type rand_floats: dict
+    :param dr_frac: Fractions of the differential reddening applied to each star,
+        for the selected model (see :py:func:`synth_cluster_priv.dr_fractions`)
+    :type dr_frac: np.ndarray
     :param st_dist_mass: Sampled IMF mass distributions.
     :type st_dist_mass: list
     :param mass_idx_lookup: Pre-computed search indexes of the sampled IMF masses
@@ -232,7 +236,7 @@ def get_model(
     isoch_av = extinction(
         ext_law,
         ext_coefs,
-        rand_floats["dr_frac"],
+        dr_frac,
         m_ini_idx,
         binar_flag,
         av,
@@ -302,7 +306,7 @@ def get_model(
         isoch_binar = extinction(
             ext_law,
             ext_coefs,
-            rand_floats["dr_frac"],
+            dr_frac,
             m_ini_idx,
             False,
             av,
