@@ -235,15 +235,8 @@ def batch_args(synthcl: "Synthetic", P: np.ndarray, N_stars: int = 100) -> tuple
         synthcl._batch_data = batch_data(synthcl)
     bd = synthcl._batch_data
 
-    # Same as in Synthetic.generate()
-    try:
-        max_mag_syn = synthcl.max_mag_syn_obs
-        err_dist_synth = synthcl.err_dist_obs
-        N_synth_stars = synthcl.N_stars_obs
-    except AttributeError:
-        max_mag_syn = np.inf
-        err_dist_synth = []
-        N_synth_stars = int(N_stars)
+    # Same values as in Synthetic.generate()
+    max_mag_syn, err_dist_synth, N_synth_stars = synthcl._calib_values(N_stars)
     if len(err_dist_synth):
         err = np.array(err_dist_synth, dtype=float)
     else:

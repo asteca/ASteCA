@@ -104,23 +104,7 @@ def main(N_repeat: int = 25_000):
             "Rv": rng.uniform(2.5, 4.0),
             "dm": rng.uniform(8.0, 14.0),
         }
-        _ = get_model(
-            params,
-            synthcl.met_age_dict,
-            synthcl.met_tol,
-            synthcl.age_tol,
-            synthcl.def_params,
-            synthcl.m_ini_idx,
-            synthcl.theor_tracks,
-            synthcl.ext_law,
-            synthcl.ext_coefs,
-            synthcl.rand_floats,
-            synthcl.st_dist_mass,
-            synthcl.mass_idx,
-            synthcl.max_mag_syn_obs,
-            synthcl.err_dist_obs,
-            synthcl.N_stars_obs,
-        )
+        _ = synthcl._get_model(params)
     profiler.stop()
     profiler.open_in_browser()
 

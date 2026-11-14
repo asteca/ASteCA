@@ -456,41 +456,7 @@ class Synthetic:
             # batch=False
             return [a if a.shape[1] else np.array([]) for a in out]
 
-        from .modules import synth_model as sm
-
-        if params is None:
-            params = {}
-
-        try:
-            # Extract from calibrated observed cluster
-            max_mag_syn = self.max_mag_syn_obs
-            err_dist_synth = self.err_dist_obs
-            N_synth_stars = self.N_stars_obs
-        except AttributeError:
-            # If no calibration was done, use the provided 'N_stars' value (or the
-            # default value if not given)
-            max_mag_syn = np.inf
-            err_dist_synth = []
-            N_synth_stars = int(N_stars)
-
-        _, synth_arr = sm.get_model(
-            params,
-            self.met_age_dict,
-            self.met_tol,
-            self.age_tol,
-            self.def_params,
-            self.m_ini_idx,
-            self.theor_tracks,
-            self.ext_law,
-            self.ext_coefs,
-            self.rand_floats,
-            self.st_dist_mass,
-            self.mass_idx,
-            max_mag_syn,
-            err_dist_synth,
-            N_synth_stars,
-            show_errors,
-        )
+        _, synth_arr = self._get_model(params, N_stars, show_errors=show_errors)
 
         return synth_arr
 
@@ -583,28 +549,10 @@ class Synthetic:
 
         from .modules import likelihood_priv as lpriv
         from .modules import stellar_stats_funcs as ssf
-        from .modules import synth_model as sm
 
         # Same synthetic cluster as generate(params); the isochrone (with DR=0) is
         # used to locate the turn-off point
-        isochrone, synth_clust = sm.get_model(
-            params,
-            self.met_age_dict,
-            self.met_tol,
-            self.age_tol,
-            self.def_params,
-            self.m_ini_idx,
-            self.theor_tracks,
-            self.ext_law,
-            self.ext_coefs,
-            self.rand_floats,
-            self.st_dist_mass,
-            self.mass_idx,
-            self.max_mag_syn_obs,
-            self.err_dist_obs,
-            self.N_stars_obs,
-            isoch_flag=True,
-        )
+        isochrone, synth_clust = self._get_model(params, isoch_flag=True)
 
         D, D_std = lpriv.cmd_overlap(
             self.cluster_mag, self.cluster_colors[0], synth_clust, h_mag, h_col
@@ -649,6 +597,69 @@ class Synthetic:
                 "This method requires running the 'calibrate()' method first\n"
                 + "with an observed 'Cluster' object"
             )
+
+    def _calib_values(self, N_stars: int) -> tuple[float, list[np.ndarray], int]:
+        """Maximum magnitude, error distribution and number of stars of the
+        synthetic clusters: those of the observed cluster if :py:meth:`calibrate` was
+        called, else no magnitude cut, no errors and ``N_stars`` stars
+
+        :param N_stars: Number of synthetic stars if the object was not calibrated
+        :type N_stars: int
+
+        :return: Maximum magnitude, error distribution and number of stars
+        :rtype: tuple[float, list[np.ndarray], int]
+        """
+        try:
+            return self.max_mag_syn_obs, self.err_dist_obs, self.N_stars_obs
+        except AttributeError:
+            return np.inf, [], int(N_stars)
+
+    def _get_model(
+        self,
+        params: dict | None,
+        N_stars: int = 100,
+        isoch_flag: bool = False,
+        show_errors: bool = False,
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Generate a synthetic cluster (and its isochrone) with
+        :py:func:`synth_model.get_model`, from the data stored in the object
+
+        :param params: Dictionary with the values for the fundamental parameters. If
+            ``None``, the default values are used
+        :type params: dict | None
+        :param N_stars: Number of synthetic stars if the object was not calibrated
+        :type N_stars: int
+        :param isoch_flag: If ``True``, also return the isochrone (with ``DR=0``)
+        :type isoch_flag: bool
+        :param show_errors: If ``True``, print the reason when an empty synthetic
+            cluster is returned
+        :type show_errors: bool
+
+        :return: Isochrone (empty if ``isoch_flag=False``) and synthetic cluster
+        :rtype: tuple[np.ndarray, np.ndarray]
+        """
+        from .modules import synth_model as sm
+
+        max_mag_syn, err_dist_synth, N_synth_stars = self._calib_values(N_stars)
+        return sm.get_model(
+            {} if params is None else params,
+            self.met_age_dict,
+            self.met_tol,
+            self.age_tol,
+            self.def_params,
+            self.m_ini_idx,
+            self.theor_tracks,
+            self.ext_law,
+            self.ext_coefs,
+            self.rand_floats,
+            self.st_dist_mass,
+            self.mass_idx,
+            max_mag_syn,
+            err_dist_synth,
+            N_synth_stars,
+            show_errors,
+            isoch_flag,
+        )
 
     def cluster_properties(
         self,
@@ -787,6 +798,7 @@ class Synthetic:
 
         from .modules import cluster_mass_funcs as cmf
         from .modules import stellar_stats_funcs as ssf
+        from .modules import synth_cluster_priv as scp
 
         # Check the arguments before generating the synthetic clusters
         if len(bss_box) != 4:
@@ -801,9 +813,48 @@ class Synthetic:
         if isochs_young is not None and isochs_young.amin > 7:
             raise ValueError("No isochrones with log(ages)<=7 found in 'isochs_young'")
 
-        models, synthcls, turn_off_points, extrinsic_pars = self._sample_models(
-            model, model_std, N_models, color_idx
+        # Fill in the default values. New dictionaries are created so that the ones
+        # passed by the user are not modified
+        model = self.def_params | model
+        model_std = {k: 0 for k in self.def_params} | model_std
+        self._vp("\nGenerate synthetic models", 1)
+        self._vp("par            : mean +/ STDDEV", 2)
+        for k in ("met", "loga", "alpha", "beta", "Rv", "DR", "Av", "dm"):
+            self._vp(f"{k:<15}: {round(model[k], 4)} +/- {round(model_std[k], 4)}", 2)
+
+        # Sample the models and generate their synthetic clusters and isochrones.
+        # Models that result in empty synthetic clusters are discarded
+        models, synthcls, isoch_tracks, max_masses = [], [], [], []
+        for smodel in scp.sample_params(
+            self.rng, model, model_std, self.met_age_dict, N_models
+        ):
+            isoch_arr, synth_arr = self._get_model(smodel, isoch_flag=True)
+            if not synth_arr.any():
+                continue
+            models.append(smodel)
+            synthcls.append(synth_arr)
+            # Magnitude, color and initial mass of the isochrone, and maximum mass of
+            # the synthetic cluster, used to locate the turn-off point
+            isoch_tracks.append(isoch_arr[[0, color_idx + 1, self.m_ini_idx]])
+            max_masses.append(synth_arr[self.m_ini_idx].max())
+        N_models_non_empty = len(models)
+        if N_models_non_empty == 0:
+            raise ValueError("All sampled models produced empty synthetic clusters.")
+        if N_models_non_empty < N_models:
+            warnings.warn(
+                f"Empty synthetic arrays generated: {N_models - N_models_non_empty}"
+            )
+        self._vp(f"N_models       : {N_models_non_empty}", 1)
+
+        turn_off_points = ssf.turn_off_points(
+            isoch_tracks, max_masses, color_idx, self.isochs.model
         )
+
+        # Used to estimate the BSS masses
+        extrinsic_pars = {
+            "values": {k: model[k] for k in ("Av", "dm", "Rv")},
+            "stddevs": {k: model_std[k] for k in ("Av", "dm", "Rv")},
+        }
 
         stars, m2_obs, valid = ssf.stellar_parameters(
             self.cluster_mag,
@@ -897,154 +948,6 @@ class Synthetic:
 
         return {"stars": stars, "cluster": cluster}
 
-    def _sample_models(
-        self,
-        model: dict[str, float],
-        model_std: dict[str, float],
-        N_models: int,
-        color_idx: int,
-    ) -> tuple[list[dict], list[np.ndarray], dict, dict]:
-        """Sample models around the given solution and generate their synthetic
-        clusters, used by :py:meth:`cluster_properties`
-
-        :param model: Dictionary with the values for the fundamental parameters
-        :type model: dict[str, float]
-        :param model_std: Dictionary with the standard deviations for the fundamental
-            parameters in the ``model`` argument
-        :type model_std: dict[str, float]
-        :param N_models: Number of sampled models
-        :type N_models: int
-        :param color_idx: Index of the color used to locate the turn-off point
-        :type color_idx: int
-
-        :raises ValueError: If all the synthetic arrays generated are empty
-
-        :return: The sampled models and their synthetic clusters (empty ones are
-            discarded), the turn-off points of the synthetic clusters, and the values
-            and STDDEVs of the extrinsic parameters
-        :rtype: tuple[list[dict], list[np.ndarray], dict, dict]
-        """
-        from .modules import stellar_stats_funcs as ssf
-        from .modules import synth_cluster_priv as scp
-        from .modules import synth_model as sm
-
-        # Update dictionaries with default values, if required. New dictionaries are
-        # created so that the ones passed by the user are not modified
-        model = self.def_params | model
-        model_std = {k: 0 for k in self.def_params} | model_std
-
-        pars_k = ("met", "loga", "alpha", "beta", "Rv", "DR", "Av", "dm")
-        self._vp("\nGenerate synthetic models", 1)
-        self._vp("par            : mean +/ STDDEV", 2)
-        for k in pars_k:
-            self._vp(
-                f"{k:<15}: {round(model[k], 4)} +/- {round(model_std[k], 4)}",
-                2,
-            )
-
-        # Generate the 'N_models' models via sampling a Gaussian centered on
-        # 'model', with standard deviation given by 'model_std', truncated to the
-        # valid range of each parameter: the isochrones' ranges for (met, loga),
-        # and non-negative values for the rest
-        bounds = {
-            "met": (self.met_age_dict["met"][0], self.met_age_dict["met"][-1]),
-            "loga": (self.met_age_dict["loga"][0], self.met_age_dict["loga"][-1]),
-        }
-        sampled_pars = {}
-        for k, f_val in model.items():
-            low, high = bounds.get(k, (scp.PARAMS_MIN.get(k, -np.inf), np.inf))
-            sampled_pars[k] = scp.truncnorm_sample(
-                self.rng, f_val, model_std[k], low, high, N_models
-            )
-        sampled_models = [
-            dict(zip(sampled_pars, t)) for t in zip(*sampled_pars.values())
-        ]
-
-        # Generate the synthetic arrays using the above models
-        models_no_empty, synthcls = [], []
-        turn_off_points = {
-            "color_idx": color_idx,
-            "to_col": [],
-            "to_mag": [],
-        }
-        # Initial minimum isochrone index for identifying the turn-off point
-        fallback_min_idx = 10
-        to_idx_lst = [fallback_min_idx]
-        for smodel in sampled_models:
-            # Get both the isochrone and the synthetic cluster
-            isoch_arr, synth_arr = sm.get_model(
-                smodel,
-                self.met_age_dict,
-                self.met_tol,
-                self.age_tol,
-                self.def_params,
-                self.m_ini_idx,
-                self.theor_tracks,
-                self.ext_law,
-                self.ext_coefs,
-                self.rand_floats,
-                self.st_dist_mass,
-                self.mass_idx,
-                self.max_mag_syn_obs,
-                self.err_dist_obs,
-                self.N_stars_obs,
-                isoch_flag=True,
-            )
-
-            # Do not store models that result in empty arrays
-            if not synth_arr.any():
-                continue
-
-            models_no_empty.append(smodel)
-            synthcls.append(synth_arr)
-
-            # Estimate turn-off point(s)
-            # Extract maximum mass
-            max_mass_isoch = synth_arr[self.m_ini_idx].max()
-            # Apply max mass filter to isochrone
-            msk = isoch_arr[self.m_ini_idx] < max_mass_isoch
-            # Extract isochrone up to the max mass
-            mag, color = np.array([isoch_arr[0], isoch_arr[color_idx + 1]])[:, msk]
-            # Find turn-off point for the isochrone
-            to_col, to_mag, to_idx = ssf.to_point_find(
-                color, mag, self.isochs.model, fallback_min_idx
-            )
-
-            # If the turn-off point is below the minimum allowed, use the median of the
-            # previous (non fallback) turn-off points
-            if (to_idx < fallback_min_idx) and turn_off_points["to_col"]:
-                to_col = np.median(turn_off_points["to_col"])
-                to_mag = np.median(turn_off_points["to_mag"])
-
-            to_idx_lst.append(to_idx)
-            # Use the 10% percentile as the minimum fallback value for the turn-off index
-            fallback_min_idx = int(np.percentile(to_idx_lst, 10))
-
-            turn_off_points["to_col"].append(to_col)
-            turn_off_points["to_mag"].append(to_mag)
-
-        N_models_non_empty = len(models_no_empty)
-        if N_models_non_empty == 0:
-            raise ValueError("All sampled models produced empty synthetic clusters.")
-        if N_models_non_empty < N_models:
-            warnings.warn(
-                f"Empty synthetic arrays generated: {N_models - N_models_non_empty}"
-            )
-
-        # Used to estimate the BSS masses
-        extrinsic_pars = {
-            "values": {"Av": model["Av"], "dm": model["dm"], "Rv": model["Rv"]},
-            "stddevs": {
-                "Av": model_std["Av"],
-                "dm": model_std["dm"],
-                "Rv": model_std["Rv"],
-            },
-        }
-
-        self._vp(f"N_models       : {N_models_non_empty}", 1)
-
-        return models_no_empty, synthcls, turn_off_points, extrinsic_pars
-
     def get_isochrone(
         self,
         fit_params: dict,
@@ -1076,37 +979,8 @@ class Synthetic:
         # # Generate displaced isochrone
         # fit_params_copy = dict(fit_params)
 
-        from .modules import synth_model as sm
-
-        try:
-            # Extract from calibrated observed cluster
-            max_mag_syn = self.max_mag_syn_obs
-            err_dist_synth = self.err_dist_obs
-            N_synth_stars = self.N_stars_obs
-        except AttributeError:
-            max_mag_syn = np.inf
-            err_dist_synth = []
-            N_synth_stars = int(N_stars)
-
         # Generate displaced isochrone and full synthetic CMD array
-        isochrone, full_arr = sm.get_model(
-            fit_params,
-            self.met_age_dict,
-            self.met_tol,
-            self.age_tol,
-            self.def_params,
-            self.m_ini_idx,
-            self.theor_tracks,
-            self.ext_law,
-            self.ext_coefs,
-            self.rand_floats,
-            self.st_dist_mass,
-            self.mass_idx,
-            max_mag_syn,
-            err_dist_synth,
-            N_synth_stars,
-            isoch_flag=True,
-        )
+        isochrone, full_arr = self._get_model(fit_params, N_stars, isoch_flag=True)
 
         if full_track:
             # Return the full track without applying the max mass filter

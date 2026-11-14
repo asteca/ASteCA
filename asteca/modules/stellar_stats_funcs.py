@@ -110,6 +110,60 @@ def to_point_find(
     return to_col, to_mag, to_idx
 
 
+def turn_off_points(
+    isoch_tracks: list[np.ndarray],
+    max_masses: list[float],
+    color_idx: int,
+    isochs_model: str,
+) -> dict:
+    """Turn-off points of the isochrones of the sampled synthetic clusters, used to
+    define the BSS region.
+
+    Each isochrone is cut at the maximum mass of its synthetic cluster. If the
+    turn-off point found is below the minimum index allowed (a fallback value), the
+    median of the previous turn-off points is used. The minimum index is updated
+    after each isochrone as the 10th percentile of the indexes found.
+
+    :param isoch_tracks: Magnitude, color and initial mass of each isochrone, arrays
+        of shape ``(3, N_points)``
+    :type isoch_tracks: list[np.ndarray]
+    :param max_masses: Maximum initial mass of each synthetic cluster
+    :type max_masses: list[float]
+    :param color_idx: Index of the color used, stored in the returned dictionary
+    :type color_idx: int
+    :param isochs_model: Isochrones' model, see :py:func:`to_point_find`
+    :type isochs_model: str
+
+    :return: Dictionary with the keys ``color_idx, to_col, to_mag``
+    :rtype: dict
+    """
+    turn_off = {"color_idx": color_idx, "to_col": [], "to_mag": []}
+    # Initial minimum isochrone index for identifying the turn-off point
+    fallback_min_idx = 10
+    to_idx_lst = [fallback_min_idx]
+    for track, max_mass in zip(isoch_tracks, max_masses):
+        # Isochrone up to the maximum mass of the synthetic cluster
+        mag, color = track[:2, track[2] < max_mass]
+        to_col, to_mag, to_idx = to_point_find(
+            color, mag, isochs_model, fallback_min_idx
+        )
+
+        # If the turn-off point is below the minimum allowed, use the median of the
+        # previous (non fallback) turn-off points
+        if (to_idx < fallback_min_idx) and turn_off["to_col"]:
+            to_col = np.median(turn_off["to_col"])
+            to_mag = np.median(turn_off["to_mag"])
+
+        to_idx_lst.append(to_idx)
+        # Use the 10% percentile as the minimum fallback value for the turn-off index
+        fallback_min_idx = int(np.percentile(to_idx_lst, 10))
+
+        turn_off["to_col"].append(to_col)
+        turn_off["to_mag"].append(to_mag)
+
+    return turn_off
+
+
 def stellar_parameters(
     cluster_mag: np.ndarray,
     cluster_e_mag: np.ndarray,

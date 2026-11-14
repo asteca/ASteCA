@@ -474,6 +474,44 @@ def truncnorm_sample(
     return stats.truncnorm.rvs(a, b, loc=mean, scale=std, size=N, random_state=rng)
 
 
+def sample_params(
+    rng: np.random.Generator,
+    model: dict[str, float],
+    model_std: dict[str, float],
+    met_age_dict: dict,
+    N_models: int,
+) -> list[dict[str, float]]:
+    """Sample sets of parameters from normal distributions centered on ``model``
+    with STDDEVs ``model_std``, truncated to the valid range of each parameter: the
+    isochrones' ranges for ``met, loga``, and the limits in ``PARAMS_MIN`` for the
+    rest (see :py:func:`truncnorm_sample`).
+
+    :param rng: Random number generator
+    :type rng: np.random.Generator
+    :param model: Dictionary with the values of all the parameters
+    :type model: dict[str, float]
+    :param model_std: Dictionary with the STDDEV of each parameter in ``model``
+    :type model_std: dict[str, float]
+    :param met_age_dict: Dictionary of metallicity and log(age) values of the
+        isochrones
+    :type met_age_dict: dict
+    :param N_models: Number of sets of parameters
+    :type N_models: int
+
+    :return: List of ``N_models`` dictionaries, one per set of parameters
+    :rtype: list[dict[str, float]]
+    """
+    bounds = {
+        "met": (met_age_dict["met"][0], met_age_dict["met"][-1]),
+        "loga": (met_age_dict["loga"][0], met_age_dict["loga"][-1]),
+    }
+    sampled = {}
+    for k, f_val in model.items():
+        low, high = bounds.get(k, (PARAMS_MIN.get(k, -np.inf), np.inf))
+        sampled[k] = truncnorm_sample(rng, f_val, model_std[k], low, high, N_models)
+    return [dict(zip(sampled, t)) for t in zip(*sampled.values())]
+
+
 def dr_fractions(rand_unif: np.ndarray, DR_distribution: str) -> np.ndarray:
     """Fractions 'f' (in [0, 1]) of the differential reddening applied to each
     synthetic star, A_i = Av + f_i * DR.
