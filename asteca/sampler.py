@@ -182,7 +182,7 @@ class Sampler:
         if self.n_active < 2 or self.n_effective < self.n_active:
             raise ValueError("Must have 'n_effective' >= 'n_active' >= 2")
 
-        # Same check done by Synthetic._log_lkl_batch(), done here so that an invalid
+        # Same check done by synth_batch.log_lkl_batch(), done here so that an invalid
         # value is reported before the run starts. As there, 'n_threads' is only used
         # (and checked) with parallel=True and numba installed
         from .modules import synth_batch as sb
@@ -197,7 +197,10 @@ class Sampler:
     def _log_like(self, params_arr: np.ndarray) -> np.ndarray:
         """Vectorized log-likelihood, ``params_arr`` has shape
         ``(n_particles, n_dim)``"""
-        lnl = self.synthcl._log_lkl_batch(
+        from .modules import synth_batch as sb
+
+        lnl = sb.log_lkl_batch(
+            self.synthcl,
             dict(zip(self.names, params_arr.T)),
             self.temperature,
             self.parallel,

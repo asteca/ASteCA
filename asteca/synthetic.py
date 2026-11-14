@@ -222,6 +222,10 @@ class Synthetic:
             self.theor_tracks, self.st_dist_mass, self.m_ini_idx
         )
 
+        # Data used by the compiled batch functions, obtained the first time they are
+        # called (see synth_batch.batch_args())
+        self._batch_data: dict | None = None
+
         # Check that the ranges are respected
         for par in ("met", "loga"):
             if par in def_params:
@@ -440,14 +444,14 @@ class Synthetic:
         if batch:
             from .modules import synth_batch as sb
 
-            P = self._batch_params(params)
+            P = sb.batch_params(self, params)
             if not sb.available(self.ext_law):
                 return [
                     self.generate(dict(zip(sb.FULL_PARAMS, p)), N_stars=N_stars)
                     for p in P
                 ]
 
-            out = sb._generate_batch(*self._batch_args(P, N_stars))
+            out = sb._generate_batch(*sb.batch_args(self, P, N_stars))
             # An empty synthetic cluster is returned as an empty 1D array, as with
             # batch=False
             return [a if a.shape[1] else np.array([]) for a in out]
@@ -633,95 +637,6 @@ class Synthetic:
 
         return D, D_std
 
-    def _log_lkl_batch(  # noqa: DOC502, RUF100
-        self,
-        params: dict | None,
-        temperature: float,
-        parallel: bool,
-        n_threads: int | None,
-    ) -> np.ndarray:
-        """Log-likelihoods of a batch of synthetic clusters, used by
-        :py:class:`asteca.Sampler`.
-
-        Same as ``self._lkl.log_lkl(self.generate(p), temperature)`` for each set of
-        parameters ``p`` in ``params`` (defined as in :py:meth:`generate` with
-        ``batch=True``), with identical results. With numba, the compiled functions in
-        :py:mod:`synth_batch` generate each synthetic cluster and evaluate its
-        likelihood in the same call (the synthetic clusters never go back to
-        Python, which is where the gain comes from), optionally distributing the
-        models among ``n_threads`` threads if ``parallel=True`` (if ``None``,
-        numba's current setting is used). Without numba, ``parallel`` and
-        ``n_threads`` are ignored. The ``temperature`` is assumed positive (it is
-        validated by :py:class:`asteca.Sampler`).
-
-        :param params: Dictionary with an array of values (or a single value) for each
-            parameter, as in :py:meth:`generate` with ``batch=True``. If ``None``, the
-            default parameters are used
-        :type params: dict | None
-        :param temperature: Likelihood temperature, assumed positive (validated by
-            :py:class:`asteca.Sampler`)
-        :type temperature: float
-        :param parallel: Evaluate the models in parallel threads (requires numba)
-        :type parallel: bool
-        :param n_threads: Number of threads used if ``parallel=True``. If ``None``,
-            numba's current setting is used
-        :type n_threads: int | None
-
-        :raises ValueError: In the same cases as :py:meth:`generate` for any of the
-            models, if :py:meth:`calibrate` was not called, or if ``n_threads`` is
-            used and it is not an integer between ``1`` and ``NUMBA_NUM_THREADS``
-
-        :return: Array with the log-likelihood of each model, ``0`` is the best value
-        :rtype: np.ndarray
-        """
-        from .modules import synth_batch as sb
-
-        self._check_calibrated()
-
-        lk = self._lkl
-        P = self._batch_params(params)
-        if not sb.available(self.ext_law):
-            return np.array(
-                [
-                    lk.log_lkl(self.generate(dict(zip(sb.FULL_PARAMS, p))), temperature)
-                    for p in P
-                ]
-            )
-
-        args: tuple = (
-            *self._batch_args(P),
-            lk.m_ini_idx,
-            lk.hist_args,
-            lk.nz_pos,
-            lk.row_off,
-            lk.table_flat,
-            lk.m_max,
-            lk.min_lkl,
-            lk.max_lkl,
-            lk.lkl_range,
-            float(lk.obs_mag_median),
-            float(lk.obs_col_median),
-            float(lk.cmd_widths[0]),
-            float(lk.cmd_widths[1]),
-            float(temperature),
-        )
-        if not parallel:
-            return sb._lnl_batch_serial(*args)
-        if n_threads is None:
-            return sb._lnl_batch_parallel(*args)
-
-        import numba
-
-        # 'n_threads' is only validated here, where it is used
-        sb.check_n_threads(n_threads)
-        # Set the number of threads for this call only
-        prev_threads = numba.get_num_threads()
-        numba.set_num_threads(int(n_threads))
-        try:
-            return sb._lnl_batch_parallel(*args)
-        finally:
-            numba.set_num_threads(prev_threads)
-
     def _check_calibrated(self) -> None:
         """Raise a ``ValueError`` if :py:meth:`calibrate` was not called"""
         if not (
@@ -734,59 +649,6 @@ class Synthetic:
                 "This method requires running the 'calibrate()' method first\n"
                 + "with an observed 'Cluster' object"
             )
-
-    def _batch_params(self, params: dict | None) -> np.ndarray:
-        """Full parameter array for the batch methods, see synth_batch.full_params()"""
-        from .modules import synth_batch as sb
-
-        return sb.full_params(
-            {} if params is None else params,
-            self.def_params,
-            self.met_age_dict,
-            self.met_tol,
-            self.age_tol,
-        )
-
-    def _batch_args(self, P: np.ndarray, N_stars: int = 100) -> tuple:
-        """Arguments of the compiled batch functions in synth_batch"""
-        from .modules import synth_batch as sb
-
-        # Data that does not change after the object is created, obtained once
-        if getattr(self, "_batch_data", None) is None:
-            self._batch_data = sb.batch_data(self)
-        bd = self._batch_data
-
-        # Same as in generate()
-        try:
-            max_mag_syn = self.max_mag_syn_obs
-            err_dist_synth = self.err_dist_obs
-            N_synth_stars = self.N_stars_obs
-        except AttributeError:
-            max_mag_syn = np.inf
-            err_dist_synth = []
-            N_synth_stars = int(N_stars)
-        if len(err_dist_synth):
-            err = np.array(err_dist_synth, dtype=float)
-        else:
-            err = np.empty((0, 0))
-
-        return (
-            P,
-            bd["met_grid"],
-            bd["age_grid"],
-            self.theor_tracks,
-            self.m_ini_idx,
-            bd["st_list"],
-            bd["midx_list"],
-            bd["N_a"],
-            bd["dr_frac"],
-            bd["ext_kind"],
-            bd["ccm"],
-            bd["unif1"],
-            float(max_mag_syn),
-            err,
-            int(N_synth_stars),
-        )
 
     def cluster_properties(
         self,
