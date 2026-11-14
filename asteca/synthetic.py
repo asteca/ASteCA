@@ -1,4 +1,5 @@
 import warnings
+from typing import Literal, overload
 
 import numpy as np
 
@@ -381,13 +382,33 @@ class Synthetic:
         self._vp(f"Max magnitude  : {self.max_mag_syn_obs:.2f}", 1)
         self._vp("Error distribution loaded", 1)
 
+    @overload
     def generate(
         self,
-        params: dict[str, float] | None = None,
+        params: dict | None = None,
         N_stars: int = 100,
+        batch: Literal[False] = False,
         show_errors: bool = False,
-    ) -> np.ndarray:
-        """Generate a synthetic cluster.
+    ) -> np.ndarray: ...
+
+    @overload
+    def generate(
+        self,
+        params: dict | None = None,
+        N_stars: int = 100,
+        *,
+        batch: Literal[True],
+        show_errors: bool = False,
+    ) -> list[np.ndarray]: ...
+
+    def generate(
+        self,
+        params: dict | None = None,
+        N_stars: int = 100,
+        batch: bool = False,
+        show_errors: bool = False,
+    ) -> np.ndarray | list[np.ndarray]:
+        """Generate a synthetic cluster, or a batch of synthetic clusters.
 
         The synthetic cluster is generated according to the parameters given in
         the ``params`` dictionary and the already calibrated
@@ -406,19 +427,42 @@ class Synthetic:
         uncertainties. Otherwise, ``N_stars`` stars are generated with no magnitude
         cut and no uncertainties.
 
+        With ``batch=True`` many synthetic clusters are generated in a single call.
+        The ``params`` dictionary then holds an array of values for each parameter,
+        all with the same length (the number of models), or a single value shared by
+        all the models. Parameters not included take the default values defined in the
+        :py:class:`Synthetic` object. E.g., for an array ``x`` of shape
+        ``(N_models, N_params)`` with the values of the parameters in ``names``:
+        ``params = dict(zip(names, x.T))``. The results are identical to calling this
+        method with ``batch=False`` for each set of parameters, but faster: with
+        `numba <https://numba.pydata.org/>`__ installed the whole batch is generated
+        in a single compiled call, which removes the Python overhead of each call (the
+        gain is largest for clusters with few stars). **Without numba there is no
+        speedup**: each model is generated as with ``batch=False``, which is
+        equivalent to (and as fast as) a loop.
+
+        This method is the entry point to combine the synthetic clusters with a
+        likelihood or distance and a sampler of the user's choosing (see
+        :ref:`own_lkl_sampler`).
+
         A ``ValueError`` is raised if ``met`` or ``loga`` are outside of the ranges of
         the loaded isochrones, if any of ``alpha, beta, Av, DR, dm`` is negative, or if
-        ``Rv<=0``.
+        ``Rv<=0`` (for any of the models if ``batch=True``).
 
-        :param params: Dictionary containing the values for the fundamental parameters.
+        :param params: Dictionary containing the values for the fundamental parameters,
+            a single value per parameter, or an array of values (one per model) if
+            ``batch=True``.
         :type params: dict | None
         :param N_stars: Number of synthetic stars to generate. Only used if the
             object was not calibrated; after calling :py:meth:`calibrate` the
             synthetic clusters contain up to as many stars as the observed cluster
             (with valid photometry) and this argument is ignored.
         :type N_stars: int
+        :param batch: If ``True``, generate one synthetic cluster for each set of
+            parameters in ``params`` and return them in a list.
+        :type batch: bool
         :param show_errors: If ``True``, possible errors will be printed to the screen.
-            Useful for debugging.
+            Useful for debugging. Only used if ``batch=False``.
         :type show_errors: bool
 
         :return: Returns a ``np.array`` containing a synthetic cluster
@@ -426,9 +470,25 @@ class Synthetic:
             the magnitude, ``c1`` is the color, ``c2`` is the optional second color,
             and ``mass, mass_b`` are the masses of the single and secondary components
             of the binary systems, respectively (if generated). If the system is a
-            single star, then ``mass_b==np.nan``.
-        :rtype: np.ndarray
+            single star, then ``mass_b==np.nan``. If ``batch=True``, a list with one
+            such array per model.
+        :rtype: np.ndarray | list[np.ndarray]
         """
+        if batch:
+            from .modules import synth_batch as sb
+
+            P = self._batch_params(params)
+            if not sb.available(self.ext_law):
+                return [
+                    self.generate(dict(zip(sb.FULL_PARAMS, p)), N_stars=N_stars)
+                    for p in P
+                ]
+
+            out = sb._generate_batch(*self._batch_args(P, N_stars))
+            # An empty synthetic cluster is returned as an empty 1D array, as with
+            # batch=False
+            return [a if a.shape[1] else np.array([]) for a in out]
+
         from .modules import synth_model as sm
 
         if params is None:
@@ -466,55 +526,6 @@ class Synthetic:
         )
 
         return synth_arr
-
-    def generate_batch(
-        self, params: dict | None = None, N_stars: int = 100
-    ) -> list[np.ndarray]:
-        """Generate a batch of synthetic clusters.
-
-        Same as calling :py:meth:`generate` for each set of parameters, with identical
-        results, but faster: with `numba <https://numba.pydata.org/>`__ installed the
-        whole batch is generated in a single compiled call, which removes the Python
-        overhead of each call (the gain is largest for clusters with few stars).
-        **Without numba there is no speedup**: :py:meth:`generate` is called for each
-        model, which is equivalent to (and as fast as) calling it in a loop.
-
-        This method (or :py:meth:`generate`) is the entry point to combine the
-        synthetic clusters with a likelihood or distance and a sampler of the user's
-        choosing (see :ref:`own_lkl_sampler`).
-
-        The ``params`` dictionary holds an array of values for each parameter, all
-        with the same length (the number of models), or a single value shared by all
-        the models. Parameters not included take the default values defined in the
-        :py:class:`Synthetic` object. E.g., for an array ``x`` of shape
-        ``(N_models, N_params)`` with the values of the parameters in ``names``:
-        ``params = dict(zip(names, x.T))``
-
-        A ``ValueError`` is raised in the same cases as in :py:meth:`generate`, for
-        any of the models.
-
-        :param params: Dictionary with the values of the fundamental parameters for
-            each model
-        :type params: dict | None
-        :param N_stars: Number of synthetic stars to generate if the object was not
-            calibrated, see :py:meth:`generate`
-        :type N_stars: int
-
-        :return: List with one synthetic cluster per model, each one equal to the
-            array returned by :py:meth:`generate`
-        :rtype: list[np.ndarray]
-        """
-        from .modules import synth_batch as sb
-
-        P = self._batch_params(params)
-        if not sb.available(self.ext_law):
-            return [
-                self.generate(dict(zip(sb.FULL_PARAMS, p)), N_stars=N_stars) for p in P
-            ]
-
-        out = sb._generate_batch(*self._batch_args(P, N_stars))
-        # generate() returns an empty 1D array for an empty synthetic cluster
-        return [a if a.shape[1] else np.array([]) for a in out]
 
     def cmd_overlap(  # noqa: DOC502, RUF100
         self,
@@ -670,8 +681,8 @@ class Synthetic:
         :py:class:`asteca.Sampler`.
 
         Same as ``self._lkl.log_lkl(self.generate(p), temperature)`` for each set of
-        parameters ``p`` in ``params`` (defined as in :py:meth:`generate_batch`),
-        with identical results. With numba, the compiled functions in
+        parameters ``p`` in ``params`` (defined as in :py:meth:`generate` with
+        ``batch=True``), with identical results. With numba, the compiled functions in
         :py:mod:`synth_batch` generate each synthetic cluster and evaluate its
         likelihood in the same call (the synthetic clusters never go back to
         Python, which is where the gain comes from), optionally distributing the
@@ -681,8 +692,8 @@ class Synthetic:
         validated by :py:class:`asteca.Sampler`).
 
         :param params: Dictionary with an array of values (or a single value) for each
-            parameter, as in :py:meth:`generate_batch`. If ``None``, the default
-            parameters are used
+            parameter, as in :py:meth:`generate` with ``batch=True``. If ``None``, the
+            default parameters are used
         :type params: dict | None
         :param temperature: Likelihood temperature, assumed positive (validated by
             :py:class:`asteca.Sampler`)

@@ -660,9 +660,9 @@ Generating in batches
 =====================
 
 Many synthetic clusters can be generated at once with the
-:py:meth:`asteca.Synthetic.generate_batch` method. It returns a list with one synthetic
-cluster per set of parameters, each one identical to the array returned by
-:py:meth:`asteca.Synthetic.generate` for those parameters.
+:py:meth:`asteca.Synthetic.generate` method and the ``batch=True`` argument. It returns
+a list with one synthetic cluster per set of parameters, each one identical to the
+array returned with ``batch=False`` (the default) for those parameters.
 
 The parameters are passed as a dictionary with an array of values for each parameter,
 all with the same length (the number of models). A single value is shared by all the
@@ -673,15 +673,15 @@ generate three synthetic clusters that only differ in their distance modulus:
 .. code-block:: python
 
     params = {"met": 0.0152, "loga": 8.0, "Av": 0.1, "dm": [7.5, 8.0, 8.5]}
-    synth_list = synthcl.generate_batch(params, N_stars=2000)
+    synth_list = synthcl.generate(params, N_stars=2000, batch=True)
 
 For an array ``x`` of shape ``(N_models, N_params)`` with the values of the
 parameters in the list ``names``, the dictionary is simply
 ``params = dict(zip(names, x.T))``.
 
 With `numba`_ installed, the whole batch is generated in a single compiled call, which
-removes the Python overhead of each call to :py:meth:`asteca.Synthetic.generate` (the
-gain is largest for clusters with few stars). The batch is always generated in a single
+removes the Python overhead of generating each model separately (the gain is largest
+for clusters with few stars). The batch is always generated in a single
 thread.
 
 .. important::
@@ -754,8 +754,8 @@ Using your own likelihood and sampler
 The :py:class:`asteca.Sampler` class uses a fixed likelihood (see :ref:`plr`). To use
 a different likelihood or distance, or a sampler of your own choosing (see this list
 of Python-based `MCMC and ABC packages`_), generate the synthetic clusters with
-:py:meth:`asteca.Synthetic.generate` (or :py:meth:`asteca.Synthetic.generate_batch`
-for samplers that evaluate many models at once) and compare them with the observed
+:py:meth:`asteca.Synthetic.generate` (with ``batch=True`` for samplers that evaluate
+many models at once) and compare them with the observed
 cluster in any way you see fit. For example:
 
 .. code-block:: python
@@ -765,7 +765,7 @@ cluster in any way you see fit. For example:
 
     def my_log_likelihood(x):
         # 'x' is an array of shape (N_models, N_params)
-        synth_list = synthcl.generate_batch(dict(zip(names, x.T)))
+        synth_list = synthcl.generate(dict(zip(names, x.T)), batch=True)
         return np.array([my_lkl(my_cluster, synth) for synth in synth_list])
 
 where ``my_lkl()`` is the user's function comparing the observed cluster with a
