@@ -128,6 +128,7 @@ def get_model(
     N_synth_stars: int,
     show_errors: bool = False,
     isoch_flag: bool = False,
+    isoch_dr_frac: float = 0.0,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Generate a synthetic cluster.
 
@@ -177,6 +178,10 @@ def get_model(
     :param isoch_flag: ``True`` if the isochrone should be returned along with the
         synthetic cluster, ``False`` otherwise.
     :type isoch_flag: bool
+    :param isoch_dr_frac: Fraction ``f`` of the differential reddening applied to
+        the returned isochrone, i.e.: it is reddened with ``Av + f * DR`` instead of
+        ``Av``. It does not affect the synthetic cluster
+    :type isoch_dr_frac: float
 
     :return: Synthetic isochrone plus synthetic array; if ``isoch_flag=False``,
         an empty array is returned instead of the isochrone.
@@ -245,6 +250,20 @@ def get_model(
         isoch_moved.copy(),
     )
     isoch_extin_dr_0 = isoch_av if isoch_flag else np.array([])
+    if isoch_flag and isoch_dr_frac > 0 and dr > 0:
+        # Returned isochrone reddened with 'Av + isoch_dr_frac * DR'. 'isoch_av' is
+        # still used below for the maximum magnitude cut
+        isoch_extin_dr_0 = extinction(
+            ext_law,
+            ext_coefs,
+            dr_frac,
+            m_ini_idx,
+            binar_flag,
+            av + isoch_dr_frac * dr,
+            0.0,
+            rv,
+            isoch_moved.copy(),
+        )
 
     # Identify the isochrone points below the maximum magnitude. The isochrone
     # itself is not cut (which would copy it): the points are selected through

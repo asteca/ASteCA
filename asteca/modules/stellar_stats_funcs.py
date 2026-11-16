@@ -11,6 +11,13 @@ from . import njit
 if TYPE_CHECKING:
     from ..isochrones import Isochrones
 
+# Percentile of the differential reddening fractions 'f' (A = Av + f * DR) at which
+# the turn-off points are located, used by Synthetic.cluster_properties(). The DR=0
+# isochrone is the bluest edge of the synthetic cluster, which for large DR values
+# lies far to the blue of the bulk of the stars (e.g.: 'foreground' model, where
+# f ~ N(0.5, 1/6)) and the BSS region misses most BSSs
+TO_DR_PERCENTILE = 5
+
 
 def to_point_find(
     x: np.ndarray,
