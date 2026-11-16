@@ -262,8 +262,6 @@ class Sampler:
         self.n_calls = int(self._smc.calls)
         self.n_iter = int(self._smc.t)
         self.logz = float(self._smc.logz)
-        _, weights, _ = self._smc.posterior()
-        self.ess = float(weights.sum() ** 2 / (weights**2).sum())
         # Normalized distance of the best solution, from 0 (exact match) to 1 (no
         # overlap), see likelihood_priv.Tremmel.log_lkl()
         self.best_dist = float(
@@ -272,7 +270,11 @@ class Sampler:
 
         self._vp(f"Iterations     : {self.n_iter}", 1)
         self._vp(f"Likelihood calls: {self.n_calls}", 1)
-        self._vp(f"ESS            : {self.ess:.0f}", 1)
+        if self.verbose > 1:
+            # Effective sample size of the posterior samples, see summary()
+            _, weights = self.posterior()
+            ess = weights.sum() ** 2 / (weights**2).sum()
+            self._vp(f"ESS            : {ess:.0f}", 1)
         self._vp(f"Best distance  : {self.best_dist:.3f}", 1)
         self._vp("Sampler run completed")
 

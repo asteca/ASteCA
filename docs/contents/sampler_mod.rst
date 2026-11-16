@@ -163,9 +163,9 @@ stored in the ``names`` attribute.
 
 After a run, the object also stores the best solution found (``best_params``) and its
 distance (``best_dist``, see :ref:`plr`), the number of iterations (``n_iter``) and
-likelihood calls (``n_calls``), the effective sample size of the posterior samples
-(``ess``), and the log-evidence estimate (``logz``), which can be used to compare
-models fitted to the same observed cluster.
+likelihood calls (``n_calls``), and the log-evidence estimate (``logz``), which can be
+used to compare models fitted to the same observed cluster. The effective sample size
+of the posterior samples is returned by :py:meth:`asteca.Sampler.summary`.
 
 The distance ``best_dist`` can not be compared across observed clusters. To assess
 whether the fitted synthetic cluster is a good representation of the observed one,
