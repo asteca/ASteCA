@@ -640,6 +640,7 @@ class Synthetic:
         N_stars: int = 100,
         isoch_flag: bool = False,
         show_errors: bool = False,
+        isoch_dr_frac: float = 0.0,
     ) -> tuple[np.ndarray, np.ndarray]:
         """Generate a synthetic cluster (and its isochrone) with
         :py:func:`synth_model.get_model`, from the data stored in the object
@@ -654,6 +655,10 @@ class Synthetic:
         :param show_errors: If ``True``, print the reason when an empty synthetic
             cluster is returned
         :type show_errors: bool
+        :param isoch_dr_frac: Fraction ``f`` of the differential reddening applied to
+            the returned isochrone (absorption ``Av + f * DR``; ``0`` for ``DR=0``).
+            It does not affect the synthetic cluster
+        :type isoch_dr_frac: float
 
         :return: Isochrone (empty if ``isoch_flag=False``) and synthetic cluster
         :rtype: tuple[np.ndarray, np.ndarray]
@@ -680,6 +685,7 @@ class Synthetic:
             N_synth_stars,
             show_errors,
             isoch_flag,
+            isoch_dr_frac,
         )
 
     def cluster_properties(
@@ -737,7 +743,11 @@ class Synthetic:
 
         The BSS region of each sampled synthetic cluster contains the stars brighter
         than its turn-off point and bluer than its turn-off color shifted by ``-0.05``
-        (to detach the region from the isochrone). This color limit is capped at the
+        (to detach the region from the isochrone). The turn-off point is located on
+        the isochrone moved to the absorption ``Av + f_5 * DR``, where ``f_5`` is the
+        5th percentile of the differential reddening fractions of the
+        ``DR_distribution`` model, i.e.: at the blue edge of the bulk of the stars
+        instead of the bluest edge (``DR=0``). This color limit is capped at the
         bluest edge (5th percentile) of the observed colors around the turn-off
         magnitude, so that the region never extends into the observed main sequence.
         If ``turn_off`` is given, the turn-off points are instead sampled from a
@@ -857,10 +867,25 @@ class Synthetic:
         # Sample the models and generate their synthetic clusters and isochrones.
         # Models that result in empty synthetic clusters are discarded
         models, synthcls, isoch_tracks, max_masses = [], [], [], []
+        # The isochrone with DR=0 is the bluest edge of the synthetic cluster. The
+        # turn-off points are located on the isochrone moved to the absorption
+        # 'Av + f_to * DR' instead (the blue edge of the bulk of the stars), where
+        # 'f_to' is a percentile of the differential reddening fractions. Not used
+        # if the turn-off point is given
+        f_to = 0.0
+        if turn_off is None:
+            f_to = float(
+                np.percentile(
+                    self.rand_floats["dr_frac"][self.DR_distribution],
+                    ssf.TO_DR_PERCENTILE,
+                )
+            )
         for smodel in scp.sample_params(
             self.rng, model, model_std, self.met_age_dict, N_models
         ):
-            isoch_arr, synth_arr = self._get_model(smodel, isoch_flag=True)
+            isoch_arr, synth_arr = self._get_model(
+                smodel, isoch_flag=True, isoch_dr_frac=f_to
+            )
             if not synth_arr.any():
                 continue
             models.append(smodel)
@@ -869,6 +894,7 @@ class Synthetic:
             # the synthetic cluster, used to locate the turn-off point
             isoch_tracks.append(isoch_arr[[0, color_idx + 1, self.m_ini_idx]])
             max_masses.append(synth_arr[self.m_ini_idx].max())
+
         N_models_non_empty = len(models)
         if N_models_non_empty == 0:
             raise ValueError("All sampled models produced empty synthetic clusters.")

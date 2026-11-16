@@ -203,6 +203,8 @@ law, simply select it when instantiating the object, as follows:
 
 
 
+.. _dr_models:
+
 Differential reddening
 ======================
 
@@ -1200,7 +1202,20 @@ single point: it contains the stars that are both bluer and brighter than
 
 where the turn-off point ``(to_col, to_mag)`` is estimated by ASteCA for each of the
 synthetic clusters sampled by :py:meth:`asteca.Synthetic.cluster_properties`, and
-shifted ``-0.05`` in color to detach the region from the isochrone. ``to_col_obs`` is
+shifted ``-0.05`` in color to detach the region from the isochrone.
+
+The turn-off point is not located on the ``DR=0`` isochrone (the isochrone returned
+by :py:meth:`asteca.Synthetic.get_isochrone`), which is the bluest edge of the
+synthetic cluster (see :ref:`dr_models`). For large ``DR`` values few stars, or none,
+lie close to it: for the ``foreground`` model, where ``f`` follows a normal
+distribution with mean ``0.5``, the isochrone falls far to the blue of the cluster
+and the BSS region misses most BSSs. Instead, the isochrone is moved to the absorption
+``Av + f_5 * DR``, where ``f_5`` is the 5th percentile of the ``f`` values of the
+selected model (``~0.23`` for ``foreground``, ``~0.03`` for ``internal``), i.e.: the
+blue edge of the bulk of the cluster's stars. This moves the turn-off point along the
+reddening vector, redder and fainter.
+
+``to_col_obs`` is
 the 5th percentile of the colors of the observed stars with magnitudes within
 ``±0.25`` mag of ``to_mag`` (this range grows in steps of ``0.05`` mag until it holds
 at least 5 stars). This means the BSS region never extends redder than the bluest
