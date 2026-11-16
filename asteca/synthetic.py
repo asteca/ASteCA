@@ -59,11 +59,12 @@ class Synthetic:
         foreground screen. ``internal``: dust mixed with the cluster stars, behind a
         uniform foreground screen. In both models the absorption of each star is
         ``Av + f * DR`` with ``f`` in ``[0, 1]``, i.e.: ``Av`` is the minimum and
-        ``Av + DR`` the maximum absorption. This is the default model: it can be
-        changed for a given call with the ``DR_distribution`` argument of
-        :py:meth:`generate`, :py:meth:`cmd_overlap`, :py:meth:`cluster_properties`,
-        :py:meth:`get_isochrone` and :py:class:`asteca.Sampler`. All the models use
-        the same random values, so they can be compared without random noise
+        ``Av + DR`` the maximum absorption. The model can be changed at any time
+        by setting the ``DR_distribution`` attribute of the object (e.g.:
+        ``synthcl.DR_distribution = "internal"``), without re-creating or
+        re-calibrating it. It is used by all the methods that generate synthetic
+        clusters and by :py:class:`asteca.Sampler`. All the models use the same
+        random values, so they can be compared without random noise
     :type DR_distribution: str
     :param seed: Random seed. If ``None`` a random integer will be generated and used
     :type seed: int | None
@@ -104,6 +105,7 @@ class Synthetic:
         self.max_mass = max_mass
         self.gamma = gamma
         self.ext_law = ext_law
+        # Validated by the property setter
         self.DR_distribution = DR_distribution
         self.seed = seed
         self.verbose = verbose
@@ -121,13 +123,6 @@ class Synthetic:
             )
 
         from .modules import synth_cluster_priv as scp
-
-        # Check differential reddening model
-        if self.DR_distribution not in scp.DR_MODELS:
-            raise ValueError(
-                f"Differential reddening model '{self.DR_distribution}' not "
-                + f"recognized. Should be one of {scp.DR_MODELS}"
-            )
 
         # Check IMF function
         imfs = ("salpeter_1955", "kroupa_2001", "chabrier_2014")
@@ -266,6 +261,26 @@ class Synthetic:
         self._vp(f"Random seed    : {self.seed}", 1)
         self._vp("Synthetic clusters object generated")
 
+    @property
+    def DR_distribution(self) -> str:
+        """Differential reddening model used to generate the synthetic clusters, one
+        of ``foreground, internal`` (see :py:class:`Synthetic`). It can be changed at
+        any time, e.g.: ``synthcl.DR_distribution = "internal"``. Setting a model that
+        is not recognized raises a ``ValueError``
+        """
+        return self._DR_distribution
+
+    @DR_distribution.setter
+    def DR_distribution(self, name: str) -> None:
+        from .modules import synth_cluster_priv as scp
+
+        if name not in scp.DR_MODELS:
+            raise ValueError(
+                f"Differential reddening model '{name}' not recognized. Should be "
+                + f"one of {scp.DR_MODELS}"
+            )
+        self._DR_distribution = name
+
     def _vp(self, mssg: str, level: int = 0) -> None:
         """Verbose print method"""
         if self.verbose > level:
@@ -379,7 +394,6 @@ class Synthetic:
         N_stars: int = 100,
         batch: bool = False,
         show_errors: bool = False,
-        DR_distribution: str | None = None,
     ) -> np.ndarray | list[np.ndarray]:
         """Generate a synthetic cluster, or a batch of synthetic clusters.
 
@@ -437,10 +451,6 @@ class Synthetic:
         :param show_errors: If ``True``, possible errors will be printed to the screen.
             Useful for debugging. Only used if ``batch=False``.
         :type show_errors: bool
-        :param DR_distribution: Differential reddening model, one of
-            ``foreground, internal`` (see :py:class:`Synthetic`). If ``None``, the
-            default model of the object is used
-        :type DR_distribution: str | None
 
         :return: Returns a ``np.array`` containing a synthetic cluster
             with the data ``[mag, c1, (c2), mass, mass_b]``, where ``mag`` is
@@ -457,22 +467,16 @@ class Synthetic:
             P = sb.batch_params(self, params)
             if not sb.available(self.ext_law):
                 return [
-                    self.generate(
-                        dict(zip(sb.FULL_PARAMS, p)),
-                        N_stars=N_stars,
-                        DR_distribution=DR_distribution,
-                    )
+                    self.generate(dict(zip(sb.FULL_PARAMS, p)), N_stars=N_stars)
                     for p in P
                 ]
 
-            out = sb._generate_batch(*sb.batch_args(self, P, N_stars, DR_distribution))
+            out = sb._generate_batch(*sb.batch_args(self, P, N_stars))
             # An empty synthetic cluster is returned as an empty 1D array, as with
             # batch=False
             return [a if a.shape[1] else np.array([]) for a in out]
 
-        _, synth_arr = self._get_model(
-            params, N_stars, show_errors=show_errors, DR_distribution=DR_distribution
-        )
+        _, synth_arr = self._get_model(params, N_stars, show_errors=show_errors)
 
         return synth_arr
 
@@ -483,7 +487,6 @@ class Synthetic:
         h_col: float = 0.075,
         to_box_mag: tuple[float, float] = (-1.0, 0.5),
         to_box_col: tuple[float, float] = (-0.2, 0.8),
-        DR_distribution: str | None = None,
     ) -> tuple[float, float]:
         """Goodness of fit of the synthetic cluster generated with the ``params``
         parameters, that can be compared across observed clusters with any number of
@@ -551,9 +554,6 @@ class Synthetic:
         :param to_box_col: Color limits of the turn-off box, relative to the color of
             the turn-off point, defaults to ``(-0.2, 0.8)``
         :type to_box_col: tuple[float, float]
-        :param DR_distribution: Differential reddening model, see
-            :py:meth:`generate`
-        :type DR_distribution: str | None
 
         :raises ValueError: If :py:meth:`calibrate` was not called, if the observed
             cluster has fewer than two stars with valid photometry, or in the same
@@ -572,9 +572,7 @@ class Synthetic:
 
         # Same synthetic cluster as generate(params); the isochrone (with DR=0) is
         # used to locate the turn-off point
-        isochrone, synth_clust = self._get_model(
-            params, isoch_flag=True, DR_distribution=DR_distribution
-        )
+        isochrone, synth_clust = self._get_model(params, isoch_flag=True)
 
         D, D_std = lpriv.cmd_overlap(
             self.cluster_mag, self.cluster_colors[0], synth_clust, h_mag, h_col
@@ -636,34 +634,12 @@ class Synthetic:
         except AttributeError:
             return np.inf, [], int(N_stars)
 
-    def _dr_name(self, DR_distribution: str | None) -> str:
-        """Name of the differential reddening model to use: ``DR_distribution``, or
-        the default model of the object if ``None``
-
-        :param DR_distribution: Differential reddening model, or ``None``
-        :type DR_distribution: str | None
-
-        :raises ValueError: If the model is not recognized
-
-        :return: Name of the differential reddening model
-        :rtype: str
-        """
-        name = self.DR_distribution if DR_distribution is None else DR_distribution
-        # The fractions of all the valid models are stored in 'rand_floats'
-        if name not in self.rand_floats["dr_frac"]:
-            raise ValueError(
-                f"Differential reddening model '{name}' not recognized. Should be "
-                + f"one of {tuple(self.rand_floats['dr_frac'])}"
-            )
-        return name
-
     def _get_model(
         self,
         params: dict | None,
         N_stars: int = 100,
         isoch_flag: bool = False,
         show_errors: bool = False,
-        DR_distribution: str | None = None,
     ) -> tuple[np.ndarray, np.ndarray]:
         """Generate a synthetic cluster (and its isochrone) with
         :py:func:`synth_model.get_model`, from the data stored in the object
@@ -678,9 +654,6 @@ class Synthetic:
         :param show_errors: If ``True``, print the reason when an empty synthetic
             cluster is returned
         :type show_errors: bool
-        :param DR_distribution: Differential reddening model. If ``None``, the default
-            model of the object is used
-        :type DR_distribution: str | None
 
         :return: Isochrone (empty if ``isoch_flag=False``) and synthetic cluster
         :rtype: tuple[np.ndarray, np.ndarray]
@@ -699,7 +672,7 @@ class Synthetic:
             self.ext_law,
             self.ext_coefs,
             self.rand_floats,
-            self.rand_floats["dr_frac"][self._dr_name(DR_distribution)],
+            self.rand_floats["dr_frac"][self.DR_distribution],
             self.st_dist_mass,
             self.mass_idx,
             max_mag_syn,
@@ -722,7 +695,6 @@ class Synthetic:
         galaxy_potential: dict[str, float] | None = None,
         disruption: dict[str, float] | None = None,
         return_arrays: bool = False,
-        DR_distribution: str | None = None,
     ) -> dict:
         r"""Estimate the per-star and the cluster properties of the observed cluster,
         from synthetic clusters sampled around a given solution.
@@ -835,16 +807,11 @@ class Synthetic:
         :param return_arrays: If ``True``, return the per-model values of
             ``binar_fr_models`` and of the masses instead of their percentiles
         :type return_arrays: bool
-        :param DR_distribution: Differential reddening model of the synthetic
-            clusters, see :py:meth:`generate`
-        :type DR_distribution: str | None
 
         :raises ValueError:
             - If the `calibrate()` method was not previously called
             - If ``turn_off`` does not contain four values or has negative STDDEVs,
-              ``galaxy_potential`` or
-              ``disruption`` contain unknown keys, or ``DR_distribution`` is not
-              recognized
+              or ``galaxy_potential`` or ``disruption`` contain unknown keys
             - If ``isochs_young`` contains no isochrones with ``log(age)<=7``
             - If all the synthetic arrays generated are empty
 
@@ -875,7 +842,6 @@ class Synthetic:
             "galaxy_potential", cmf.GALAXY_POTENTIAL, galaxy_potential
         )
         disrup = cmf.update_pars("disruption", cmf.DISRUPTION, disruption)
-        DR_distribution = self._dr_name(DR_distribution)
         if isochs_young is not None and isochs_young.amin > 7:
             raise ValueError("No isochrones with log(ages)<=7 found in 'isochs_young'")
 
@@ -894,9 +860,7 @@ class Synthetic:
         for smodel in scp.sample_params(
             self.rng, model, model_std, self.met_age_dict, N_models
         ):
-            isoch_arr, synth_arr = self._get_model(
-                smodel, isoch_flag=True, DR_distribution=DR_distribution
-            )
+            isoch_arr, synth_arr = self._get_model(smodel, isoch_flag=True)
             if not synth_arr.any():
                 continue
             models.append(smodel)
@@ -1027,7 +991,6 @@ class Synthetic:
         color_idx: int = 0,
         full_track: bool = False,
         N_stars: int = 1000,
-        DR_distribution: str | None = None,
     ) -> np.ndarray:
         """Generate an isochrone for plotting.
 
@@ -1046,10 +1009,6 @@ class Synthetic:
         :type full_track: bool
         :param N_stars: Number of synthetic stars to generate
         :type N_stars: int
-        :param DR_distribution: Differential reddening model of the synthetic
-            cluster (used to cut the isochrone at its maximum mass), see
-            :py:meth:`generate`
-        :type DR_distribution: str | None
 
         :return: Array with the isochrone data to plot
         :rtype: np.ndarray
@@ -1058,9 +1017,7 @@ class Synthetic:
         # fit_params_copy = dict(fit_params)
 
         # Generate displaced isochrone and full synthetic CMD array
-        isochrone, full_arr = self._get_model(
-            fit_params, N_stars, isoch_flag=True, DR_distribution=DR_distribution
-        )
+        isochrone, full_arr = self._get_model(fit_params, N_stars, isoch_flag=True)
 
         if full_track:
             # Return the full track without applying the max mass filter

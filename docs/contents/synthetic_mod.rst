@@ -208,18 +208,20 @@ Differential reddening
 
 The ``DR_distribution`` argument selects the model used for the differential
 reddening (assuming :math:`DR>0`, see Section :ref:`ref_generating`). It accepts one
-of two string values: ``foreground`` (the default) or ``internal``. The value given
-when the :py:class:`asteca.Synthetic` object is created is the default model, which
-can be changed for a given call with the ``DR_distribution`` argument of
-:py:meth:`asteca.Synthetic.generate` (also with ``batch=True``),
+of two string values: ``foreground`` (the default) or ``internal``. The model can be
+changed at any time by setting the ``DR_distribution`` attribute of the object,
+without creating or calibrating it again. The model set is used by all the methods
+that generate synthetic clusters (:py:meth:`asteca.Synthetic.generate`,
 :py:meth:`asteca.Synthetic.cmd_overlap`, :py:meth:`asteca.Synthetic.get_isochrone`,
-:py:meth:`asteca.Synthetic.cluster_properties`, and :py:class:`asteca.Sampler`.
-For example, to fit the same observed cluster with both models:
+:py:meth:`asteca.Synthetic.cluster_properties`) and by :py:class:`asteca.Sampler`, so
+the fit and the properties derived from it always use the same model. For example, to
+fit the same observed cluster with both models:
 
 .. code-block:: python
 
     for model in ("foreground", "internal"):
-        sampler = asteca.Sampler(synthcl, priors, DR_distribution=model)
+        synthcl.DR_distribution = model
+        sampler = asteca.Sampler(synthcl, priors)
         sampler.run()
 
 The fractions of both models are obtained once, when the object is created, from the
@@ -617,8 +619,8 @@ the ``GAIADR3`` law is selected (see :ref:`extinction_law`).
 Finally, the differential reddening parameter ``DR`` adds random scatter to the
 absorption of the cluster stars. Each star receives an absorption between ``Av`` (the
 minimum) and ``Av + DR`` (the maximum), distributed according to the model selected
-with the ``DR_distribution`` argument when the :py:class:`asteca.Synthetic` object is
-instantiated: ``foreground`` (the default) or ``internal``. See
+with the ``DR_distribution`` argument (or attribute) of the
+:py:class:`asteca.Synthetic` object: ``foreground`` (the default) or ``internal``. See
 :ref:`ref_defining` for details.
 
 

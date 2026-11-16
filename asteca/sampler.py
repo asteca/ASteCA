@@ -32,7 +32,10 @@ class Sampler:
     :ref:`sampler_module`). The models are evaluated in batches, which is faster than
     one at a time if `numba <https://numba.pydata.org/>`__ is installed. The
     parameters that are not included in ``priors`` keep the default values of the
-    ``synthcl`` object.
+    ``synthcl`` object, and the differential reddening model is that of the
+    ``synthcl`` object when :py:meth:`run` is called (see
+    :py:attr:`asteca.Synthetic.DR_distribution`). It is stored in the
+    ``DR_distribution`` attribute of the sampler.
 
     The random seed is inherited from the ``synthcl`` object (its ``seed``
     attribute), which also fixes the random sampling of its synthetic clusters. The
@@ -68,10 +71,6 @@ class Sampler:
         (before importing ``asteca``) or with ``numba.set_num_threads()``. It can not
         be larger than ``NUMBA_NUM_THREADS``
     :type n_threads: int | None
-    :param DR_distribution: Differential reddening model of the synthetic clusters,
-        one of ``foreground, internal`` (see :py:class:`asteca.Synthetic`). If
-        ``None``, the default model of the ``synthcl`` object is used
-    :type DR_distribution: str | None
     :param verbose: Verbose level. A value of ``0`` hides all output
     :type verbose: int
 
@@ -90,12 +89,12 @@ class Sampler:
         n_active: int = 128,
         parallel: bool = False,
         n_threads: int | None = None,
-        DR_distribution: str | None = None,
         verbose: int = 1,
     ) -> None:
         self.synthcl = synthcl
-        # Differential reddening model of the synthetic clusters (validated here)
-        self.DR_distribution = synthcl._dr_name(DR_distribution)
+        # Differential reddening model of the synthetic clusters, set by the first
+        # call to run()
+        self.DR_distribution: str | None = None
         self.n_effective = int(n_effective)
         self.n_active = int(n_active)
         self.parallel = parallel
@@ -134,7 +133,6 @@ class Sampler:
         self._vp("\nSampler object generated")
         self._vp(f"Fitted params  : {self.names}", 1)
         self._vp(f"Temperature    : {self.temperature:g}", 1)
-        self._vp(f"Diff reddening : {self.DR_distribution}", 1)
         self._vp(f"n_effective    : {self.n_effective}", 1)
         self._vp(f"n_active       : {self.n_active}", 1)
         if self.parallel:
@@ -217,7 +215,6 @@ class Sampler:
             self.temperature,
             self.parallel,
             self.n_threads,
-            self.DR_distribution,
         )
         lnl = np.asarray(lnl, dtype=float)
         lnl[~np.isfinite(lnl)] = -np.inf
@@ -252,11 +249,31 @@ class Sampler:
         ``n_total``. Calling this method again with a larger ``n_total`` continues the
         run.
 
+        The synthetic clusters are generated with the differential reddening model of
+        the ``synthcl`` object (see :py:attr:`asteca.Synthetic.DR_distribution`) at
+        the time of the first call, stored in the ``DR_distribution`` attribute.
+
         :param n_total: Effective sample size of the posterior samples required to
             stop the run
         :type n_total: int
+
+        :raises ValueError: If the run is continued after changing the differential
+            reddening model of the ``synthcl`` object
         """
+        # The model can not change within a run (the samples of all the iterations
+        # are combined)
+        if self.DR_distribution is None:
+            self.DR_distribution = self.synthcl.DR_distribution
+        elif self.synthcl.DR_distribution != self.DR_distribution:
+            raise ValueError(
+                "The differential reddening model of the 'synthcl' object changed "
+                + f"from '{self.DR_distribution}' to "
+                + f"'{self.synthcl.DR_distribution}' since this run started. Restore "
+                + "it to continue the run, or create a new Sampler object"
+            )
+
         self._vp("\nRunning sampler...", 1)
+        self._vp(f"Diff reddening : {self.DR_distribution}", 1)
         self._smc.run(n_total)
 
         self.n_calls = int(self._smc.calls)
