@@ -1,14 +1,18 @@
 import matplotlib.pyplot as plt
-from asteca.modules import stellar_stats_funcs as ssf
 
 import asteca
+from asteca.modules import stellar_stats_funcs as ssf
+
+# Color shift applied to the turn-off point, same value used by
+# ssf.get_bss_probabilities()
+COL_OFFSET = -0.05
 
 
 def main():
     # Isochrones parameters
     isochs = asteca.Isochrones(
         model="parsec",
-        isochs_path="../../../../isochrones/gaia_solar_range",
+        isochs_path="../isochrones/parsec/gaia",
         mag="Gmag",
         color=("G_BPmag", "G_RPmag"),
         verbose=3,
@@ -18,7 +22,7 @@ def main():
     synthcl = asteca.Synthetic(
         isochs,
         ext_law="GAIADR3",
-        max_mass=40000,
+        max_mass=5000,
         seed=42519,
         verbose=3,
     )
@@ -29,67 +33,45 @@ def main():
         "Av": 0.42,
     }
 
-    isoch_arr = synthcl.get_isochrone(model)
-    cluster_mag, cluster_color = isoch_arr[1], isoch_arr[0]
+    # Isochrone cut at the maximum mass of the synthetic cluster
+    isoch_mag, isoch_col = synthcl.get_isochrone(model)
 
-    # --- Find TO region ---
-    to_col_1, to_col_2, to_mag_1, to_mag_2 = ssf.to_point_find(
-        isoch_arr[1],
-        isoch_arr[0],
-        cluster_mag,
-        cluster_color,
-        isochs_model="parsec",
-        mag_offset_1=0.5,
-        col_offset_1=-0.1,
-        mag_offset_2=-0.5,
-        col_offset_2=-0.05,
+    # Turn-off point, and the point that defines the BSS region
+    to_col, to_mag, _ = ssf.to_point_find(
+        isoch_col, isoch_mag, isochs_model="parsec", fallback_min_idx=10
     )
+    bss_col = to_col + COL_OFFSET
 
-    mplot(isoch_arr, to_col_1, to_col_2, to_mag_1, to_mag_2)
+    mplot(isoch_mag, isoch_col, to_col, to_mag, bss_col)
 
 
-def mplot(isoch_arr, to_col_1, to_col_2, to_mag_1, to_mag_2):
-
-    fig, ax = plt.subplots(figsize=(4, 4))
+def mplot(isoch_mag, isoch_col, to_col, to_mag, bss_col):
+    _fig, ax = plt.subplots(figsize=(4, 4))
 
     # Isochrone
-    ax.plot(isoch_arr[1], isoch_arr[0], color="black")
+    ax.plot(isoch_col, isoch_mag, color="black", zorder=3)
 
-    ax.scatter(to_col_1, to_mag_1, color="green", s=10, label="TO Point 1", zorder=4)
-    ax.scatter(to_col_2, to_mag_2, color="red", s=10, label="TO Point 2", zorder=4)
+    ax.scatter(to_col, to_mag, color="red", s=10, label="TO point", zorder=4)
+    ax.scatter(bss_col, to_mag, color="green", s=10, label="BSS point", zorder=4)
 
-    ax.plot([to_col_2, to_col_2], [to_mag_2 - 5, to_mag_2], color="k", lw=1, ls=":")
-    ax.plot([to_col_2, to_col_1], [to_mag_2, to_mag_2], color="k", lw=1, ls=":")
-    ax.plot([to_col_1, to_col_1], [to_mag_1, to_mag_2], color="k", lw=1, ls=":")
-    ax.plot([to_col_1, to_col_1 - 5], [to_mag_1, to_mag_1], color="k", lw=1, ls=":")
-
-    # Define polygon vertices (following the drawn boundary)
-    x_poly = [
-        to_col_2,     # top-left
-        to_col_1,     # top-right
-        to_col_1,     # down to (to_mag_1)
-        -5,           # extend left to x = -5
-        -5,           # down to y = 0
-        to_col_2      # back toward left boundary
-    ]
-
-    y_poly = [
-        to_mag_2,     # top
-        to_mag_2,
-        to_mag_1,
-        to_mag_1,
-        0,
-        to_mag_2 - 5
-    ]
-    # Fill region
-    ax.fill(x_poly, y_poly, color="lightblue", alpha=1, zorder=1, label="BSS Region")
+    # BSS region: bluer and brighter than the BSS point
+    xmin, ymin = -5, 0
+    ax.plot([bss_col, bss_col], [to_mag, ymin], color="k", lw=1, ls=":")
+    ax.plot([bss_col, xmin], [to_mag, to_mag], color="k", lw=1, ls=":")
+    ax.fill(
+        [xmin, bss_col, bss_col, xmin],
+        [ymin, ymin, to_mag, to_mag],
+        color="lightblue",
+        alpha=1,
+        zorder=1,
+        label="BSS region",
+    )
 
     ax.legend(fontsize=8)
-    # smaller x and y ticks
     ax.tick_params(axis="both", which="major", labelsize=8)
     ax.set_xlabel("Color", fontsize=8)
     ax.set_ylabel("Magnitude", fontsize=8)
-    ax.set_xlim(-.5, 1.2)
+    ax.set_xlim(-0.5, 1.2)
     ax.set_ylim(15, 4)
 
     # plt.show()

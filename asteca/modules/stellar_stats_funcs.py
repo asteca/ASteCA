@@ -134,10 +134,11 @@ def turn_off_points(
     :param isochs_model: Isochrones' model, see :py:func:`to_point_find`
     :type isochs_model: str
 
-    :return: Dictionary with the keys ``color_idx, to_col, to_mag``
+    :return: Dictionary with the keys ``color_idx, to_col, to_mag, manual``
+        (``manual=False``)
     :rtype: dict
     """
-    turn_off = {"color_idx": color_idx, "to_col": [], "to_mag": []}
+    turn_off = {"color_idx": color_idx, "to_col": [], "to_mag": [], "manual": False}
     # Initial minimum isochrone index for identifying the turn-off point
     fallback_min_idx = 10
     to_idx_lst = [fallback_min_idx]
@@ -164,6 +165,39 @@ def turn_off_points(
     return turn_off
 
 
+def turn_off_points_manual(
+    rng: np.random.Generator,
+    turn_off: tuple[float, float, float, float],
+    N_points: int,
+    color_idx: int,
+) -> dict:
+    """Turn-off points sampled from a normal distribution around a turn-off point
+    given by the user, used to define the BSS region instead of the points estimated
+    by :py:func:`turn_off_points`
+
+    :param rng: Random number generator
+    :type rng: np.random.Generator
+    :param turn_off: Turn-off point and its STDDEVs, ``(color, magnitude,
+        stddev_color, stddev_magnitude)``
+    :type turn_off: tuple[float, float, float, float]
+    :param N_points: Number of points to sample (one per synthetic cluster)
+    :type N_points: int
+    :param color_idx: Index of the color used, stored in the returned dictionary
+    :type color_idx: int
+
+    :return: Dictionary with the keys ``color_idx, to_col, to_mag, manual``
+        (``manual=True``)
+    :rtype: dict
+    """
+    col, mag, col_std, mag_std = turn_off
+    return {
+        "color_idx": color_idx,
+        "to_col": list(rng.normal(col, col_std, N_points)),
+        "to_mag": list(rng.normal(mag, mag_std, N_points)),
+        "manual": True,
+    }
+
+
 def stellar_parameters(
     cluster_mag: np.ndarray,
     cluster_e_mag: np.ndarray,
@@ -172,7 +206,6 @@ def stellar_parameters(
     m_ini_idx: int,
     synthcls: list[np.ndarray],
     turn_off_points: dict,
-    bss_box: tuple[float, float, float, float],
     isochs_young: "Isochrones | None",
     extrinsic_pars: dict,
     ext_law: str,
@@ -194,11 +227,9 @@ def stellar_parameters(
     :type m_ini_idx: int
     :param synthcls: Synthetic clusters of the sampled models
     :type synthcls: list[np.ndarray]
-    :param turn_off_points: Turn-off points of the synthetic clusters
+    :param turn_off_points: Turn-off points of the synthetic clusters, see
+        :py:func:`turn_off_points` and :py:func:`turn_off_points_manual`
     :type turn_off_points: dict
-    :param bss_box: Offsets that define the BSS region, ``(mag_offset_1,
-        col_offset_1, mag_offset_2, col_offset_2)``
-    :type bss_box: tuple[float, float, float, float]
     :param isochs_young: Isochrones with ``log(age)<=7``, or ``None``
     :type isochs_young: Isochrones | None
     :param extrinsic_pars: Values and STDDEVs of the extrinsic parameters
@@ -229,16 +260,8 @@ def stellar_parameters(
     binar_probs = get_binar_probabilities(m2_obs)
 
     # BSS probabilities
-    mag_offset_1, col_offset_1, mag_offset_2, col_offset_2 = bss_box
     bss_probs = get_bss_probabilities(
-        cluster_mag,
-        cluster_colors,
-        turn_off_points,
-        len(synthcls),
-        mag_offset_1,
-        mag_offset_2,
-        col_offset_1,
-        col_offset_2,
+        cluster_mag, cluster_colors, turn_off_points, len(synthcls)
     )
 
     binar_probs = (1 - bss_probs) * binar_probs
@@ -451,10 +474,7 @@ def get_bss_probabilities(
     cluster_colors: list[np.ndarray | None],
     turn_off_points: dict,
     N_sampled_synthcls: int,
-    mag_offset_1: float,
-    mag_offset_2: float,
-    col_offset_1: float,
-    col_offset_2: float,
+    col_offset: float = -0.05,
     percentile: float = 5,
     dmag_init: float = 0.25,
     dmag_step: float = 0.05,
@@ -464,26 +484,26 @@ def get_bss_probabilities(
     (BSS) based on the turn-off point of the isochrones generated from the sampled
     models.
 
+    For each turn-off point ``(to_col, to_mag)``, the BSS region contains the stars
+    bluer than ``to_col + col_offset`` and brighter than ``to_mag``. The color shift
+    detaches the region from the isochrone. The color limit is capped at the
+    ``percentile`` of the observed colors around ``to_mag``, so that the region never
+    extends into the observed main sequence. If the turn-off points were given by the
+    user (``turn_off_points["manual"]``), they are used as given: no color shift and
+    no cap are applied.
+
     :param cluster_mag: Observed cluster magnitudes.
     :type cluster_mag: np.ndarray
     :param cluster_colors: Observed cluster colors.
     :type cluster_colors: list[np.ndarray | None]
-    :param turn_off_points: Turn-off region limits estimated for sampled models.
+    :param turn_off_points: Turn-off points of the sampled models, see
+        :py:func:`turn_off_points` and :py:func:`turn_off_points_manual`
     :type turn_off_points: dict
     :param N_sampled_synthcls: Number of sampled synthetic clusters.
     :type N_sampled_synthcls: int
-    :param mag_offset_1: Offset applied to the turn-off magnitude to define the
-        first BSS region
-    :type mag_offset_1: float
-    :param mag_offset_2: Offset applied to the turn-off magnitude to define the
-        second BSS region
-    :type mag_offset_2: float
-    :param col_offset_1: Offset applied to the turn-off color to define the
-        first BSS region
-    :type col_offset_1: float
-    :param col_offset_2: Offset applied to the turn-off color to define the
-        second BSS region
-    :type col_offset_2: float
+    :param col_offset: Offset applied to the turn-off color to detach the BSS region
+        from the isochrone
+    :type col_offset: float
     :param percentile: Percentile used to estimate the turn-off color from observed
         stars.
     :type percentile: float
@@ -500,11 +520,8 @@ def get_bss_probabilities(
     """
     to_col = np.array(turn_off_points["to_col"])
     to_mag = np.array(turn_off_points["to_mag"])
+    manual = turn_off_points.get("manual", False)
     cl_color = cluster_colors[turn_off_points["color_idx"]]
-
-    # Define magnitude limits around the detected turn-off magnitude
-    to_mag_1 = to_mag + mag_offset_1
-    to_mag_2 = to_mag + mag_offset_2
 
     bss_probs = np.zeros_like(cluster_mag)
 
@@ -515,27 +532,29 @@ def get_bss_probabilities(
         # No stars with valid magnitudes, no BSS can be identified
         return bss_probs
 
-    for to_c, to_m, to_m1, to_m2 in zip(to_col, to_mag, to_mag_1, to_mag_2):
-        # Define a magnitude range around the identified turn-off magnitude.
-        # Iteratively increase the magnitude range until at least `min_stars` are found
-        # within it.
-        dmag = dmag_init
-        while True:
-            mag_range = (cluster_mag > (to_m - dmag)) & (cluster_mag < (to_m + dmag))
-            if mag_range.sum() >= min_stars:
-                break
-            dmag += dmag_step
+    for to_c, to_m in zip(to_col, to_mag):
+        if manual:
+            col_lim = to_c
+        else:
+            # Define a magnitude range around the identified turn-off magnitude.
+            # Iteratively increase the magnitude range until at least `min_stars` are
+            # found within it.
+            dmag = dmag_init
+            while True:
+                mag_range = (cluster_mag > (to_m - dmag)) & (
+                    cluster_mag < (to_m + dmag)
+                )
+                if mag_range.sum() >= min_stars:
+                    break
+                dmag += dmag_step
 
-        # This approach is more robust to incorrect parameter values assigned to
-        # the observed cluster
-        to_col_cl = np.nanpercentile(cl_color[mag_range], percentile)
-        to_c1 = min(to_col_cl, to_c + col_offset_1)
-        to_c2 = min(to_col_cl, to_c + col_offset_2)
+            # This approach is more robust to incorrect parameter values assigned to
+            # the observed cluster
+            to_col_cl = np.nanpercentile(cl_color[mag_range], percentile)
+            col_lim = min(to_col_cl, to_c + col_offset)
 
         # Assign BSS probabilities
-        msk = ((cl_color < to_c1) & (cluster_mag < to_m1)) | (
-            (cl_color < to_c2) & (cluster_mag < to_m2)
-        )
+        msk = (cl_color < col_lim) & (cluster_mag < to_m)
         bss_probs[msk] += 1
 
     # Normalize probability

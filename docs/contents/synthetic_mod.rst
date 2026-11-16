@@ -1189,23 +1189,22 @@ Blue stragglers
 ---------------
 
 The BSS region of the CMD is defined as the region above the cluster's turn-off
-point and bluer than the main sequence. In **ASteCA** this region is
-defined as the region towards lower values of two points:
+point and bluer than the main sequence. In **ASteCA** this region is defined by a
+single point: it contains the stars that are both bluer and brighter than
 
 .. code-block:: python
 
-    # The two points that define the BSS regions are defined as:
-    to_point_1 = [min(to_col_obs, to_col + col_offset_1), to_mag + mag_offset_1]
-    to_point_2 = [min(to_col_obs, to_col + col_offset_2), to_mag + mag_offset_2]
+    bss_point = [min(to_col_obs, to_col - 0.05), to_mag]
 
 where the turn-off point ``(to_col, to_mag)`` is estimated by ASteCA for each of the
 synthetic clusters sampled by :py:meth:`asteca.Synthetic.cluster_properties`, and
-``to_col_obs`` is the 5th percentile of the colors of the observed stars with
-magnitudes within ``±0.25`` mag of ``to_mag`` (this range grows in steps of ``0.05``
-mag until it holds at least 5 stars). This means the BSS region never extends redder
-than the bluest edge of the observed stars around the turn-off magnitude. As a result,
-main sequence stars are not classified as BSSs if the turn-off of the fitted isochrone
-is redder than the observed one (e.g. because of a small error in the fitted ``Av`` or
+shifted ``-0.05`` in color to detach the region from the isochrone. ``to_col_obs`` is
+the 5th percentile of the colors of the observed stars with magnitudes within
+``±0.25`` mag of ``to_mag`` (this range grows in steps of ``0.05`` mag until it holds
+at least 5 stars). This means the BSS region never extends redder than the bluest
+edge of the observed stars around the turn-off magnitude. As a result, main sequence
+stars are not classified as BSSs if the turn-off of the fitted isochrone is redder
+than the observed one (e.g. because of a small error in the fitted ``Av`` or
 ``loga``). The ``bss_prob`` value of each observed star is the fraction of sampled
 synthetic clusters for which the star falls inside the BSS region.
 
@@ -1215,14 +1214,12 @@ The default BSS region looks like this:
     :scale: 50%
     :align: center
 
-The two-point polygon allows separating the BSS region from lower mass
-stars in the main sequence (the TO point 1 is defined at a smaller color value
-than TO point 2). These stars can be affected by photometric uncertainties that
-make them look bluer than they actually are, thus mimicking the BSS region.
-
-The values for the offsets ``(mag_offset_1, col_offset_1, mag_offset_2, col_offset_2)``
-can be modified by the user via the ``bss_box`` argument of the
-:py:meth:`asteca.Synthetic.cluster_properties` method.
+The turn-off point can also be given manually via the ``turn_off`` argument of
+:py:meth:`asteca.Synthetic.cluster_properties`, as
+``(color, magnitude, stddev_color, stddev_magnitude)``. In this case one point per
+sampled synthetic cluster is drawn from a normal distribution with these means and
+STDDEVs, and each one is used as given to define the BSS region (no color shift and
+no ``to_col_obs`` cap).
 
 
 BSSs are not described by the isochrone of the rest of the cluster: they behave as

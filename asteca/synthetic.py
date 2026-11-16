@@ -227,6 +227,10 @@ class Synthetic:
         # called (see synth_batch.batch_args())
         self._batch_data: dict | None = None
 
+        # Turn-off points used to define the BSS region, stored by the last call to
+        # cluster_properties()
+        self.turn_off_points: dict | None = None
+
         # Check that the ranges are respected
         for par in ("met", "loga"):
             if par in def_params:
@@ -712,7 +716,7 @@ class Synthetic:
         N_models: int = 200,
         color_idx: int = 0,
         isochs_young: Isochrones | None = None,
-        bss_box: tuple[float, float, float, float] = (0.5, -0.1, -0.5, -0.05),
+        turn_off: tuple[float, float, float, float] | None = None,
         radec_c: tuple[float, float] | None = None,
         rho_amb: float | None = None,
         galaxy_potential: dict[str, float] | None = None,
@@ -759,10 +763,17 @@ class Synthetic:
         With ``return_arrays=True`` the per-model values of ``binar_fr_models`` and of
         the masses are returned instead.
 
-        The BSS region is defined by the turn-off point of each sampled synthetic
-        cluster plus the offsets in ``bss_box``. Its color limits are capped at the
+        The BSS region of each sampled synthetic cluster contains the stars brighter
+        than its turn-off point and bluer than its turn-off color shifted by ``-0.05``
+        (to detach the region from the isochrone). This color limit is capped at the
         bluest edge (5th percentile) of the observed colors around the turn-off
         magnitude, so that the region never extends into the observed main sequence.
+        If ``turn_off`` is given, the turn-off points are instead sampled from a
+        normal distribution around it (one per synthetic cluster), and used as given
+        (no color shift or cap). The turn-off points used (before the color shift)
+        are stored in the ``turn_off_points`` attribute, a dictionary with the keys
+        ``color_idx, to_col, to_mag, manual`` (one ``to_col, to_mag`` value per
+        synthetic cluster).
 
         The initial, evolutionary and dynamical masses require the ambient density
         ``rho_amb``. If it is not given, it is estimated using the cluster's position
@@ -790,10 +801,11 @@ class Synthetic:
             isochrones with ``log(age)<=7``. These are used to estimate the
             ``mass_bss`` values. If ``None``, these values are ``nan``
         :type isochs_young: Isochrones | None
-        :param bss_box: Offsets applied to the turn-off point to define the two points
-            of the BSS region: ``(mag_offset_1, col_offset_1, mag_offset_2,
-            col_offset_2)``
-        :type bss_box: tuple[float, float, float, float]
+        :param turn_off: Manual turn-off point that defines the BSS region, given as
+            ``(color, magnitude, stddev_color, stddev_magnitude)`` in the color
+            selected by ``color_idx``. If ``None``, the turn-off point of each
+            sampled synthetic cluster is estimated from its isochrone
+        :type turn_off: tuple[float, float, float, float] | None
         :param radec_c: Center coordinates in ``(RA, DEC)``
         :type radec_c: tuple[float, float] | None
         :param rho_amb: Ambient density [:math:`M_{\odot}\,pc^{-3}`]. If ``None``, it
@@ -829,7 +841,8 @@ class Synthetic:
 
         :raises ValueError:
             - If the `calibrate()` method was not previously called
-            - If ``bss_box`` does not contain four values, ``galaxy_potential`` or
+            - If ``turn_off`` does not contain four values or has negative STDDEVs,
+              ``galaxy_potential`` or
               ``disruption`` contain unknown keys, or ``DR_distribution`` is not
               recognized
             - If ``isochs_young`` contains no isochrones with ``log(age)<=7``
@@ -850,11 +863,14 @@ class Synthetic:
         from .modules import synth_cluster_priv as scp
 
         # Check the arguments before generating the synthetic clusters
-        if len(bss_box) != 4:
-            raise ValueError(
-                "'bss_box' must contain four values: (mag_offset_1, col_offset_1, "
-                + "mag_offset_2, col_offset_2)"
-            )
+        if turn_off is not None:
+            if len(turn_off) != 4:
+                raise ValueError(
+                    "'turn_off' must contain four values: (color, magnitude, "
+                    + "stddev_color, stddev_magnitude)"
+                )
+            if turn_off[2] < 0 or turn_off[3] < 0:
+                raise ValueError("The STDDEVs in 'turn_off' must be >= 0")
         gal_pot = cmf.update_pars(
             "galaxy_potential", cmf.GALAXY_POTENTIAL, galaxy_potential
         )
@@ -898,9 +914,15 @@ class Synthetic:
             )
         self._vp(f"N_models       : {N_models_non_empty}", 1)
 
-        turn_off_points = ssf.turn_off_points(
-            isoch_tracks, max_masses, color_idx, self.isochs.model
-        )
+        if turn_off is None:
+            turn_off_points = ssf.turn_off_points(
+                isoch_tracks, max_masses, color_idx, self.isochs.model
+            )
+        else:
+            turn_off_points = ssf.turn_off_points_manual(
+                self.rng, turn_off, N_models_non_empty, color_idx
+            )
+        self.turn_off_points = turn_off_points
 
         # Used to estimate the BSS masses
         extrinsic_pars = {
@@ -916,7 +938,6 @@ class Synthetic:
             self.m_ini_idx,
             synthcls,
             turn_off_points,
-            bss_box,
             isochs_young,
             extrinsic_pars,
             self.ext_law,
