@@ -2,7 +2,6 @@ import warnings
 from typing import TYPE_CHECKING
 
 import numpy as np
-from scipy.signal import savgol_filter
 from scipy.spatial import KDTree
 
 from . import HAS_NUMBA as _HAS_NUMBA
@@ -11,125 +10,22 @@ from . import njit
 if TYPE_CHECKING:
     from ..isochrones import Isochrones
 
-# Percentile of the differential reddening fractions 'f' (A = Av + f * DR) at which
-# the turn-off points are located, used by Synthetic.cluster_properties(). The DR=0
-# isochrone is the bluest edge of the synthetic cluster, which for large DR values
-# lies far to the blue of the bulk of the stars (e.g.: 'foreground' model, where
-# f ~ N(0.5, 1/6)) and the BSS region misses most BSSs
-TO_DR_PERCENTILE = 5
-
-
-def to_point_find(
-    x: np.ndarray,
-    y: np.ndarray,
-    isochs_model: str,
-    fallback_min_idx: int,
-    window: int = 21,
-    polyorder: int = 3,
-    deriv: int = 1,
-    eps_default: float = 1e-6,
-    eps_mist: float = 1e-3,
-    confirm_min: int = 3,
-    confirm_frac: float = 1 / 3,
-) -> tuple[float, float, int]:
-    """Estimate turn-off point for an isochrone.
-
-    The function applies a Savitzky-Golay filter to estimate the first derivative of
-    the isochrone and identifies the first sustained increasing region.
-
-    :param x: One-dimensional array of isochrone color values.
-    :type x: np.ndarray
-    :param y: One-dimensional array of isochrone magnitudes values.
-    :type y: np.ndarray
-    :param isochs_model: Name of the isochrone model.
-    :type isochs_model: str
-    :param fallback_min_idx: Minimum acceptable index for the detected turn-off.
-    :type fallback_min_idx: int
-    :param window: Window length for the Savitzky-Golay filter.
-        - Smaller window:
-            - Less smoothing
-            - More sensitive to local features and noise
-            - Can detect short-lived changes in the isochrone
-            - More likely to produce an early/unstable turn-off
-        - Larger window:
-            - More smoothing
-            - Ignores small-scale structure
-            - Requires a broader, more persistent change in color
-            - Produces a more robust but potentially later/less precise detection
-    :type window: int
-    :param polyorder: Polynomial order for the Savitzky-Golay filter.
-        - Lower polyorder (e.g. 2):
-            - More restrictive local fit
-            - Smoother derivative
-            - Less sensitive to complicated curvature
-        - Higher polyorder(e.g. 4 or 5):
-            - Can reproduce more complicated local shapes
-            - Potentially more sensitive to real curvature
-            - Also potentially more sensitive to noise
-    :type polyorder: int
-    :param deriv: Derivative order for the Savitzky-Golay filter.
-    :type deriv: int
-    :param eps_default: Default derivative threshold for an increasing trend.
-    :type eps_default: float
-    :param eps_mist: Derivative threshold used for the ``mist`` model.
-    :type eps_mist: float
-    :param confirm_min: Minimum number of consecutive derivative values required.
-    :type confirm_min: int
-    :param confirm_frac: Fraction of ``window`` used to define consecutive values
-        required to confirm the trend.
-    :type confirm_frac: float
-
-    :return: Color and magnitude for the turn-off point.
-    :rtype: tuple[float, float, int]
-    """
-    n = len(x)
-    eps = eps_default
-
-    # The MIST isochrones require a much larger epsilon value to identify the turn-off
-    if isochs_model.lower() == "mist":
-        eps = eps_mist
-
-    if n < window:
-        to_idx = n - 1
-    else:
-        if window % 2 == 0:
-            window += 1
-        dx = savgol_filter(x, window_length=window, polyorder=polyorder, deriv=deriv)
-        confirm = max(confirm_min, int(window * confirm_frac))
-        to_idx = n - 1
-        # First index i (in range(n - confirm)) where the 'confirm' consecutive
-        # derivative values dx[i : i + confirm] are all > eps
-        if n > confirm:
-            windows = np.lib.stride_tricks.sliding_window_view(dx > eps, confirm)
-            idx = np.flatnonzero(windows[: n - confirm].all(axis=1))
-            if idx.size > 0:
-                to_idx = int(idx[0])
-
-    # If no sustained positive trend is found, use the leftmost point in the isochrone.
-    # This is a fallback mechanism to ensure that a semi-reasonable turn-off point is
-    # assigned if the found value is too far down the isochrone
-    if to_idx < fallback_min_idx:
-        to_idx = int(np.argmin(x))
-
-    # Extract the color and magnitude values at the detected turn-off index
-    to_col, to_mag = float(x[to_idx]), float(y[to_idx])
-
-    return to_col, to_mag, to_idx
-
 
 def turn_off_points(
     isoch_tracks: list[np.ndarray],
     max_masses: list[float],
     color_idx: int,
-    isochs_model: str,
+    color_rise: float = 0.3,
 ) -> dict:
     """Turn-off points of the isochrones of the sampled synthetic clusters, used to
     define the BSS region.
 
-    Each isochrone is cut at the maximum mass of its synthetic cluster. If the
-    turn-off point found is below the minimum index allowed (a fallback value), the
-    median of the previous turn-off points is used. The minimum index is updated
-    after each isochrone as the 10th percentile of the indexes found.
+    Each isochrone is cut at the maximum mass of its synthetic cluster and its points
+    are ordered by initial mass. Starting from the lowest mass, the main sequence
+    gets bluer with increasing mass until the turn-off, after which the color
+    increases (subgiant and giant branches). The turn-off point is the bluest point
+    before the color increases by more than ``color_rise``. If it never does (young
+    isochrones), it is the bluest point of the whole isochrone.
 
     :param isoch_tracks: Magnitude, color and initial mass of each isochrone, arrays
         of shape ``(3, N_points)``
@@ -138,33 +34,33 @@ def turn_off_points(
     :type max_masses: list[float]
     :param color_idx: Index of the color used, stored in the returned dictionary
     :type color_idx: int
-    :param isochs_model: Isochrones' model, see :py:func:`to_point_find`
-    :type isochs_model: str
+    :param color_rise: Color increase (mag) along the isochrone, after its bluest
+        point, that marks the turn-off point (avoids stopping at small wiggles of the
+        main sequence, such as the knee of the overshooting hook)
+    :type color_rise: float
 
     :return: Dictionary with the keys ``color_idx, to_col, to_mag, manual``
-        (``manual=False``)
+        (``manual=False``). The turn-off point is ``(nan, nan)`` for an isochrone
+        with no finite points below the maximum mass
     :rtype: dict
     """
     turn_off = {"color_idx": color_idx, "to_col": [], "to_mag": [], "manual": False}
-    # Initial minimum isochrone index for identifying the turn-off point
-    fallback_min_idx = 10
-    to_idx_lst = [fallback_min_idx]
     for track, max_mass in zip(isoch_tracks, max_masses):
-        # Isochrone up to the maximum mass of the synthetic cluster
-        mag, color = track[:2, track[2] < max_mass]
-        to_col, to_mag, to_idx = to_point_find(
-            color, mag, isochs_model, fallback_min_idx
-        )
+        # Isochrone up to the maximum mass of the synthetic cluster, with finite
+        # photometry, ordered by initial mass
+        msk = (track[2] < max_mass) & np.isfinite(track[0]) & np.isfinite(track[1])
+        mag, col, mass = track[:, msk]
+        order = np.argsort(mass, kind="stable")
+        mag, col = mag[order], col[order]
 
-        # If the turn-off point is below the minimum allowed, use the median of the
-        # previous (non fallback) turn-off points
-        if (to_idx < fallback_min_idx) and turn_off["to_col"]:
-            to_col = np.median(turn_off["to_col"])
-            to_mag = np.median(turn_off["to_mag"])
-
-        to_idx_lst.append(to_idx)
-        # Use the 10% percentile as the minimum fallback value for the turn-off index
-        fallback_min_idx = int(np.percentile(to_idx_lst, 10))
+        to_col, to_mag = np.nan, np.nan
+        if col.size > 0:
+            # First point redder than the bluest previous point by more than
+            # 'color_rise'
+            rise = np.flatnonzero(col > np.minimum.accumulate(col) + color_rise)
+            end = rise[0] if rise.size else col.size
+            i_to = int(np.argmin(col[:end]))
+            to_col, to_mag = float(col[i_to]), float(mag[i_to])
 
         turn_off["to_col"].append(to_col)
         turn_off["to_mag"].append(to_mag)

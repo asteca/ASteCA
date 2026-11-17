@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
 import asteca
 from asteca.modules import stellar_stats_funcs as ssf
@@ -37,9 +38,10 @@ def main():
     isoch_mag, isoch_col = synthcl.get_isochrone(model)
 
     # Turn-off point, and the point that defines the BSS region
-    to_col, to_mag, _ = ssf.to_point_find(
-        isoch_col, isoch_mag, isochs_model="parsec", fallback_min_idx=10
-    )
+    # (the isochrone points are ordered by mass: their index is used as the mass)
+    track = np.array([isoch_mag, isoch_col, np.arange(len(isoch_mag))])
+    to = ssf.turn_off_points([track], [np.inf], 0)
+    to_col, to_mag = to["to_col"][0], to["to_mag"][0]
     bss_col = to_col + COL_OFFSET
 
     mplot(isoch_mag, isoch_col, to_col, to_mag, bss_col)

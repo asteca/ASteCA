@@ -582,12 +582,11 @@ class Synthetic:
 
         # Turn-off point of the isochrone up to the maximum mass of the synthetic
         # cluster, as in cluster_properties()
-        msk = isochrone[self.m_ini_idx] < synth_clust[self.m_ini_idx].max()
-        if msk.sum() < 2:
+        max_mass = synth_clust[self.m_ini_idx].max()
+        if (isochrone[self.m_ini_idx] < max_mass).sum() < 2:
             return D, D_std
-        to_col, to_mag, _ = ssf.to_point_find(
-            isochrone[1][msk], isochrone[0][msk], self.isochs.model, 0
-        )
+        to = ssf.turn_off_points([isochrone[[0, 1, self.m_ini_idx]]], [max_mass], 0)
+        to_col, to_mag = to["to_col"][0], to["to_mag"][0]
 
         # Turn-off check: the observed and synthetic stars inside a box around the
         # turn-off are compared with the cmd_overlap() statistic. The check is skipped
@@ -864,22 +863,30 @@ class Synthetic:
         for k in ("met", "loga", "alpha", "beta", "Rv", "DR", "Av", "dm"):
             self._vp(f"{k:<15}: {round(model[k], 4)} +/- {round(model_std[k], 4)}", 2)
 
-        # Sample the models and generate their synthetic clusters and isochrones.
-        # Models that result in empty synthetic clusters are discarded
-        models, synthcls, isoch_tracks, max_masses = [], [], [], []
         # The isochrone with DR=0 is the bluest edge of the synthetic cluster. The
         # turn-off points are located on the isochrone moved to the absorption
         # 'Av + f_to * DR' instead (the blue edge of the bulk of the stars), where
         # 'f_to' is a percentile of the differential reddening fractions. Not used
         # if the turn-off point is given
+        #
+        # Percentile of the differential reddening fractions 'f' (A = Av + f * DR) at
+        # which the turn-off points are located. The DR=0 isochrone is the bluest edge
+        # of the synthetic cluster, which for large DR values lies far to the blue of
+        # the bulk of the stars (e.g.: 'foreground' model, where
+        # f ~ N(0.5, 1/6)) and the BSS region misses most BSSs
+        TO_DR_PERCENTILE = 5
         f_to = 0.0
         if turn_off is None:
             f_to = float(
                 np.percentile(
                     self.rand_floats["dr_frac"][self.DR_distribution],
-                    ssf.TO_DR_PERCENTILE,
+                    TO_DR_PERCENTILE,
                 )
             )
+
+        # Sample the models and generate their synthetic clusters and isochrones.
+        # Models that result in empty synthetic clusters are discarded
+        models, synthcls, isoch_tracks, max_masses = [], [], [], []
         for smodel in scp.sample_params(
             self.rng, model, model_std, self.met_age_dict, N_models
         ):
@@ -905,9 +912,7 @@ class Synthetic:
         self._vp(f"N_models       : {N_models_non_empty}", 1)
 
         if turn_off is None:
-            turn_off_points = ssf.turn_off_points(
-                isoch_tracks, max_masses, color_idx, self.isochs.model
-            )
+            turn_off_points = ssf.turn_off_points(isoch_tracks, max_masses, color_idx)
         else:
             turn_off_points = ssf.turn_off_points_manual(
                 self.rng, turn_off, N_models_non_empty, color_idx
