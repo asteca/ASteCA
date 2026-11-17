@@ -143,7 +143,9 @@ def cluster_masses(
         # Initial mass
         M_i = minit_LGB05(loga, M_a, gamma, t0, mu_ev)
 
-        # Obtain evolutionary and dynamical masses
+        # Obtain evolutionary and dynamical masses. Since mu_ev<=1, and M_i*mu_ev>=M_a
+        # (see minit_LGB05()), both are >=0 and M_a + M_evol + M_dyn = M_i. The max()
+        # only guards against rounding errors
         M_evol = max(0, M_i * (1 - mu_ev))
         M_dyn = max(0, M_i - M_evol - M_a)
 
@@ -286,7 +288,7 @@ def stellar_evol_mass_loss(z_met: float, loga: float) -> float:
     :type loga: float
 
     :return: Fraction of the initial mass remaining after the mass loss by stellar
-        evolution.
+        evolution, at most ``1``.
     :rtype: float
     """
     mu_coeffs = {
@@ -307,7 +309,11 @@ def stellar_evol_mass_loss(z_met: float, loga: float) -> float:
     x = loga - 6
     mu_ev = a0 + a1 * x + a2 * x**2 + a3 * x**3
 
-    return mu_ev
+    # The polynomial gives values larger than 1 for young ages and low metallicities
+    # (e.g.: 1.054 for Z=0.0004, log(age)=6), which is not a valid fraction. As it
+    # decreases with age, clipping it gives mu_ev=1 (no mass loss) up to the age where
+    # it falls below 1
+    return min(1.0, mu_ev)
 
 
 def ambient_density(
