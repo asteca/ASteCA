@@ -23,6 +23,17 @@ GALAXY_POTENTIAL = {
 # (2005), gamma from Boutloukos & Lamers (2003), epsilon from Angelo et al. (2023)
 DISRUPTION = {"C_env": 810e6, "gamma": 0.62, "epsilon": 0.08}
 
+# Coefficients of the polynomial fits to the fraction of the initial mass that remains
+# after the mass loss by stellar evolution, for each metallicity Z. Lamers, Baumgardt
+# & Gieles (2010), Table B2
+MU_EV_COEFFS = {
+    "Z": np.array([0.0004, 0.0010, 0.0040, 0.0080, 0.0200]),
+    "a0": np.array([1.0541, 1.0469, 1.0247, 1.0078, 0.9770]),
+    "a1": np.array([-0.10912, -0.10122, -0.08307, -0.07456, -0.05709]),
+    "a2": np.array([-0.01082, -0.01349, -0.01845, -0.02002, -0.02338]),
+    "a3": np.array([0.00285, 0.00306, 0.00336, 0.00340, 0.00348]),
+}
+
 
 def update_pars(name: str, defaults: dict, pars: dict | None) -> dict:
     """Update a dictionary of default parameters with the values given by the user.
@@ -116,6 +127,10 @@ def cluster_masses(
         )
 
     C_env, gamma, epsilon = disrup["C_env"], disrup["gamma"], disrup["epsilon"]
+    # The 0.1% tolerance avoids warnings from rounding errors (e.g.: Z values
+    # converted from [Fe/H])
+    Z_min, Z_max = 0.999 * MU_EV_COEFFS["Z"][0], 1.001 * MU_EV_COEFFS["Z"][-1]
+    Z_out = False
     masses_all = []
     for i, model in enumerate(models):
         # Estimate the actual mass, ie: the sum of the observed and photometric
@@ -132,6 +147,7 @@ def cluster_masses(
         # 'mu_ev' estimation in the stellar_evol_mass_loss() function
         if z_to_FeH is not None:
             z_met = z_to_FeH * 10**z_met
+        Z_out |= not Z_min <= z_met <= Z_max
 
         # Dissolution parameter
         t0 = dissolution_param(C_env, epsilon, gamma, rho_amb_arr[i])
@@ -150,6 +166,14 @@ def cluster_masses(
         M_dyn = max(0, M_i - M_evol - M_a)
 
         masses_all.append([M_obs, M_phot, M_evol, M_dyn])
+
+    if Z_out:
+        warnings.warn(
+            "\nMetallicity outside of the range of the stellar evolution mass loss "
+            + f"model ({MU_EV_COEFFS['Z'][0]} <= Z <= {MU_EV_COEFFS['Z'][-1]}) for some "
+            + "models:\nthe closest metallicity is used for the initial, evolutionary "
+            + "and dynamical masses"
+        )
 
     masses_all = np.array(masses_all, dtype=float).T
 
@@ -282,6 +306,11 @@ def stellar_evol_mass_loss(z_met: float, loga: float) -> float:
     Source: Lamers, Baumgardt & Gieles (2010); Table B2
     (http://adsabs.harvard.edu/abs/2010MNRAS.409..305L)
 
+    The coefficients of the polynomial are linearly interpolated in ``log10(Z)``
+    between the tabulated metallicities. Outside of their range
+    (``0.0004 <= Z <= 0.02``) those of the closest metallicity are used (a warning
+    is shown by :py:func:`cluster_masses`).
+
     :param z_met: Metallicity.
     :type z_met: float
     :param loga: Logarithm of the age.
@@ -291,18 +320,14 @@ def stellar_evol_mass_loss(z_met: float, loga: float) -> float:
         evolution, at most ``1``.
     :rtype: float
     """
-    mu_coeffs = {
-        "Z": np.array([0.0004, 0.0010, 0.0040, 0.0080, 0.0200]),
-        "a0": np.array([1.0541, 1.0469, 1.0247, 1.0078, 0.9770]),
-        "a1": np.array([-0.10912, -0.10122, -0.08307, -0.07456, -0.05709]),
-        "a2": np.array([-0.01082, -0.01349, -0.01845, -0.02002, -0.02338]),
-        "a3": np.array([0.00285, 0.00306, 0.00336, 0.00340, 0.00348]),
-    }
-    i = np.argmin(abs(mu_coeffs["Z"] - z_met))
-    a0 = mu_coeffs["a0"][i]
-    a1 = mu_coeffs["a1"][i]
-    a2 = mu_coeffs["a2"][i]
-    a3 = mu_coeffs["a3"][i]
+    Z_tab = MU_EV_COEFFS["Z"]
+    # Interpolate the coefficients in log(Z), clamped to the tabulated range
+    logZ = np.log10(np.clip(z_met, Z_tab[0], Z_tab[-1]))
+    logZ_tab = np.log10(Z_tab)
+    a0, a1, a2, a3 = (
+        float(np.interp(logZ, logZ_tab, MU_EV_COEFFS[k]))
+        for k in ("a0", "a1", "a2", "a3")
+    )
 
     # x = log(t/Myr)
     # x = log10(10**loga / 1e6) = log10(10**loga) - log10(1e6) = loga - 6
