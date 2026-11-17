@@ -913,33 +913,11 @@ def merge_ps_massini_check(mass_col: str, isochrones: dict) -> tuple[list, list]
             met_vals.append(df_age_0)
         isochrones_ordered.append(met_vals)
 
-    # Check whether the (metallicity, age) grid is regular
+    # Check for missing (metallicity, age) combinations. Uneven steps in the grid
+    # are not checked: the grid values are located with np.searchsorted
     met_age = np.asarray(met_age_arr, dtype=float)
     met_vals = np.unique(met_age[:, 0])
     age_vals = np.unique(met_age[:, 1])
-
-    issues = []
-
-    def _find_irregular_spacing(values: np.ndarray, name: str) -> list[str]:
-        if len(values) <= 2:
-            return []
-
-        diffs = np.diff(values)
-        step = np.median(diffs)
-        bad_idx = np.where(~np.isclose(diffs, step))[0]
-
-        if not len(bad_idx):
-            return []
-
-        return [
-            f"{name}: {len(bad_idx)} of {len(diffs)} steps differ from the median "
-            + f"step ({step:g}), steps range [{diffs.min():g}, {diffs.max():g}]"
-        ]
-
-    issues.extend(_find_irregular_spacing(met_vals, "metallicity"))
-    issues.extend(_find_irregular_spacing(age_vals, "age"))
-
-    # Check for missing (metallicity, age) combinations
     present = np.zeros((len(met_vals), len(age_vals)), dtype=bool)
     present[
         np.searchsorted(met_vals, met_age[:, 0]),
@@ -948,15 +926,9 @@ def merge_ps_massini_check(mass_col: str, isochrones: dict) -> tuple[list, list]
     N_missing = int((~present).sum())
     if N_missing:
         i, j = np.argwhere(~present)[0]
-        issues.append(
-            f"missing points: {N_missing} (met, age) combinations, e.g. "
-            + f"(met={met_vals[i]:g}, age={age_vals[j]:g})"
-        )
-
-    if issues:
         warnings.warn(
-            "\nThe (metallicity, age) isochrone grid is irregular:\n"
-            + "\n".join(issues)
+            f"\nThe (metallicity, age) isochrone grid is missing {N_missing} "
+            + f"points, e.g.: (met={met_vals[i]:g}, age={age_vals[j]:g})"
         )
 
     # Check that all the (interpolated) isochrones have the same number of points
