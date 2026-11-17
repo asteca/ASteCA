@@ -971,16 +971,6 @@ class Synthetic:
             axis=1
         ) / N_valid
 
-        # The number of stars in the synthetic clusters is not constant so we estimate
-        # its median, and compare it with the number of observed stars
-        N_stars_isoch = int(np.median([np.shape(_)[-1] for _ in synthcls]))
-        if N_stars_isoch < self.N_stars_obs:
-            warnings.warn(
-                f"\nThe number of synthetic stars ({N_stars_isoch}) is smaller than "
-                + f"the number of\nobserved stars ({self.N_stars_obs}). Increase "
-                + "the 'max_mass' argument in `asteca.Synthetic()`\nfor a more "
-                + "accurate mass estimation"
-            )
         # Use the position of the observed cluster if no ambient density or
         # coordinates are given
         if (

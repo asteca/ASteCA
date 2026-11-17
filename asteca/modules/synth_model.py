@@ -188,7 +188,8 @@ def get_model(
         :py:func:`cluster_mass_funcs.get_M_actual`): the IMF sampled masses used to
         generate it (``imf_masses``: all the masses up to the last star kept in the
         synthetic cluster, or the full sample if it was exhausted), the indexes of
-        the stars kept (``kept_idx``), the initial and secondary masses of the
+        the stars kept (``kept_idx``), the number of stars requested
+        (``N_target``), the initial and secondary masses of the
         isochrone (``mass_row``, ``m2_row``), and the binary fraction parameters
         (``alpha``, ``beta``). It is not modified if the synthetic cluster is empty
     :type mass_info: dict | None
@@ -379,6 +380,7 @@ def get_model(
             {
                 "imf_masses": st_mass[:N_end],
                 "kept_idx": kept_idx,
+                "N_target": N_synth_stars,
                 "mass_row": mass_row.copy(),
                 "m2_row": isoch_moved[m_ini_idx + 1].copy() if binar_flag else None,
                 "alpha": alpha,

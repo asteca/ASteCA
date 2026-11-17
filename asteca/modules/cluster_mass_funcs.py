@@ -131,11 +131,12 @@ def cluster_masses(
     # converted from [Fe/H])
     Z_min, Z_max = 0.999 * MU_EV_COEFFS["Z"][0], 1.001 * MU_EV_COEFFS["Z"][-1]
     Z_out = False
-    masses_all = []
+    masses_all, scales = [], []
     for i, model in enumerate(models):
         # Estimate the actual mass, ie: the sum of the observed and photometric
         # masses
-        M_obs, M_phot, M_a = get_M_actual(m_ini_idx, synthcls[i], mass_infos[i])
+        M_obs, M_phot, M_a, scale = get_M_actual(m_ini_idx, synthcls[i], mass_infos[i])
+        scales.append(scale)
 
         if rho_amb_arr is None:
             masses_all.append([M_obs, M_phot, np.nan, np.nan])
@@ -167,6 +168,16 @@ def cluster_masses(
 
         masses_all.append([M_obs, M_phot, M_evol, M_dyn])
 
+    scales = np.array(scales)
+    N_short = int((scales > 1).sum())
+    if N_short > 0:
+        warnings.warn(
+            f"\nN={N_short} synthetic clusters (of {len(models)}) have fewer stars than "
+            + "the observed cluster (IMF sample exhausted).\nTheir masses were scaled "
+            + "by the ratio of observed to synthetic stars (median: "
+            + f"{np.median(scales[scales > 1]):.2f}). Increase the 'max_mass' argument "
+            + "in `asteca.Synthetic()`\nfor a more accurate mass estimation"
+        )
     if Z_out:
         warnings.warn(
             "\nMetallicity outside of the range of the stellar evolution mass loss "
@@ -226,7 +237,7 @@ def get_M_actual(
     m_ini_idx: int,
     sampled_synthcl: np.ndarray,
     mass_info: dict,
-) -> tuple[float, float, float]:
+) -> tuple[float, float, float, float]:
     """Estimate the actual mass as the total present-day mass of the simulated
     cluster whose observable part is the synthetic cluster.
 
@@ -242,6 +253,12 @@ def get_M_actual(
 
     M_actual = M_obs + M_phot
 
+    If the IMF sample was exhausted before the requested number of stars
+    (``N_target``, the number of observed stars) was generated, the simulated cluster
+    is smaller than the observed one. The masses are then scaled by
+    ``N_target / N_kept``, the expected ratio between the masses of both clusters
+    (the fraction of observable stars only depends on the model's parameters).
+
     :param m_ini_idx: Index of the initial mass column
     :type m_ini_idx: int
     :param sampled_synthcl: Sampled synthetic cluster data.
@@ -250,8 +267,9 @@ def get_M_actual(
         :py:func:`synth_model.get_model`
     :type mass_info: dict
 
-    :return: Observed, photometric, and actual mass.
-    :rtype: tuple[float, float, float]
+    :return: Observed, photometric, and actual mass, and the scale factor applied
+        (``1`` if the IMF sample was not exhausted)
+    :rtype: tuple[float, float, float, float]
     """
     M_obs = float(
         np.nansum(sampled_synthcl[m_ini_idx]) + np.nansum(sampled_synthcl[-1])
@@ -265,9 +283,14 @@ def get_M_actual(
     m_unobs = imf_masses[unobs]
 
     M_phot = float(m_unobs.sum() + companion_mass(m_unobs, mass_info).sum())
+
+    # Scale to the number of observed stars if the IMF sample was exhausted
+    N_kept = sampled_synthcl.shape[1]
+    scale = max(1.0, mass_info["N_target"] / N_kept)
+    M_obs, M_phot = M_obs * scale, M_phot * scale
     M_actual = M_obs + M_phot
 
-    return M_obs, M_phot, M_actual
+    return M_obs, M_phot, M_actual, scale
 
 
 def companion_mass(m1: np.ndarray, mass_info: dict) -> np.ndarray:
