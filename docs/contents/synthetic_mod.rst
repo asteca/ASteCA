@@ -1349,6 +1349,22 @@ as shown in
 `Lamers, Baumgardt & Gieles (2010) <http://adsabs.harvard.edu/abs/2010MNRAS.409..305L>`_,
 Table B2.
 
+That polynomial fits the remaining mass fraction :math:`\mu` of stars *plus* stellar
+remnants. In their Eq. 1, the fraction of each type of remnant ejected from the
+cluster by its kick velocity is subtracted from it:
+
+.. math::
+
+    \mu_{\text{evol}} = \mu - f_{kick}^{BH} \mu_{BH} - f_{kick}^{NS} \mu_{NS} -
+    f_{kick}^{WD} \mu_{WD}
+
+where :math:`\mu_{BH}`, :math:`\mu_{NS}` and :math:`\mu_{WD}` are the mass fractions
+(relative to :math:`M_i`) of black holes, neutron stars and white dwarfs.
+**ASteCA** uses :math:`f_{kick}^{BH} = f_{kick}^{NS} = f_{kick}^{WD} = 0`, i.e.: all
+remnants are assumed to be retained in the cluster (as in the BM03 models of
+Lamers, Baumgardt & Gieles 2010, Appendix A1), and thus
+:math:`\mu_{\text{evol}} = \mu`.
+
 The dissolution parameter :math:`t_0` of a cluster is the hypothetical dissolution
 time-scale of a cluster of 1 :math:`M_{\odot}` and is related to the disruption time
 :math:`t_{dis}` (defined as the time when 5% of the initial number of stars remain in

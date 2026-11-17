@@ -329,6 +329,14 @@ def stellar_evol_mass_loss(z_met: float, loga: float) -> float:
     Source: Lamers, Baumgardt & Gieles (2010); Table B2
     (http://adsabs.harvard.edu/abs/2010MNRAS.409..305L)
 
+    The polynomial is the fit to ``mu``, the remaining mass fraction of stars plus
+    stellar remnants. In their Eq. 1 the fraction of each remnant type ejected by kick
+    velocities is subtracted from it:
+    ``mu_ev = mu - f_kick_BH * mu_BH - f_kick_NS * mu_NS - f_kick_WD * mu_WD``.
+    ASteCA uses ``f_kick = 0`` for the three remnant types, i.e.: all black holes,
+    neutron stars and white dwarfs are assumed to be retained in the cluster (as in
+    their BM03 models, Appendix A1), and ``mu_ev = mu``.
+
     The coefficients of the polynomial are linearly interpolated in ``log10(Z)``
     between the tabulated metallicities. Outside of their range
     (``0.0004 <= Z <= 0.02``) those of the closest metallicity are used (a warning
