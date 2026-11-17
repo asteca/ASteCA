@@ -173,16 +173,16 @@ def cluster_masses(
     if N_short > 0:
         warnings.warn(
             f"\nN={N_short} synthetic clusters (of {len(models)}) have fewer stars than "
-            + "the observed cluster (IMF sample exhausted).\nTheir masses were scaled "
-            + "by the ratio of observed to synthetic stars (median: "
-            + f"{np.median(scales[scales > 1]):.2f}). Increase the 'max_mass' argument "
-            + "in `asteca.Synthetic()`\nfor a more accurate mass estimation"
+            + "the observed cluster\n(IMF sample exhausted). Their masses were scaled "
+            + "by the ratio of observed\nto synthetic stars (median: "
+            + f"{np.median(scales[scales > 1]):.2f}). Increase the 'max_mass' argument\n"
+            + "in `asteca.Synthetic()` for a more accurate mass estimation"
         )
     if Z_out:
         warnings.warn(
             "\nMetallicity outside of the range of the stellar evolution mass loss "
-            + f"model ({MU_EV_COEFFS['Z'][0]} <= Z <= {MU_EV_COEFFS['Z'][-1]}) for some "
-            + "models:\nthe closest metallicity is used for the initial, evolutionary "
+            + f"model\n({MU_EV_COEFFS['Z'][0]} <= Z <= {MU_EV_COEFFS['Z'][-1]}) for some "
+            + "models: the closest metallicity is\nused for the initial, evolutionary "
             + "and dynamical masses"
         )
 

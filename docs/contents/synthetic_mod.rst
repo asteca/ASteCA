@@ -886,8 +886,7 @@ Notes:
   compared
 - :math:`D` is dominated by the most populated regions of the CMD. Sparse field
   contaminants have a very small effect on it, but differences in sparsely populated
-  regions (e.g.: a turn-off or a few giants) also contribute little (see the turn-off
-  check below)
+  regions (e.g.: a turn-off or a few giants) also contribute little
 - The cost of the sums over all the pairs of stars grows with the product of the
   numbers of observed and synthetic stars. For large clusters (more than about
   300,000 pairs, i.e. ~550 stars each) the stars are binned on a grid with a
@@ -897,45 +896,6 @@ Notes:
   slightly wider kernel, with the self-pairs removed exactly, so the properties
   above are preserved. In tests with real clusters, ``D`` and ``D_std`` differed
   from the exact values by less than 0.1 times ``D_std``
-
-Turn-off check
---------------
-
-The synthetic cluster has the same number of stars as the observed cluster, and their
-distribution along the main sequence follows the IMF. If the observed luminosity
-function is flatter than the synthetic one, e.g. in dynamically evolved (old) clusters
-that lost part of their low-mass stars, or when the faint end of the observed cluster
-is incomplete, the synthetic cluster has too many faint main sequence stars and too
-few stars around the turn-off, for *any* set of parameters. Since the faint main
-sequence contains most of the stars, it dominates the likelihood, and the fit
-sacrifices the turn-off region, which is the one that constrains the age and the
-metallicity. Neither cutting the faint end of the observed cluster nor raising the
-temperature of the likelihood solves this: the mismatch is a difference in the slope
-of the luminosity function, and the faintest stars left after any cut are again
-overpopulated.
-
-To alert of this situation, :py:meth:`asteca.Synthetic.cmd_overlap` locates the
-turn-off point of the isochrone used to generate the synthetic cluster (as done by
-:py:meth:`asteca.Synthetic.cluster_properties`) and defines a box around it, by default from
-1 mag brighter to 0.5 mag fainter than the turn-off and from 0.2 mag bluer to 0.8 mag
-redder (arguments ``to_box_mag`` and ``to_box_col``). The observed and synthetic stars
-inside the box are compared with the same :math:`D` statistic described above, using
-narrower kernels (:math:`h_G=0.1` and :math:`h_C=0.025` mag) to resolve the shape of
-the turn-off and subgiant branch. A warning is shown if this :math:`D` is larger than
-four times its standard deviation. Comparing the distributions, and not just the
-number of stars in the box, also catches fits that place roughly the right number of
-stars around the turn-off but in the wrong positions (e.g.: a turn-off that is too
-bright or too blue, or a main sequence that is too narrow). The check requires at
-least 30 observed and 30 synthetic stars in the box.
-
-In tests with 16 UCC clusters (55 to ~4000 members), old clusters with a poorly
-fitted turn-off gave values between 4 and 13 standard deviations (9 to 17 for
-NGC 6791, depending on the fit), a well fitted old cluster gave less than 0.3, and
-comparing two synthetic clusters generated with the same parameters gave at most 3.3
-standard deviations (also for large differential reddening values, ``DR~1.6``). The
-check is not performed for most young clusters, and for clusters with fewer than a few
-hundred members, where few stars lie around the turn-off.
-
 
 
 

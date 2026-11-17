@@ -181,8 +181,9 @@ class Synthetic:
 
             if self.isochs.color2_effl is not None:
                 raise ValueError(
-                    f"\nExtinction law '{self.ext_law}' does not apply to the second color.\n"
-                    + "Use the 'CCMO' extinction law if you need to process a second color"
+                    f"\nExtinction law '{self.ext_law}' does not apply to the "
+                    "second color.\nUse the 'CCMO' extinction law if you need to "
+                    "process a second color"
                 )
 
             # The Rv parameter is not used by this law
@@ -232,7 +233,8 @@ class Synthetic:
                 pmin, pmax = min(self.met_age_dict[par]), max(self.met_age_dict[par])
                 if self.def_params[par] < pmin or self.def_params[par] > pmax:
                     warnings.warn(
-                        f"Parameter {par}={self.def_params[par]} is out of range: [{pmin} - {pmax}]"
+                        f"Parameter {par}={self.def_params[par]} is out "
+                        f"of range: [{pmin} - {pmax}]"
                     )
 
         required = {
@@ -344,12 +346,14 @@ class Synthetic:
         if cluster.mag.size * f_stars_mass > self.max_mass:
             warnings.warn(
                 (
-                    f"\nThe number of stars in this `Cluster` object ({cluster.mag.size}) is large.\n"
-                    "This may lead to synthetic clusters with insufficient stars to\n"
+                    f"\nThe number of stars in this `Cluster` object "
+                    f"({cluster.mag.size}) is large.\nThis may lead to synthetic "
+                    "clusters with insufficient stars to\n"
                     "properly reproduce the observations.\n"
-                    "Consider increasing the 'max_mass' parameter in the Synthetic cluster \n"
-                    f"object (current value: {self.max_mass}). As a rule of thumb, set 'max_mass' \n"
-                    f"to at least {f_stars_mass} times the number of observed stars."
+                    "Consider increasing the 'max_mass' parameter in the Synthetic "
+                    f"cluster \n object (current value: {self.max_mass}). As a rule "
+                    f"of thumb, set 'max_mass' \nto at least {f_stars_mass} times "
+                    "the number of observed stars."
                 ),
                 UserWarning,
             )
@@ -485,13 +489,10 @@ class Synthetic:
         params: dict[str, float],
         h_mag: float = 0.3,
         h_col: float = 0.075,
-        to_box_mag: tuple[float, float] = (-1.0, 0.5),
-        to_box_col: tuple[float, float] = (-0.2, 0.8),
     ) -> tuple[float, float]:
         """Goodness of fit of the synthetic cluster generated with the ``params``
         parameters, that can be compared across observed clusters with any number of
-        stars. The method also checks that the turn-off region of the observed cluster
-        is reproduced by the synthetic cluster, and shows a warning if it is not.
+        stars.
 
         The synthetic cluster is generated internally with :py:meth:`generate`, i.e.
         ``params`` is defined in the same way (e.g.: the best fit or median
@@ -522,25 +523,6 @@ class Synthetic:
 
         The observed cluster is the one passed to :py:meth:`calibrate`.
 
-        Turn-off check: the turn-off point of the isochrone of the synthetic cluster
-        is located (as in :py:meth:`cluster_properties`) and a box is defined around it,
-        from ``to_box_mag[0]`` to ``to_box_mag[1]`` mag in magnitude and from
-        ``to_box_col[0]`` to ``to_box_col[1]`` mag in color, relative to the
-        turn-off (by default from 1 mag brighter to 0.5 mag fainter, including the
-        subgiant and lower red giant branches). The distributions of the observed and
-        synthetic stars inside this box are compared with the same ``D`` statistic,
-        using narrower kernels (``0.1`` mag in magnitude and ``0.025`` mag in color)
-        to resolve the turn-off. A warning is shown if this ``D`` is larger than
-        four times its standard deviation, i.e. if the turn-off region is clearly
-        not reproduced. Since the faint main sequence contains most of the stars, it
-        dominates the likelihood (and ``D``), and the fit can sacrifice the turn-off
-        region, which constrains the age and metallicity. This happens e.g. when the
-        observed luminosity function is flatter than the one of the synthetic
-        cluster (dynamically evolved clusters that lost low-mass stars, or an
-        incomplete faint end), see :ref:`cmd_overlap`. The check requires at least
-        ``30`` observed and ``30`` synthetic stars in the box, i.e. it is not
-        performed for most young clusters, whose turn-off is sparsely populated.
-
         :param params: Dictionary with the values of the fundamental parameters used
             to generate the synthetic cluster, see :py:meth:`generate`
         :type params: dict[str, float]
@@ -548,12 +530,6 @@ class Synthetic:
         :type h_mag: float
         :param h_col: Width of the Gaussian kernel in color, defaults to ``0.075``
         :type h_col: float
-        :param to_box_mag: Magnitude limits of the turn-off box, relative to the
-            magnitude of the turn-off point, defaults to ``(-1.0, 0.5)``
-        :type to_box_mag: tuple[float, float]
-        :param to_box_col: Color limits of the turn-off box, relative to the color of
-            the turn-off point, defaults to ``(-0.2, 0.8)``
-        :type to_box_col: tuple[float, float]
 
         :raises ValueError: If :py:meth:`calibrate` was not called, if the observed
             cluster has fewer than two stars with valid photometry, or in the same
@@ -568,130 +544,43 @@ class Synthetic:
         self._check_calibrated()
 
         from .modules import likelihood_priv as lpriv
-        from .modules import stellar_stats_funcs as ssf
 
         # Same synthetic cluster as generate(params); the isochrone (with DR=0) is
         # used to locate the turn-off point
-        isochrone, synth_clust = self._get_model(params, isoch_flag=True)
+        # isochrone, synth_clust = self._get_model(params, isoch_flag=True)
+        _, synth_clust = self._get_model(params, isoch_flag=False)
 
         D, D_std = lpriv.cmd_overlap(
             self.cluster_mag, self.cluster_colors[0], synth_clust, h_mag, h_col
         )
-        if synth_clust.size == 0:
-            return D, D_std
-
-        # Turn-off point of the isochrone up to the maximum mass of the synthetic
-        # cluster, as in cluster_properties()
-        max_mass = synth_clust[self.m_ini_idx].max()
-        if (isochrone[self.m_ini_idx] < max_mass).sum() < 2:
-            return D, D_std
-        to = ssf.turn_off_points([isochrone[[0, 1, self.m_ini_idx]]], [max_mass], 0)
-        to_col, to_mag = to["to_col"][0], to["to_mag"][0]
 
         # Turn-off check: the observed and synthetic stars inside a box around the
         # turn-off are compared with the cmd_overlap() statistic. The check is skipped
         # if the box contains few stars.
-        lpriv.turnoff_box(
-            self.cluster_mag,
-            self.cluster_colors[0],
-            synth_clust[0],
-            synth_clust[1],
-            to_mag,
-            to_col,
-            to_box_mag,
-            to_box_col,
-        )
+
+        # if synth_clust.size == 0:
+        #     return D, D_std
+
+        # # Turn-off point of the isochrone up to the maximum mass of the synthetic
+        # # cluster, as in cluster_properties()
+        # max_mass = synth_clust[self.m_ini_idx].max()
+        # if (isochrone[self.m_ini_idx] < max_mass).sum() < 2:
+        #     return D, D_std
+        # to = ssf.turn_off_points([isochrone[[0, 1, self.m_ini_idx]]], [max_mass], 0)
+        # to_col, to_mag = to["to_col"][0], to["to_mag"][0]
+
+        # lpriv.cmd_overlap_turnoff_box(
+        #     self.cluster_mag,
+        #     self.cluster_colors[0],
+        #     synth_clust[0],
+        #     synth_clust[1],
+        #     to_mag,
+        #     to_col,
+        #     to_box_mag,
+        #     to_box_col,
+        # )
 
         return D, D_std
-
-    def _check_calibrated(self) -> None:
-        """Raise a ``ValueError`` if :py:meth:`calibrate` was not called"""
-        if not (
-            hasattr(self, "max_mag_syn_obs")
-            and hasattr(self, "err_dist_obs")
-            and hasattr(self, "N_stars_obs")
-            and hasattr(self, "_lkl")
-        ):
-            raise ValueError(
-                "This method requires running the 'calibrate()' method first\n"
-                + "with an observed 'Cluster' object"
-            )
-
-    def _calib_values(self, N_stars: int) -> tuple[float, list[np.ndarray], int]:
-        """Maximum magnitude, error distribution and number of stars of the
-        synthetic clusters: those of the observed cluster if :py:meth:`calibrate` was
-        called, else no magnitude cut, no errors and ``N_stars`` stars
-
-        :param N_stars: Number of synthetic stars if the object was not calibrated
-        :type N_stars: int
-
-        :return: Maximum magnitude, error distribution and number of stars
-        :rtype: tuple[float, list[np.ndarray], int]
-        """
-        try:
-            return self.max_mag_syn_obs, self.err_dist_obs, self.N_stars_obs
-        except AttributeError:
-            return np.inf, [], int(N_stars)
-
-    def _get_model(
-        self,
-        params: dict | None,
-        N_stars: int = 100,
-        isoch_flag: bool = False,
-        show_errors: bool = False,
-        isoch_dr_frac: float = 0.0,
-        mass_info: dict | None = None,
-    ) -> tuple[np.ndarray, np.ndarray]:
-        """Generate a synthetic cluster (and its isochrone) with
-        :py:func:`synth_model.get_model`, from the data stored in the object
-
-        :param params: Dictionary with the values for the fundamental parameters. If
-            ``None``, the default values are used
-        :type params: dict | None
-        :param N_stars: Number of synthetic stars if the object was not calibrated
-        :type N_stars: int
-        :param isoch_flag: If ``True``, also return the isochrone (with ``DR=0``)
-        :type isoch_flag: bool
-        :param show_errors: If ``True``, print the reason when an empty synthetic
-            cluster is returned
-        :type show_errors: bool
-        :param isoch_dr_frac: Fraction ``f`` of the differential reddening applied to
-            the returned isochrone (absorption ``Av + f * DR``; ``0`` for ``DR=0``).
-            It does not affect the synthetic cluster
-        :type isoch_dr_frac: float
-        :param mass_info: If a dictionary is given, it is filled with the data
-            required to estimate the total mass of the simulated cluster, see
-            :py:func:`synth_model.get_model`
-        :type mass_info: dict | None
-
-        :return: Isochrone (empty if ``isoch_flag=False``) and synthetic cluster
-        :rtype: tuple[np.ndarray, np.ndarray]
-        """
-        from .modules import synth_model as sm
-
-        max_mag_syn, err_dist_synth, N_synth_stars = self._calib_values(N_stars)
-        return sm.get_model(
-            {} if params is None else params,
-            self.met_age_dict,
-            self.met_tol,
-            self.age_tol,
-            self.def_params,
-            self.m_ini_idx,
-            self.theor_tracks,
-            self.ext_law,
-            self.ext_coefs,
-            self.rand_floats,
-            self.rand_floats["dr_frac"][self.DR_distribution],
-            self.st_dist_mass,
-            self.mass_idx,
-            max_mag_syn,
-            err_dist_synth,
-            N_synth_stars,
-            show_errors,
-            isoch_flag,
-            isoch_dr_frac,
-            mass_info,
-        )
 
     def cluster_properties(
         self,
@@ -1104,3 +993,92 @@ class Synthetic:
         isochrone = np.array([isoch_mag, isochrone[color_idx + 1]])[:, msk]
 
         return isochrone
+
+    def _check_calibrated(self) -> None:
+        """Raise a ``ValueError`` if :py:meth:`calibrate` was not called"""
+        if not (
+            hasattr(self, "max_mag_syn_obs")
+            and hasattr(self, "err_dist_obs")
+            and hasattr(self, "N_stars_obs")
+            and hasattr(self, "_lkl")
+        ):
+            raise ValueError(
+                "This method requires running the 'calibrate()' method first\n"
+                + "with an observed 'Cluster' object"
+            )
+
+    def _calib_values(self, N_stars: int) -> tuple[float, list[np.ndarray], int]:
+        """Maximum magnitude, error distribution and number of stars of the
+        synthetic clusters: those of the observed cluster if :py:meth:`calibrate` was
+        called, else no magnitude cut, no errors and ``N_stars`` stars
+
+        :param N_stars: Number of synthetic stars if the object was not calibrated
+        :type N_stars: int
+
+        :return: Maximum magnitude, error distribution and number of stars
+        :rtype: tuple[float, list[np.ndarray], int]
+        """
+        try:
+            return self.max_mag_syn_obs, self.err_dist_obs, self.N_stars_obs
+        except AttributeError:
+            return np.inf, [], int(N_stars)
+
+    def _get_model(
+        self,
+        params: dict | None,
+        N_stars: int = 100,
+        isoch_flag: bool = False,
+        show_errors: bool = False,
+        isoch_dr_frac: float = 0.0,
+        mass_info: dict | None = None,
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Generate a synthetic cluster (and its isochrone) with
+        :py:func:`synth_model.get_model`, from the data stored in the object
+
+        :param params: Dictionary with the values for the fundamental parameters. If
+            ``None``, the default values are used
+        :type params: dict | None
+        :param N_stars: Number of synthetic stars if the object was not calibrated
+        :type N_stars: int
+        :param isoch_flag: If ``True``, also return the isochrone (with ``DR=0``)
+        :type isoch_flag: bool
+        :param show_errors: If ``True``, print the reason when an empty synthetic
+            cluster is returned
+        :type show_errors: bool
+        :param isoch_dr_frac: Fraction ``f`` of the differential reddening applied to
+            the returned isochrone (absorption ``Av + f * DR``; ``0`` for ``DR=0``).
+            It does not affect the synthetic cluster
+        :type isoch_dr_frac: float
+        :param mass_info: If a dictionary is given, it is filled with the data
+            required to estimate the total mass of the simulated cluster, see
+            :py:func:`synth_model.get_model`
+        :type mass_info: dict | None
+
+        :return: Isochrone (empty if ``isoch_flag=False``) and synthetic cluster
+        :rtype: tuple[np.ndarray, np.ndarray]
+        """
+        from .modules import synth_model as sm
+
+        max_mag_syn, err_dist_synth, N_synth_stars = self._calib_values(N_stars)
+        return sm.get_model(
+            {} if params is None else params,
+            self.met_age_dict,
+            self.met_tol,
+            self.age_tol,
+            self.def_params,
+            self.m_ini_idx,
+            self.theor_tracks,
+            self.ext_law,
+            self.ext_coefs,
+            self.rand_floats,
+            self.rand_floats["dr_frac"][self.DR_distribution],
+            self.st_dist_mass,
+            self.mass_idx,
+            max_mag_syn,
+            err_dist_synth,
+            N_synth_stars,
+            show_errors,
+            isoch_flag,
+            isoch_dr_frac,
+            mass_info,
+        )
