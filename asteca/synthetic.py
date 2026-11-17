@@ -640,6 +640,7 @@ class Synthetic:
         isoch_flag: bool = False,
         show_errors: bool = False,
         isoch_dr_frac: float = 0.0,
+        mass_info: dict | None = None,
     ) -> tuple[np.ndarray, np.ndarray]:
         """Generate a synthetic cluster (and its isochrone) with
         :py:func:`synth_model.get_model`, from the data stored in the object
@@ -658,6 +659,10 @@ class Synthetic:
             the returned isochrone (absorption ``Av + f * DR``; ``0`` for ``DR=0``).
             It does not affect the synthetic cluster
         :type isoch_dr_frac: float
+        :param mass_info: If a dictionary is given, it is filled with the data
+            required to estimate the total mass of the simulated cluster, see
+            :py:func:`synth_model.get_model`
+        :type mass_info: dict | None
 
         :return: Isochrone (empty if ``isoch_flag=False``) and synthetic cluster
         :rtype: tuple[np.ndarray, np.ndarray]
@@ -685,6 +690,7 @@ class Synthetic:
             show_errors,
             isoch_flag,
             isoch_dr_frac,
+            mass_info,
         )
 
     def cluster_properties(
@@ -887,16 +893,19 @@ class Synthetic:
         # Sample the models and generate their synthetic clusters and isochrones.
         # Models that result in empty synthetic clusters are discarded
         models, synthcls, isoch_tracks, max_masses = [], [], [], []
+        mass_infos = []
         for smodel in scp.sample_params(
             self.rng, model, model_std, self.met_age_dict, N_models
         ):
+            mass_info = {}
             isoch_arr, synth_arr = self._get_model(
-                smodel, isoch_flag=True, isoch_dr_frac=f_to
+                smodel, isoch_flag=True, isoch_dr_frac=f_to, mass_info=mass_info
             )
             if not synth_arr.any():
                 continue
             models.append(smodel)
             synthcls.append(synth_arr)
+            mass_infos.append(mass_info)
             # Magnitude, color and initial mass of the isochrone, and maximum mass of
             # the synthetic cluster, used to locate the turn-off point
             isoch_tracks.append(isoch_arr[[0, color_idx + 1, self.m_ini_idx]])
@@ -990,9 +999,8 @@ class Synthetic:
         masses = cmf.cluster_masses(
             models,
             synthcls,
-            self.rng,
+            mass_infos,
             self.m_ini_idx,
-            self.st_dist_mass,
             self.isochs.z_to_FeH,
             radec_c,
             rho_amb,

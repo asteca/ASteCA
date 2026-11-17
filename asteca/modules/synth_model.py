@@ -129,6 +129,7 @@ def get_model(
     show_errors: bool = False,
     isoch_flag: bool = False,
     isoch_dr_frac: float = 0.0,
+    mass_info: dict | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Generate a synthetic cluster.
 
@@ -182,6 +183,15 @@ def get_model(
         the returned isochrone, i.e.: it is reddened with ``Av + f * DR`` instead of
         ``Av``. It does not affect the synthetic cluster
     :type isoch_dr_frac: float
+    :param mass_info: If a dictionary is given, it is filled with the data required
+        to estimate the total mass of the simulated cluster (see
+        :py:func:`cluster_mass_funcs.get_M_actual`): the IMF sampled masses used to
+        generate it (``imf_masses``: all the masses up to the last star kept in the
+        synthetic cluster, or the full sample if it was exhausted), the indexes of
+        the stars kept (``kept_idx``), the initial and secondary masses of the
+        isochrone (``mass_row``, ``m2_row``), and the binary fraction parameters
+        (``alpha``, ``beta``). It is not modified if the synthetic cluster is empty
+    :type mass_info: dict | None
 
     :return: Synthetic isochrone plus synthetic array; if ``isoch_flag=False``,
         an empty array is returned instead of the isochrone.
@@ -352,6 +362,30 @@ def get_model(
                 + f"log(age)={loga:.3f}, Av={av:.3f}, DR={dr:.3f}, dm={dm:.3f})"
             )
         return isoch_extin_dr_0, np.array([])
+
+    if mass_info is not None:
+        # Indexes in the IMF sample of the stars in the pool (the same selection
+        # done by mass_interp()), and of those kept in the synthetic cluster
+        mass_row = isoch_moved[m_ini_idx]
+        pool_idx = first_in_range(
+            st_mass, mass_row[idx_cut[0]], mass_row[idx_cut[-1]], N_pool
+        )
+        kept_idx = pool_idx[keep[:N_synth_stars]]
+        # The simulated cluster is made of the IMF masses up to the last kept star.
+        # If fewer than 'N_synth_stars' stars were kept, the whole IMF sample was
+        # used (see the loop above)
+        N_end = kept_idx[-1] + 1 if keep.size >= N_synth_stars else st_mass.size
+        mass_info.update(
+            {
+                "imf_masses": st_mass[:N_end],
+                "kept_idx": kept_idx,
+                "mass_row": mass_row.copy(),
+                "m2_row": isoch_moved[m_ini_idx + 1].copy() if binar_flag else None,
+                "alpha": alpha,
+                "beta": beta,
+            }
+        )
+
     isoch_binar = isoch_binar[:, keep[:N_synth_stars]]
 
     # Assign errors according to errors distribution.

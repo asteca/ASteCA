@@ -53,9 +53,8 @@ def update_pars(name: str, defaults: dict, pars: dict | None) -> dict:
 def cluster_masses(
     models: list[dict],
     synthcls: list[np.ndarray],
-    rng: np.random.Generator,
+    mass_infos: list[dict],
     m_ini_idx: int,
-    st_dist_mass: list[list],
     z_to_FeH: float | None,
     radec_c: tuple[float, float] | None,
     rho_amb: float | None,
@@ -73,12 +72,11 @@ def cluster_masses(
     :type models: list[dict]
     :param synthcls: Synthetic clusters of the sampled models
     :type synthcls: list[np.ndarray]
-    :param rng: Random number generator
-    :type rng: np.random.Generator
+    :param mass_infos: IMF data of the simulated cluster of each model, filled by
+        :py:func:`synth_model.get_model` (see :py:func:`get_M_actual`)
+    :type mass_infos: list[dict]
     :param m_ini_idx: Index of the initial mass in the synthetic clusters
     :type m_ini_idx: int
-    :param st_dist_mass: Sampled IMF masses
-    :type st_dist_mass: list[list]
     :param z_to_FeH: Factor to convert [Fe/H] back to Z, ``None`` if the
         metallicity is given as Z
     :type z_to_FeH: float | None
@@ -122,7 +120,7 @@ def cluster_masses(
     for i, model in enumerate(models):
         # Estimate the actual mass, ie: the sum of the observed and photometric
         # masses
-        M_obs, M_phot, M_a = get_M_actual(rng, m_ini_idx, st_dist_mass, synthcls[i])
+        M_obs, M_phot, M_a = get_M_actual(m_ini_idx, synthcls[i], mass_infos[i])
 
         if rho_amb_arr is None:
             masses_all.append([M_obs, M_phot, np.nan, np.nan])
@@ -199,56 +197,80 @@ def galactic_coords(
 
 
 def get_M_actual(
-    rng: np.random.Generator,
     m_ini_idx: int,
-    st_dist_mass: list[list],
     sampled_synthcl: np.ndarray,
+    mass_info: dict,
 ) -> tuple[float, float, float]:
-    """Estimate the actual mass using the observed mass and the fraction of
-    mass estimated to be beyond the maximum observed magnitude.
+    """Estimate the actual mass as the total present-day mass of the simulated
+    cluster whose observable part is the synthetic cluster.
 
-    The final actual mass is just:
+    The synthetic cluster is generated from the IMF sampled masses, taken in order,
+    keeping the stars brighter than the maximum magnitude (after the binarity,
+    extinction and differential reddening). The simulated cluster is then made of
+    all the IMF masses up to the last star kept; those still alive (below the
+    maximum mass of the isochrone) and not kept are its unobserved members.
+
+    M_obs: primary and secondary masses of the stars in the synthetic cluster
+    M_phot: masses of the unobserved members plus the expected mass of their
+    companions (see :py:func:`companion_mass`)
 
     M_actual = M_obs + M_phot
 
-    :param rng: Random number generator
-    :type rng: np.random.Generator
     :param m_ini_idx: Index of the initial mass column
     :type m_ini_idx: int
-    :param st_dist_mass: List of sampled masses
-    :type st_dist_mass: list[list]
     :param sampled_synthcl: Sampled synthetic cluster data.
     :type sampled_synthcl: np.ndarray
+    :param mass_info: IMF data of the simulated cluster, filled by
+        :py:func:`synth_model.get_model`
+    :type mass_info: dict
 
     :return: Observed, photometric, and actual mass.
     :rtype: tuple[float, float, float]
     """
-    mass_ini = sampled_synthcl[m_ini_idx]
-    mass_2nd = sampled_synthcl[-1]
-    M_obs = np.nansum([mass_ini, mass_2nd])
-
-    Nmets, Nages = len(st_dist_mass), len(st_dist_mass[0])
-    i = rng.integers(Nmets)
-    j = rng.integers(Nages)
-
-    masses = st_dist_mass[i][j]
-
-    # Find sampled IMF masses closest to the observed mass limits
-    mass_min = masses[np.argmin(np.abs(masses - mass_ini.min()))]
-    mass_max = masses[np.argmin(np.abs(masses - mass_ini.max()))]
-
-    # Calculate the photometric mass fraction and scale it to the observed mass
-    M_phot_sample = max(1, masses[masses < mass_min].sum())
-    M_obs_sample = max(
-        1,
-        masses[(masses >= mass_min) & (masses < mass_max)].sum(),
+    M_obs = float(
+        np.nansum(sampled_synthcl[m_ini_idx]) + np.nansum(sampled_synthcl[-1])
     )
 
-    factor = M_phot_sample / M_obs_sample
-    M_phot = factor * M_obs
+    imf_masses = mass_info["imf_masses"]
+    # Members not in the synthetic cluster, still alive
+    unobs = np.ones(imf_masses.size, dtype=bool)
+    unobs[mass_info["kept_idx"]] = False
+    unobs &= imf_masses <= mass_info["mass_row"][-1]
+    m_unobs = imf_masses[unobs]
+
+    M_phot = float(m_unobs.sum() + companion_mass(m_unobs, mass_info).sum())
     M_actual = M_obs + M_phot
 
     return M_obs, M_phot, M_actual
+
+
+def companion_mass(m1: np.ndarray, mass_info: dict) -> np.ndarray:
+    """Expected mass of the companion of each primary mass, with the binary
+    probability and mass ratios used to generate the synthetic clusters (see
+    :py:func:`synth_model.binarity`): the probability of being a binary times the
+    secondary mass of the isochrone, interpolated through its mass ratio ``q``
+    (the value of the closest isochrone point is used for masses outside of its
+    range).
+
+    :param m1: Primary masses.
+    :type m1: np.ndarray
+    :param mass_info: IMF data of the simulated cluster, filled by
+        :py:func:`synth_model.get_model`
+    :type mass_info: dict
+
+    :return: Expected companion masses.
+    :rtype: np.ndarray
+    """
+    alpha, beta = mass_info["alpha"], mass_info["beta"]
+    m2_row = mass_info["m2_row"]
+    if m2_row is None or m1.size == 0:
+        return np.zeros(m1.size)
+
+    b_p = np.clip(alpha + beta / (1.0 + 1.4 / m1), 0.0, 1.0)
+    mass_row = mass_info["mass_row"]
+    q = np.interp(m1, mass_row, m2_row / mass_row)
+
+    return b_p * q * m1
 
 
 def stellar_evol_mass_loss(z_met: float, loga: float) -> float:
