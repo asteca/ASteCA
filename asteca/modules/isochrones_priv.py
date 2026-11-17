@@ -116,6 +116,9 @@ def load(
         age_col,
     )
 
+    # The (met, age) grid must be rectangular
+    met_age_vals, isoch_arrays = keep_common_ages(met_age_vals, isoch_arrays)
+
     met_age_sorted, isochs_sorted = sort_by_met_age(met_age_vals, isoch_arrays)
 
     # Interpolate the isochrones based on either mass or EEP distribution
@@ -459,6 +462,62 @@ def get_BASTI_z_a_val(full_header: list, met_col: str, age_col: str) -> tuple[st
         raise ValueError("Could not read header from Basti isochrone")
 
     return met, age
+
+
+def keep_common_ages(
+    met_age_vals: list,
+    isoch_arrays: list[np.ndarray],
+) -> tuple[list, list]:
+    """Keep only the ages present in all the metallicities.
+
+    The isochrones are stored in a (met, age) grid, which requires all the
+    metallicities to share the same ages. Some services (e.g.: BaSTI) provide a
+    different maximum age for each metallicity.
+
+    :param met_age_vals: List of metallicity and ages
+    :type met_age_vals: list
+    :param isoch_arrays: List of isochrones as numpy arrays
+    :type isoch_arrays: list[np.ndarray]
+
+    :raises ValueError: If no age is shared by all the metallicities.
+
+    :return: Lists of met and age values, and isochrones, for the common ages.
+    :rtype: tuple[list, list]
+    """
+    ages_per_met: dict[str, set] = {}
+    for met, age in met_age_vals:
+        ages_per_met.setdefault(met, set()).add(age)
+    common_ages = set.intersection(*ages_per_met.values())
+
+    N_drop = len(met_age_vals) - len(common_ages) * len(ages_per_met)
+    if N_drop == 0:
+        return met_age_vals, isoch_arrays
+
+    if not common_ages:
+        raise ValueError(
+            "No age is present in all the metallicities of the isochrones grid"
+        )
+
+    loga = [float(_) for _ in common_ages]
+    loga_drop = sorted(
+        float(_) for _ in set.union(*ages_per_met.values()) - common_ages
+    )
+    if len(loga_drop) <= 10:
+        drop_str = "log(age)=" + ", ".join(f"{_:.3f}" for _ in loga_drop)
+    else:
+        drop_str = (
+            f"{len(loga_drop)} ages in the range "
+            + f"log(age)=[{loga_drop[0]:.3f}, {loga_drop[-1]:.3f}]"
+        )
+    warnings.warn(
+        f"\n{N_drop} isochrones were discarded because their ages are not present "
+        + f"in all the metallicities.\nDiscarded: {drop_str}.\nThe grid was reduced "
+        + f"to {len(common_ages)} ages, in the range "
+        + f"log(age)=[{min(loga):.3f}, {max(loga):.3f}]\n"
+    )
+
+    keep = [i for i, (_, age) in enumerate(met_age_vals) if age in common_ages]
+    return [met_age_vals[i] for i in keep], [isoch_arrays[i] for i in keep]
 
 
 def sort_by_met_age(
@@ -872,17 +931,10 @@ def merge_ps_massini_check(mass_col: str, isochrones: dict) -> tuple[list, list]
         if not len(bad_idx):
             return []
 
-        lines = [f"Irregular {name} spacing (expected step ~{step:g}):"]
-        for i in bad_idx:
-            i0 = max(0, i - 1)
-            i1 = min(len(values), i + 3)
-            context = values[i0:i1]
-            lines.append(
-                f"  around {values[i]:g} -> {values[i + 1]:g} "
-                f"(step={diffs[i]:g}): {context}"
-            )
-
-        return lines
+        return [
+            f"{name}: {len(bad_idx)} of {len(diffs)} steps differ from the median "
+            + f"step ({step:g}), steps range [{diffs.min():g}, {diffs.max():g}]"
+        ]
 
     issues.extend(_find_irregular_spacing(met_vals, "metallicity"))
     issues.extend(_find_irregular_spacing(age_vals, "age"))
@@ -893,18 +945,18 @@ def merge_ps_massini_check(mass_col: str, isochrones: dict) -> tuple[list, list]
         np.searchsorted(met_vals, met_age[:, 0]),
         np.searchsorted(age_vals, met_age[:, 1]),
     ] = True
-    for i, j in zip(*np.nonzero(~present)):
-        ages_present = age_vals[present[i]]
-        idx = np.searchsorted(ages_present, age_vals[j])
-        adjacent = ages_present[max(0, idx - 1) : min(len(ages_present), idx + 1)]
+    N_missing = int((~present).sum())
+    if N_missing:
+        i, j = np.argwhere(~present)[0]
         issues.append(
-            f"Missing grid point (met={met_vals[i]:g}, age={age_vals[j]:g}); "
-            f"adjacent ages at this metallicity: {adjacent}"
+            f"missing points: {N_missing} (met, age) combinations, e.g. "
+            + f"(met={met_vals[i]:g}, age={age_vals[j]:g})"
         )
 
     if issues:
         warnings.warn(
-            "The (metallicity, age) isochrone grid is irregular:\n" + "\n".join(issues)
+            "\nThe (metallicity, age) isochrone grid is irregular:\n"
+            + "\n".join(issues)
         )
 
     # Check that all the (interpolated) isochrones have the same number of points
