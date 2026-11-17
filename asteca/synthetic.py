@@ -827,6 +827,7 @@ class Synthetic:
             - If the `calibrate()` method was not previously called
             - If ``turn_off`` does not contain four values or has negative STDDEVs,
               or ``galaxy_potential`` or ``disruption`` contain unknown keys
+            - If ``rho_amb`` is not a finite value larger than zero
             - If ``isochs_young`` contains no isochrones with ``log(age)<=7``
             - If all the synthetic arrays generated are empty
 
@@ -853,6 +854,8 @@ class Synthetic:
                 )
             if turn_off[2] < 0 or turn_off[3] < 0:
                 raise ValueError("The STDDEVs in 'turn_off' must be >= 0")
+        if rho_amb is not None and not (np.isfinite(rho_amb) and rho_amb > 0):
+            raise ValueError(f"'rho_amb' must be a finite value > 0, got {rho_amb}")
         gal_pot = cmf.update_pars(
             "galaxy_potential", cmf.GALAXY_POTENTIAL, galaxy_potential
         )
@@ -979,9 +982,17 @@ class Synthetic:
             and self.cluster_ra is not None
             and self.cluster_dec is not None
         ):
+            # The RA values are measured relative to their circular mean before
+            # taking the median, so that clusters crossing RA=0 are handled
+            ra = np.asarray(self.cluster_ra, dtype=float)
+            ra_rad = np.deg2rad(ra)
+            ra_ref = np.rad2deg(
+                np.arctan2(np.nanmean(np.sin(ra_rad)), np.nanmean(np.cos(ra_rad)))
+            )
+            ra_off = (ra - ra_ref + 180.0) % 360.0 - 180.0
             radec_c = (
-                float(np.median(self.cluster_ra)),
-                float(np.median(self.cluster_dec)),
+                float((ra_ref + np.nanmedian(ra_off)) % 360.0),
+                float(np.nanmedian(self.cluster_dec)),
             )
             self._vp(
                 "\nUsing ambient density estimated from observed cluster (ra, dec)", 1

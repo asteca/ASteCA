@@ -482,7 +482,8 @@ def dissolution_param(
 
     :param C_env: Constant related to the disruption time.
     :type C_env: float
-    :param epsilon: Parameter related to the tidal field.
+    :param epsilon: Eccentricity of the cluster's orbit (``0 <= epsilon < 1``); the
+        dissolution time scales as ``(1 - epsilon)`` (Baumgardt & Makino 2003).
     :type epsilon: float
     :param gamma: Parameter related to the mass-loss rate.
     :type gamma: float
