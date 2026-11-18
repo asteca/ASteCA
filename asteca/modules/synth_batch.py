@@ -320,7 +320,7 @@ def log_lkl_batch(  # noqa: DOC502, RUF100
         return np.array(
             [
                 lk.log_lkl(
-                    synthcl.generate(dict(zip(FULL_PARAMS, p))),
+                    synthcl._get_model(dict(zip(FULL_PARAMS, p)))[1],
                     temperature,
                 )
                 for p in P

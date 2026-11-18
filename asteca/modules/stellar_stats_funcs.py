@@ -663,7 +663,7 @@ def closest_isoch_point(
 
     tree = KDTree(np.column_stack((isoch_mag, isoch_color)))
     _, idx = tree.query(np.column_stack((star_mag, star_color)))
-    return idx
+    return np.asarray(idx)
 
 
 if _HAS_NUMBA:

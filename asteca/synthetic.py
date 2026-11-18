@@ -107,12 +107,11 @@ class Synthetic:
         self.ext_law = ext_law
         # Validated by the property setter
         self.DR_distribution = DR_distribution
-        self.seed = seed
-        self.verbose = verbose
-
         # Set seed
-        if self.seed is None:
-            self.seed = np.random.randint(0, 100_000)
+        self.seed: int = (
+            int(np.random.randint(0, 100_000)) if seed is None else int(seed)
+        )
+        self.verbose = verbose
         self.rng = np.random.default_rng(self.seed)
 
         # Check gamma distribution
@@ -470,8 +469,9 @@ class Synthetic:
 
             P = sb.batch_params(self, params)
             if not sb.available(self.ext_law):
+                # Same as generate() with batch=False for each model
                 return [
-                    self.generate(dict(zip(sb.FULL_PARAMS, p)), N_stars=N_stars)
+                    self._get_model(dict(zip(sb.FULL_PARAMS, p)), N_stars)[1]
                     for p in P
                 ]
 
