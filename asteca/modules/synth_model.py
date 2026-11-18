@@ -128,7 +128,7 @@ def get_model(
     The synthetic cluster is generated according to the parameters in ``p`` and the
     data of the :py:class:`Synthetic` object. This is the Python implementation of
     the synthetic cluster recipe, used when numba is not installed; with numba, the
-    compiled ``synth_batch._synth_one_ex()`` is used instead (through
+    compiled ``synth_batch._synth_one()`` is used instead (through
     ``synth_batch.ModelEngine``), with identical results.
 
     :param ctx: Data that defines the synthetic clusters
@@ -349,7 +349,7 @@ def get_model(
 
 
 # Reasons for an empty synthetic cluster, indexed by the status code returned by
-# synth_batch._synth_one_ex() (0: not empty)
+# synth_batch._synth_one() (0: not empty)
 EMPTY_REASONS = ("", "max magnitude cut", "IMF interpolation", "the extinction")
 
 

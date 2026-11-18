@@ -2,7 +2,7 @@
 
 Once a :py:class:`asteca.Synthetic` object is created, every random value used by
 :py:func:`synth_model.get_model` is drawn in advance, so a model is a deterministic
-function of its parameters. :py:func:`_synth_one_ex` generates a synthetic cluster in a
+function of its parameters. :py:func:`_synth_one` generates a synthetic cluster in a
 single compiled call, chaining the numba kernels of :py:mod:`synth_model` in the same
 order and with the same operations as :py:func:`synth_model.get_model` (the Python
 implementation, used without numba), so that the results are identical. The batch
@@ -27,7 +27,7 @@ import numpy as np
 
 from . import HAS_NUMBA as _HAS_NUMBA
 
-# Output of _synth_one_ex(): the synthetic cluster and the data used by
+# Output of _synth_one(): the synthetic cluster and the data used by
 # ModelEngine.get_model() to obtain the isochrone, the mass information and the reason
 # for an empty cluster
 SynthOut = namedtuple(
@@ -200,7 +200,7 @@ if _HAS_NUMBA:
     _per_star_pool_next_nb = njit(cache=True)(per_star_pool_next)
 
     @njit(cache=True)
-    def _synth_one_ex(
+    def _synth_one(
         p,
         met_grid,
         age_grid,
@@ -393,43 +393,6 @@ if _HAS_NUMBA:
         return SynthOut(isoch_binar, 0, isochrone, isoch_av, idx_cut, N_pool, keep)
 
     @njit(cache=True)
-    def _synth_one(
-        p,
-        met_grid,
-        age_grid,
-        theor_tracks,
-        m_ini_idx,
-        st_list,
-        midx_list,
-        N_a,
-        dr_frac,
-        ext_kind,
-        ccm,
-        unif1,
-        max_mag,
-        err,
-        N_synth,
-    ):
-        """Synthetic cluster of :py:func:`_synth_one_ex`"""
-        return _synth_one_ex(
-            p,
-            met_grid,
-            age_grid,
-            theor_tracks,
-            m_ini_idx,
-            st_list,
-            midx_list,
-            N_a,
-            dr_frac,
-            ext_kind,
-            ccm,
-            unif1,
-            max_mag,
-            err,
-            N_synth,
-        ).synth
-
-    @njit(cache=True)
     def _lnl_one(
         synth,
         n_phot,
@@ -501,7 +464,7 @@ if _HAS_NUMBA:
                     max_mag,
                     err,
                     N_synth,
-                )
+                ).synth
             )
         return out
 
@@ -557,7 +520,7 @@ if _HAS_NUMBA:
                 max_mag,
                 err,
                 N_synth,
-            )
+            ).synth
             out[j] = _lnl_one(
                 synth,
                 n_phot,
@@ -630,7 +593,7 @@ if _HAS_NUMBA:
                 max_mag,
                 err,
                 N_synth,
-            )
+            ).synth
             out[j] = _lnl_one(
                 synth,
                 n_phot,
