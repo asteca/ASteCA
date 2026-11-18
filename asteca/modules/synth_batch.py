@@ -10,21 +10,30 @@ functions loop over many parameter sets in a single call, which removes the Pyth
 overhead of each call (which dominates for clusters with few stars), and the batch of
 log-likelihoods can be evaluated in parallel threads.
 
-:py:class:`ModelEngine` is the single entry point used to generate synthetic clusters
-(one or many) by :py:class:`asteca.Synthetic` and :py:class:`asteca.Sampler`: it uses
-the compiled functions if they are available (numba installed, see
-:py:func:`available`), and :py:func:`synth_model.get_model` otherwise.
+:py:class:`model_data.ModelEngine` is the single entry point used to generate
+synthetic clusters (one or many) by :py:class:`asteca.Synthetic` and
+:py:class:`asteca.Sampler`: it uses the compiled functions of this module if they are
+available (numba installed, see :py:func:`available`), and
+:py:func:`synth_model.get_model` otherwise.
 """
 
+from collections import namedtuple
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .model_data import ModelContext, ObservedData
+    from .model_data import ModelEngine
 
 import numpy as np
 
 from . import HAS_NUMBA as _HAS_NUMBA
-from . import synth_model as sm
+
+# Output of _synth_one_ex(): the synthetic cluster and the data used by
+# ModelEngine.get_model() to obtain the isochrone, the mass information and the reason
+# for an empty cluster
+SynthOut = namedtuple(
+    "SynthOut",
+    ("synth", "status", "isoch_moved", "isoch_av", "idx_cut", "N_pool", "keep"),
+)
 
 
 def available(ext_law: str) -> bool:
@@ -74,14 +83,14 @@ def ccmo_array(ext_law: str, ext_coefs: list) -> np.ndarray:
     return np.array(rows, dtype=float)
 
 
-def batch_data(ctx: "ModelContext") -> dict:
+def batch_data(ctx: "ModelEngine") -> dict:
     """Arrays used by the compiled functions that do not change after the
     :py:class:`asteca.Synthetic` object is created. The typed lists hold references
     to the existing IMF samples and mass indexes (no copies). Obtained once and
-    cached by :py:attr:`ModelContext.batch_data <model_data.ModelContext.batch_data>`.
+    cached by :py:attr:`ModelEngine.batch_data <model_data.ModelEngine.batch_data>`.
 
     :param ctx: Data that defines the synthetic clusters
-    :type ctx: ModelContext
+    :type ctx: ModelEngine
 
     :return: Dictionary with the data
     :rtype: dict
@@ -120,24 +129,24 @@ def batch_data(ctx: "ModelContext") -> dict:
 
 
 def batch_args(
-    ctx: "ModelContext",
+    ctx: "ModelEngine",
     dr_model: str,
     calib: tuple[float, list[np.ndarray], int],
     P: np.ndarray,
 ) -> tuple:
     """Arguments of the compiled batch functions :py:func:`_generate_batch`,
     :py:func:`_lnl_batch_serial` and :py:func:`_lnl_batch_parallel` (the
-    likelihood arguments are added by :py:meth:`ModelEngine.log_lkl`).
+    likelihood arguments are added by :py:meth:`model_data.ModelEngine.log_lkl`).
 
     :param ctx: Data that defines the synthetic clusters
-    :type ctx: ModelContext
+    :type ctx: ModelEngine
     :param dr_model: Differential reddening model
     :type dr_model: str
     :param calib: Maximum magnitude, error distribution and number of stars of the
         synthetic clusters, as given by ``Synthetic._calib_values()``
     :type calib: tuple[float, list[np.ndarray], int]
-    :param P: Array of parameters, see :py:meth:`ModelContext.params_array
-        <model_data.ModelContext.params_array>`
+    :param P: Array of parameters, see :py:meth:`ModelEngine.params_array
+        <model_data.ModelEngine.params_array>`
     :type P: np.ndarray
 
     :return: Tuple of arguments
@@ -169,230 +178,6 @@ def batch_args(
         err,
         int(N_synth_stars),
     )
-
-
-class ModelEngine:
-    """Generates batches of synthetic clusters and evaluates their log-likelihoods,
-    with the compiled functions of this module if they are available (see
-    :py:func:`available`), else with a loop over :py:func:`synth_model.get_model`.
-    The results are identical either way.
-
-    :param ctx: Data that defines the synthetic clusters
-    :type ctx: ModelContext
-    :param parallel: Evaluate the log-likelihoods in parallel threads (only used if
-        the compiled functions are available)
-    :type parallel: bool
-    :param n_threads: Number of threads used if ``parallel=True``. If ``None``,
-        numba's current setting is used
-    :type n_threads: int | None
-
-    :raises ValueError: If the threads are used and ``n_threads`` is not an integer
-        between ``1`` and ``NUMBA_NUM_THREADS``
-    """
-
-    def __init__(  # noqa: DOC502, RUF100
-        self,
-        ctx: "ModelContext",
-        parallel: bool = False,
-        n_threads: int | None = None,
-    ) -> None:
-        self.ctx = ctx
-        self.compiled = available(ctx.ext_law)
-        self.parallel = parallel
-        self.n_threads = n_threads
-        # 'n_threads' is only validated if it is used
-        if self.compiled and parallel and n_threads is not None:
-            check_n_threads(n_threads)
-
-    def get_model(
-        self,
-        p: np.ndarray,
-        dr_model: str,
-        calib: tuple[float, list[np.ndarray], int],
-        show_errors: bool = False,
-        isoch_flag: bool = False,
-        isoch_dr_frac: float = 0.0,
-        mass_info: dict | None = None,
-    ) -> tuple[np.ndarray, np.ndarray]:
-        """One synthetic cluster (and its isochrone), identical to
-        :py:func:`synth_model.get_model` (which is used if the compiled functions
-        are not available). The synthetic cluster is generated by the compiled
-        :py:func:`_synth_one_ex`, the isochrone and ``mass_info`` are obtained from
-        the data it returns.
-
-        :param p: Values of the fundamental parameters: a row of the array
-            returned by :py:meth:`ModelContext.params_array
-            <model_data.ModelContext.params_array>`
-        :type p: np.ndarray
-        :param dr_model: Differential reddening model
-        :type dr_model: str
-        :param calib: Maximum magnitude, error distribution and number of stars of
-            the synthetic cluster, as given by ``Synthetic._calib_values()``
-        :type calib: tuple[float, list[np.ndarray], int]
-        :param show_errors: Print the reason when an empty cluster is returned
-        :type show_errors: bool
-        :param isoch_flag: Also return the isochrone
-        :type isoch_flag: bool
-        :param isoch_dr_frac: Fraction of the differential reddening applied to the
-            returned isochrone
-        :type isoch_dr_frac: float
-        :param mass_info: Filled with the data required to estimate the total mass,
-            see :py:func:`synth_model.get_model`
-        :type mass_info: dict | None
-
-        :return: Isochrone (empty if ``isoch_flag=False``) and synthetic cluster (an
-            empty 1D array if the cluster is empty)
-        :rtype: tuple[np.ndarray, np.ndarray]
-        """
-        if not self.compiled:
-            return sm.get_model(
-                self.ctx,
-                p,
-                dr_model,
-                calib,
-                show_errors=show_errors,
-                isoch_flag=isoch_flag,
-                isoch_dr_frac=isoch_dr_frac,
-                mass_info=mass_info,
-            )
-
-        args = batch_args(self.ctx, dr_model, calib, p[None, :])
-        synth, status, isoch_moved, isoch_av, idx_cut, N_pool, keep = _synth_one_ex(
-            p, *args[1:]
-        )
-        _, _, alpha, beta, av, dr, rv, _ = p.tolist()
-        isoch = sm.output_isochrone(
-            self.ctx,
-            self.ctx.rand_floats["dr_frac"][dr_model],
-            isoch_flag,
-            isoch_dr_frac,
-            not (alpha == 0.0 and beta == 0.0),
-            av,
-            dr,
-            rv,
-            isoch_moved,
-            isoch_av,
-        )
-        if status != 0:
-            if show_errors:
-                print(sm.empty_message(status, p))
-            return isoch, np.array([])
-
-        if mass_info is not None:
-            ml, _, al, _ = sm.grid_box(self.ctx.met_age_dict, p[0], p[1])
-            sm.fill_mass_info(
-                mass_info,
-                self.ctx,
-                p,
-                self.ctx.st_dist_mass[ml][al],
-                isoch_moved,
-                idx_cut,
-                N_pool,
-                keep,
-                calib[2],
-            )
-        return isoch, synth
-
-    def generate(
-        self,
-        P: np.ndarray,
-        dr_model: str,
-        calib: tuple[float, list[np.ndarray], int],
-    ) -> list[np.ndarray]:
-        """Synthetic clusters of a batch of models, identical to those generated
-        one at a time by :py:func:`synth_model.get_model`
-
-        :param P: Array of parameters, see :py:meth:`ModelContext.params_array
-            <model_data.ModelContext.params_array>`
-        :type P: np.ndarray
-        :param dr_model: Differential reddening model
-        :type dr_model: str
-        :param calib: Maximum magnitude, error distribution and number of stars of
-            the synthetic clusters, as given by ``Synthetic._calib_values()``
-        :type calib: tuple[float, list[np.ndarray], int]
-
-        :return: One synthetic cluster per model (an empty 1D array if the cluster
-            is empty)
-        :rtype: list[np.ndarray]
-        """
-        if not self.compiled:
-            return [sm.get_model(self.ctx, p, dr_model, calib)[1] for p in P]
-        out = _generate_batch(*batch_args(self.ctx, dr_model, calib, P))
-        # An empty synthetic cluster is returned as an empty 1D array, as with
-        # get_model()
-        return [a if a.shape[1] else np.array([]) for a in out]
-
-    def log_lkl(
-        self,
-        P: np.ndarray,
-        dr_model: str,
-        obs: "ObservedData",
-        temperature: float,
-    ) -> np.ndarray:
-        """Log-likelihoods of a batch of models, identical to
-        ``obs.lkl.log_lkl(get_model(ctx, p, dr_model, obs.calib_values())[1],
-        temperature)`` for each row ``p`` of ``P``. With the compiled functions,
-        each synthetic cluster is generated and evaluated in the same call (the
-        synthetic clusters never go back to Python, which is where the gain comes
-        from), optionally distributing the models among parallel threads.
-
-        :param P: Array of parameters, see :py:meth:`ModelContext.params_array
-            <model_data.ModelContext.params_array>`
-        :type P: np.ndarray
-        :param dr_model: Differential reddening model
-        :type dr_model: str
-        :param obs: Data of the observed cluster
-        :type obs: ObservedData
-        :param temperature: Likelihood temperature, assumed positive (validated by
-            :py:class:`asteca.Sampler`)
-        :type temperature: float
-
-        :return: Array with the log-likelihood of each model, ``0`` is the best value
-        :rtype: np.ndarray
-        """
-        lk = obs.lkl
-        calib = obs.calib_values()
-        if not self.compiled:
-            return np.array(
-                [
-                    lk.log_lkl(
-                        sm.get_model(self.ctx, p, dr_model, calib)[1], temperature
-                    )
-                    for p in P
-                ]
-            )
-
-        args: tuple = (
-            *batch_args(self.ctx, dr_model, calib, P),
-            lk.m_ini_idx,
-            lk.hist_args,
-            lk.nz_pos,
-            lk.row_off,
-            lk.table_flat,
-            lk.m_max,
-            lk.min_lkl,
-            lk.max_lkl,
-            lk.lkl_range,
-            float(lk.obs_mag_median),
-            float(lk.obs_col_median),
-            float(lk.cmd_widths[0]),
-            float(lk.cmd_widths[1]),
-            float(temperature),
-        )
-        if not self.parallel:
-            return _lnl_batch_serial(*args)
-        if self.n_threads is None:
-            return _lnl_batch_parallel(*args)
-
-        import numba
-
-        # Set the number of threads for this call only
-        prev_threads = numba.get_num_threads()
-        numba.set_num_threads(int(self.n_threads))
-        try:
-            return _lnl_batch_parallel(*args)
-        finally:
-            numba.set_num_threads(prev_threads)
 
 
 if _HAS_NUMBA:
@@ -437,11 +222,11 @@ if _HAS_NUMBA:
         GAIADR3 extinction law and ``1`` for CCMO, with the coefficients in ``ccm``
         (see :py:func:`ccmo_array`).
 
-        Returns ``(synth, status, isoch_moved, isoch_av, idx_cut, N_pool, keep)``:
-        the synthetic cluster, an array of shape ``(m_ini_idx + 2, N)`` with
+        Returns a ``SynthOut`` named tuple ``(synth, status, isoch_moved, isoch_av,
+        idx_cut, N_pool, keep)``: the synthetic cluster, an array of shape ``(m_ini_idx + 2, N)`` with
         ``N = 0`` for an empty cluster; the reason for an empty cluster (see
         ``synth_model.EMPTY_REASONS``, ``0`` if not empty); and the data used by
-        :py:meth:`ModelEngine.get_model` to obtain the isochrone and the mass
+        :py:meth:`model_data.ModelEngine.get_model` to obtain the isochrone and the mass
         information: the isochrone moved by the distance modulus, the isochrone
         with the minimum absorption ``Av``, the indexes of its points brighter than
         the maximum magnitude, the final size of the pool of candidate stars, and
@@ -535,7 +320,7 @@ if _HAS_NUMBA:
         empty = np.empty((isochrone.shape[0], 0))[:N_rows]
         keep = np.empty(0, dtype=np.intp)
         if idx_cut.size == 0:
-            return empty, 1, isochrone, isoch_av, idx_cut, 0, keep
+            return SynthOut(empty, 1, isochrone, isoch_av, idx_cut, 0, keep)
 
         # Pool of candidate stars, grown until N_synth stars are brighter than the
         # maximum magnitude after their extinction (see synth_model.get_model())
@@ -555,7 +340,7 @@ if _HAS_NUMBA:
                 midx_list[k],
             )
             if isoch_mass.shape[1] == 0:
-                return empty, 2, isochrone, isoch_av, idx_cut, N_pool, keep
+                return SynthOut(empty, 2, isochrone, isoch_av, idx_cut, N_pool, keep)
             N_stars = isoch_mass.shape[1]
 
             # binarity()
@@ -596,7 +381,7 @@ if _HAS_NUMBA:
             N_pool = N_new
 
         if keep.size == 0:
-            return empty, 3, isochrone, isoch_av, idx_cut, N_pool, keep
+            return SynthOut(empty, 3, isochrone, isoch_av, idx_cut, N_pool, keep)
         isoch_binar = isoch_all[:, keep[:N_synth]]
 
         # add_errors()
@@ -605,7 +390,7 @@ if _HAS_NUMBA:
             for i in range(err.shape[0]):
                 _scatter_add_nb(isoch_binar[i], mag_sort, err[i])
 
-        return isoch_binar, 0, isochrone, isoch_av, idx_cut, N_pool, keep
+        return SynthOut(isoch_binar, 0, isochrone, isoch_av, idx_cut, N_pool, keep)
 
     @njit(cache=True)
     def _synth_one(
@@ -625,7 +410,7 @@ if _HAS_NUMBA:
         err,
         N_synth,
     ):
-        """Synthetic cluster returned by :py:func:`_synth_one_ex`"""
+        """Synthetic cluster of :py:func:`_synth_one_ex`"""
         return _synth_one_ex(
             p,
             met_grid,
@@ -642,7 +427,7 @@ if _HAS_NUMBA:
             max_mag,
             err,
             N_synth,
-        )[0]
+        ).synth
 
     @njit(cache=True)
     def _lnl_one(

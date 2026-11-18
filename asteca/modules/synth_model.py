@@ -7,7 +7,7 @@ from . import HAS_NUMBA as _HAS_NUMBA
 from . import njit
 
 if TYPE_CHECKING:
-    from .model_data import ModelContext
+    from .model_data import ModelEngine
 
 # The 'coeffs' values are the main sequence values taken from:
 # https://www.cosmos.esa.int/web/gaia/edr3-extinction-law
@@ -88,7 +88,7 @@ def main(N_repeat: int = 25_000):
     synthcl.calibrate(my_cluster)
 
     rng = np.random.default_rng(12345)
-    met_age_dict = synthcl._ctx.met_age_dict
+    met_age_dict = synthcl._engine.met_age_dict
     met_min, met_max = met_age_dict["met"][0], met_age_dict["met"][-1]
     loga_min, loga_max = met_age_dict["loga"][0], met_age_dict["loga"][-1]
 
@@ -114,7 +114,7 @@ def main(N_repeat: int = 25_000):
 
 
 def get_model(
-    ctx: "ModelContext",
+    ctx: "ModelEngine",
     p: np.ndarray,
     dr_model: str,
     calib: tuple[float, list[np.ndarray], int],
@@ -132,10 +132,10 @@ def get_model(
     ``synth_batch.ModelEngine``), with identical results.
 
     :param ctx: Data that defines the synthetic clusters
-    :type ctx: ModelContext
+    :type ctx: ModelEngine
     :param p: Values of the fundamental parameters, in the order of ``FULL_PARAMS``:
-        a row of the array returned by :py:meth:`ModelContext.params_array
-        <model_data.ModelContext.params_array>` (the values are not validated here)
+        a row of the array returned by :py:meth:`ModelEngine.params_array
+        <model_data.ModelEngine.params_array>` (the values are not validated here)
     :type p: np.ndarray
     :param dr_model: Differential reddening model, it selects the fractions of the
         differential reddening applied to each star (see
@@ -373,7 +373,7 @@ def empty_message(status: int, p: np.ndarray) -> str:
 
 
 def output_isochrone(
-    ctx: "ModelContext",
+    ctx: "ModelEngine",
     dr_frac: np.ndarray,
     isoch_flag: bool,
     isoch_dr_frac: float,
@@ -389,7 +389,7 @@ def output_isochrone(
     ``isoch_dr_frac > 0``; an empty array if ``isoch_flag=False``
 
     :param ctx: Data that defines the synthetic clusters
-    :type ctx: ModelContext
+    :type ctx: ModelEngine
     :param dr_frac: Fractions of the differential reddening of the selected model
     :type dr_frac: np.ndarray
     :param isoch_flag: Return the isochrone
@@ -431,7 +431,7 @@ def output_isochrone(
 
 def fill_mass_info(
     mass_info: dict,
-    ctx: "ModelContext",
+    ctx: "ModelEngine",
     p: np.ndarray,
     st_mass: np.ndarray,
     isoch_moved: np.ndarray,
@@ -446,7 +446,7 @@ def fill_mass_info(
     :param mass_info: Dictionary to fill
     :type mass_info: dict
     :param ctx: Data that defines the synthetic clusters
-    :type ctx: ModelContext
+    :type ctx: ModelEngine
     :param p: Values of the fundamental parameters, see :py:func:`get_model`
     :type p: np.ndarray
     :param st_mass: Sampled IMF masses used

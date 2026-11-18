@@ -434,7 +434,7 @@ def randVals(
 
 
 # Lower limits of the parameters that can not be negative (Rv must also be > 0,
-# see ModelContext.params_array() in model_data)
+# see ModelEngine.params_array() in model_data)
 PARAMS_MIN = {"alpha": 0.0, "beta": 0.0, "Av": 0.0, "DR": 0.0, "dm": 0.0, "Rv": 0.0}
 
 

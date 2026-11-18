@@ -1,14 +1,10 @@
 import warnings
-from typing import TYPE_CHECKING
 
 import numpy as np
 
 from .cluster import Cluster
 from .isochrones import Isochrones
-from .modules.model_data import ModelContext, ObservedData
-
-if TYPE_CHECKING:
-    from .modules.synth_batch import ModelEngine
+from .modules.model_data import ModelEngine, ObservedData
 
 
 class Synthetic:
@@ -212,9 +208,9 @@ class Synthetic:
                 self.isochs.color2_effl,
             )
 
-        # Data used to generate the synthetic clusters (by _get_model() and by the
-        # batch functions in synth_batch)
-        self._ctx = ModelContext(
+        # Data that defines the synthetic clusters, and the single entry point used to
+        # generate them (one or many) and to evaluate their likelihood (Sampler)
+        self._engine = ModelEngine(
             met_age_dict=self.isochs.met_age_dict,
             met_tol=met_tol,
             age_tol=age_tol,
@@ -239,7 +235,7 @@ class Synthetic:
         # Check that the ranges are respected
         for par in ("met", "loga"):
             if par in def_params:
-                grid = self._ctx.met_age_dict[par]
+                grid = self._engine.met_age_dict[par]
                 pmin, pmax = min(grid), max(grid)
                 if self.def_params[par] < pmin or self.def_params[par] > pmax:
                     warnings.warn(
@@ -391,7 +387,7 @@ class Synthetic:
                 cluster.e_mag,
                 cluster.e_color,
                 cluster.e_color2,
-                self._ctx.rand_floats["norm"][1],
+                self._engine.rand_floats["norm"][1],
             ),
             lkl=lpriv.Tremmel(cluster.mag, colors),
         )
@@ -478,8 +474,8 @@ class Synthetic:
         :rtype: np.ndarray | list[np.ndarray]
         """
         if batch:
-            return self._model_engine().generate(
-                self._ctx.params_array(params),
+            return self._engine.generate(
+                self._engine.params_array(params),
                 self.DR_distribution,
                 self._calib_values(N_stars),
             )
@@ -565,10 +561,10 @@ class Synthetic:
 
         # # Turn-off point of the isochrone up to the maximum mass of the synthetic
         # # cluster, as in cluster_properties()
-        # max_mass = synth_clust[self._ctx.m_ini_idx].max()
-        # if (isochrone[self._ctx.m_ini_idx] < max_mass).sum() < 2:
+        # max_mass = synth_clust[self._engine.m_ini_idx].max()
+        # if (isochrone[self._engine.m_ini_idx] < max_mass).sum() < 2:
         #     return D, D_std
-        # to = ssf.turn_off_points([isochrone[[0, 1, self._ctx.m_ini_idx]]], [max_mass], 0)
+        # to = ssf.turn_off_points([isochrone[[0, 1, self._engine.m_ini_idx]]], [max_mass], 0)
         # to_col, to_mag = to["to_col"][0], to["to_mag"][0]
 
         # lpriv.cmd_overlap_turnoff_box(
@@ -779,7 +775,7 @@ class Synthetic:
         if turn_off is None:
             f_to = float(
                 np.percentile(
-                    self._ctx.rand_floats["dr_frac"][self.DR_distribution],
+                    self._engine.rand_floats["dr_frac"][self.DR_distribution],
                     TO_DR_PERCENTILE,
                 )
             )
@@ -789,7 +785,7 @@ class Synthetic:
         models, synthcls, isoch_tracks, max_masses = [], [], [], []
         mass_infos = []
         for smodel in scp.sample_params(
-            self.rng, model, model_std, self._ctx.met_age_dict, N_models
+            self.rng, model, model_std, self._engine.met_age_dict, N_models
         ):
             mass_info = {}
             isoch_arr, synth_arr = self._get_model(
@@ -802,8 +798,8 @@ class Synthetic:
             mass_infos.append(mass_info)
             # Magnitude, color and initial mass of the isochrone, and maximum mass of
             # the synthetic cluster, used to locate the turn-off point
-            isoch_tracks.append(isoch_arr[[0, color_idx + 1, self._ctx.m_ini_idx]])
-            max_masses.append(synth_arr[self._ctx.m_ini_idx].max())
+            isoch_tracks.append(isoch_arr[[0, color_idx + 1, self._engine.m_ini_idx]])
+            max_masses.append(synth_arr[self._engine.m_ini_idx].max())
 
         N_models_non_empty = len(models)
         if N_models_non_empty == 0:
@@ -833,13 +829,13 @@ class Synthetic:
             obs.e_mag,
             obs.colors,
             obs.e_colors,
-            self._ctx.m_ini_idx,
+            self._engine.m_ini_idx,
             synthcls,
             turn_off_points,
             isochs_young,
             extrinsic_pars,
             self.ext_law,
-            self._ctx.ext_coefs,
+            self._engine.ext_coefs,
             self.rng,
         )
         # Add ID column if it exists
@@ -892,7 +888,7 @@ class Synthetic:
             models,
             synthcls,
             mass_infos,
-            self._ctx.m_ini_idx,
+            self._engine.m_ini_idx,
             self.isochs.z_to_FeH,
             radec_c,
             rho_amb,
@@ -965,8 +961,8 @@ class Synthetic:
             return np.array(isochrone)[[0, color_idx + 1]]
 
         # Extract magnitude and mass from the isochrone and the full synthetic cluster
-        isoch_mag, isoch_mass = isochrone[0], isochrone[self._ctx.m_ini_idx]
-        mag_full, mass_full = full_arr[0], full_arr[self._ctx.m_ini_idx]
+        isoch_mag, isoch_mass = isochrone[0], isochrone[self._engine.m_ini_idx]
+        mag_full, mass_full = full_arr[0], full_arr[self._engine.m_ini_idx]
         full_mag_min = mag_full.min()
 
         # Select the max mass for the isochrone that results in a minimum difference
@@ -1063,13 +1059,13 @@ class Synthetic:
         :return: Isochrone (empty if ``isoch_flag=False``) and synthetic cluster
         :rtype: tuple[np.ndarray, np.ndarray]
         """
-        P = self._ctx.params_array(params)
+        P = self._engine.params_array(params)
         if P.shape[0] != 1:
             raise ValueError(
                 "A single value is required for each parameter (use 'batch=True' to "
                 + "generate several synthetic clusters)"
             )
-        return self._model_engine().get_model(
+        return self._engine.get_model(
             P[0],
             self.DR_distribution,
             self._calib_values(N_stars),
@@ -1078,22 +1074,3 @@ class Synthetic:
             isoch_dr_frac=isoch_dr_frac,
             mass_info=mass_info,
         )
-
-    def _model_engine(
-        self, parallel: bool = False, n_threads: int | None = None
-    ) -> "ModelEngine":
-        """Engine that generates batches of synthetic clusters (and evaluates their
-        likelihood) with the data of this object, see
-        :py:class:`synth_batch.ModelEngine`
-
-        :param parallel: Evaluate the log-likelihoods in parallel threads
-        :type parallel: bool
-        :param n_threads: Number of threads used if ``parallel=True``
-        :type n_threads: int | None
-
-        :return: Engine
-        :rtype: ModelEngine
-        """
-        from .modules.synth_batch import ModelEngine
-
-        return ModelEngine(self._ctx, parallel, n_threads)

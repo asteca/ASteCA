@@ -105,10 +105,11 @@ class Sampler:
 
         self.names = list(priors)
         self.bounds = np.array([priors[k] for k in self.names], dtype=float)
-        # Generates the synthetic clusters and evaluates their log-likelihoods. It
-        # also validates 'n_threads' (only used with parallel=True and numba
-        # installed), so that an invalid value is reported before the run starts
-        self._engine = synthcl._model_engine(parallel, n_threads)
+        # Generates the synthetic clusters and evaluates their log-likelihoods.
+        # 'n_threads' (only used with parallel=True and numba installed) is validated
+        # here, so that an invalid value is reported before the run starts
+        self._engine = synthcl._engine
+        self._engine.check_threads(parallel, n_threads)
         self._check_args(temperature)
 
         # A legacy RandomState is used so that the results match those of pocoMC
@@ -166,7 +167,7 @@ class Sampler:
         # ranges, negative values, Rv > 0). As the priors are uniform, this makes
         # all the values that the sampler can propose valid
         try:
-            self._engine.ctx.params_array(dict(zip(self.names, self.bounds)))
+            self._engine.params_array(dict(zip(self.names, self.bounds)))
         except ValueError as err:
             raise ValueError(f"Invalid 'priors': {err}") from None
 
@@ -190,10 +191,12 @@ class Sampler:
         ``(n_particles, n_dim)``"""
         # The differential reddening model can not change within a run, see run()
         lnl = self._engine.log_lkl(
-            self._engine.ctx.params_array(dict(zip(self.names, params_arr.T))),
+            self._engine.params_array(dict(zip(self.names, params_arr.T))),
             self.synthcl.DR_distribution,
             self._obs,
             self.temperature,
+            self.parallel,
+            self.n_threads,
         )
         lnl = np.asarray(lnl, dtype=float)
         lnl[~np.isfinite(lnl)] = -np.inf
