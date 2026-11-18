@@ -106,6 +106,10 @@ class Sampler:
         self.names = list(priors)
         self.bounds = np.array([priors[k] for k in self.names], dtype=float)
         self._check_args(temperature)
+        # Generates the synthetic clusters and evaluates their log-likelihoods. It
+        # also validates 'n_threads' (only used with parallel=True and numba
+        # installed), so that an invalid value is reported before the run starts
+        self._engine = synthcl._model_engine(parallel, n_threads)
 
         # A legacy RandomState is used so that the results match those of pocoMC
         # (with precondition=False) for the same seed
@@ -145,8 +149,12 @@ class Sampler:
             print(mssg)
 
     def _check_args(self, temperature: float | str) -> None:
-        """Validate the input arguments, and set the ``temperature`` attribute"""
+        """Validate the input arguments, and set the ``temperature`` and ``_obs``
+        attributes"""
         obs = self.synthcl._check_calibrated()
+        # Observed cluster used by the likelihood. A later call to
+        # 'synthcl.calibrate()' does not affect this object
+        self._obs = obs
 
         if len(self.names) == 0:
             raise ValueError("At least one parameter must be included in 'priors'")
@@ -192,29 +200,15 @@ class Sampler:
         if self.n_active < 2 or self.n_effective < self.n_active:
             raise ValueError("Must have 'n_effective' >= 'n_active' >= 2")
 
-        # Same check done by synth_batch.log_lkl_batch(), done here so that an invalid
-        # value is reported before the run starts. As there, 'n_threads' is only used
-        # (and checked) with parallel=True and numba installed
-        from .modules import synth_batch as sb
-
-        if (
-            self.parallel
-            and self.n_threads is not None
-            and sb.available(self.synthcl.ext_law)
-        ):
-            sb.check_n_threads(self.n_threads)
-
     def _log_like(self, params_arr: np.ndarray) -> np.ndarray:
         """Vectorized log-likelihood, ``params_arr`` has shape
         ``(n_particles, n_dim)``"""
-        from .modules import synth_batch as sb
-
-        lnl = sb.log_lkl_batch(
-            self.synthcl,
-            dict(zip(self.names, params_arr.T)),
+        # The differential reddening model can not change within a run, see run()
+        lnl = self._engine.log_lkl(
+            self._engine.ctx.params_array(dict(zip(self.names, params_arr.T))),
+            self.synthcl.DR_distribution,
+            self._obs,
             self.temperature,
-            self.parallel,
-            self.n_threads,
         )
         lnl = np.asarray(lnl, dtype=float)
         lnl[~np.isfinite(lnl)] = -np.inf
@@ -222,8 +216,7 @@ class Sampler:
         # if no synthetic star falls in any bin of the observed Hess diagram, or
         # if the synthetic cluster is empty ('d = 10'). The small tolerance absorbs
         # the rounding of the conversion
-        lkl_range = self.synthcl._check_calibrated().lkl.lkl_range
-        dist = -lnl * self.temperature / lkl_range
+        dist = self._obs.lkl.distance(lnl, self.temperature)
         self._n_lnl += lnl.size
         self._n_lnl_no_overlap += int(np.sum(dist >= 1.0 - 1e-9))
 
@@ -282,11 +275,7 @@ class Sampler:
         self.logz = float(self._smc.logz)
         # Normalized distance of the best solution, from 0 (exact match) to 1 (no
         # overlap), see likelihood_priv.Tremmel.log_lkl()
-        self.best_dist = float(
-            -self.best_lnl
-            * self.temperature
-            / self.synthcl._check_calibrated().lkl.lkl_range
-        )
+        self.best_dist = float(self._obs.lkl.distance(self.best_lnl, self.temperature))
 
         self._vp(f"Iterations     : {self.n_iter}", 1)
         self._vp(f"Likelihood calls: {self.n_calls}", 1)

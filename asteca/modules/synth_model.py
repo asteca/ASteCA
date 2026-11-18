@@ -1,3 +1,4 @@
+from bisect import bisect_left
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -114,7 +115,7 @@ def main(N_repeat: int = 25_000):
 
 def get_model(
     ctx: "ModelContext",
-    params: dict | None,
+    p: np.ndarray,
     dr_model: str,
     calib: tuple[float, list[np.ndarray], int],
     show_errors: bool = False,
@@ -124,15 +125,15 @@ def get_model(
 ) -> tuple[np.ndarray, np.ndarray]:
     """Generate a synthetic cluster.
 
-    The synthetic cluster is generated according to the parameters given in
-    the ``params`` dictionary and the already calibrated
-    :py:class:`Synthetic` object.
+    The synthetic cluster is generated according to the parameters in ``p`` and the
+    data of the :py:class:`Synthetic` object.
 
     :param ctx: Data that defines the synthetic clusters
     :type ctx: ModelContext
-    :param params: Dictionary containing the values for the fundamental parameters.
-        If ``None``, the default values are used
-    :type params: dict | None
+    :param p: Values of the fundamental parameters, in the order of ``FULL_PARAMS``:
+        a row of the array returned by :py:meth:`ModelContext.params_array
+        <model_data.ModelContext.params_array>` (the values are not validated here)
+    :type p: np.ndarray
     :param dr_model: Differential reddening model, it selects the fractions of the
         differential reddening applied to each star (see
         :py:func:`synth_cluster_priv.dr_fractions`)
@@ -172,20 +173,15 @@ def get_model(
     :rtype: tuple[np.ndarray, np.ndarray]
     """
 
-    met_age_dict, def_params = ctx.met_age_dict, ctx.def_params
+    met_age_dict = ctx.met_age_dict
     m_ini_idx, theor_tracks = ctx.m_ini_idx, ctx.theor_tracks
     ext_law, ext_coefs, rand_floats = ctx.ext_law, ctx.ext_coefs, ctx.rand_floats
     dr_frac = rand_floats["dr_frac"][dr_model]
     max_mag_syn, err_dist_synth, N_synth_stars = calib
-    if params is None:
-        params = {}
 
-    # Return proper values for fixed parameters and parameters required
-    # for the (z, log(age)) isochrone averaging.
-    met, loga, alpha, beta, av, dr, rv, dm, ml, mh, al, ah = properModel(
-        met_age_dict, def_params, params, ctx.met_tol, ctx.age_tol
-    )
-
+    met, loga, alpha, beta, av, dr, rv, dm = p.tolist()
+    # Indexes of the (z, log(age)) box used for the isochrone averaging
+    ml, mh, al, ah = grid_box(met_age_dict, met, loga)
     # If (z, a) are both fixed, use the single processed isochrone
     if ml == al == mh == ah == 0:
         # The np.array() is important to avoid overwriting 'theor_tracks'
@@ -424,94 +420,35 @@ def per_star_pool_next(
     return min(N_new, N_max)
 
 
-def properModel(
-    met_age_dict: dict,
-    def_params: dict,
-    fit_params: dict,
-    met_tol: float,
-    age_tol: float,
-) -> tuple[float, float, float, float, float, float, float, float, int, int, int, int]:
-    """Define the 'proper' model with values for (z, a) taken from its grid,
-    and filled values for those parameters that are fixed.
+def grid_box(met_age_dict: dict, met: float, loga: float) -> tuple[int, int, int, int]:
+    """Indexes of the (z, a) values in the grid that define the box that encloses
+    the ``(met, loga)`` values (all ``0`` for a grid with a single value).
 
     :param met_age_dict: Dictionary of metallicity and age values.
     :type met_age_dict: dict
-    :param def_params: Dictionary of default parameters.
-    :type def_params: dict
-    :param fit_params: Dictionary of fitted parameters.
-    :type fit_params: dict
-    :param met_tol: Tolerance for metallicity values matching
-    :type met_tol: float
-    :param age_tol: Tolerance for log(age) values matching
-    :type age_tol: float
+    :param met: Metallicity
+    :type met: float
+    :param loga: Logarithmic age
+    :type loga: float
 
-    :raises ValueError: If (z, a) are outside of the isochrones' ranges, if any of
-     ``alpha, beta, Av, DR, dm`` is negative, or if ``Rv <= 0``.
-
-    :returns: A tuple containing all fundamental parameters, and the indexes of the
-     (z, a) values in the grid that define the box that enclose the proper (z, a)
-     values.
-    :rtype: tuple[float, float, float, float, float, float, float, float, int, int, int, int]
-
+    :returns: Indexes ``(ml, mh, al, ah)``
+    :rtype: tuple[int, int, int, int]
     """
-    # Combine `fit_params` with default parameter values in `def_params`, updating
-    # duplicated values with those in `fit_params`
-    fit_params = def_params | fit_params
-
-    def _check_param(name, tol):
-        if len(met_age_dict[name]) == 1:
-            if abs(fit_params[name] - met_age_dict[name][0]) > tol:
-                raise ValueError(
-                    f"Parameter {name}={fit_params[name]:.5f} != fixed value"
-                    + f" {met_age_dict[name][0]}"
-                )
-        elif not (met_age_dict[name][0] <= fit_params[name] <= met_age_dict[name][-1]):
-            raise ValueError(
-                f"Parameter {name}={fit_params[name]:.5f} outside isochrone"
-                + f" range [{met_age_dict[name][0]}, {met_age_dict[name][-1]}]"
-            )
-
-    _check_param("met", met_tol)
-    _check_param("loga", age_tol)
-
-    # Parameters that can not be negative (Rv can not be zero either)
-    for name in ("alpha", "beta", "Av", "DR", "dm"):
-        if fit_params[name] < 0.0:
-            raise ValueError(f"Parameter {name}={fit_params[name]:.5f} must be >= 0")
-    if fit_params["Rv"] <= 0.0:
-        raise ValueError(f"Parameter Rv={fit_params['Rv']:.5f} must be > 0")
-
+    # bisect_left() returns the same index as np.searchsorted() (side="left"), and
+    # is much faster on grids this small
+    met_grid, age_grid = met_age_dict["met"], met_age_dict["loga"]
     ml = mh = 0
-    if len(met_age_dict["met"]) > 1:
-        mh = min(
-            len(met_age_dict["met"]) - 1,
-            np.searchsorted(met_age_dict["met"], fit_params["met"]),
-        )
+    if len(met_grid) > 1:
+        mh = min(len(met_grid) - 1, bisect_left(met_grid, met))
         # prevent negative index
         ml = max(0, mh - 1)
 
     al = ah = 0
-    if len(met_age_dict["loga"]) > 1:
-        ah = min(
-            len(met_age_dict["loga"]) - 1,
-            np.searchsorted(met_age_dict["loga"], fit_params["loga"]),
-        )
+    if len(age_grid) > 1:
+        ah = min(len(age_grid) - 1, bisect_left(age_grid, loga))
         al = max(0, ah - 1)
 
-    return (
-        float(fit_params["met"]),
-        float(fit_params["loga"]),
-        float(fit_params["alpha"]),
-        float(fit_params["beta"]),
-        float(fit_params["Av"]),
-        float(fit_params["DR"]),
-        float(fit_params["Rv"]),
-        float(fit_params["dm"]),
-        int(ml),
-        int(mh),
-        int(al),
-        int(ah),
-    )
+    return int(ml), int(mh), int(al), int(ah)
 
 
 def zaWAverage(

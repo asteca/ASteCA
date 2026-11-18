@@ -1,10 +1,14 @@
 import warnings
+from typing import TYPE_CHECKING
 
 import numpy as np
 
 from .cluster import Cluster
 from .isochrones import Isochrones
 from .modules.model_data import ModelContext, ObservedData
+
+if TYPE_CHECKING:
+    from .modules.synth_batch import ModelEngine
 
 
 class Synthetic:
@@ -442,9 +446,11 @@ class Synthetic:
         likelihood or distance and a sampler of the user's choosing (see
         :ref:`own_lkl_sampler`).
 
-        A ``ValueError`` is raised if ``met`` or ``loga`` are outside of the ranges of
-        the loaded isochrones, if any of ``alpha, beta, Av, DR, dm`` is negative, or if
-        ``Rv<=0`` (for any of the models if ``batch=True``).
+        A ``ValueError`` is raised if a parameter is not recognized, if ``met`` or
+        ``loga`` are outside of the ranges of the loaded isochrones, if any of
+        ``alpha, beta, Av, DR, dm`` is negative, if ``Rv<=0``, or if any value is
+        ``nan`` (for any of the models if ``batch=True``). The same values are
+        accepted with ``batch=True`` and ``batch=False``.
 
         :param params: Dictionary containing the values for the fundamental parameters,
             a single value per parameter, or an array of values (one per model) if
@@ -472,23 +478,11 @@ class Synthetic:
         :rtype: np.ndarray | list[np.ndarray]
         """
         if batch:
-            from .modules import synth_batch as sb
-
-            P = sb.batch_params(self._ctx, params)
-            if not sb.available(self._ctx.ext_law):
-                # Same as generate() with batch=False for each model
-                return [
-                    self._get_model(dict(zip(sb.FULL_PARAMS, p)), N_stars)[1] for p in P
-                ]
-
-            out = sb._generate_batch(
-                *sb.batch_args(
-                    self._ctx, self.DR_distribution, self._calib_values(N_stars), P
-                )
+            return self._model_engine().generate(
+                self._ctx.params_array(params),
+                self.DR_distribution,
+                self._calib_values(N_stars),
             )
-            # An empty synthetic cluster is returned as an empty 1D array, as with
-            # batch=False
-            return [a if a.shape[1] else np.array([]) for a in out]
 
         _, synth_arr = self._get_model(params, N_stars, show_errors=show_errors)
 
@@ -1063,14 +1057,23 @@ class Synthetic:
             :py:func:`synth_model.get_model`
         :type mass_info: dict | None
 
+        :raises ValueError: If the parameters are not valid, or if more than one value
+            is given for a parameter
+
         :return: Isochrone (empty if ``isoch_flag=False``) and synthetic cluster
         :rtype: tuple[np.ndarray, np.ndarray]
         """
         from .modules import synth_model as sm
 
+        P = self._ctx.params_array(params)
+        if P.shape[0] != 1:
+            raise ValueError(
+                "A single value is required for each parameter (use 'batch=True' to "
+                + "generate several synthetic clusters)"
+            )
         return sm.get_model(
             self._ctx,
-            params,
+            P[0],
             self.DR_distribution,
             self._calib_values(N_stars),
             show_errors=show_errors,
@@ -1078,3 +1081,22 @@ class Synthetic:
             isoch_dr_frac=isoch_dr_frac,
             mass_info=mass_info,
         )
+
+    def _model_engine(
+        self, parallel: bool = False, n_threads: int | None = None
+    ) -> "ModelEngine":
+        """Engine that generates batches of synthetic clusters (and evaluates their
+        likelihood) with the data of this object, see
+        :py:class:`synth_batch.ModelEngine`
+
+        :param parallel: Evaluate the log-likelihoods in parallel threads
+        :type parallel: bool
+        :param n_threads: Number of threads used if ``parallel=True``
+        :type n_threads: int | None
+
+        :return: Engine
+        :rtype: ModelEngine
+        """
+        from .modules.synth_batch import ModelEngine
+
+        return ModelEngine(self._ctx, parallel, n_threads)

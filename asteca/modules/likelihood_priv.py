@@ -749,3 +749,20 @@ class Tremmel:
                 lkl = self.max_lkl - d * self.lkl_range
 
         return (lkl - self.max_lkl) / temperature
+
+    def distance(
+        self, lnl: float | np.ndarray, temperature: float = 1.0
+    ) -> float | np.ndarray:
+        """Normalized distance of log-likelihood value(s) returned by
+        :py:meth:`log_lkl` at the same ``temperature``: ``0`` for an exact match,
+        ``>= 1`` when no synthetic star falls in any of the observed bins.
+
+        :param lnl: Log-likelihood value(s)
+        :type lnl: float | np.ndarray
+        :param temperature: Likelihood temperature used to obtain ``lnl``
+        :type temperature: float
+
+        :return: Distance value(s)
+        :rtype: float | np.ndarray
+        """
+        return -lnl * temperature / self.lkl_range

@@ -10,23 +10,22 @@ one returned by :py:meth:`asteca.Synthetic.generate`. This removes the Python ov
 of each call (which dominates for clusters with few stars), and the batch of
 log-likelihoods can be evaluated in parallel threads.
 
-The compiled functions are only available with numba; :py:func:`log_lkl_batch` and
-:py:meth:`asteca.Synthetic.generate` (with ``batch=True``) fall back to a loop over
-the models otherwise.
+:py:class:`ModelEngine` is the single entry point used by
+:py:meth:`asteca.Synthetic.generate` (with ``batch=True``) and by
+:py:class:`asteca.Sampler`: it uses the compiled functions if they are available
+(numba installed, see :py:func:`available`), and falls back to a loop over
+:py:func:`synth_model.get_model` otherwise.
 """
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ..synthetic import Synthetic
-    from .model_data import ModelContext
+    from .model_data import ModelContext, ObservedData
 
 import numpy as np
 
 from . import HAS_NUMBA as _HAS_NUMBA
-
-# Order of the full parameter vector used by the compiled functions
-FULL_PARAMS = ("met", "loga", "alpha", "beta", "Av", "DR", "Rv", "dm")
+from .synth_model import get_model
 
 
 def available(ext_law: str) -> bool:
@@ -121,102 +120,6 @@ def batch_data(ctx: "ModelContext") -> dict:
     }
 
 
-def full_params(
-    params: dict,
-    def_params: dict,
-    met_age_dict: dict,
-    met_tol: float,
-    age_tol: float,
-) -> np.ndarray:
-    """Array with the values of all the parameters for each model, in the order of
-    ``FULL_PARAMS``, with the same defaults and checks as
-    :py:func:`synth_model.properModel`.
-
-    :param params: Dictionary with an array (or a single value, shared by all the
-        models) for each parameter
-    :type params: dict
-    :param def_params: Dictionary of default parameters
-    :type def_params: dict
-    :param met_age_dict: Dictionary of metallicity and age values
-    :type met_age_dict: dict
-    :param met_tol: Tolerance for metallicity values matching
-    :type met_tol: float
-    :param age_tol: Tolerance for log(age) values matching
-    :type age_tol: float
-
-    :raises ValueError: If a parameter is not recognized, if the arrays have
-        different lengths, if (z, a) are outside of the isochrones' ranges, if any of
-        ``alpha, beta, Av, DR, dm`` is negative, or if ``Rv <= 0``
-
-    :return: Array of shape ``(N_models, 8)``
-    :rtype: np.ndarray
-    """
-    unknown = set(params) - set(FULL_PARAMS)
-    if unknown:
-        raise ValueError(f"Parameter(s) {sorted(unknown)} not recognized")
-
-    values = {k: np.atleast_1d(np.asarray(v, dtype=float)) for k, v in params.items()}
-    for k, v in values.items():
-        if v.ndim != 1:
-            raise ValueError(f"Parameter {k} must be a single value or a 1D array")
-    lengths = {v.size for v in values.values() if v.size != 1}
-    if len(lengths) > 1:
-        raise ValueError("All the parameter arrays must have the same length")
-    N = lengths.pop() if lengths else 1
-
-    P = np.empty((N, len(FULL_PARAMS)))
-    for i, k in enumerate(FULL_PARAMS):
-        P[:, i] = values[k] if k in values else def_params[k]
-
-    for i, (k, tol) in enumerate((("met", met_tol), ("loga", age_tol))):
-        grid, v = met_age_dict[k], P[:, i]
-        if len(grid) == 1:
-            bad = np.abs(v - grid[0]) > tol
-            if bad.any():
-                raise ValueError(
-                    f"Parameter {k}={v[bad][0]:.5f} != fixed value {grid[0]}"
-                )
-        else:
-            bad = (v < grid[0]) | (v > grid[-1])
-            if bad.any():
-                raise ValueError(
-                    f"Parameter {k}={v[bad][0]:.5f} outside isochrone"
-                    + f" range [{grid[0]}, {grid[-1]}]"
-                )
-    for i, k in enumerate(FULL_PARAMS):
-        if k in ("met", "loga", "Rv"):
-            continue
-        bad = P[:, i] < 0.0
-        if bad.any():
-            raise ValueError(f"Parameter {k}={P[:, i][bad][0]:.5f} must be >= 0")
-    bad = P[:, 6] <= 0.0
-    if bad.any():
-        raise ValueError(f"Parameter Rv={P[:, 6][bad][0]:.5f} must be > 0")
-
-    return P
-
-
-def batch_params(ctx: "ModelContext", params: dict | None) -> np.ndarray:
-    """Full parameter array for the batch functions, see :py:func:`full_params`
-
-    :param ctx: Data that defines the synthetic clusters
-    :type ctx: ModelContext
-    :param params: Dictionary with an array (or a single value, shared by all the
-        models) for each parameter. If ``None``, the default parameters are used
-    :type params: dict | None
-
-    :return: Array of shape ``(N_models, 8)``
-    :rtype: np.ndarray
-    """
-    return full_params(
-        {} if params is None else params,
-        ctx.def_params,
-        ctx.met_age_dict,
-        ctx.met_tol,
-        ctx.age_tol,
-    )
-
-
 def batch_args(
     ctx: "ModelContext",
     dr_model: str,
@@ -225,7 +128,7 @@ def batch_args(
 ) -> tuple:
     """Arguments of the compiled batch functions :py:func:`_generate_batch`,
     :py:func:`_lnl_batch_serial` and :py:func:`_lnl_batch_parallel` (the
-    likelihood arguments are added by :py:func:`log_lkl_batch`).
+    likelihood arguments are added by :py:meth:`ModelEngine.log_lkl`).
 
     :param ctx: Data that defines the synthetic clusters
     :type ctx: ModelContext
@@ -234,7 +137,8 @@ def batch_args(
     :param calib: Maximum magnitude, error distribution and number of stars of the
         synthetic clusters, as given by ``Synthetic._calib_values()``
     :type calib: tuple[float, list[np.ndarray], int]
-    :param P: Array of parameters, see :py:func:`full_params`
+    :param P: Array of parameters, see :py:meth:`ModelContext.params_array
+        <model_data.ModelContext.params_array>`
     :type P: np.ndarray
 
     :return: Tuple of arguments
@@ -268,99 +172,137 @@ def batch_args(
     )
 
 
-def log_lkl_batch(  # noqa: DOC502, RUF100
-    synthcl: "Synthetic",
-    params: dict | None,
-    temperature: float,
-    parallel: bool,
-    n_threads: int | None,
-) -> np.ndarray:
-    """Log-likelihoods of a batch of synthetic clusters, used by
-    :py:class:`asteca.Sampler`.
+class ModelEngine:
+    """Generates batches of synthetic clusters and evaluates their log-likelihoods,
+    with the compiled functions of this module if they are available (see
+    :py:func:`available`), else with a loop over :py:func:`synth_model.get_model`.
+    The results are identical either way.
 
-    Same as ``synthcl._obs.lkl.log_lkl(synthcl.generate(p), temperature)`` for each
-    set of parameters ``p`` in ``params`` (defined as in
-    :py:meth:`asteca.Synthetic.generate` with ``batch=True``), with identical
-    results. With numba, the compiled functions in this module generate each
-    synthetic cluster and evaluate its likelihood in the same call (the synthetic
-    clusters never go back to Python, which is where the gain comes from), optionally
-    distributing the models among ``n_threads`` threads if ``parallel=True`` (if
-    ``None``, numba's current setting is used). Without numba, ``parallel`` and
-    ``n_threads`` are ignored. The ``temperature`` is assumed positive (it is
-    validated by :py:class:`asteca.Sampler`).
-
-    :param synthcl: :py:class:`asteca.Synthetic` object
-    :type synthcl: Synthetic
-    :param params: Dictionary with an array of values (or a single value) for each
-        parameter, as in :py:meth:`asteca.Synthetic.generate` with ``batch=True``. If
-        ``None``, the default parameters are used
-    :type params: dict | None
-    :param temperature: Likelihood temperature, assumed positive (validated by
-        :py:class:`asteca.Sampler`)
-    :type temperature: float
-    :param parallel: Evaluate the models in parallel threads (requires numba)
+    :param ctx: Data that defines the synthetic clusters
+    :type ctx: ModelContext
+    :param parallel: Evaluate the log-likelihoods in parallel threads (only used if
+        the compiled functions are available)
     :type parallel: bool
     :param n_threads: Number of threads used if ``parallel=True``. If ``None``,
         numba's current setting is used
     :type n_threads: int | None
 
-    :raises ValueError: In the same cases as :py:meth:`asteca.Synthetic.generate` for
-        any of the models, if :py:meth:`asteca.Synthetic.calibrate` was not called, or
-        if ``n_threads`` is used and it is not an integer between ``1`` and
-        ``NUMBA_NUM_THREADS``
-
-    :return: Array with the log-likelihood of each model, ``0`` is the best value
-    :rtype: np.ndarray
+    :raises ValueError: If the threads are used and ``n_threads`` is not an integer
+        between ``1`` and ``NUMBA_NUM_THREADS``
     """
-    obs = synthcl._check_calibrated()
-    ctx = synthcl._ctx
 
-    lk = obs.lkl
-    P = batch_params(ctx, params)
-    if not available(ctx.ext_law):
-        return np.array(
-            [
-                lk.log_lkl(
-                    synthcl._get_model(dict(zip(FULL_PARAMS, p)))[1],
-                    temperature,
-                )
-                for p in P
-            ]
+    def __init__(  # noqa: DOC502, RUF100
+        self,
+        ctx: "ModelContext",
+        parallel: bool = False,
+        n_threads: int | None = None,
+    ) -> None:
+        self.ctx = ctx
+        self.compiled = available(ctx.ext_law)
+        self.parallel = parallel
+        self.n_threads = n_threads
+        # 'n_threads' is only validated if it is used
+        if self.compiled and parallel and n_threads is not None:
+            check_n_threads(n_threads)
+
+    def generate(
+        self,
+        P: np.ndarray,
+        dr_model: str,
+        calib: tuple[float, list[np.ndarray], int],
+    ) -> list[np.ndarray]:
+        """Synthetic clusters of a batch of models, identical to those generated
+        one at a time by :py:func:`synth_model.get_model`
+
+        :param P: Array of parameters, see :py:meth:`ModelContext.params_array
+            <model_data.ModelContext.params_array>`
+        :type P: np.ndarray
+        :param dr_model: Differential reddening model
+        :type dr_model: str
+        :param calib: Maximum magnitude, error distribution and number of stars of
+            the synthetic clusters, as given by ``Synthetic._calib_values()``
+        :type calib: tuple[float, list[np.ndarray], int]
+
+        :return: One synthetic cluster per model (an empty 1D array if the cluster
+            is empty)
+        :rtype: list[np.ndarray]
+        """
+        if not self.compiled:
+            return [get_model(self.ctx, p, dr_model, calib)[1] for p in P]
+        out = _generate_batch(*batch_args(self.ctx, dr_model, calib, P))
+        # An empty synthetic cluster is returned as an empty 1D array, as with
+        # get_model()
+        return [a if a.shape[1] else np.array([]) for a in out]
+
+    def log_lkl(
+        self,
+        P: np.ndarray,
+        dr_model: str,
+        obs: "ObservedData",
+        temperature: float,
+    ) -> np.ndarray:
+        """Log-likelihoods of a batch of models, identical to
+        ``obs.lkl.log_lkl(get_model(ctx, p, dr_model, obs.calib_values())[1],
+        temperature)`` for each row ``p`` of ``P``. With the compiled functions,
+        each synthetic cluster is generated and evaluated in the same call (the
+        synthetic clusters never go back to Python, which is where the gain comes
+        from), optionally distributing the models among parallel threads.
+
+        :param P: Array of parameters, see :py:meth:`ModelContext.params_array
+            <model_data.ModelContext.params_array>`
+        :type P: np.ndarray
+        :param dr_model: Differential reddening model
+        :type dr_model: str
+        :param obs: Data of the observed cluster
+        :type obs: ObservedData
+        :param temperature: Likelihood temperature, assumed positive (validated by
+            :py:class:`asteca.Sampler`)
+        :type temperature: float
+
+        :return: Array with the log-likelihood of each model, ``0`` is the best value
+        :rtype: np.ndarray
+        """
+        lk = obs.lkl
+        calib = obs.calib_values()
+        if not self.compiled:
+            return np.array(
+                [
+                    lk.log_lkl(get_model(self.ctx, p, dr_model, calib)[1], temperature)
+                    for p in P
+                ]
+            )
+
+        args: tuple = (
+            *batch_args(self.ctx, dr_model, calib, P),
+            lk.m_ini_idx,
+            lk.hist_args,
+            lk.nz_pos,
+            lk.row_off,
+            lk.table_flat,
+            lk.m_max,
+            lk.min_lkl,
+            lk.max_lkl,
+            lk.lkl_range,
+            float(lk.obs_mag_median),
+            float(lk.obs_col_median),
+            float(lk.cmd_widths[0]),
+            float(lk.cmd_widths[1]),
+            float(temperature),
         )
+        if not self.parallel:
+            return _lnl_batch_serial(*args)
+        if self.n_threads is None:
+            return _lnl_batch_parallel(*args)
 
-    args: tuple = (
-        *batch_args(ctx, synthcl.DR_distribution, obs.calib_values(), P),
-        lk.m_ini_idx,
-        lk.hist_args,
-        lk.nz_pos,
-        lk.row_off,
-        lk.table_flat,
-        lk.m_max,
-        lk.min_lkl,
-        lk.max_lkl,
-        lk.lkl_range,
-        float(lk.obs_mag_median),
-        float(lk.obs_col_median),
-        float(lk.cmd_widths[0]),
-        float(lk.cmd_widths[1]),
-        float(temperature),
-    )
-    if not parallel:
-        return _lnl_batch_serial(*args)
-    if n_threads is None:
-        return _lnl_batch_parallel(*args)
+        import numba
 
-    import numba
-
-    # 'n_threads' is only validated here, where it is used
-    check_n_threads(n_threads)
-    # Set the number of threads for this call only
-    prev_threads = numba.get_num_threads()
-    numba.set_num_threads(int(n_threads))
-    try:
-        return _lnl_batch_parallel(*args)
-    finally:
-        numba.set_num_threads(prev_threads)
+        # Set the number of threads for this call only
+        prev_threads = numba.get_num_threads()
+        numba.set_num_threads(int(self.n_threads))
+        try:
+            return _lnl_batch_parallel(*args)
+        finally:
+            numba.set_num_threads(prev_threads)
 
 
 if _HAS_NUMBA:
@@ -409,7 +351,7 @@ if _HAS_NUMBA:
         met, loga, alpha, beta, av, dr, dm = p[0], p[1], p[2], p[3], p[4], p[5], p[7]
         N_rows = m_ini_idx + 2
 
-        # properModel(): indexes of the (z, a) box
+        # synth_model.grid_box(): indexes of the (z, a) box
         ml = mh = 0
         if met_grid.size > 1:
             mh = min(met_grid.size - 1, np.searchsorted(met_grid, met))
