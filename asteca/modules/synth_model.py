@@ -645,7 +645,6 @@ def move_isochrone(
     # Move magnitude
     isochrone[0] += dm
     # Move binary magnitude if required
-    # if isochrone.shape[0] > m_ini_idx + 1:
     if binar_flag:
         # m_ini_idx + 1 --> Secondary binary mass
         # m_ini_idx + 2 --> Binary magnitude
@@ -767,13 +766,9 @@ def extinction(
         Av_dr = dr_frac[:Ns] * dr
         Av_dr += Av
 
+    ec_col2 = 0.0
     if ext_law == "CCMO":
-        # Magnitude
-        ec_mag = ext_coefs[0][0] + ext_coefs[0][1] / Rv
-        # First color
-        ec_col1 = (ext_coefs[1][0][0] + ext_coefs[1][0][1] / Rv) - (
-            ext_coefs[1][1][0] + ext_coefs[1][1][1] / Rv
-        )
+        ec_mag, ec_col1, ec_col2 = ccmo_coefs(ext_coefs, Rv)
         Ax = ec_mag * Av_dr
         Ex1 = ec_col1 * Av_dr
     elif ext_law == "GAIADR3":
@@ -791,11 +786,8 @@ def extinction(
         isochrone[m_ini_idx + 2] += Ax  # Magnitude (binary system)
         isochrone[m_ini_idx + 3] += Ex1  # First color (binary system)
 
-    # Second color
+    # Second color (CCMO only)
     if len(ext_coefs) > 2:
-        ec_col2 = (ext_coefs[2][0][0] + ext_coefs[2][0][1] / Rv) - (
-            ext_coefs[2][1][0] + ext_coefs[2][1][1] / Rv
-        )
         Ex2 = ec_col2 * Av_dr
         isochrone[2] += Ex2
         # Move color with binary data.

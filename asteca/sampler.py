@@ -280,8 +280,7 @@ class Sampler:
         if self.verbose > 1:
             # Effective sample size of the posterior samples, see summary()
             _, weights = self.posterior()
-            ess = weights.sum() ** 2 / (weights**2).sum()
-            self._vp(f"ESS            : {ess:.0f}", 1)
+            self._vp(f"ESS            : {_ess(weights):.0f}", 1)
         self._vp(f"Best distance  : {self.best_dist:.3f}", 1)
         self._vp("Sampler run completed")
 
@@ -402,10 +401,23 @@ class Sampler:
         w_unique = np.bincount(inv.ravel(), weights=weights)
 
         summ["diagnostics"] = {
-            "ess": float(w_sum**2 / np.sum(weights**2)),
-            "ess_unique": float(np.sum(w_unique) ** 2 / np.sum(w_unique**2)),
+            "ess": _ess(weights),
+            "ess_unique": _ess(w_unique),
             "accept": float(self._smc.current["accept"]),
             "steps": float(self._smc.current["steps"]),
             "no_overlap_frac": self._n_lnl_no_overlap / max(self._n_lnl, 1),
         }
         return summ
+
+
+def _ess(weights: np.ndarray) -> float:
+    """Effective sample size of importance weighted samples, ``sum(w)**2 /
+    sum(w**2)`` (the weights do not need to be normalized)
+
+    :param weights: Importance weights
+    :type weights: np.ndarray
+
+    :return: Effective sample size
+    :rtype: float
+    """
+    return float(np.sum(weights) ** 2 / np.sum(weights**2))
