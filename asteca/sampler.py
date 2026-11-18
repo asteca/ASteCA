@@ -189,10 +189,11 @@ class Sampler:
     def _log_like(self, params_arr: np.ndarray) -> np.ndarray:
         """Vectorized log-likelihood, ``params_arr`` has shape
         ``(n_particles, n_dim)``"""
-        # The differential reddening model can not change within a run, see run()
+        # Differential reddening model of this run, set by run()
+        assert self.DR_distribution is not None
         lnl = self._engine.log_lkl(
             self._engine.params_array(dict(zip(self.names, params_arr.T))),
-            self.synthcl.DR_distribution,
+            self.DR_distribution,
             self._obs,
             self.temperature,
             self.parallel,

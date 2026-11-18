@@ -42,77 +42,6 @@ _BPRP_COEFFS = (
 _X_MIN, _X_MAX = -0.06, 2.5
 
 
-def main(N_repeat: int = 25_000):
-    """
-    Main function used to test the performance of the `generate` function. It
-    generates a synthetic cluster N_repeat times, and profiles the execution time
-    of the function.
-
-    :param N_repeat: Number of times to repeat the generation of the synthetic cluster.
-    :type N_repeat: int
-    """
-    import asteca
-
-    print(asteca.__version__)
-    import pandas as pd
-    from pyinstrument import Profiler
-
-    # Isochrones parameters
-    isochs = asteca.Isochrones(
-        model="parsec",
-        isochs_path="../../docs/_static/isochrones/parsec/gaia",
-        mag="Gmag",
-        color=("G_BPmag", "G_RPmag"),
-        verbose=3,
-    )
-
-    # Synthetic clusters parameters
-    synthcl = asteca.Synthetic(
-        isochs,
-        ext_law="GAIADR3",
-        max_mass=40000,
-        seed=42519,
-        verbose=3,
-    )
-
-    obs_df = pd.read_csv("../../docs/_static/cluster.csv")
-    my_cluster = asteca.Cluster(
-        ra=np.array(obs_df["RA_ICRS"]),
-        dec=np.array(obs_df["DE_ICRS"]),
-        mag=np.array(obs_df["Gmag"]),
-        e_mag=np.array(obs_df["e_Gmag"]),
-        color=np.array(obs_df["BP-RP"]),
-        e_color=np.array(obs_df["e_BP-RP"]),
-        verbose=2,
-    )
-    synthcl.calibrate(my_cluster)
-
-    rng = np.random.default_rng(12345)
-    met_age_dict = synthcl._engine.met_age_dict
-    met_min, met_max = met_age_dict["met"][0], met_age_dict["met"][-1]
-    loga_min, loga_max = met_age_dict["loga"][0], met_age_dict["loga"][-1]
-
-    # Start profiler
-    profiler = Profiler()
-    profiler.start()
-    for _ in range(N_repeat):
-        # Random parameter values within reasonable ranges
-        _av = rng.uniform(0.0, 3.0)
-        params = {
-            "met": rng.uniform(met_min, met_max),
-            "loga": rng.uniform(loga_min, loga_max),
-            "alpha": rng.uniform(0.0, 0.2),
-            "beta": rng.uniform(0.5, 1.5),
-            "Av": _av,
-            "DR": rng.uniform(0.0, _av),
-            "Rv": rng.uniform(2.5, 4.0),
-            "dm": rng.uniform(8.0, 14.0),
-        }
-        _ = synthcl._get_model(params)
-    profiler.stop()
-    profiler.open_in_browser()
-
-
 def get_model(
     ctx: "ModelEngine",
     p: np.ndarray,
@@ -129,7 +58,7 @@ def get_model(
     data of the :py:class:`Synthetic` object. This is the Python implementation of
     the synthetic cluster recipe, used when numba is not installed; with numba, the
     compiled ``synth_batch._synth_one()`` is used instead (through
-    ``synth_batch.ModelEngine``), with identical results.
+    ``model_data.ModelEngine.get_model()``), with identical results.
 
     :param ctx: Data that defines the synthetic clusters
     :type ctx: ModelEngine
@@ -236,16 +165,7 @@ def get_model(
         isoch_moved.copy(),
     )
     isoch_extin_dr_0 = output_isochrone(
-        ctx,
-        dr_frac,
-        isoch_flag,
-        isoch_dr_frac,
-        binar_flag,
-        av,
-        dr,
-        rv,
-        isoch_moved,
-        isoch_av,
+        ctx, p, dr_model, isoch_flag, isoch_dr_frac, isoch_moved, isoch_av
     )
 
     # Identify the isochrone points below the maximum magnitude. The isochrone
@@ -329,15 +249,7 @@ def get_model(
 
     if mass_info is not None:
         fill_mass_info(
-            mass_info,
-            ctx,
-            p,
-            st_mass,
-            isoch_moved,
-            idx_cut,
-            N_pool,
-            keep,
-            N_synth_stars,
+            mass_info, ctx, p, N_synth_stars, isoch_moved, idx_cut, N_pool, keep
         )
 
     isoch_binar = isoch_binar[:, keep[:N_synth_stars]]
@@ -374,13 +286,10 @@ def empty_message(status: int, p: np.ndarray) -> str:
 
 def output_isochrone(
     ctx: "ModelEngine",
-    dr_frac: np.ndarray,
+    p: np.ndarray,
+    dr_model: str,
     isoch_flag: bool,
     isoch_dr_frac: float,
-    binar_flag: bool,
-    av: float,
-    dr: float,
-    rv: float,
     isoch_moved: np.ndarray,
     isoch_av: np.ndarray,
 ) -> np.ndarray:
@@ -390,20 +299,14 @@ def output_isochrone(
 
     :param ctx: Data that defines the synthetic clusters
     :type ctx: ModelEngine
-    :param dr_frac: Fractions of the differential reddening of the selected model
-    :type dr_frac: np.ndarray
+    :param p: Values of the fundamental parameters, see :py:func:`get_model`
+    :type p: np.ndarray
+    :param dr_model: Differential reddening model
+    :type dr_model: str
     :param isoch_flag: Return the isochrone
     :type isoch_flag: bool
     :param isoch_dr_frac: Fraction of the differential reddening applied
     :type isoch_dr_frac: float
-    :param binar_flag: ``False`` if the model has no binary systems
-    :type binar_flag: bool
-    :param av: Minimum absorption
-    :type av: float
-    :param dr: Differential reddening
-    :type dr: float
-    :param rv: Ratio of total to selective absorption
-    :type rv: float
     :param isoch_moved: Isochrone moved by the distance modulus (not modified)
     :type isoch_moved: np.ndarray
     :param isoch_av: Isochrone with the minimum absorption ``Av``
@@ -414,13 +317,14 @@ def output_isochrone(
     """
     if not isoch_flag:
         return np.array([])
+    _, _, alpha, beta, av, dr, rv, _ = p.tolist()
     if isoch_dr_frac > 0 and dr > 0:
         return extinction(
             ctx.ext_law,
             ctx.ext_coefs,
-            dr_frac,
+            ctx.rand_floats["dr_frac"][dr_model],
             ctx.m_ini_idx,
-            binar_flag,
+            not (alpha == 0.0 and beta == 0.0),
             av + isoch_dr_frac * dr,
             0.0,
             rv,
@@ -433,12 +337,11 @@ def fill_mass_info(
     mass_info: dict,
     ctx: "ModelEngine",
     p: np.ndarray,
-    st_mass: np.ndarray,
+    N_synth_stars: int,
     isoch_moved: np.ndarray,
     idx_cut: np.ndarray,
     N_pool: int,
     keep: np.ndarray,
-    N_synth_stars: int,
 ) -> None:
     """Fill ``mass_info`` with the data required to estimate the total mass of a
     (non empty) simulated cluster, see :py:func:`get_model`
@@ -449,8 +352,8 @@ def fill_mass_info(
     :type ctx: ModelEngine
     :param p: Values of the fundamental parameters, see :py:func:`get_model`
     :type p: np.ndarray
-    :param st_mass: Sampled IMF masses used
-    :type st_mass: np.ndarray
+    :param N_synth_stars: Number of synthetic stars requested
+    :type N_synth_stars: int
     :param isoch_moved: Isochrone moved by the distance modulus
     :type isoch_moved: np.ndarray
     :param idx_cut: Indexes of the isochrone points brighter than the maximum
@@ -460,11 +363,12 @@ def fill_mass_info(
     :type N_pool: int
     :param keep: Indexes of the candidates brighter than the maximum magnitude
     :type keep: np.ndarray
-    :param N_synth_stars: Number of synthetic stars requested
-    :type N_synth_stars: int
     """
     m_ini_idx = ctx.m_ini_idx
-    alpha, beta = float(p[2]), float(p[3])
+    met, loga, alpha, beta = p[:4].tolist()
+    # Sampled IMF masses used (see get_model())
+    ml, _, al, _ = grid_box(ctx.met_age_dict, met, loga)
+    st_mass = ctx.st_dist_mass[ml][al]
     binar_flag = not (alpha == 0.0 and beta == 0.0)
     # Indexes in the IMF sample of the stars in the pool (the same selection done by
     # mass_interp()), and of those kept in the synthetic cluster
@@ -677,196 +581,7 @@ def zaWAverage(
     # Now for the secondary masses
     isochrone[m_ini_idx + 1] = closest_iso[m_ini_idx + 1]
 
-    # temp_plot(
-    #     theor_tracks,
-    #     isochrone,
-    #     m_ini_idx,
-    #     ml,
-    #     mh,
-    #     al,
-    #     ah,
-    #     z_model,
-    #     a_model
-    # )
-
     return isochrone, m0, a0
-
-
-def temp_plot(
-    theor_tracks: np.ndarray,
-    isochrone: np.ndarray,
-    m_ini_idx: int,
-    ml: int,
-    mh: int,
-    al: int,
-    ah: int,
-    z_model: float,
-    a_model: float,
-) -> None:
-    """
-    Temporary plotting function to visualize the bilinear interpolation of the
-    theoretical tracks and the resulting isochrone. This function is intended for
-    debugging and verification purposes.
-
-    :param theor_tracks: Theoretical isochrones
-    :type theor_tracks: np.ndarray
-    :param isochrone: Interpolated isochrone
-    :type isochrone: np.ndarray
-    :param m_ini_idx: Index of the initial mass
-    :type m_ini_idx: int
-    :param ml: Index of the lower metallicity grid value
-    :type ml: int
-    :param mh: Index of the upper metallicity grid value
-    :type mh: int
-    :param al: Index of the lower age grid value
-    :type al: int
-    :param ah: Index of the upper age grid value
-    :type ah: int
-    :param z_model: Metallicity of the interpolated isochrone
-    :type z_model: float
-    :param a_model: Age of the interpolated isochrone
-    :type a_model: float
-    """
-    import matplotlib.pyplot as plt
-
-    print("ml, mh, al, ah:", ml, mh, al, ah)
-    print("z_model, a_model:", z_model, a_model)
-
-    plt.subplot(221)
-    N_pts = len(theor_tracks[ml][al][m_ini_idx])
-    plt.scatter(
-        # theor_tracks[ml][al][m_ini_idx],
-        np.arange(0, N_pts),
-        theor_tracks[ml][al][0],
-        c="b",
-        alpha=0.5,
-        label="mlal",
-    )
-    plt.scatter(
-        # theor_tracks[ml][ah][m_ini_idx],
-        np.arange(0, N_pts),
-        theor_tracks[ml][ah][0],
-        c="r",
-        alpha=0.5,
-        label="mlah",
-    )
-    plt.scatter(
-        # theor_tracks[mh][al][m_ini_idx],
-        np.arange(0, N_pts),
-        theor_tracks[mh][al][0],
-        c="cyan",
-        alpha=0.5,
-        label="mhal",
-    )
-    plt.scatter(
-        # theor_tracks[mh][ah][m_ini_idx],
-        np.arange(0, N_pts),
-        theor_tracks[mh][ah][0],
-        c="orange",
-        alpha=0.5,
-        label="mhah",
-    )
-    plt.xlabel("mass")
-    plt.ylabel("mag")
-    # plt.scatter(isochrone[m_ini_idx], isochrone[0], marker="x", c="k")
-    plt.scatter(np.arange(0, len(isochrone[0])), isochrone[0], marker="x", c="k")
-    plt.legend()
-
-    plt.subplot(222)
-    plt.scatter(
-        # theor_tracks[ml][al][m_ini_idx],
-        np.arange(0, N_pts),
-        theor_tracks[ml][al][1],
-        c="b",
-        alpha=0.5,
-        label="mlal",
-    )
-    plt.scatter(
-        # theor_tracks[ml][ah][m_ini_idx],
-        np.arange(0, N_pts),
-        theor_tracks[ml][ah][1],
-        c="r",
-        alpha=0.5,
-        label="mlah",
-    )
-    plt.scatter(
-        # theor_tracks[mh][al][m_ini_idx],
-        np.arange(0, N_pts),
-        theor_tracks[mh][al][1],
-        c="cyan",
-        alpha=0.5,
-        label="mhal",
-    )
-    plt.scatter(
-        # theor_tracks[mh][ah][m_ini_idx],
-        np.arange(0, N_pts),
-        theor_tracks[mh][ah][1],
-        c="orange",
-        alpha=0.5,
-        label="mhah",
-    )
-    # plt.scatter(isochrone[m_ini_idx], isochrone[1], marker="x", c="k")
-    plt.scatter(np.arange(0, len(isochrone[0])), isochrone[1], marker="x", c="k")
-    plt.xlabel("mass")
-    plt.ylabel("color")
-    plt.legend()
-
-    # First color
-    plt.subplot(223)
-    plt.scatter(
-        theor_tracks[ml][al][1], theor_tracks[ml][al][0], c="b", alpha=0.2, label="mlal"
-    )
-    plt.scatter(
-        theor_tracks[ml][ah][1], theor_tracks[ml][ah][0], c="r", alpha=0.2, label="mlah"
-    )
-    plt.scatter(
-        theor_tracks[mh][al][1],
-        theor_tracks[mh][al][0],
-        c="cyan",
-        alpha=0.2,
-        label="mhal",
-    )
-    plt.scatter(
-        theor_tracks[mh][ah][1],
-        theor_tracks[mh][ah][0],
-        c="orange",
-        alpha=0.2,
-        label="mhah",
-    )
-    plt.scatter(isochrone[1], isochrone[0], c="k", marker="x", alpha=0.5, label="avrg")
-    plt.gca().invert_yaxis()
-    plt.legend()
-    plt.xlabel("color")
-    plt.ylabel("mag")
-
-    # Plot aligned masses
-    plt.subplot(224)
-    mmin = theor_tracks[ml][al][m_ini_idx].min()
-    mmax = theor_tracks[ml][al][m_ini_idx].max()
-    plt.plot(theor_tracks[ml][al][m_ini_idx], label=f"mlal, [{mmin:.2f}, {mmax:.2f}]")
-    mmin = theor_tracks[ml][ah][m_ini_idx].min()
-    mmax = theor_tracks[ml][ah][m_ini_idx].max()
-    plt.plot(theor_tracks[ml][ah][m_ini_idx], label=f"mlah, [{mmin:.2f}, {mmax:.2f}]")
-    mmin = theor_tracks[mh][al][m_ini_idx].min()
-    mmax = theor_tracks[mh][al][m_ini_idx].max()
-    plt.plot(theor_tracks[mh][al][m_ini_idx], label=f"mhal, [{mmin:.2f}, {mmax:.2f}]")
-    mmin = theor_tracks[mh][ah][m_ini_idx].min()
-    mmax = theor_tracks[mh][ah][m_ini_idx].max()
-    plt.plot(theor_tracks[mh][ah][m_ini_idx], label=f"mhah, [{mmin:.2f}, {mmax:.2f}]")
-    plt.legend()
-    plt.xlabel("aligned points")
-    plt.ylabel("mass")
-
-    plt.show()
-
-    # Second color
-    # plt.subplot(133)
-    # plt.scatter(theor_tracks[ml][al][2], theor_tracks[ml][al][0], c='b')
-    # plt.scatter(theor_tracks[ml][ah][2], theor_tracks[ml][ah][0], c='r')
-    # plt.scatter(theor_tracks[mh][al][2], theor_tracks[mh][al][0], c='cyan')
-    # plt.scatter(theor_tracks[mh][ah][2], theor_tracks[mh][ah][0], c='orange')
-    # plt.scatter(isochrone[2], isochrone[0], c='g', ls='--')
-    # plt.gca().invert_yaxis()
 
 
 if _HAS_NUMBA:
@@ -1698,33 +1413,6 @@ def interp_mass_isoch(
     :returns: Interpolated isochrone array.
     :rtype: np.ndarray
     """
-
-    # *****************************************************************************
-    # This is a stripped down version of scipy.inter1d (kind='linear') which
-    # is now legacy code
-    # (https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.interp1d.html)
-    # Scipy now recommends using np.interp for simple linear interpolation but it
-    # is quite slower.
-    #
-    # Note: If x_new[n] == x[m], then m is returned by searchsorted.
-    # x_new_indices = np.searchsorted(mass_ini, mass_dist)
-    # #
-    # # Calculate the slope of regions that each x_new value falls in.
-    # lo = x_new_indices - 1
-    # x_lo = mass_ini[lo]
-    # x_hi = mass_ini[x_new_indices]
-    # # y_lo = isoch_cut[:, lo]
-    # # y_hi = isoch_cut[:, x_new_indices]
-    # y_lo = np.take(isoch_cut, lo, axis=1)
-    # y_hi = np.take(isoch_cut, x_new_indices, axis=1)
-
-    # # Compute slope and result in fewer steps
-    # x_diff = mass_dist - x_lo
-    # # Calculate the actual value for each entry in x_new.
-    # # slope = (y_hi - y_lo) / (x_hi - x_lo)
-    # isoch_mass = y_lo + (y_hi - y_lo) * (x_diff / (x_hi - x_lo))
-    # # *****************************************************************************
-
     if x_new_indices is None:
         x_new_indices = np.searchsorted(mass_ini, mass_dist)
     #
@@ -1744,50 +1432,6 @@ def interp_mass_isoch(
     isoch_mass -= y_lo
     isoch_mass *= w
     isoch_mass += y_lo
-
-    # *****************************************************************************
-    # # This approach is 3X slower
-    # isoch_T = np.ascontiguousarray(isoch_cut.T)   # shape (N_iso, D)
-
-    # isoch_mass = np.empty((len(mass_dist), isoch_cut.shape[0]))  # (N_samp, D)
-    # for i in range(isoch_cut.shape[0]):           # iterate over D rows
-    #     isoch_mass[:, i] = np.interp(mass_dist, mass_ini, isoch_T[:, i])
-
-    # isoch_mass = isoch_mass.T                     # back to (D, N_samp)
-    # *****************************************************************************
-
-    # *****************************************************************************
-    # This is slower for more than 5 dimensions, and *very* slightly faster for lower
-    # dimensions
-    # isoch_mass = np.empty([isoch_cut.shape[0], mass_dist.size])
-    # for i, arr in enumerate(isoch_cut):
-    #     isoch_mass[i] = np.interp(mass_dist, mass_ini, arr)
-
-    # # Same performance as above
-    # isoch_mass = []
-    # for arr in isoch_cut:
-    #     isoch_mass.append(np.interp(mass_dist, mass_ini, arr))
-    # isoch_mass = np.array(isoch_mass)
-    # *****************************************************************************
-
-    # *****************************************************************************
-    # This is about 2x faster than interp1d() but it comes at the cost of a more
-    # coarse distribution of stars throughout the isochrone. To fix this, we have to
-    # apply a random noise to the magnitude(s) proportional to the percentage that
-    # the masses sampled differ from those in the isochrone. This lowers the
-    # performance to an increase of ~22%
-    #
-    # idx = np.searchsorted(mass_ini, mass_dist)
-    # isoch_mass = isoch_cut[:, idx]
-
-    # Random noise applied to magnitudes. Does not really work that good
-    # m_perc = (isoch_mass[m_ini_idx] - mass_dist) / mass_dist
-    # # Random noise to magnitude
-    # isoch_mass[0] += isoch_mass[0] * m_perc
-    # if binar_flag:
-    #     # Random noise to binary magnitude
-    #     isoch_mass[m_ini_idx + 2] += isoch_mass[m_ini_idx + 2] * m_perc
-    # *****************************************************************************
 
     return isoch_mass
 
@@ -1943,7 +1587,3 @@ def add_errors(isoch_binar: np.ndarray, err_dist: list[np.ndarray]) -> np.ndarra
         row[mag_sort] += sigma[:N]
 
     return isoch_binar
-
-
-if __name__ == "__main__":
-    main()

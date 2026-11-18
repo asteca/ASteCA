@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
+from . import HAS_NUMBA
 from . import synth_batch as sb
 from . import synth_model as sm
 
@@ -105,69 +106,46 @@ class ModelEngine:
         values = [params[k] if k in params else self.def_params[k] for k in FULL_PARAMS]
         # Fast path for a single model, checked with the same comparisons in Python
         # (much faster than with arrays this small)
+        lo, hi = self._bounds
         if all(isinstance(v, _SCALARS) for v in values):
             vals = [float(v) for v in values]
-            lo, hi = self._bounds_list
             ok = all(lo[i] <= v <= hi[i] for i, v in enumerate(vals)) and all(
-                abs(vals[i] - g) <= tol for i, g, tol in self._fixed_list
+                abs(vals[i] - g) <= tol for i, g, tol in self._fixed
             )
             if ok:
                 return np.array([vals])
 
-        # All single values, or all arrays of the same length
-        try:
-            P = np.array(values, dtype=float)
-        except ValueError:
-            P = None
-        if P is not None and P.ndim == 1:
-            P = P.reshape(1, -1)
-        elif P is not None and P.ndim == 2:
-            P = np.ascontiguousarray(P.T)
-        else:
-            P = _broadcast_params(values)
-
-        lo, hi = self._bounds
+        P = _broadcast_params(values)
         # 'nan' values are rejected, as they fail both comparisons
         bad = ~((P >= lo) & (P <= hi))
-        for i, k, tol in self._fixed_params:
-            bad[:, i] = ~(np.abs(P[:, i] - self.met_age_dict[k][0]) <= tol)
+        for i, g, tol in self._fixed:
+            bad[:, i] = ~(np.abs(P[:, i] - g) <= tol)
         if bad.any():
             self._raise_invalid(P, bad)
         return P
 
     @cached_property
-    def _bounds(self) -> tuple[np.ndarray, np.ndarray]:
+    def _bounds(self) -> tuple[list[float], list[float]]:
         """Valid ranges of the parameters (``met, loga`` with a single value in the
-        grid are checked separately, see :py:attr:`_fixed_params`)"""
-        lo = np.zeros(len(FULL_PARAMS))
-        hi = np.full(len(FULL_PARAMS), np.inf)
+        grid are checked separately, see :py:attr:`_fixed`)"""
+        lo = [0.0] * len(FULL_PARAMS)
+        hi = [float("inf")] * len(FULL_PARAMS)
         # Rv must be > 0
-        lo[FULL_PARAMS.index("Rv")] = np.nextafter(0.0, 1.0)
+        lo[FULL_PARAMS.index("Rv")] = float(np.nextafter(0.0, 1.0))
         for i, k in enumerate(("met", "loga")):
             grid = self.met_age_dict[k]
-            lo[i], hi[i] = (grid[0], grid[-1]) if len(grid) > 1 else (-np.inf, np.inf)
+            if len(grid) > 1:
+                lo[i], hi[i] = float(grid[0]), float(grid[-1])
+            else:
+                lo[i], hi[i] = -float("inf"), float("inf")
         return lo, hi
 
     @cached_property
-    def _bounds_list(self) -> tuple[list[float], list[float]]:
-        """Same as :py:attr:`_bounds`, as lists of floats"""
-        lo, hi = self._bounds
-        return lo.tolist(), hi.tolist()
-
-    @cached_property
-    def _fixed_list(self) -> tuple[tuple[int, float, float], ...]:
-        """Index, grid value and tolerance of the fixed parameters, see
-        :py:attr:`_fixed_params`"""
+    def _fixed(self) -> tuple[tuple[int, float, float], ...]:
+        """Index, grid value and tolerance of ``met, loga`` if their grid has a
+        single value: the parameter must then be equal to it, within the tolerance"""
         return tuple(
-            (i, float(self.met_age_dict[k][0]), tol) for i, k, tol in self._fixed_params
-        )
-
-    @cached_property
-    def _fixed_params(self) -> tuple[tuple[int, str, float], ...]:
-        """Index, name and tolerance of ``met, loga`` if their grid has a single
-        value: the parameter must then be equal to it, within the tolerance"""
-        return tuple(
-            (i, k, tol)
+            (i, float(self.met_age_dict[k][0]), tol)
             for i, (k, tol) in enumerate(
                 (("met", self.met_tol), ("loga", self.age_tol))
             )
@@ -200,14 +178,14 @@ class ModelEngine:
                 raise ValueError(f"Parameter Rv={v:.5f} must be > 0")
             raise ValueError(f"Parameter {k}={v:.5f} must be >= 0")
 
-    @cached_property
+    @property
     def compiled(self) -> bool:
         """``True`` if the compiled functions of :py:mod:`synth_batch` are used (numba
-        installed and a supported extinction law), else the Python implementation
-        :py:func:`synth_model.get_model` is used. The results are identical"""
-        return sb.available(self.ext_law)
+        installed), else the Python implementation :py:func:`synth_model.get_model`
+        is used. The results are identical"""
+        return HAS_NUMBA
 
-    def check_threads(self, parallel: bool, n_threads: int | None) -> None:  # noqa: DOC502, RUF100
+    def check_threads(self, parallel: bool, n_threads: int | None) -> None:
         """Validate ``n_threads``, only if the threads are used (compiled functions
         and ``parallel=True``)
 
@@ -219,8 +197,26 @@ class ModelEngine:
         :raises ValueError: If ``n_threads`` is not an integer between ``1`` and
             ``NUMBA_NUM_THREADS``
         """
-        if self.compiled and parallel and n_threads is not None:
-            sb.check_n_threads(n_threads)
+        if not (self.compiled and parallel and n_threads is not None):
+            return
+        import numba
+
+        if (
+            isinstance(n_threads, bool)
+            or not isinstance(n_threads, (int, np.integer))
+            or n_threads < 1
+        ):
+            raise ValueError(
+                f"'n_threads' must be a positive integer, got {n_threads!r}"
+            )
+        # NUMBA_NUM_THREADS is set dynamically in numba.config (unknown to type
+        # checkers)
+        max_threads = numba.config.NUMBA_NUM_THREADS  # pyright: ignore[reportPrivateImportUsage, reportAttributeAccessIssue]
+        if n_threads > max_threads:
+            raise ValueError(
+                f"'n_threads={n_threads}' can not be larger than NUMBA_NUM_THREADS="
+                + f"{max_threads}"
+            )
 
     def get_model(
         self,
@@ -274,20 +270,9 @@ class ModelEngine:
                 mass_info=mass_info,
             )
 
-        args = sb.batch_args(self, dr_model, calib, p[None, :])
-        out = sb._synth_one(p, *args[1:])
-        _, _, alpha, beta, av, dr, rv, _ = p.tolist()
+        out = sb._synth_one(p, *sb.batch_args(self, dr_model, calib))
         isoch = sm.output_isochrone(
-            self,
-            self.rand_floats["dr_frac"][dr_model],
-            isoch_flag,
-            isoch_dr_frac,
-            not (alpha == 0.0 and beta == 0.0),
-            av,
-            dr,
-            rv,
-            out.isoch_moved,
-            out.isoch_av,
+            self, p, dr_model, isoch_flag, isoch_dr_frac, out.isoch_moved, out.isoch_av
         )
         if out.status != 0:
             if show_errors:
@@ -295,17 +280,15 @@ class ModelEngine:
             return isoch, np.array([])
 
         if mass_info is not None:
-            ml, _, al, _ = sm.grid_box(self.met_age_dict, p[0], p[1])
             sm.fill_mass_info(
                 mass_info,
                 self,
                 p,
-                self.st_dist_mass[ml][al],
+                calib[2],
                 out.isoch_moved,
                 out.idx_cut,
                 out.N_pool,
                 out.keep,
-                calib[2],
             )
         return isoch, out.synth
 
@@ -333,7 +316,7 @@ class ModelEngine:
         """
         if not self.compiled:
             return [sm.get_model(self, p, dr_model, calib)[1] for p in P]
-        out = sb._generate_batch(*sb.batch_args(self, dr_model, calib, P))
+        out = sb._generate_batch(P, *sb.batch_args(self, dr_model, calib))
         # An empty synthetic cluster is returned as an empty 1D array, as with
         # get_model()
         return [a if a.shape[1] else np.array([]) for a in out]
@@ -386,7 +369,8 @@ class ModelEngine:
             )
 
         args: tuple = (
-            *sb.batch_args(self, dr_model, calib, P),
+            P,
+            *sb.batch_args(self, dr_model, calib),
             lk.m_ini_idx,
             lk.hist_args,
             lk.nz_pos,
@@ -486,15 +470,16 @@ def _broadcast_params(values: list) -> np.ndarray:
     :return: Array of shape ``(N_models, 8)``
     :rtype: np.ndarray
     """
-    arrays = [np.atleast_1d(np.asarray(v, dtype=float)) for v in values]
+    arrays = [np.asarray(v, dtype=float) for v in values]
     for k, v in zip(FULL_PARAMS, arrays):
-        if v.ndim != 1:
+        if v.ndim > 1:
             raise ValueError(f"Parameter {k} must be a single value or a 1D array")
-    lengths = {v.size for v in arrays if v.size != 1}
+    lengths = {v.size for v in arrays if v.ndim == 1 and v.size != 1}
     if len(lengths) > 1:
         raise ValueError("All the parameter arrays must have the same length")
     N = lengths.pop() if lengths else 1
-    P = np.empty((N, len(FULL_PARAMS)))
+    # Filled by rows (contiguous) and transposed once, faster than by columns
+    P = np.empty((len(FULL_PARAMS), N))
     for i, v in enumerate(arrays):
-        P[:, i] = v
-    return P
+        P[i] = v
+    return P.T.copy()

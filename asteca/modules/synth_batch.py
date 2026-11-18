@@ -12,9 +12,8 @@ log-likelihoods can be evaluated in parallel threads.
 
 :py:class:`model_data.ModelEngine` is the single entry point used to generate
 synthetic clusters (one or many) by :py:class:`asteca.Synthetic` and
-:py:class:`asteca.Sampler`: it uses the compiled functions of this module if they are
-available (numba installed, see :py:func:`available`), and
-:py:func:`synth_model.get_model` otherwise.
+:py:class:`asteca.Sampler`: it uses the compiled functions of this module if numba is
+installed, and :py:func:`synth_model.get_model` otherwise.
 """
 
 from collections import namedtuple
@@ -34,32 +33,6 @@ SynthOut = namedtuple(
     "SynthOut",
     ("synth", "status", "isoch_moved", "isoch_av", "idx_cut", "N_pool", "keep"),
 )
-
-
-def available(ext_law: str) -> bool:
-    """``True`` if the compiled batch functions can be used"""
-    return _HAS_NUMBA and ext_law in ("GAIADR3", "CCMO")
-
-
-def check_n_threads(n_threads) -> None:
-    """Raise a ``ValueError`` if ``n_threads`` is not an integer between ``1`` and
-    ``NUMBA_NUM_THREADS``. Only called when the threads are actually used (numba
-    installed and ``parallel=True``)."""
-    import numba
-
-    if (
-        isinstance(n_threads, bool)
-        or not isinstance(n_threads, (int, np.integer))
-        or n_threads < 1
-    ):
-        raise ValueError(f"'n_threads' must be a positive integer, got {n_threads!r}")
-    # NUMBA_NUM_THREADS is set dynamically in numba.config (unknown to type checkers)
-    max_threads = numba.config.NUMBA_NUM_THREADS  # pyright: ignore[reportPrivateImportUsage, reportAttributeAccessIssue]
-    if n_threads > max_threads:
-        raise ValueError(
-            f"'n_threads={n_threads}' can not be larger than NUMBA_NUM_THREADS="
-            + f"{max_threads}"
-        )
 
 
 def ccmo_array(ext_law: str, ext_coefs: list) -> np.ndarray:
@@ -132,11 +105,11 @@ def batch_args(
     ctx: "ModelEngine",
     dr_model: str,
     calib: tuple[float, list[np.ndarray], int],
-    P: np.ndarray,
 ) -> tuple:
-    """Arguments of the compiled batch functions :py:func:`_generate_batch`,
-    :py:func:`_lnl_batch_serial` and :py:func:`_lnl_batch_parallel` (the
-    likelihood arguments are added by :py:meth:`model_data.ModelEngine.log_lkl`).
+    """Arguments of the compiled functions :py:func:`_synth_one`,
+    :py:func:`_generate_batch`, :py:func:`_lnl_batch_serial` and
+    :py:func:`_lnl_batch_parallel` that follow the parameters (the likelihood
+    arguments are added by :py:meth:`model_data.ModelEngine.log_lkl`).
 
     :param ctx: Data that defines the synthetic clusters
     :type ctx: ModelEngine
@@ -145,9 +118,6 @@ def batch_args(
     :param calib: Maximum magnitude, error distribution and number of stars of the
         synthetic clusters, as given by ``Synthetic._calib_values()``
     :type calib: tuple[float, list[np.ndarray], int]
-    :param P: Array of parameters, see :py:meth:`ModelEngine.params_array
-        <model_data.ModelEngine.params_array>`
-    :type P: np.ndarray
 
     :return: Tuple of arguments
     :rtype: tuple
@@ -162,7 +132,6 @@ def batch_args(
         err = np.empty((0, 0))
 
     return (
-        P,
         bd["met_grid"],
         bd["age_grid"],
         ctx.theor_tracks,
