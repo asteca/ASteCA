@@ -1331,21 +1331,6 @@ def first_in_range(
     return np.concatenate(idx_lst)[:N_max]
 
 
-# import _interp_mass_isoch as _c
-
-# def interp_mass_isoch(
-#     isoch_cut: np.ndarray,
-#     mass_ini: np.ndarray,
-#     mass_dist: np.ndarray,
-# ) -> np.ndarray:
-#     # C extension requires float64 C-contiguous arrays
-#     return _c.interp_mass_isoch(
-#         np.ascontiguousarray(isoch_cut, dtype=np.float64),
-#         np.ascontiguousarray(mass_ini,  dtype=np.float64),
-#         np.ascontiguousarray(mass_dist, dtype=np.float64),
-#     )
-
-
 def interp_mass_isoch(
     isoch_cut: np.ndarray,
     mass_ini: np.ndarray,

@@ -183,7 +183,6 @@ def qDistribution(
 
     try:
         gamma = float(gamma)
-        # mass_ratios = np.random.power(gamma + 1, N)  # DEPRECATED 13/01/25
 
         # Use 'gamma + 1' in the power-law distribution because in D&K this
         # distribution is defined as f(q)~q^gamma, while numpy's distribution is
@@ -208,7 +207,6 @@ def qDistribution(
                 (msk5, gamma5),
                 (msk6, gamma6),
             ):
-                # q = np.random.power(gammaX + 1, msk.sum())
                 q = rng.power(gammaX + 1, msk.sum())
                 mass_ratios[msk] = q
         else:
@@ -416,12 +414,12 @@ def randVals(
     N_isoch = theor_tracks.shape[-1]
     N_mass = max(N_isoch, max(arr.size for met in st_dist_mass for arr in met))
 
-    # Used by `move_isochrone()` and `add_errors`
-    # rand_norm_vals = np.random.normal(0.0, 1.0, (2, N_mass))
+    # Row 1: used by error_distribution() (Synthetic.calibrate()). Row 0 is not
+    # used, but it is drawn so that the random values that follow (and hence the
+    # results for a given seed) do not change
     rand_norm_vals = rng.normal(0.0, 1.0, (2, N_mass))
 
-    # Used by `move_isochrone()`, `binarity()`
-    # rand_unif_vals = np.random.uniform(0.0, 1.0, (2, N_mass))
+    # Row 0: used by dr_fractions() (below). Row 1: used by binarity()
     rand_unif_vals = rng.uniform(0.0, 1.0, (2, N_mass))
 
     # Used by `extinction()`. The fractions of every differential reddening model
