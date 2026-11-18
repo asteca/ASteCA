@@ -310,22 +310,14 @@ class Synthetic:
         from .modules import likelihood_priv as lpriv
         from .modules import synth_cluster_priv as scp
 
-        if cluster.mag is None:
-            raise ValueError(
-                "Attribute 'mag' is required to calibrate 'Cluster' object."
-            )
-        if cluster.e_mag is None:
-            raise ValueError(
-                "Attribute 'e_mag' is required to calibrate 'Cluster' object."
-            )
-        if cluster.color is None:
-            raise ValueError(
-                "Attribute 'color' is required to calibrate 'Cluster' object."
-            )
-        if cluster.e_color is None:
-            raise ValueError(
-                "Attribute 'e_color' is required to calibrate 'Cluster' object."
-            )
+        required = ("mag", "e_mag", "color", "e_color")
+        values = [getattr(cluster, attr) for attr in required]
+        for attr, v in zip(required, values):
+            if v is None:
+                raise ValueError(
+                    f"Attribute '{attr}' is required to calibrate 'Cluster' object."
+                )
+        mag, e_mag, color, e_color = values
 
         # Check that the number of colors match
         if self.isochs.color2_effl is not None and cluster.color2 is None:
@@ -341,11 +333,11 @@ class Synthetic:
 
         # Warning with hard coded values
         f_stars_mass = 7
-        if cluster.mag.size * f_stars_mass > self.max_mass:
+        if mag.size * f_stars_mass > self.max_mass:
             warnings.warn(
                 (
                     f"\nThe number of stars in this `Cluster` object "
-                    f"({cluster.mag.size}) is large.\nThis may lead to synthetic "
+                    f"({mag.size}) is large.\nThis may lead to synthetic "
                     "clusters with insufficient stars to\n"
                     "properly reproduce the observations.\n"
                     "Consider increasing the 'max_mass' parameter in the Synthetic "
@@ -356,32 +348,30 @@ class Synthetic:
                 UserWarning,
             )
 
-        # Data used by the likelihood (asteca.Sampler)
-        colors = [cluster.color]
-        if cluster.color2 is not None:
-            colors += [cluster.color2]
-
         # All the data is obtained before it is stored, so that the object is left
         # unchanged if any step fails
         obs = ObservedData(
-            mag=cluster.mag,
-            e_mag=cluster.e_mag,
-            colors=[cluster.color, cluster.color2],
-            e_colors=[cluster.e_color, cluster.e_color2],
+            mag=mag,
+            e_mag=e_mag,
+            colors=[color, cluster.color2],
+            e_colors=[e_color, cluster.e_color2],
             star_id=cluster.star_id,
             ra=cluster.ra,
             dec=cluster.dec,
             # Calibrate parameters using the observed cluster
-            max_mag=float(np.nanmax(cluster.mag)),
+            max_mag=float(np.nanmax(mag)),
             N_stars=cluster.N_stars - cluster.N_nan_phot,
             err_dist=scp.error_distribution(
-                cluster.mag,
-                cluster.e_mag,
-                cluster.e_color,
+                mag,
+                e_mag,
+                e_color,
                 cluster.e_color2,
                 self._engine.rand_floats["norm"][1],
             ),
-            lkl=lpriv.Tremmel(cluster.mag, colors),
+            # Likelihood used by asteca.Sampler, with the defined colors
+            lkl=lpriv.Tremmel(
+                mag, [c for c in (color, cluster.color2) if c is not None]
+            ),
         )
         self._obs = obs
 
@@ -777,7 +767,7 @@ class Synthetic:
         models, synthcls, isoch_tracks, max_masses = [], [], [], []
         mass_infos = []
         for smodel in scp.sample_params(
-            self.rng, model, model_std, self._engine.met_age_dict, N_models
+            self.rng, model, model_std, self._engine.limits, N_models
         ):
             mass_info = {}
             isoch_arr, synth_arr = self._get_model(
@@ -814,6 +804,7 @@ class Synthetic:
         extrinsic_pars = {
             "values": {k: model[k] for k in ("Av", "dm", "Rv")},
             "stddevs": {k: model_std[k] for k in ("Av", "dm", "Rv")},
+            "limits": self._engine.limits,
         }
 
         stars, m2_obs, valid = ssf.stellar_parameters(
@@ -932,9 +923,6 @@ class Synthetic:
         :return: Array with the isochrone data to plot
         :rtype: np.ndarray
         """
-        # # Generate displaced isochrone
-        # fit_params_copy = dict(fit_params)
-
         # Generate displaced isochrone and full synthetic CMD array
         isochrone, full_arr = self._get_model(fit_params, N_stars, isoch_flag=True)
 

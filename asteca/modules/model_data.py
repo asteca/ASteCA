@@ -152,6 +152,17 @@ class ModelEngine:
             if len(self.met_age_dict[k]) == 1
         )
 
+    @cached_property
+    def limits(self) -> dict[str, tuple[float, float]]:
+        """Valid range ``(low, high)`` of each parameter, used to sample parameter
+        values. ``met, loga`` with a single value in the grid have ``low = high``
+        (equal to that value)"""
+        lo, hi = self._bounds
+        lims = {k: (lo[i], hi[i]) for i, k in enumerate(FULL_PARAMS)}
+        for i, g, _ in self._fixed:
+            lims[FULL_PARAMS[i]] = (g, g)
+        return lims
+
     def _raise_invalid(self, P: np.ndarray, bad: np.ndarray) -> None:
         """Raise the error for the first invalid parameter
 

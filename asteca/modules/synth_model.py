@@ -561,13 +561,6 @@ def zaWAverage(
     m0 = mh if t >= 0.5 else ml
     a0 = ah if u >= 0.5 else al
 
-    if _HAS_NUMBA:
-        # Compiled version: identical results, see _zaWAverage_nb()
-        isochrone = _zaWAverage_nb(
-            theor_tracks, ml, mh, al, ah, w11, w12, w21, w22, m0, a0, m_ini_idx
-        )
-        return isochrone, m0, a0
-
     # Core interpolation via in-place accumulation
     isochrone = theor_tracks[ml][al] * w11
     isochrone += theor_tracks[ml][ah] * w12
@@ -1173,38 +1166,15 @@ def mass_interp(
     :returns: Interpolated isochrone array.
     :rtype: np.ndarray
     """
-    if _HAS_NUMBA:
-        # Compiled version: identical results, see _mass_interp_nb()
-        isoch_mass = _mass_interp_nb(
-            isochrone,
-            idx_cut,
-            msk_cut,
-            m_ini_idx,
-            st_dist_mass,
-            N_synth_stars,
-            mass_idx,
-        )
-        if isoch_mass.shape[1] == 0:
-            return np.array([])
-        return isoch_mass
-
     # ==IMPORTANT==
     # Assumes `mass_ini=isochrone[m_ini_idx]` is sorted min to max. This is checked
     # when loading the isochrones in isochrones_priv.interp_isochrones()
     # ==IMPORTANT==
     mass_ini = isochrone[m_ini_idx]
 
-    # Filter masses in the IMF sampling that are outside of the mass
-    # range given by the cut isochrone (st_dist_mass[0]: sampled masses from IMF)
-
-    # # msk_min = (st_dist_mass[0] >= mass_ini.min())
-    # # msk_max = (st_dist_mass[0] <= mass_ini.max())
-    # # (~msk_min).sum(): stars lost below the minimum mass (photometric)
-    # # (~msk_max).sum(): stars lost above the maximum mass (evolutionary)
-    # msk_m = (st_dist_mass >= mass_ini.min()) & (st_dist_mass <= mass_ini.max())
-
     # Extract up to 'N_synth_stars' masses sampled from an IMF, within the mass range
-    # idx = np.nonzero(msk_m)[0][:N_synth_stars]
+    # of the cut isochrone (the first ones, as np.nonzero(msk)[0][:N_synth_stars]
+    # with 'msk' the masses in that range)
     idx = first_in_range(
         st_dist_mass, mass_ini[idx_cut[0]], mass_ini[idx_cut[-1]], N_synth_stars
     )
@@ -1471,11 +1441,6 @@ def binarity(
 
     Ns = isoch_mass.shape[-1]
 
-    if _HAS_NUMBA:
-        # Compiled version: identical results, see _binarity_nb()
-        _binarity_nb(alpha, beta, m_ini_idx, rand_unif_vals, isoch_mass)
-        return isoch_mass[: m_ini_idx + 2]
-
     # Distribution of probability of binarity (multiplicity fraction) versus
     # primary masses.
 
@@ -1572,13 +1537,6 @@ def add_errors(isoch_binar: np.ndarray, err_dist: list[np.ndarray]) -> np.ndarra
     # Indexes that sort the stars from the largest to the smallest magnitude, the
     # same order used by the error distributions (see error_distribution())
     mag_sort = np.argsort(-isoch_binar[0])
-
-    if _HAS_NUMBA:
-        # Compiled scatter-add, see _scatter_add_nb(). The sorting above is left
-        # to NumPy: numba's argsort, and a compiled bucket sort, were not faster
-        for i, sigma in enumerate(err_dist):
-            _scatter_add_nb(isoch_binar[i], mag_sort, sigma)
-        return isoch_binar
 
     for i, sigma in enumerate(err_dist):
         # Index the row first: fancy indexing a 1D view is noticeably faster

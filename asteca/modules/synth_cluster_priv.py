@@ -433,11 +433,6 @@ def randVals(
     return rand_floats
 
 
-# Lower limits of the parameters that can not be negative (Rv must also be > 0,
-# see ModelEngine.params_array() in model_data)
-PARAMS_MIN = {"alpha": 0.0, "beta": 0.0, "Av": 0.0, "DR": 0.0, "dm": 0.0, "Rv": 0.0}
-
-
 def truncnorm_sample(
     rng: np.random.Generator,
     mean: float,
@@ -449,7 +444,8 @@ def truncnorm_sample(
     """Sample a normal distribution truncated to the range [low, high].
 
     Unlike clipping the samples of a normal distribution, this does not pile up
-    values at the limits of the range.
+    values at the limits of the range. If ``low = high`` all the values are equal to
+    it.
 
     :param rng: Random number generator.
     :type rng: np.random.Generator
@@ -468,6 +464,8 @@ def truncnorm_sample(
     :returns: Array of samples.
     :rtype: np.ndarray
     """
+    if low == high:
+        return np.full(N, float(low))
     if std <= 0.0:
         return np.full(N, float(mean))
     a, b = (low - mean) / std, (high - mean) / std
@@ -478,13 +476,12 @@ def sample_params(
     rng: np.random.Generator,
     model: dict[str, float],
     model_std: dict[str, float],
-    met_age_dict: dict,
+    limits: dict[str, tuple[float, float]],
     N_models: int,
 ) -> list[dict[str, float]]:
     """Sample sets of parameters from normal distributions centered on ``model``
-    with STDDEVs ``model_std``, truncated to the valid range of each parameter: the
-    isochrones' ranges for ``met, loga``, and the limits in ``PARAMS_MIN`` for the
-    rest (see :py:func:`truncnorm_sample`).
+    with STDDEVs ``model_std``, truncated to the valid range of each parameter (see
+    :py:func:`truncnorm_sample`).
 
     :param rng: Random number generator
     :type rng: np.random.Generator
@@ -492,22 +489,18 @@ def sample_params(
     :type model: dict[str, float]
     :param model_std: Dictionary with the STDDEV of each parameter in ``model``
     :type model_std: dict[str, float]
-    :param met_age_dict: Dictionary of metallicity and log(age) values of the
-        isochrones
-    :type met_age_dict: dict
+    :param limits: Valid range of each parameter, see
+        :py:attr:`ModelEngine.limits <model_data.ModelEngine.limits>`
+    :type limits: dict[str, tuple[float, float]]
     :param N_models: Number of sets of parameters
     :type N_models: int
 
     :return: List of ``N_models`` dictionaries, one per set of parameters
     :rtype: list[dict[str, float]]
     """
-    bounds = {
-        "met": (met_age_dict["met"][0], met_age_dict["met"][-1]),
-        "loga": (met_age_dict["loga"][0], met_age_dict["loga"][-1]),
-    }
     sampled = {}
     for k, f_val in model.items():
-        low, high = bounds.get(k, (PARAMS_MIN.get(k, -np.inf), np.inf))
+        low, high = limits[k]
         sampled[k] = truncnorm_sample(rng, f_val, model_std[k], low, high, N_models)
     return [dict(zip(sampled, t)) for t in zip(*sampled.values())]
 

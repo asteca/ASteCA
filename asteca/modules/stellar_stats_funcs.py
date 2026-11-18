@@ -135,7 +135,8 @@ def stellar_parameters(
     :type turn_off_points: dict
     :param isochs_young: Isochrones with ``log(age)<=7``, or ``None``
     :type isochs_young: Isochrones | None
-    :param extrinsic_pars: Values and STDDEVs of the extrinsic parameters
+    :param extrinsic_pars: Values and STDDEVs of the extrinsic parameters, and the
+        valid range of each parameter (``values, stddevs, limits``)
     :type extrinsic_pars: dict
     :param ext_law: Extinction law
     :type ext_law: str
@@ -488,7 +489,8 @@ def get_bss_masses(
     :type cluster_mag: np.ndarray
     :param cluster_color: Photometric colors of the stars in the cluster.
     :type cluster_color: np.ndarray
-    :param extrinsic_pars: Dictionary containing model parameters.
+    :param extrinsic_pars: Values and STDDEVs of the extrinsic parameters, and the
+        valid range of each parameter (``values, stddevs, limits``)
     :type extrinsic_pars: dict
     :param ext_law: Extinction law.
     :type ext_law: str
@@ -533,14 +535,14 @@ def get_bss_masses(
     # Sample extrinsic parameter values
     Na, Nm = [int(_) for _ in np.shape(isoch_youngs_arrs)[:2]]
     N_samples = max(1, int(N_models / (Na * Nm) + 1))
-    # Truncated to the valid ranges (Av, dm, Rv can not be negative)
+    # Truncated to the valid ranges of the parameters
     sampled_models = {
         k: scp.truncnorm_sample(
             rng,
             f_val,
             extrinsic_pars["stddevs"][k],
-            scp.PARAMS_MIN.get(k, -np.inf),
-            np.inf,
+            extrinsic_pars["limits"][k][0],
+            extrinsic_pars["limits"][k][1],
             N_samples,
         )
         for k, f_val in extrinsic_pars["values"].items()
