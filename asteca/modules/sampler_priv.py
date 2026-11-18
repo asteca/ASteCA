@@ -58,7 +58,9 @@ class PersistentSMC:
         ``(n_particles, n_dim)`` and returns an array of shape ``(n_particles,)``
     :type log_like: Callable[[np.ndarray], np.ndarray]
     :param bounds: Array of shape ``(n_dim, 2)`` with the ``[min, max]`` limits of the
-        uniform priors
+        uniform priors, assumed finite and with ``min < max`` (validated by
+        :py:class:`asteca.Sampler`). ``log_like`` is only called with points inside
+        these limits
     :type bounds: np.ndarray
     :param n_effective: Target ESS used to select the next inverse temperature
     :type n_effective: int
@@ -72,8 +74,6 @@ class PersistentSMC:
     :param callback: Function called at the end of each iteration with the dictionary
         of the current particles (used to print the progress)
     :type callback: Callable[[dict], None] | None
-
-    :raises ValueError: If the prior bounds are not finite or not ``min < max``
     """
 
     def __init__(
@@ -93,8 +93,6 @@ class PersistentSMC:
         # Uniform priors
         self.bounds = np.asarray(bounds, dtype=float)
         self.low, self.high = self.bounds.T
-        if not (np.all(np.isfinite(self.bounds)) and np.all(self.high > self.low)):
-            raise ValueError("Prior bounds must be finite and with min < max")
         self.n_dim = len(self.bounds)
 
         self.n_active = int(n_active)

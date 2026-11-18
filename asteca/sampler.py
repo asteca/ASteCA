@@ -1,5 +1,6 @@
 import numpy as np
 
+from .modules.model_data import FULL_PARAMS
 from .synthetic import Synthetic
 
 # Temperature used with temperature="auto", as (max N, temperature) pairs: the first
@@ -150,8 +151,8 @@ class Sampler:
             print(mssg)
 
     def _check_args(self, temperature: float | str) -> None:
-        """Validate the input arguments, and set the ``temperature`` and ``_obs``
-        attributes"""
+        """Validate the input arguments, and set the ``temperature``, ``_obs``,
+        ``_P_default`` and ``_P_cols`` attributes"""
         obs = self.synthcl._check_calibrated()
         # Observed cluster used by the likelihood. A later call to
         # 'synthcl.calibrate()' does not affect this object
@@ -167,9 +168,13 @@ class Sampler:
         # ranges, negative values, Rv > 0). As the priors are uniform, this makes
         # all the values that the sampler can propose valid
         try:
-            self._engine.params_array(dict(zip(self.names, self.bounds)))
+            corners = self._engine.params_array(dict(zip(self.names, self.bounds)))
         except ValueError as err:
             raise ValueError(f"Invalid 'priors': {err}") from None
+        # Parameters of the models evaluated by _log_like(): the default values, with
+        # the sampled ones in the columns of the fitted parameters
+        self._P_default = corners[0]
+        self._P_cols = [FULL_PARAMS.index(k) for k in self.names]
 
         if isinstance(temperature, str):
             if temperature != "auto":
@@ -189,10 +194,14 @@ class Sampler:
     def _log_like(self, params_arr: np.ndarray) -> np.ndarray:
         """Vectorized log-likelihood, ``params_arr`` has shape
         ``(n_particles, n_dim)``"""
+        # The sampler only proposes values inside the priors, which are all valid
+        # (see _check_args()), so they are not validated again
+        P = np.tile(self._P_default, (len(params_arr), 1))
+        P[:, self._P_cols] = params_arr
         # Differential reddening model of this run, set by run()
         assert self.DR_distribution is not None
         lnl = self._engine.log_lkl(
-            self._engine.params_array(dict(zip(self.names, params_arr.T))),
+            P,
             self.DR_distribution,
             self._obs,
             self.temperature,

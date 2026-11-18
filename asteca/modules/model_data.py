@@ -270,7 +270,7 @@ class ModelEngine:
                 mass_info=mass_info,
             )
 
-        out = sb._synth_one(p, *sb.batch_args(self, dr_model, calib))
+        out = sb._synth_one(p, *sb.model_args(self, dr_model, calib))
         isoch = sm.output_isochrone(
             self, p, dr_model, isoch_flag, isoch_dr_frac, out.isoch_moved, out.isoch_av
         )
@@ -316,7 +316,7 @@ class ModelEngine:
         """
         if not self.compiled:
             return [sm.get_model(self, p, dr_model, calib)[1] for p in P]
-        out = sb._generate_batch(P, *sb.batch_args(self, dr_model, calib))
+        out = sb._generate_batch(P, *sb.model_args(self, dr_model, calib))
         # An empty synthetic cluster is returned as an empty 1D array, as with
         # get_model()
         return [a if a.shape[1] else np.array([]) for a in out]
@@ -368,22 +368,10 @@ class ModelEngine:
                 ]
             )
 
-        args: tuple = (
+        args = (
             P,
-            *sb.batch_args(self, dr_model, calib),
-            lk.m_ini_idx,
-            lk.hist_args,
-            lk.nz_pos,
-            lk.row_off,
-            lk.table_flat,
-            lk.m_max,
-            lk.min_lkl,
-            lk.max_lkl,
-            lk.lkl_range,
-            float(lk.obs_mag_median),
-            float(lk.obs_col_median),
-            float(lk.cmd_widths[0]),
-            float(lk.cmd_widths[1]),
+            *sb.model_args(self, dr_model, calib),
+            lk.kernel_args,
             float(temperature),
         )
         if not parallel:

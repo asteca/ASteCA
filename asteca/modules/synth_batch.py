@@ -17,7 +17,7 @@ installed, and :py:func:`synth_model.get_model` otherwise.
 """
 
 from collections import namedtuple
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .model_data import ModelEngine
@@ -101,15 +101,16 @@ def batch_data(ctx: "ModelEngine") -> dict:
     }
 
 
-def batch_args(
+def model_args(
     ctx: "ModelEngine",
     dr_model: str,
     calib: tuple[float, list[np.ndarray], int],
-) -> tuple:
-    """Arguments of the compiled functions :py:func:`_synth_one`,
-    :py:func:`_generate_batch`, :py:func:`_lnl_batch_serial` and
-    :py:func:`_lnl_batch_parallel` that follow the parameters (the likelihood
-    arguments are added by :py:meth:`model_data.ModelEngine.log_lkl`).
+) -> tuple[tuple, Any, Any]:
+    """Data of the synthetic clusters passed to the compiled functions
+    :py:func:`_synth_one`, :py:func:`_generate_batch`, :py:func:`_lnl_batch_serial`
+    and :py:func:`_lnl_batch_parallel`: the ``model`` tuple, and the typed lists of
+    the IMF samples and of their mass indexes. The typed lists are separate
+    arguments because numba types a tuple that contains them on every call (~0.1 ms)
 
     :param ctx: Data that defines the synthetic clusters
     :type ctx: ModelEngine
@@ -119,8 +120,10 @@ def batch_args(
         synthetic clusters, as given by ``Synthetic._calib_values()``
     :type calib: tuple[float, list[np.ndarray], int]
 
-    :return: Tuple of arguments
-    :rtype: tuple
+    :return: ``(model, st_list, midx_list)``, with ``model = (met_grid, age_grid,
+        theor_tracks, m_ini_idx, N_a, dr_frac, ext_kind, ccm, unif1, max_mag, err,
+        N_synth)``
+    :rtype: tuple[tuple, Any, Any]
     """
     bd = ctx.batch_data
 
@@ -131,13 +134,11 @@ def batch_args(
     else:
         err = np.empty((0, 0))
 
-    return (
+    model = (
         bd["met_grid"],
         bd["age_grid"],
         ctx.theor_tracks,
         ctx.m_ini_idx,
-        bd["st_list"],
-        bd["midx_list"],
         bd["N_a"],
         bd["dr_frac"][dr_model],
         bd["ext_kind"],
@@ -147,6 +148,7 @@ def batch_args(
         err,
         int(N_synth_stars),
     )
+    return model, bd["st_list"], bd["midx_list"]
 
 
 if _HAS_NUMBA:
@@ -169,27 +171,12 @@ if _HAS_NUMBA:
     _per_star_pool_next_nb = njit(cache=True)(per_star_pool_next)
 
     @njit(cache=True)
-    def _synth_one(
-        p,
-        met_grid,
-        age_grid,
-        theor_tracks,
-        m_ini_idx,
-        st_list,
-        midx_list,
-        N_a,
-        dr_frac,
-        ext_kind,
-        ccm,
-        unif1,
-        max_mag,
-        err,
-        N_synth,
-    ):
+    def _synth_one(p, model, st_list, midx_list):
         """One synthetic cluster, with the same steps and operations as
-        :py:func:`synth_model.get_model` (numba). ``ext_kind`` is ``0`` for the
-        GAIADR3 extinction law and ``1`` for CCMO, with the coefficients in ``ccm``
-        (see :py:func:`ccmo_array`).
+        :py:func:`synth_model.get_model` (numba). ``model, st_list, midx_list`` are
+        returned by :py:func:`model_args`; the ``ext_kind`` of ``model`` is ``0`` for
+        the GAIADR3 extinction law and ``1`` for CCMO, with the coefficients in
+        ``ccm`` (see :py:func:`ccmo_array`).
 
         Returns a ``SynthOut`` named tuple ``(synth, status, isoch_moved, isoch_av,
         idx_cut, N_pool, keep)``: the synthetic cluster, an array of shape ``(m_ini_idx + 2, N)`` with
@@ -200,6 +187,20 @@ if _HAS_NUMBA:
         with the minimum absorption ``Av``, the indexes of its points brighter than
         the maximum magnitude, the final size of the pool of candidate stars, and
         the indexes of the candidates brighter than the maximum magnitude."""
+        (
+            met_grid,
+            age_grid,
+            theor_tracks,
+            m_ini_idx,
+            N_a,
+            dr_frac,
+            ext_kind,
+            ccm,
+            unif1,
+            max_mag,
+            err,
+            N_synth,
+        ) = model
         # p[6] (Rv) is only used by the CCMO extinction law
         met, loga, alpha, beta, av, dr, dm = p[0], p[1], p[2], p[3], p[4], p[5], p[7]
         N_rows = m_ini_idx + 2
@@ -362,222 +363,66 @@ if _HAS_NUMBA:
         return SynthOut(isoch_binar, 0, isochrone, isoch_av, idx_cut, N_pool, keep)
 
     @njit(cache=True)
-    def _lnl_one(
-        synth,
-        n_phot,
-        hist_args,
-        nz_pos,
-        row_off,
-        table_flat,
-        m_max,
-        min_lkl,
-        max_lkl,
-        lkl_range,
-        obs_mag_med,
-        obs_col_med,
-        w_mag,
-        w_col,
-        temperature,
-    ):
+    def _lnl_one(synth, lkl, temperature):
         """Same as :py:meth:`likelihood_priv.Tremmel.log_lkl`, for one synthetic
-        cluster"""
+        cluster. ``lkl`` is :py:attr:`Tremmel.kernel_args
+        <likelihood_priv.Tremmel.kernel_args>`"""
+        (
+            n_phot,
+            hist_args,
+            nz_pos,
+            row_off,
+            table_flat,
+            m_max,
+            min_lkl,
+            max_lkl,
+            lkl_range,
+            obs_mag_med,
+            obs_col_med,
+            w_mag,
+            w_col,
+        ) = lkl
         if synth.shape[1] == 0:
-            lkl = max_lkl - 10.0 * lkl_range
+            lnl = max_lkl - 10.0 * lkl_range
         else:
             mag = synth[0]
-            lkl = _tremmel_lkl_nb(
+            lnl = _tremmel_lkl_nb(
                 mag, synth[1:n_phot], hist_args, nz_pos, row_off, table_flat, m_max
             )
-            if lkl <= min_lkl:
+            if lnl <= min_lkl:
                 # likelihood_priv.no_overlap_dist()
                 d_mag = (obs_mag_med - np.median(mag)) / w_mag
                 d_col = (obs_col_med - np.median(synth[1])) / w_col
-                lkl = max_lkl - (1 + (d_mag * d_mag + d_col * d_col)) * lkl_range
-        return (lkl - max_lkl) / temperature
+                lnl = max_lkl - (1 + (d_mag * d_mag + d_col * d_col)) * lkl_range
+        return (lnl - max_lkl) / temperature
 
     @njit(cache=True)
-    def _generate_batch(
-        P,
-        met_grid,
-        age_grid,
-        theor_tracks,
-        m_ini_idx,
-        st_list,
-        midx_list,
-        N_a,
-        dr_frac,
-        ext_kind,
-        ccm,
-        unif1,
-        max_mag,
-        err,
-        N_synth,
-    ):
+    def _generate_batch(P, model, st_list, midx_list):
         """List with the synthetic clusters for each set of parameters in ``P``"""
         out = List()
         for j in range(P.shape[0]):
-            out.append(
-                _synth_one(
-                    P[j],
-                    met_grid,
-                    age_grid,
-                    theor_tracks,
-                    m_ini_idx,
-                    st_list,
-                    midx_list,
-                    N_a,
-                    dr_frac,
-                    ext_kind,
-                    ccm,
-                    unif1,
-                    max_mag,
-                    err,
-                    N_synth,
-                ).synth
-            )
+            out.append(_synth_one(P[j], model, st_list, midx_list).synth)
         return out
 
     @njit(cache=True)
-    def _lnl_batch_serial(
-        P,
-        met_grid,
-        age_grid,
-        theor_tracks,
-        m_ini_idx,
-        st_list,
-        midx_list,
-        N_a,
-        dr_frac,
-        ext_kind,
-        ccm,
-        unif1,
-        max_mag,
-        err,
-        N_synth,
-        n_phot,
-        hist_args,
-        nz_pos,
-        row_off,
-        table_flat,
-        m_max,
-        min_lkl,
-        max_lkl,
-        lkl_range,
-        obs_mag_med,
-        obs_col_med,
-        w_mag,
-        w_col,
-        temperature,
-    ):
+    def _lnl_batch_serial(P, model, st_list, midx_list, lkl, temperature):
         """Log-likelihoods of the synthetic clusters for each set of parameters in
         ``P``. The synthetic clusters are not returned"""
         out = np.empty(P.shape[0])
         for j in range(P.shape[0]):
-            synth = _synth_one(
-                P[j],
-                met_grid,
-                age_grid,
-                theor_tracks,
-                m_ini_idx,
-                st_list,
-                midx_list,
-                N_a,
-                dr_frac,
-                ext_kind,
-                ccm,
-                unif1,
-                max_mag,
-                err,
-                N_synth,
-            ).synth
-            out[j] = _lnl_one(
-                synth,
-                n_phot,
-                hist_args,
-                nz_pos,
-                row_off,
-                table_flat,
-                m_max,
-                min_lkl,
-                max_lkl,
-                lkl_range,
-                obs_mag_med,
-                obs_col_med,
-                w_mag,
-                w_col,
-                temperature,
-            )
+            synth = _synth_one(P[j], model, st_list, midx_list).synth
+            out[j] = _lnl_one(synth, lkl, temperature)
         return out
 
+    # A separate function, not _lnl_batch_serial() compiled with parallel=True:
+    # numba's cache does not tell the two versions of the same function apart
     @njit(cache=True, parallel=True)
-    def _lnl_batch_parallel(
-        P,
-        met_grid,
-        age_grid,
-        theor_tracks,
-        m_ini_idx,
-        st_list,
-        midx_list,
-        N_a,
-        dr_frac,
-        ext_kind,
-        ccm,
-        unif1,
-        max_mag,
-        err,
-        N_synth,
-        n_phot,
-        hist_args,
-        nz_pos,
-        row_off,
-        table_flat,
-        m_max,
-        min_lkl,
-        max_lkl,
-        lkl_range,
-        obs_mag_med,
-        obs_col_med,
-        w_mag,
-        w_col,
-        temperature,
-    ):
+    def _lnl_batch_parallel(P, model, st_list, midx_list, lkl, temperature):
         """Same as :py:func:`_lnl_batch_serial`, with the models distributed among
         numba's threads. Each model only reads the shared arrays and writes its own
         output, so the results are identical"""
         out = np.empty(P.shape[0])
         for j in prange(P.shape[0]):
-            synth = _synth_one(
-                P[j],
-                met_grid,
-                age_grid,
-                theor_tracks,
-                m_ini_idx,
-                st_list,
-                midx_list,
-                N_a,
-                dr_frac,
-                ext_kind,
-                ccm,
-                unif1,
-                max_mag,
-                err,
-                N_synth,
-            ).synth
-            out[j] = _lnl_one(
-                synth,
-                n_phot,
-                hist_args,
-                nz_pos,
-                row_off,
-                table_flat,
-                m_max,
-                min_lkl,
-                max_lkl,
-                lkl_range,
-                obs_mag_med,
-                obs_col_med,
-                w_mag,
-                w_col,
-                temperature,
-            )
+            synth = _synth_one(P[j], model, st_list, midx_list).synth
+            out[j] = _lnl_one(synth, lkl, temperature)
         return out

@@ -725,6 +725,24 @@ class Tremmel:
         # of a log-likelihood value 'lnl' at temperature T is -lnl * T / lkl_range)
         self.lkl_range = self.max_lkl - self.min_lkl
 
+        # Data passed (as a single tuple, the 'lkl' argument) to the compiled
+        # functions that evaluate the likelihood, see synth_batch._lnl_one()
+        self.kernel_args = (
+            self.m_ini_idx,
+            self.hist_args,
+            self.nz_pos,
+            self.row_off,
+            self.table_flat,
+            self.m_max,
+            self.min_lkl,
+            self.max_lkl,
+            self.lkl_range,
+            float(self.obs_mag_median),
+            float(self.obs_col_median),
+            self.cmd_widths[0],
+            self.cmd_widths[1],
+        )
+
     def log_lkl(self, synth_clust: np.ndarray, temperature: float = 1.0) -> float:
         """Log-likelihood relative to its maximum, divided by the ``temperature``:
         ``(lkl - max_lkl) / temperature``, so that ``0`` is the best value.

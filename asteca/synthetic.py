@@ -6,6 +6,18 @@ from .cluster import Cluster
 from .isochrones import Isochrones
 from .modules.model_data import ModelEngine, ObservedData
 
+# Default values of the fundamental parameters, used for those not in 'def_params'
+DEFAULT_PARAMS = {
+    "met": 0.0152,
+    "loga": 8.0,
+    "alpha": 0.09,
+    "beta": 0.94,
+    "Rv": 3.1,
+    "DR": 0.0,
+    "Av": 0.2,
+    "dm": 9.0,
+}
+
 
 class Synthetic:
     """Define a :py:class:`Synthetic` object.
@@ -22,8 +34,9 @@ class Synthetic:
     :param isochs: :py:class:`Isochrones <asteca.isochrones.Isochrones>` object with
         the loaded files for the theoretical isochrones
     :type isochs: Isochrones
-    :param def_params: Default values for all the required fundamental parameters. If
-        ``None`` is given, the following values are used::
+    :param def_params: Default values of the fundamental parameters, used for the
+        parameters not given when generating a synthetic cluster. The parameters not
+        included here (all of them if ``None`` is given) take the following values::
 
             {
                 "met": 0.0152,
@@ -35,6 +48,10 @@ class Synthetic:
                 "Av": 0.2,
                 "dm": 9.0,
             }
+
+        A warning is shown if a default value is not valid (e.g.: a metallicity or age
+        outside the range of the isochrones); the parameter must then be given each
+        time a synthetic cluster is generated
     :type def_params: dict[str, float] | None
     :param IMF_name: Name of the initial mass function used to populate the isochrones,
         one of ``salpeter_1955, kroupa_2001, chabrier_2014``
@@ -88,20 +105,13 @@ class Synthetic:
         verbose: int = 1,
     ) -> None:
 
-        if def_params is None:
-            def_params = {
-                "met": 0.0152,
-                "loga": 8.0,
-                "alpha": 0.09,
-                "beta": 0.94,
-                "Rv": 3.1,
-                "DR": 0.0,
-                "Av": 0.2,
-                "dm": 9.0,
-            }
-
         self.isochs = isochs
-        self.def_params = def_params
+        self.def_params = {**DEFAULT_PARAMS, **(def_params or {})}
+        unknown = self.def_params.keys() - DEFAULT_PARAMS.keys()
+        if unknown:
+            raise ValueError(
+                f"Parameter(s) {sorted(unknown)} in 'def_params' not recognized"
+            )
         self.IMF_name = IMF_name
         self.max_mass = max_mass
         self.gamma = gamma
@@ -232,32 +242,14 @@ class Synthetic:
         # cluster_properties()
         self.turn_off_points: dict | None = None
 
-        # Check that the ranges are respected
-        for par in ("met", "loga"):
-            if par in def_params:
-                grid = self._engine.met_age_dict[par]
-                pmin, pmax = min(grid), max(grid)
-                if self.def_params[par] < pmin or self.def_params[par] > pmax:
-                    warnings.warn(
-                        f"Parameter {par}={self.def_params[par]} is out "
-                        f"of range: [{pmin} - {pmax}]"
-                    )
-
-        required = {
-            "met",
-            "loga",
-            "alpha",
-            "beta",
-            "Rv",
-            "DR",
-            "Av",
-            "dm",
-        }
-        if not required.issubset(def_params.keys()):
-            missing = required - set(def_params.keys())
+        # Validate the default values with the same checks as the parameters of the
+        # synthetic clusters. An invalid value is only an error if it is used
+        try:
+            self._engine.params_array(None)
+        except ValueError as err:
             warnings.warn(
-                f"Missing required keys in 'def_params': {missing}.\nThese must be all "
-                "present in 'params' when calling 'synthcl.generate(params)'"
+                f"Invalid 'def_params': {err}. The parameter must be included in "
+                + "'params' when generating synthetic clusters"
             )
 
         self._vp(f"Default params : {self.def_params}", 1)

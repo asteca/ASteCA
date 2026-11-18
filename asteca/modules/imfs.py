@@ -26,18 +26,6 @@ def invTrnsfSmpl(IMF_name: str, m_low: float = 0.08, m_high: float = 100) -> BSp
     mass_values += list(np.linspace(10.01, m_high, 25))
     mass_values = np.array(mass_values)
 
-    # DEPRECATED 12/01/25
-    #
-    # IMF_old = get_imf(IMF_name, m_low)
-    # CDF_samples, m_old, area_CDF = [], m_low, 0.0
-    # for m in mass_values[1:]:
-    #     # Approximate integral with rectangular area, and add to previous total area
-    #     IMF_new = get_imf(IMF_name, m)
-    #     area_CDF += 0.5 * (IMF_new + IMF_old) * (m - m_old)
-    #     CDF_samples.append(area_CDF)
-    #     IMF_old, m_old = IMF_new, m
-    # CDF_samples = np.array(CDF_samples) / max(CDF_samples)
-
     # Approximate integral with rectangular area, and add to previous total area
     # This is the length of the base of the rectangle
     length = mass_values[1:] - mass_values[:-1]
