@@ -105,11 +105,11 @@ class Sampler:
 
         self.names = list(priors)
         self.bounds = np.array([priors[k] for k in self.names], dtype=float)
-        self._check_args(temperature)
         # Generates the synthetic clusters and evaluates their log-likelihoods. It
         # also validates 'n_threads' (only used with parallel=True and numba
         # installed), so that an invalid value is reported before the run starts
         self._engine = synthcl._model_engine(parallel, n_threads)
+        self._check_args(temperature)
 
         # A legacy RandomState is used so that the results match those of pocoMC
         # (with precondition=False) for the same seed
@@ -159,31 +159,16 @@ class Sampler:
         if len(self.names) == 0:
             raise ValueError("At least one parameter must be included in 'priors'")
         for k, (pmin, pmax) in zip(self.names, self.bounds):
-            if k not in self.synthcl.def_params:
-                raise ValueError(
-                    f"Parameter '{k}' not recognized. Should be one of "
-                    + f"{list(self.synthcl.def_params)}"
-                )
             if not (np.isfinite(pmin) and np.isfinite(pmax) and pmin < pmax):
                 raise ValueError(f"Prior of '{k}' must be finite and with min < max")
-
-        isochs = self.synthcl.isochs
-        lims = {
-            "met": (isochs.zmin, isochs.zmax),
-            "loga": (isochs.amin, isochs.amax),
-        }
-        for k, (pmin, pmax) in zip(self.names, self.bounds):
-            if k in lims:
-                lmin, lmax = lims[k]
-                if pmin < lmin or pmax > lmax:
-                    raise ValueError(
-                        f"Prior of '{k}' {pmin, pmax} is outside of the range of "
-                        + f"the loaded isochrones [{lmin}, {lmax}]"
-                    )
-            elif k == "Rv" and pmin <= 0.0:
-                raise ValueError("Prior of 'Rv' must be larger than 0")
-            elif k != "Rv" and pmin < 0.0:
-                raise ValueError(f"Prior of '{k}' must not be negative")
+        # The limits of the priors must be valid values of the parameters: they are
+        # checked as those of the synthetic clusters (unknown names, isochrones'
+        # ranges, negative values, Rv > 0). As the priors are uniform, this makes
+        # all the values that the sampler can propose valid
+        try:
+            self._engine.ctx.params_array(dict(zip(self.names, self.bounds)))
+        except ValueError as err:
+            raise ValueError(f"Invalid 'priors': {err}") from None
 
         if isinstance(temperature, str):
             if temperature != "auto":
