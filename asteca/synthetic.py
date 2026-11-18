@@ -4,6 +4,7 @@ import numpy as np
 
 from .cluster import Cluster
 from .isochrones import Isochrones
+from .modules.model_data import ModelContext, ObservedData
 
 
 class Synthetic:
@@ -143,12 +144,12 @@ class Synthetic:
         # Sample the selected IMF
         Nmets, Nages = self.isochs.theor_tracks.shape[:2]
         self._vp("(Sampling IMF)", 1)
-        self.st_dist_mass = scp.sample_imf(
+        st_dist_mass = scp.sample_imf(
             self.rng, self.IMF_name, self.max_mass, Nmets, Nages
         )
 
         # Add binary systems
-        self.theor_tracks = scp.add_binarity(
+        theor_tracks = scp.add_binarity(
             self.rng,
             self.gamma,
             self.isochs.color,
@@ -157,15 +158,15 @@ class Synthetic:
             self.isochs.color_filters,
         )
 
-        # Data used by the `generate()` method
-        self.m_ini_idx = 2  # (0->mag, 1->color, 2->mass_ini)
+        # Index of the initial mass row of the synthetic clusters
+        m_ini_idx = 2  # (0->mag, 1->color, 2->mass_ini)
         if self.isochs.color2_effl is not None:
-            self.m_ini_idx = 3  # (0->mag, 1->color, 2->color2, 3->mass_ini)
+            m_ini_idx = 3  # (0->mag, 1->color, 2->color2, 3->mass_ini)
         # Set tolerances for the ranges of the isochrones in `generate()`
-        self.age_tol = 0.01
-        self.met_tol = 0.001  # z
+        age_tol = 0.01
+        met_tol = 0.001  # z
         if self.isochs.z_to_FeH is not None:
-            self.met_tol = 0.01  # FeH
+            met_tol = 0.01  # FeH
 
         if self.ext_law in ("GAIADR3",):
             if (
@@ -193,7 +194,7 @@ class Synthetic:
                 )
 
         # Get extinction coefficients for these filters
-        self.ext_coefs = []  # It is important to pass an empty list because the
+        ext_coefs = []  # It is important to pass an empty list because the
         # function `extinction()` checks its length later on
         if self.ext_law == "CCMO":
             if self.isochs.magnitude_effl is None or self.isochs.color_effl is None:
@@ -201,26 +202,31 @@ class Synthetic:
                     f"Extinction law '{self.ext_law}' requires effective lambda\n"
                     + "values for the magnitude and first color."
                 )
-            self.ext_coefs = scp.ccmo_ext_coeffs(
+            ext_coefs = scp.ccmo_ext_coeffs(
                 self.isochs.magnitude_effl,
                 self.isochs.color_effl,
                 self.isochs.color2_effl,
             )
 
-        # Generate random floats used by `generate()`
-        self.rand_floats = scp.randVals(self.rng, self.theor_tracks, self.st_dist_mass)
-
-        # Store for internal usage
-        self.met_age_dict = self.isochs.met_age_dict
-
-        # Pre-computed search indexes used by mass_interp()
-        self.mass_idx = scp.mass_idx_lookup(
-            self.theor_tracks, self.st_dist_mass, self.m_ini_idx
+        # Data used to generate the synthetic clusters (by _get_model() and by the
+        # batch functions in synth_batch)
+        self._ctx = ModelContext(
+            met_age_dict=self.isochs.met_age_dict,
+            met_tol=met_tol,
+            age_tol=age_tol,
+            def_params=self.def_params,
+            m_ini_idx=m_ini_idx,
+            theor_tracks=theor_tracks,
+            ext_law=self.ext_law,
+            ext_coefs=ext_coefs,
+            # Random floats used by `generate()`
+            rand_floats=scp.randVals(self.rng, theor_tracks, st_dist_mass),
+            st_dist_mass=st_dist_mass,
+            # Pre-computed search indexes used by mass_interp()
+            mass_idx=scp.mass_idx_lookup(theor_tracks, st_dist_mass, m_ini_idx),
         )
-
-        # Data used by the compiled batch functions, obtained the first time they are
-        # called (see synth_batch.batch_args())
-        self._batch_data: dict | None = None
+        # Observed cluster data, set by calibrate()
+        self._obs: ObservedData | None = None
 
         # Turn-off points used to define the BSS region, stored by the last call to
         # cluster_properties()
@@ -229,7 +235,8 @@ class Synthetic:
         # Check that the ranges are respected
         for par in ("met", "loga"):
             if par in def_params:
-                pmin, pmax = min(self.met_age_dict[par]), max(self.met_age_dict[par])
+                grid = self._ctx.met_age_dict[par]
+                pmin, pmax = min(grid), max(grid)
                 if self.def_params[par] < pmin or self.def_params[par] > pmax:
                     warnings.warn(
                         f"Parameter {par}={self.def_params[par]} is out "
@@ -357,38 +364,38 @@ class Synthetic:
                 UserWarning,
             )
 
-        # Calibrate parameters using the observed cluster
-        self.max_mag_syn_obs = float(np.nanmax(cluster.mag))
-        self.N_stars_obs = cluster.N_stars - cluster.N_nan_phot
-        self.err_dist_obs = scp.error_distribution(
-            cluster.mag,
-            cluster.e_mag,
-            cluster.e_color,
-            cluster.e_color2,
-            self.rand_floats["norm"][1],
-        )
-
-        # Used by the `cluster_properties()` method
-        self.star_id = cluster.star_id
-        self.cluster_mag = cluster.mag
-        self.cluster_colors = [cluster.color, cluster.color2]
-        # Used by get_stellar_masses()
-        self.cluster_e_mag = cluster.e_mag
-        self.cluster_e_colors = [cluster.e_color, cluster.e_color2]
-
-        # Used by the `cluster_properties()` method
-        self.cluster_ra = cluster.ra
-        self.cluster_dec = cluster.dec
-
         # Data used by the likelihood (asteca.Sampler)
         colors = [cluster.color]
         if cluster.color2 is not None:
             colors += [cluster.color2]
-        self._lkl = lpriv.Tremmel(cluster.mag, colors)
+
+        # All the data is obtained before it is stored, so that the object is left
+        # unchanged if any step fails
+        obs = ObservedData(
+            mag=cluster.mag,
+            e_mag=cluster.e_mag,
+            colors=[cluster.color, cluster.color2],
+            e_colors=[cluster.e_color, cluster.e_color2],
+            star_id=cluster.star_id,
+            ra=cluster.ra,
+            dec=cluster.dec,
+            # Calibrate parameters using the observed cluster
+            max_mag=float(np.nanmax(cluster.mag)),
+            N_stars=cluster.N_stars - cluster.N_nan_phot,
+            err_dist=scp.error_distribution(
+                cluster.mag,
+                cluster.e_mag,
+                cluster.e_color,
+                cluster.e_color2,
+                self._ctx.rand_floats["norm"][1],
+            ),
+            lkl=lpriv.Tremmel(cluster.mag, colors),
+        )
+        self._obs = obs
 
         self._vp("\nCalibrated observed cluster")
-        self._vp(f"N_stars_obs    : {self.N_stars_obs}", 1)
-        self._vp(f"Max magnitude  : {self.max_mag_syn_obs:.2f}", 1)
+        self._vp(f"N_stars_obs    : {obs.N_stars}", 1)
+        self._vp(f"Max magnitude  : {obs.max_mag:.2f}", 1)
         self._vp("Error distribution loaded", 1)
 
     def generate(
@@ -467,15 +474,18 @@ class Synthetic:
         if batch:
             from .modules import synth_batch as sb
 
-            P = sb.batch_params(self, params)
-            if not sb.available(self.ext_law):
+            P = sb.batch_params(self._ctx, params)
+            if not sb.available(self._ctx.ext_law):
                 # Same as generate() with batch=False for each model
                 return [
-                    self._get_model(dict(zip(sb.FULL_PARAMS, p)), N_stars)[1]
-                    for p in P
+                    self._get_model(dict(zip(sb.FULL_PARAMS, p)), N_stars)[1] for p in P
                 ]
 
-            out = sb._generate_batch(*sb.batch_args(self, P, N_stars))
+            out = sb._generate_batch(
+                *sb.batch_args(
+                    self._ctx, self.DR_distribution, self._calib_values(N_stars), P
+                )
+            )
             # An empty synthetic cluster is returned as an empty 1D array, as with
             # batch=False
             return [a if a.shape[1] else np.array([]) for a in out]
@@ -541,7 +551,7 @@ class Synthetic:
             If the synthetic cluster has fewer than two stars, ``D=1`` and ``D_std=0``
         :rtype: tuple[float, float]
         """
-        self._check_calibrated()
+        obs = self._check_calibrated()
 
         from .modules import likelihood_priv as lpriv
 
@@ -550,9 +560,7 @@ class Synthetic:
         # isochrone, synth_clust = self._get_model(params, isoch_flag=True)
         _, synth_clust = self._get_model(params, isoch_flag=False)
 
-        D, D_std = lpriv.cmd_overlap(
-            self.cluster_mag, self.cluster_colors[0], synth_clust, h_mag, h_col
-        )
+        D, D_std = lpriv.cmd_overlap(obs.mag, obs.colors[0], synth_clust, h_mag, h_col)
 
         # Turn-off check: the observed and synthetic stars inside a box around the
         # turn-off are compared with the cmd_overlap() statistic. The check is skipped
@@ -563,10 +571,10 @@ class Synthetic:
 
         # # Turn-off point of the isochrone up to the maximum mass of the synthetic
         # # cluster, as in cluster_properties()
-        # max_mass = synth_clust[self.m_ini_idx].max()
-        # if (isochrone[self.m_ini_idx] < max_mass).sum() < 2:
+        # max_mass = synth_clust[self._ctx.m_ini_idx].max()
+        # if (isochrone[self._ctx.m_ini_idx] < max_mass).sum() < 2:
         #     return D, D_std
-        # to = ssf.turn_off_points([isochrone[[0, 1, self.m_ini_idx]]], [max_mass], 0)
+        # to = ssf.turn_off_points([isochrone[[0, 1, self._ctx.m_ini_idx]]], [max_mass], 0)
         # to_col, to_mag = to["to_col"][0], to["to_mag"][0]
 
         # lpriv.cmd_overlap_turnoff_box(
@@ -728,7 +736,7 @@ class Synthetic:
             M_evol, M_dyn``)
         :rtype: dict
         """
-        self._check_calibrated()
+        obs = self._check_calibrated()
 
         from .modules import cluster_mass_funcs as cmf
         from .modules import stellar_stats_funcs as ssf
@@ -777,7 +785,7 @@ class Synthetic:
         if turn_off is None:
             f_to = float(
                 np.percentile(
-                    self.rand_floats["dr_frac"][self.DR_distribution],
+                    self._ctx.rand_floats["dr_frac"][self.DR_distribution],
                     TO_DR_PERCENTILE,
                 )
             )
@@ -787,7 +795,7 @@ class Synthetic:
         models, synthcls, isoch_tracks, max_masses = [], [], [], []
         mass_infos = []
         for smodel in scp.sample_params(
-            self.rng, model, model_std, self.met_age_dict, N_models
+            self.rng, model, model_std, self._ctx.met_age_dict, N_models
         ):
             mass_info = {}
             isoch_arr, synth_arr = self._get_model(
@@ -800,8 +808,8 @@ class Synthetic:
             mass_infos.append(mass_info)
             # Magnitude, color and initial mass of the isochrone, and maximum mass of
             # the synthetic cluster, used to locate the turn-off point
-            isoch_tracks.append(isoch_arr[[0, color_idx + 1, self.m_ini_idx]])
-            max_masses.append(synth_arr[self.m_ini_idx].max())
+            isoch_tracks.append(isoch_arr[[0, color_idx + 1, self._ctx.m_ini_idx]])
+            max_masses.append(synth_arr[self._ctx.m_ini_idx].max())
 
         N_models_non_empty = len(models)
         if N_models_non_empty == 0:
@@ -827,22 +835,22 @@ class Synthetic:
         }
 
         stars, m2_obs, valid = ssf.stellar_parameters(
-            self.cluster_mag,
-            self.cluster_e_mag,
-            self.cluster_colors,
-            self.cluster_e_colors,
-            self.m_ini_idx,
+            obs.mag,
+            obs.e_mag,
+            obs.colors,
+            obs.e_colors,
+            self._ctx.m_ini_idx,
             synthcls,
             turn_off_points,
             isochs_young,
             extrinsic_pars,
             self.ext_law,
-            self.ext_coefs,
+            self._ctx.ext_coefs,
             self.rng,
         )
         # Add ID column if it exists
-        if self.star_id is not None:
-            stars = {"star_id": self.star_id, **stars}
+        if obs.star_id is not None:
+            stars = {"star_id": obs.star_id, **stars}
         N_nan = int((~valid).sum())
         if N_nan > 0:
             self._vp("", 0)
@@ -868,12 +876,12 @@ class Synthetic:
         if (
             rho_amb is None
             and radec_c is None
-            and self.cluster_ra is not None
-            and self.cluster_dec is not None
+            and obs.ra is not None
+            and obs.dec is not None
         ):
             # The RA values are measured relative to their circular mean before
             # taking the median, so that clusters crossing RA=0 are handled
-            ra = np.asarray(self.cluster_ra, dtype=float)
+            ra = np.asarray(obs.ra, dtype=float)
             ra_rad = np.deg2rad(ra)
             ra_ref = np.rad2deg(
                 np.arctan2(np.nanmean(np.sin(ra_rad)), np.nanmean(np.cos(ra_rad)))
@@ -881,7 +889,7 @@ class Synthetic:
             ra_off = (ra - ra_ref + 180.0) % 360.0 - 180.0
             radec_c = (
                 float((ra_ref + np.nanmedian(ra_off)) % 360.0),
-                float(np.nanmedian(self.cluster_dec)),
+                float(np.nanmedian(obs.dec)),
             )
             self._vp(
                 "\nUsing ambient density estimated from observed cluster (ra, dec)", 1
@@ -890,7 +898,7 @@ class Synthetic:
             models,
             synthcls,
             mass_infos,
-            self.m_ini_idx,
+            self._ctx.m_ini_idx,
             self.isochs.z_to_FeH,
             radec_c,
             rho_amb,
@@ -963,8 +971,8 @@ class Synthetic:
             return np.array(isochrone)[[0, color_idx + 1]]
 
         # Extract magnitude and mass from the isochrone and the full synthetic cluster
-        isoch_mag, isoch_mass = isochrone[0], isochrone[self.m_ini_idx]
-        mag_full, mass_full = full_arr[0], full_arr[self.m_ini_idx]
+        isoch_mag, isoch_mass = isochrone[0], isochrone[self._ctx.m_ini_idx]
+        mag_full, mass_full = full_arr[0], full_arr[self._ctx.m_ini_idx]
         full_mag_min = mag_full.min()
 
         # Select the max mass for the isochrone that results in a minimum difference
@@ -994,18 +1002,20 @@ class Synthetic:
 
         return isochrone
 
-    def _check_calibrated(self) -> None:
-        """Raise a ``ValueError`` if :py:meth:`calibrate` was not called"""
-        if not (
-            hasattr(self, "max_mag_syn_obs")
-            and hasattr(self, "err_dist_obs")
-            and hasattr(self, "N_stars_obs")
-            and hasattr(self, "_lkl")
-        ):
+    def _check_calibrated(self) -> ObservedData:
+        """Data of the observed cluster stored by :py:meth:`calibrate`
+
+        :raises ValueError: If :py:meth:`calibrate` was not called
+
+        :return: Observed cluster data
+        :rtype: ObservedData
+        """
+        if self._obs is None:
             raise ValueError(
                 "This method requires running the 'calibrate()' method first\n"
                 + "with an observed 'Cluster' object"
             )
+        return self._obs
 
     def _calib_values(self, N_stars: int) -> tuple[float, list[np.ndarray], int]:
         """Maximum magnitude, error distribution and number of stars of the
@@ -1018,10 +1028,9 @@ class Synthetic:
         :return: Maximum magnitude, error distribution and number of stars
         :rtype: tuple[float, list[np.ndarray], int]
         """
-        try:
-            return self.max_mag_syn_obs, self.err_dist_obs, self.N_stars_obs
-        except AttributeError:
+        if self._obs is None:
             return np.inf, [], int(N_stars)
+        return self._obs.calib_values()
 
     def _get_model(
         self,
@@ -1059,26 +1068,13 @@ class Synthetic:
         """
         from .modules import synth_model as sm
 
-        max_mag_syn, err_dist_synth, N_synth_stars = self._calib_values(N_stars)
         return sm.get_model(
-            {} if params is None else params,
-            self.met_age_dict,
-            self.met_tol,
-            self.age_tol,
-            self.def_params,
-            self.m_ini_idx,
-            self.theor_tracks,
-            self.ext_law,
-            self.ext_coefs,
-            self.rand_floats,
-            self.rand_floats["dr_frac"][self.DR_distribution],
-            self.st_dist_mass,
-            self.mass_idx,
-            max_mag_syn,
-            err_dist_synth,
-            N_synth_stars,
-            show_errors,
-            isoch_flag,
-            isoch_dr_frac,
-            mass_info,
+            self._ctx,
+            params,
+            self.DR_distribution,
+            self._calib_values(N_stars),
+            show_errors=show_errors,
+            isoch_flag=isoch_flag,
+            isoch_dr_frac=isoch_dr_frac,
+            mass_info=mass_info,
         )

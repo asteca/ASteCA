@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..synthetic import Synthetic
+    from .model_data import ModelContext
 
 import numpy as np
 
@@ -75,24 +76,25 @@ def ccmo_array(ext_law: str, ext_coefs: list) -> np.ndarray:
     return np.array(rows, dtype=float)
 
 
-def batch_data(synthcl: "Synthetic") -> dict:
+def batch_data(ctx: "ModelContext") -> dict:
     """Arrays used by the compiled functions that do not change after the
     :py:class:`asteca.Synthetic` object is created. The typed lists hold references
-    to the existing IMF samples and mass indexes (no copies).
+    to the existing IMF samples and mass indexes (no copies). Obtained once and
+    cached by :py:attr:`ModelContext.batch_data <model_data.ModelContext.batch_data>`.
 
-    :param synthcl: :py:class:`asteca.Synthetic` object
-    :type synthcl: Synthetic
+    :param ctx: Data that defines the synthetic clusters
+    :type ctx: ModelContext
 
     :return: Dictionary with the data
     :rtype: dict
     """
     from numba.typed.typedlist import List
 
-    N_z, N_a = synthcl.theor_tracks.shape[:2]
+    N_z, N_a = ctx.theor_tracks.shape[:2]
     st_list = List()
     for ml in range(N_z):
         for al in range(N_a):
-            st_list.append(synthcl.st_dist_mass[ml][al])
+            st_list.append(ctx.st_dist_mass[ml][al])
     # Indexes for the (ml, al) box and its closest node (m0, a0) are stored at
     # position ((ml * N_a + al) * 2 + (m0 - ml)) * 2 + (a0 - al). Nodes beyond the
     # grid's edges are never used (repeated keys keep the positions consistent)
@@ -102,21 +104,20 @@ def batch_data(synthcl: "Synthetic") -> dict:
             for dz in (0, 1):
                 for da in (0, 1):
                     key = (ml, al, min(ml + dz, N_z - 1), min(al + da, N_a - 1))
-                    midx_list.append(synthcl.mass_idx[key])
+                    midx_list.append(ctx.mass_idx[key])
 
     return {
-        "met_grid": np.asarray(synthcl.met_age_dict["met"], dtype=float),
-        "age_grid": np.asarray(synthcl.met_age_dict["loga"], dtype=float),
+        "met_grid": np.asarray(ctx.met_age_dict["met"], dtype=float),
+        "age_grid": np.asarray(ctx.met_age_dict["loga"], dtype=float),
         "N_a": N_a,
         "st_list": st_list,
         "midx_list": midx_list,
         "dr_frac": {
-            k: np.ascontiguousarray(v)
-            for k, v in synthcl.rand_floats["dr_frac"].items()
+            k: np.ascontiguousarray(v) for k, v in ctx.rand_floats["dr_frac"].items()
         },
-        "ext_kind": 0 if synthcl.ext_law == "GAIADR3" else 1,
-        "ccm": ccmo_array(synthcl.ext_law, synthcl.ext_coefs),
-        "unif1": np.ascontiguousarray(synthcl.rand_floats["unif"][1]),
+        "ext_kind": 0 if ctx.ext_law == "GAIADR3" else 1,
+        "ccm": ccmo_array(ctx.ext_law, ctx.ext_coefs),
+        "unif1": np.ascontiguousarray(ctx.rand_floats["unif"][1]),
     }
 
 
@@ -195,11 +196,11 @@ def full_params(
     return P
 
 
-def batch_params(synthcl: "Synthetic", params: dict | None) -> np.ndarray:
+def batch_params(ctx: "ModelContext", params: dict | None) -> np.ndarray:
     """Full parameter array for the batch functions, see :py:func:`full_params`
 
-    :param synthcl: :py:class:`asteca.Synthetic` object
-    :type synthcl: Synthetic
+    :param ctx: Data that defines the synthetic clusters
+    :type ctx: ModelContext
     :param params: Dictionary with an array (or a single value, shared by all the
         models) for each parameter. If ``None``, the default parameters are used
     :type params: dict | None
@@ -209,41 +210,40 @@ def batch_params(synthcl: "Synthetic", params: dict | None) -> np.ndarray:
     """
     return full_params(
         {} if params is None else params,
-        synthcl.def_params,
-        synthcl.met_age_dict,
-        synthcl.met_tol,
-        synthcl.age_tol,
+        ctx.def_params,
+        ctx.met_age_dict,
+        ctx.met_tol,
+        ctx.age_tol,
     )
 
 
 def batch_args(
-    synthcl: "Synthetic",
+    ctx: "ModelContext",
+    dr_model: str,
+    calib: tuple[float, list[np.ndarray], int],
     P: np.ndarray,
-    N_stars: int = 100,
 ) -> tuple:
     """Arguments of the compiled batch functions :py:func:`_generate_batch`,
     :py:func:`_lnl_batch_serial` and :py:func:`_lnl_batch_parallel` (the
-    likelihood arguments are added by :py:func:`log_lkl_batch`). The data that does
-    not change after the object is created (see :py:func:`batch_data`) is obtained
-    once and stored in the object.
+    likelihood arguments are added by :py:func:`log_lkl_batch`).
 
-    :param synthcl: :py:class:`asteca.Synthetic` object
-    :type synthcl: Synthetic
+    :param ctx: Data that defines the synthetic clusters
+    :type ctx: ModelContext
+    :param dr_model: Differential reddening model
+    :type dr_model: str
+    :param calib: Maximum magnitude, error distribution and number of stars of the
+        synthetic clusters, as given by ``Synthetic._calib_values()``
+    :type calib: tuple[float, list[np.ndarray], int]
     :param P: Array of parameters, see :py:func:`full_params`
     :type P: np.ndarray
-    :param N_stars: Number of synthetic stars to generate if the object was not
-        calibrated, see :py:meth:`asteca.Synthetic.generate`
-    :type N_stars: int
 
     :return: Tuple of arguments
     :rtype: tuple
     """
-    if synthcl._batch_data is None:
-        synthcl._batch_data = batch_data(synthcl)
-    bd = synthcl._batch_data
+    bd = ctx.batch_data
 
     # Same values as in Synthetic.generate()
-    max_mag_syn, err_dist_synth, N_synth_stars = synthcl._calib_values(N_stars)
+    max_mag_syn, err_dist_synth, N_synth_stars = calib
     if len(err_dist_synth):
         err = np.array(err_dist_synth, dtype=float)
     else:
@@ -253,12 +253,12 @@ def batch_args(
         P,
         bd["met_grid"],
         bd["age_grid"],
-        synthcl.theor_tracks,
-        synthcl.m_ini_idx,
+        ctx.theor_tracks,
+        ctx.m_ini_idx,
         bd["st_list"],
         bd["midx_list"],
         bd["N_a"],
-        bd["dr_frac"][synthcl.DR_distribution],
+        bd["dr_frac"][dr_model],
         bd["ext_kind"],
         bd["ccm"],
         bd["unif1"],
@@ -278,8 +278,8 @@ def log_lkl_batch(  # noqa: DOC502, RUF100
     """Log-likelihoods of a batch of synthetic clusters, used by
     :py:class:`asteca.Sampler`.
 
-    Same as ``synthcl._lkl.log_lkl(synthcl.generate(p), temperature)`` for each set
-    of parameters ``p`` in ``params`` (defined as in
+    Same as ``synthcl._obs.lkl.log_lkl(synthcl.generate(p), temperature)`` for each
+    set of parameters ``p`` in ``params`` (defined as in
     :py:meth:`asteca.Synthetic.generate` with ``batch=True``), with identical
     results. With numba, the compiled functions in this module generate each
     synthetic cluster and evaluate its likelihood in the same call (the synthetic
@@ -312,11 +312,12 @@ def log_lkl_batch(  # noqa: DOC502, RUF100
     :return: Array with the log-likelihood of each model, ``0`` is the best value
     :rtype: np.ndarray
     """
-    synthcl._check_calibrated()
+    obs = synthcl._check_calibrated()
+    ctx = synthcl._ctx
 
-    lk = synthcl._lkl
-    P = batch_params(synthcl, params)
-    if not available(synthcl.ext_law):
+    lk = obs.lkl
+    P = batch_params(ctx, params)
+    if not available(ctx.ext_law):
         return np.array(
             [
                 lk.log_lkl(
@@ -328,7 +329,7 @@ def log_lkl_batch(  # noqa: DOC502, RUF100
         )
 
     args: tuple = (
-        *batch_args(synthcl, P),
+        *batch_args(ctx, synthcl.DR_distribution, obs.calib_values(), P),
         lk.m_ini_idx,
         lk.hist_args,
         lk.nz_pos,

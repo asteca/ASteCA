@@ -146,7 +146,7 @@ class Sampler:
 
     def _check_args(self, temperature: float | str) -> None:
         """Validate the input arguments, and set the ``temperature`` attribute"""
-        self.synthcl._check_calibrated()
+        obs = self.synthcl._check_calibrated()
 
         if len(self.names) == 0:
             raise ValueError("At least one parameter must be included in 'priors'")
@@ -184,7 +184,7 @@ class Sampler:
                     + f"'{temperature}'"
                 )
             # Number of observed stars, as in the calibration of AUTO_TEMPERATURES
-            N = len(self.synthcl.cluster_mag)
+            N = len(obs.mag)
             temperature = next(t for n, t in AUTO_TEMPERATURES if N <= n)
         self.temperature = float(temperature)
         if not self.temperature > 0.0:
@@ -222,7 +222,8 @@ class Sampler:
         # if no synthetic star falls in any bin of the observed Hess diagram, or
         # if the synthetic cluster is empty ('d = 10'). The small tolerance absorbs
         # the rounding of the conversion
-        dist = -lnl * self.temperature / self.synthcl._lkl.lkl_range
+        lkl_range = self.synthcl._check_calibrated().lkl.lkl_range
+        dist = -lnl * self.temperature / lkl_range
         self._n_lnl += lnl.size
         self._n_lnl_no_overlap += int(np.sum(dist >= 1.0 - 1e-9))
 
@@ -282,7 +283,9 @@ class Sampler:
         # Normalized distance of the best solution, from 0 (exact match) to 1 (no
         # overlap), see likelihood_priv.Tremmel.log_lkl()
         self.best_dist = float(
-            -self.best_lnl * self.temperature / self.synthcl._lkl.lkl_range
+            -self.best_lnl
+            * self.temperature
+            / self.synthcl._check_calibrated().lkl.lkl_range
         )
 
         self._vp(f"Iterations     : {self.n_iter}", 1)
