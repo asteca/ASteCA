@@ -176,10 +176,10 @@ def sampleInv(
     :return: Array of sampled masses.
     :rtype: np.ndarray
     """
+    # The spline is of order k=1 (linear) so its knots without the boundary
+    # repetitions and its coefficients are the (x, y) points
+    x, y = inv_cdf.t[1:-1], inv_cdf.c
     if _HAS_NUMBA:
-        # The spline is of order k=1 (linear) so its knots without the
-        # boundary repetitions and its coefficients are the (x, y) points
-        x, y = inv_cdf.t[1:-1], inv_cdf.c
         lut_nb = invCDF_lut(x) if lut is None else lut
 
     state = rng.bit_generator.state
@@ -192,9 +192,18 @@ def sampleInv(
             N_kept = _sample_chunks_nb(u_vals, x, y, lut_nb, Max_mass, N_chunk)  # pyright: ignore[reportPossiblyUnboundVariable]
             masses = u_vals
         else:
-            masses = inv_cdf(u_vals)
-            # Total mass at the end of each chunk
-            chunk_mass = np.cumsum(masses.reshape(-1, N_chunk).sum(axis=1))
+            # Same operations as _sample_chunks_nb(), so that the masses are
+            # identical with and without numba (evaluating 'inv_cdf' directly
+            # rounds differently)
+            k = np.clip(np.searchsorted(x, u_vals) - 1, 0, x.size - 2)
+            masses = y[k] + (u_vals - x[k]) * (y[k + 1] - y[k]) / (x[k + 1] - x[k])
+            # Total mass at the end of each chunk. Each chunk is summed in order
+            # (cumsum), as in _sample_chunks_nb(): sum() adds pairwise and can
+            # round differently, which could change the chunk that reaches
+            # 'Max_mass'
+            chunk_mass = np.cumsum(
+                np.cumsum(masses.reshape(-1, N_chunk), axis=1)[:, -1]
+            )
             N_kept = (int(np.searchsorted(chunk_mass, Max_mass)) + 1) * N_chunk
             if N_kept > N_draw:
                 N_kept = -1

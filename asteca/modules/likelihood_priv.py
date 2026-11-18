@@ -202,7 +202,25 @@ def tremmel(
     # Remove all bins where n_i = 0 (no observed stars). Counts beyond the
     # table's last column are clipped, otherwise they would read the next row
     syn_histo_f_z = np.minimum(syn_histo_f.take(nz_pos).astype(np.intp), m_max)
-    return table_flat.take(row_off + syn_histo_f_z).sum()
+    # Added in order, as in _tremmel_lkl_nb(), so that the result is identical
+    return _seq_sum(0.0, table_flat.take(row_off + syn_histo_f_z))
+
+
+def _seq_sum(start: float, v: np.ndarray) -> float:
+    """``start + v[0] + v[1] + ...`` added in order, as the loops of the compiled
+    functions do. ``v.sum()`` adds pairwise and can round differently
+
+    :param start: Initial value
+    :type start: float
+    :param v: 1D array of values to add
+    :type v: np.ndarray
+
+    :return: Sum
+    :rtype: float
+    """
+    if v.size == 0:
+        return float(start)
+    return float(np.cumsum(np.concatenate(([start], v)))[-1])
 
 
 def no_overlap_dist(
@@ -459,15 +477,26 @@ def cmd_overlap(
     syn = np.column_stack([synth_clust[0] / h_mag, synth_clust[1] / h_col])
     M = len(syn)
 
-    def k_sums(x: np.ndarray, y: np.ndarray) -> tuple[float, float]:
-        """Sums of k and of k^2 over all the (x, y) pairs"""
+    def k_sums(x: np.ndarray, y: np.ndarray, self_pairs: bool) -> tuple[float, float]:
+        """Sums of k and of k^2 over all the (x, y) pairs, with the same operations
+        and in the same order as _k_sums_self_nb() (``self_pairs=True``, ``x`` is
+        ``y``) and _k_sums_cross_nb(), so that the results are identical"""
         s1 = s2 = 0.0
         for i in range(0, len(x), chunk):
             xc = x[i : i + chunk]
-            d2 = (xc[:, :1] - y[:, 0]) ** 2 + (xc[:, 1:] - y[:, 1]) ** 2
-            k = np.exp(-0.25 * d2)
-            s1 += k.sum()
-            s2 += (k * k).sum()
+            dx = xc[:, :1] - y[:, 0]
+            dy = xc[:, 1:] - y[:, 1]
+            k = np.exp(-0.25 * (dx * dx + dy * dy))
+            if self_pairs:
+                # Only the pairs j > i (k is symmetric, and k=1 for j = i)
+                rows = np.arange(i, i + len(xc))[:, None]
+                k = k[np.arange(len(y)) > rows]
+            else:
+                k = k.ravel()
+            s1 = _seq_sum(s1, k)
+            s2 = _seq_sum(s2, k * k)
+        if self_pairs:
+            return len(x) + 2 * s1, len(x) + 2 * s2
         return s1, s2
 
     sums = None
@@ -480,9 +509,9 @@ def cmd_overlap(
         s_ss, s2_ss = _k_sums_self_nb(syn)
         s_os = _k_sums_cross_nb(obs, syn)
     else:
-        s_oo, s2_oo = k_sums(obs, obs)
-        s_ss, s2_ss = k_sums(syn, syn)
-        s_os, _ = k_sums(obs, syn)
+        s_oo, s2_oo = k_sums(obs, obs, True)
+        s_ss, s2_ss = k_sums(syn, syn, True)
+        s_os, _ = k_sums(obs, syn, False)
 
     # Mean kernel values over the pairs of distinct observed stars, of distinct
     # synthetic stars, and of observed-synthetic stars. Removing the pairs of a star
