@@ -1063,16 +1063,13 @@ class Synthetic:
         :return: Isochrone (empty if ``isoch_flag=False``) and synthetic cluster
         :rtype: tuple[np.ndarray, np.ndarray]
         """
-        from .modules import synth_model as sm
-
         P = self._ctx.params_array(params)
         if P.shape[0] != 1:
             raise ValueError(
                 "A single value is required for each parameter (use 'batch=True' to "
                 + "generate several synthetic clusters)"
             )
-        return sm.get_model(
-            self._ctx,
+        return self._model_engine().get_model(
             P[0],
             self.DR_distribution,
             self._calib_values(N_stars),

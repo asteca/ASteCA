@@ -126,7 +126,10 @@ def get_model(
     """Generate a synthetic cluster.
 
     The synthetic cluster is generated according to the parameters in ``p`` and the
-    data of the :py:class:`Synthetic` object.
+    data of the :py:class:`Synthetic` object. This is the Python implementation of
+    the synthetic cluster recipe, used when numba is not installed; with numba, the
+    compiled ``synth_batch._synth_one_ex()`` is used instead (through
+    ``synth_batch.ModelEngine``), with identical results.
 
     :param ctx: Data that defines the synthetic clusters
     :type ctx: ModelContext
@@ -232,21 +235,18 @@ def get_model(
         rv,
         isoch_moved.copy(),
     )
-    isoch_extin_dr_0 = isoch_av if isoch_flag else np.array([])
-    if isoch_flag and isoch_dr_frac > 0 and dr > 0:
-        # Returned isochrone reddened with 'Av + isoch_dr_frac * DR'. 'isoch_av' is
-        # still used below for the maximum magnitude cut
-        isoch_extin_dr_0 = extinction(
-            ext_law,
-            ext_coefs,
-            dr_frac,
-            m_ini_idx,
-            binar_flag,
-            av + isoch_dr_frac * dr,
-            0.0,
-            rv,
-            isoch_moved.copy(),
-        )
+    isoch_extin_dr_0 = output_isochrone(
+        ctx,
+        dr_frac,
+        isoch_flag,
+        isoch_dr_frac,
+        binar_flag,
+        av,
+        dr,
+        rv,
+        isoch_moved,
+        isoch_av,
+    )
 
     # Identify the isochrone points below the maximum magnitude. The isochrone
     # itself is not cut (which would copy it): the points are selected through
@@ -254,10 +254,7 @@ def get_model(
     idx_cut, msk_cut = cut_max_mag(isoch_av, max_mag_syn)
     if idx_cut.size == 0:
         if show_errors:
-            print(
-                f"No stars left after max magnitude cut (met={met:.5f},"
-                + f"log(age)={loga:.3f}, Av={av:.3f}, DR={dr:.3f}, dm={dm:.3f})"
-            )
+            print(empty_message(1, p))
         return isoch_extin_dr_0, np.array([])
 
     # Pre-computed search indexes for this IMF sample and grid node
@@ -286,10 +283,7 @@ def get_model(
         )
         if isoch_mass.size == 0:
             if show_errors:
-                print(
-                    f"No stars left after IMF interpolation (met={met:.5f},"
-                    + f"log(age)={loga:.3f}, Av={av:.3f}, DR={dr:.3f}, dm={dm:.3f})"
-                )
+                print(empty_message(2, p))
             return isoch_extin_dr_0, np.array([])
         N_stars = isoch_mass.shape[1]
 
@@ -330,34 +324,20 @@ def get_model(
 
     if keep.size == 0:
         if show_errors:
-            print(
-                f"No stars left after the extinction (met={met:.5f},"
-                + f"log(age)={loga:.3f}, Av={av:.3f}, DR={dr:.3f}, dm={dm:.3f})"
-            )
+            print(empty_message(3, p))
         return isoch_extin_dr_0, np.array([])
 
     if mass_info is not None:
-        # Indexes in the IMF sample of the stars in the pool (the same selection
-        # done by mass_interp()), and of those kept in the synthetic cluster
-        mass_row = isoch_moved[m_ini_idx]
-        pool_idx = first_in_range(
-            st_mass, mass_row[idx_cut[0]], mass_row[idx_cut[-1]], N_pool
-        )
-        kept_idx = pool_idx[keep[:N_synth_stars]]
-        # The simulated cluster is made of the IMF masses up to the last kept star.
-        # If fewer than 'N_synth_stars' stars were kept, the whole IMF sample was
-        # used (see the loop above)
-        N_end = kept_idx[-1] + 1 if keep.size >= N_synth_stars else st_mass.size
-        mass_info.update(
-            {
-                "imf_masses": st_mass[:N_end],
-                "kept_idx": kept_idx,
-                "N_target": N_synth_stars,
-                "mass_row": mass_row.copy(),
-                "m2_row": isoch_moved[m_ini_idx + 1].copy() if binar_flag else None,
-                "alpha": alpha,
-                "beta": beta,
-            }
+        fill_mass_info(
+            mass_info,
+            ctx,
+            p,
+            st_mass,
+            isoch_moved,
+            idx_cut,
+            N_pool,
+            keep,
+            N_synth_stars,
         )
 
     isoch_binar = isoch_binar[:, keep[:N_synth_stars]]
@@ -366,6 +346,148 @@ def get_model(
     synth_clust = add_errors(isoch_binar, err_dist_synth)
 
     return isoch_extin_dr_0, synth_clust
+
+
+# Reasons for an empty synthetic cluster, indexed by the status code returned by
+# synth_batch._synth_one_ex() (0: not empty)
+EMPTY_REASONS = ("", "max magnitude cut", "IMF interpolation", "the extinction")
+
+
+def empty_message(status: int, p: np.ndarray) -> str:
+    """Message printed when an empty synthetic cluster is returned and
+    ``show_errors=True``
+
+    :param status: Reason for the empty cluster, see ``EMPTY_REASONS``
+    :type status: int
+    :param p: Values of the fundamental parameters, see :py:func:`get_model`
+    :type p: np.ndarray
+
+    :return: Message
+    :rtype: str
+    """
+    met, loga, _, _, av, dr, _, dm = p.tolist()
+    return (
+        f"No stars left after {EMPTY_REASONS[status]} (met={met:.5f},"
+        + f"log(age)={loga:.3f}, Av={av:.3f}, DR={dr:.3f}, dm={dm:.3f})"
+    )
+
+
+def output_isochrone(
+    ctx: "ModelContext",
+    dr_frac: np.ndarray,
+    isoch_flag: bool,
+    isoch_dr_frac: float,
+    binar_flag: bool,
+    av: float,
+    dr: float,
+    rv: float,
+    isoch_moved: np.ndarray,
+    isoch_av: np.ndarray,
+) -> np.ndarray:
+    """Isochrone returned by :py:func:`get_model`: the isochrone with the minimum
+    absorption ``Av``, or reddened with ``Av + isoch_dr_frac * DR`` if
+    ``isoch_dr_frac > 0``; an empty array if ``isoch_flag=False``
+
+    :param ctx: Data that defines the synthetic clusters
+    :type ctx: ModelContext
+    :param dr_frac: Fractions of the differential reddening of the selected model
+    :type dr_frac: np.ndarray
+    :param isoch_flag: Return the isochrone
+    :type isoch_flag: bool
+    :param isoch_dr_frac: Fraction of the differential reddening applied
+    :type isoch_dr_frac: float
+    :param binar_flag: ``False`` if the model has no binary systems
+    :type binar_flag: bool
+    :param av: Minimum absorption
+    :type av: float
+    :param dr: Differential reddening
+    :type dr: float
+    :param rv: Ratio of total to selective absorption
+    :type rv: float
+    :param isoch_moved: Isochrone moved by the distance modulus (not modified)
+    :type isoch_moved: np.ndarray
+    :param isoch_av: Isochrone with the minimum absorption ``Av``
+    :type isoch_av: np.ndarray
+
+    :return: Isochrone
+    :rtype: np.ndarray
+    """
+    if not isoch_flag:
+        return np.array([])
+    if isoch_dr_frac > 0 and dr > 0:
+        return extinction(
+            ctx.ext_law,
+            ctx.ext_coefs,
+            dr_frac,
+            ctx.m_ini_idx,
+            binar_flag,
+            av + isoch_dr_frac * dr,
+            0.0,
+            rv,
+            isoch_moved.copy(),
+        )
+    return isoch_av
+
+
+def fill_mass_info(
+    mass_info: dict,
+    ctx: "ModelContext",
+    p: np.ndarray,
+    st_mass: np.ndarray,
+    isoch_moved: np.ndarray,
+    idx_cut: np.ndarray,
+    N_pool: int,
+    keep: np.ndarray,
+    N_synth_stars: int,
+) -> None:
+    """Fill ``mass_info`` with the data required to estimate the total mass of a
+    (non empty) simulated cluster, see :py:func:`get_model`
+
+    :param mass_info: Dictionary to fill
+    :type mass_info: dict
+    :param ctx: Data that defines the synthetic clusters
+    :type ctx: ModelContext
+    :param p: Values of the fundamental parameters, see :py:func:`get_model`
+    :type p: np.ndarray
+    :param st_mass: Sampled IMF masses used
+    :type st_mass: np.ndarray
+    :param isoch_moved: Isochrone moved by the distance modulus
+    :type isoch_moved: np.ndarray
+    :param idx_cut: Indexes of the isochrone points brighter than the maximum
+        magnitude
+    :type idx_cut: np.ndarray
+    :param N_pool: Final size of the pool of candidate stars
+    :type N_pool: int
+    :param keep: Indexes of the candidates brighter than the maximum magnitude
+    :type keep: np.ndarray
+    :param N_synth_stars: Number of synthetic stars requested
+    :type N_synth_stars: int
+    """
+    m_ini_idx = ctx.m_ini_idx
+    alpha, beta = float(p[2]), float(p[3])
+    binar_flag = not (alpha == 0.0 and beta == 0.0)
+    # Indexes in the IMF sample of the stars in the pool (the same selection done by
+    # mass_interp()), and of those kept in the synthetic cluster
+    mass_row = isoch_moved[m_ini_idx]
+    pool_idx = first_in_range(
+        st_mass, mass_row[idx_cut[0]], mass_row[idx_cut[-1]], N_pool
+    )
+    kept_idx = pool_idx[keep[:N_synth_stars]]
+    # The simulated cluster is made of the IMF masses up to the last kept star. If
+    # fewer than 'N_synth_stars' stars were kept, the whole IMF sample was used (see
+    # get_model())
+    N_end = kept_idx[-1] + 1 if keep.size >= N_synth_stars else st_mass.size
+    mass_info.update(
+        {
+            "imf_masses": st_mass[:N_end],
+            "kept_idx": kept_idx,
+            "N_target": N_synth_stars,
+            "mass_row": mass_row.copy(),
+            "m2_row": isoch_moved[m_ini_idx + 1].copy() if binar_flag else None,
+            "alpha": alpha,
+            "beta": beta,
+        }
+    )
 
 
 def per_star_pool(N_synth_stars: int, dr: float) -> int:
