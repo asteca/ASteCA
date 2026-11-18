@@ -1,4 +1,5 @@
 import warnings
+from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -70,7 +71,7 @@ def turn_off_points(
 
 def turn_off_points_manual(
     rng: np.random.Generator,
-    turn_off: tuple[float, float, float, float],
+    turn_off: Sequence[float],
     N_points: int,
     color_idx: int,
 ) -> dict:
@@ -82,7 +83,7 @@ def turn_off_points_manual(
     :type rng: np.random.Generator
     :param turn_off: Turn-off point and its STDDEVs, ``(color, magnitude,
         stddev_color, stddev_magnitude)``
-    :type turn_off: tuple[float, float, float, float]
+    :type turn_off: Sequence[float]
     :param N_points: Number of points to sample (one per synthetic cluster)
     :type N_points: int
     :param color_idx: Index of the color used, stored in the returned dictionary

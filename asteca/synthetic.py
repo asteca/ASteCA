@@ -1,4 +1,5 @@
 import warnings
+from collections.abc import Sequence
 
 import numpy as np
 
@@ -569,7 +570,7 @@ class Synthetic:
         N_models: int = 200,
         color_idx: int = 0,
         isochs_young: Isochrones | None = None,
-        turn_off: tuple[float, float, float, float] | None = None,
+        turn_off: Sequence[float] | None = None,
         radec_c: tuple[float, float] | None = None,
         rho_amb: float | None = None,
         galaxy_potential: dict[str, float] | None = None,
@@ -661,7 +662,7 @@ class Synthetic:
             ``(color, magnitude, stddev_color, stddev_magnitude)`` in the color
             selected by ``color_idx``. If ``None``, the turn-off point of each
             sampled synthetic cluster is estimated from its isochrone
-        :type turn_off: tuple[float, float, float, float] | None
+        :type turn_off: Sequence[float] | None
         :param radec_c: Center coordinates in ``(RA, DEC)``
         :type radec_c: tuple[float, float] | None
         :param rho_amb: Ambient density [:math:`M_{\odot}\,pc^{-3}`]. If ``None``, it
