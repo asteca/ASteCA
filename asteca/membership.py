@@ -89,7 +89,7 @@ class Membership:
         # Set seed
         self.rng = np.random.default_rng(seed)
 
-        from .modules import cluster_priv as cp
+        from .modules import structure as st
         from .modules.bayesian_da import bayesian_mp
 
         xv, yv = self.my_field.ra, self.my_field.dec
@@ -101,7 +101,7 @@ class Membership:
             xv_t = np.array(list(xv) + [xy_center[0]])
             yv_t = np.array(list(yv) + [xy_center[1]])
             # Convert
-            xv_t, yv_t = cp.radec2lonlat(xv_t, yv_t)
+            xv_t, yv_t = st.radec2lonlat(xv_t, yv_t)
             # Extract center value
             xv, yv = xv_t[:-1], yv_t[:-1]
             xy_center = (xv_t[-1], yv_t[-1])
@@ -227,7 +227,7 @@ class Membership:
         # Set seed
         self.rng = np.random.default_rng(seed)
 
-        from .modules import cluster_priv as cp
+        from .modules import structure as st
         from .modules.fastmp import fastMP
 
         xv, yv = self.my_field.ra, self.my_field.dec
@@ -239,7 +239,7 @@ class Membership:
             xv_t = np.array(list(xv) + [xy_center[0]])
             yv_t = np.array(list(yv) + [xy_center[1]])
             # Convert
-            xv_t, yv_t = cp.radec2lonlat(xv_t, yv_t)
+            xv_t, yv_t = st.radec2lonlat(xv_t, yv_t)
             # Extract center value
             xv, yv = xv_t[:-1], yv_t[:-1]
             xy_center = (xv_t[-1], yv_t[-1])

@@ -5,7 +5,7 @@ import numpy as np
 from astropy.stats import RipleysKEstimator
 from scipy.spatial import KDTree
 
-from . import cluster_priv as cp
+from . import structure as st
 
 
 def density_nmembs(
@@ -132,7 +132,7 @@ def ripley_nmembs(
             plx,
         ]
     )
-    idx_clean, X_no_nan = cp.reject_nans(X)
+    idx_clean, X_no_nan = st.reject_nans(X)
     # Unpack input data with no 'nans'
     lon, lat, pmRA, pmDE, plx = X_no_nan
     # These arrays are not used, fill with dummy values
@@ -140,7 +140,7 @@ def ripley_nmembs(
 
     # Remove the most obvious field stars
     N_filter_max = int(min(N_clust_max * X_stars_max, N_stars_max))
-    idx_clean, x, y, pmRA, pmDE, plx, _, _, _ = cp.first_filter(
+    idx_clean, x, y, pmRA, pmDE, plx, _, _, _ = st.first_filter(
         idx_clean,
         vpd_c,
         plx_c,
@@ -160,7 +160,7 @@ def ripley_nmembs(
 
     # Obtain the ordered indexes of the distances to the (pmra, pmde, plx) center
     cents_3d = np.array([list(vpd_c) + [plx_c]])
-    d_pm_plx_idxs = cp.get_Nd_dists(cents_3d, np.array([pmRA, pmDE, plx]).T)
+    d_pm_plx_idxs = st.get_Nd_dists(cents_3d, np.array([pmRA, pmDE, plx]).T)
 
     # Select those clusters where the stars are different enough from a
     # random distribution

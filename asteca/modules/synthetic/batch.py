@@ -1,30 +1,30 @@
 """Compiled generation of synthetic clusters (and of their log-likelihoods).
 
 Once a :py:class:`asteca.Synthetic` object is created, every random value used by
-:py:func:`synth_model.get_model` is drawn in advance, so a model is a deterministic
+:py:func:`generate.get_model` is drawn in advance, so a model is a deterministic
 function of its parameters. :py:func:`_synth_one` generates a synthetic cluster in a
-single compiled call, chaining the numba kernels of :py:mod:`synth_model` in the same
-order and with the same operations as :py:func:`synth_model.get_model` (the Python
+single compiled call, chaining the numba kernels of :py:mod:`generate` in the same
+order and with the same operations as :py:func:`generate.get_model` (the Python
 implementation, used without numba), so that the results are identical. The batch
 functions loop over many parameter sets in a single call, which removes the Python
 overhead of each call (which dominates for clusters with few stars), and the batch of
 log-likelihoods can be evaluated in parallel threads.
 
-:py:class:`model_data.ModelEngine` is the single entry point used to generate
+:py:class:`engine.ModelEngine` is the single entry point used to generate
 synthetic clusters (one or many) by :py:class:`asteca.Synthetic` and
 :py:class:`asteca.Sampler`: it uses the compiled functions of this module if numba is
-installed, and :py:func:`synth_model.get_model` otherwise.
+installed, and :py:func:`generate.get_model` otherwise.
 """
 
 from collections import namedtuple
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from .model_data import ModelEngine
+    from .engine import ModelEngine
 
 import numpy as np
 
-from . import HAS_NUMBA as _HAS_NUMBA
+from .. import HAS_NUMBA as _HAS_NUMBA
 
 # Output of _synth_one(): the synthetic cluster and the data used by
 # ModelEngine.get_model() to obtain the isochrone, the mass information and the reason
@@ -38,7 +38,7 @@ SynthOut = namedtuple(
 def ccmo_array(ext_law: str, ext_coefs: list) -> np.ndarray:
     """CCMO extinction coefficients as an array for the compiled functions: one row
     ``[a, b, 0, 0]`` for the magnitude and one row ``[a1, b1, a2, b2]`` for each
-    color (see :py:func:`synth_model.ccmo_coefs`). Empty for other extinction laws.
+    color (see :py:func:`generate.ccmo_coefs`). Empty for other extinction laws.
 
     :param ext_law: Extinction law
     :type ext_law: str
@@ -60,7 +60,7 @@ def batch_data(ctx: "ModelEngine") -> dict:
     """Arrays used by the compiled functions that do not change after the
     :py:class:`asteca.Synthetic` object is created. The typed lists hold references
     to the existing IMF samples and mass indexes (no copies). Obtained once and
-    cached by :py:attr:`ModelEngine.batch_data <model_data.ModelEngine.batch_data>`.
+    cached by :py:attr:`ModelEngine.batch_data <engine.ModelEngine.batch_data>`.
 
     :param ctx: Data that defines the synthetic clusters
     :type ctx: ModelEngine
@@ -155,8 +155,7 @@ if _HAS_NUMBA:
     from numba import njit, prange
     from numba.typed.typedlist import List
 
-    from .likelihood_priv import _tremmel_lkl_nb
-    from .synth_model import (
+    from .generate import (
         _binarity_nb,
         _extinction_ccmo_nb,
         _extinction_gaiadr3_nb,
@@ -166,6 +165,7 @@ if _HAS_NUMBA:
         per_star_pool,
         per_star_pool_next,
     )
+    from .likelihood import _tremmel_lkl_nb
 
     _per_star_pool_nb = njit(cache=True)(per_star_pool)
     _per_star_pool_next_nb = njit(cache=True)(per_star_pool_next)
@@ -173,7 +173,7 @@ if _HAS_NUMBA:
     @njit(cache=True)
     def _synth_one(p, model, st_list, midx_list):
         """One synthetic cluster, with the same steps and operations as
-        :py:func:`synth_model.get_model` (numba). ``model, st_list, midx_list`` are
+        :py:func:`generate.get_model` (numba). ``model, st_list, midx_list`` are
         returned by :py:func:`model_args`; the ``ext_kind`` of ``model`` is ``0`` for
         the GAIADR3 extinction law and ``1`` for CCMO, with the coefficients in
         ``ccm`` (see :py:func:`ccmo_array`).
@@ -181,8 +181,8 @@ if _HAS_NUMBA:
         Returns a ``SynthOut`` named tuple ``(synth, status, isoch_moved, isoch_av,
         idx_cut, N_pool, keep)``: the synthetic cluster, an array of shape ``(m_ini_idx + 2, N)`` with
         ``N = 0`` for an empty cluster; the reason for an empty cluster (see
-        ``synth_model.EMPTY_REASONS``, ``0`` if not empty); and the data used by
-        :py:meth:`model_data.ModelEngine.get_model` to obtain the isochrone and the mass
+        ``generate.EMPTY_REASONS``, ``0`` if not empty); and the data used by
+        :py:meth:`engine.ModelEngine.get_model` to obtain the isochrone and the mass
         information: the isochrone moved by the distance modulus, the isochrone
         with the minimum absorption ``Av``, the indexes of its points brighter than
         the maximum magnitude, the final size of the pool of candidate stars, and
@@ -205,7 +205,7 @@ if _HAS_NUMBA:
         met, loga, alpha, beta, av, dr, dm = p[0], p[1], p[2], p[3], p[4], p[5], p[7]
         N_rows = m_ini_idx + 2
 
-        # synth_model.grid_box(): indexes of the (z, a) box
+        # generate.grid_box(): indexes of the (z, a) box
         ml = mh = 0
         if met_grid.size > 1:
             mh = min(met_grid.size - 1, np.searchsorted(met_grid, met))
@@ -252,7 +252,7 @@ if _HAS_NUMBA:
         if binar_flag:
             isochrone[m_ini_idx + 2] += dm
 
-        # synth_model.ccmo_coefs()
+        # generate.ccmo_coefs()
         ec_mag = ec_col1 = ec_col2 = 0.0
         col2_flag = False
         if ext_kind == 1:
@@ -293,7 +293,7 @@ if _HAS_NUMBA:
             return SynthOut(empty, 1, isochrone, isoch_av, idx_cut, 0, keep)
 
         # Pool of candidate stars, grown until N_synth stars are brighter than the
-        # maximum magnitude after their extinction (see synth_model.get_model())
+        # maximum magnitude after their extinction (see generate.get_model())
         k = ((ml * N_a + al) * 2 + (m0 - ml)) * 2 + (a0 - al)
         st_mass = st_list[ml * N_a + al]
         dr_kind = 1 if dr > 0.0 else 0
@@ -364,9 +364,9 @@ if _HAS_NUMBA:
 
     @njit(cache=True)
     def _lnl_one(synth, lkl, temperature):
-        """Same as :py:meth:`likelihood_priv.Tremmel.log_lkl`, for one synthetic
+        """Same as :py:meth:`likelihood.Tremmel.log_lkl`, for one synthetic
         cluster. ``lkl`` is :py:attr:`Tremmel.kernel_args
-        <likelihood_priv.Tremmel.kernel_args>`"""
+        <likelihood.Tremmel.kernel_args>`"""
         (
             n_phot,
             hist_args,
@@ -390,7 +390,7 @@ if _HAS_NUMBA:
                 mag, synth[1:n_phot], hist_args, nz_pos, row_off, table_flat, m_max
             )
             if lnl <= min_lkl:
-                # likelihood_priv.no_overlap_dist()
+                # likelihood.no_overlap_dist()
                 d_mag = (obs_mag_med - np.median(mag)) / w_mag
                 d_col = (obs_col_med - np.median(synth[1])) / w_col
                 lnl = max_lkl - (1 + (d_mag * d_mag + d_col * d_col)) * lkl_range

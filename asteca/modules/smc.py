@@ -2,8 +2,8 @@
 tempering with persistent sampling and t-pCN MCMC moves.
 
 This module is adapted from pocoMC v1.2.6 (https://github.com/minaskar/pocomc),
-Copyright 2022-Now Minas Karamanis and contributors, distributed under the GNU General
-Public License v3 (GPL-3.0).
+Copyright 2022-Now Minas Karamanis (https://github.com/minaskar) and contributors,
+distributed under the GNU General Public License v3 (GPL-3.0).
 
 Only the parts of pocoMC used by ASteCA are kept: bounded (uniform) priors mapped to
 an unbounded space with a probit transform and a diagonal affine scaling, persistent

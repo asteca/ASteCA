@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.stats import iqr
 
-from . import cluster_priv as cp
+from . import structure as st
 
 # Maximum number of stars to consider for the first filter. This is a safeguard
 # against very large datasets that would make the process too slow.
@@ -63,14 +63,14 @@ def fastMP(
 
     # Remove 'nan' values
     N_all = X.shape[1]
-    idx_clean, X_no_nan = cp.reject_nans(X)
+    idx_clean, X_no_nan = st.reject_nans(X)
     # Unpack input data with no 'nans'
     lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx = X_no_nan
 
     # Remove the most obvious field stars. This has no effect on the results but
     # speeds up the process enormously
     N_filter_max = min(N_cluster * 10, N_STARS_MAX)
-    idx_clean, lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx = cp.first_filter(
+    idx_clean, lon, lat, pmRA, pmDE, plx, e_pmRA, e_pmDE, e_plx = st.first_filter(
         idx_clean,
         vpd_c,
         plx_c,
@@ -153,14 +153,14 @@ def extract_reference_stars(
 
     # Select the N_cluster stars closest to the centers using the IQR of all the stars
     data_5d = norm_data(lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c, data_iqr)
-    st_idx = cp.get_Nd_dists(CENTS_5D, data_5d)[:N_cluster]
+    st_idx = st.get_Nd_dists(CENTS_5D, data_5d)[:N_cluster]
 
     # Re-estimate the IQR with the selected stars and select again
     data_iqr = iqr(
         [lon[st_idx], lat[st_idx], pmRA[st_idx], pmDE[st_idx], plx[st_idx]], 1
     )
     data_5d = norm_data(lon, lat, pmRA, pmDE, plx, xy_c, vpd_c, plx_c, data_iqr)
-    st_idx = cp.get_Nd_dists(CENTS_5D, data_5d)[:N_cluster]
+    st_idx = st.get_Nd_dists(CENTS_5D, data_5d)[:N_cluster]
 
     # Compute the normalized 2D distances of all stars to the centers
     ref_dist = np.linalg.norm(data_5d, axis=1)
@@ -259,7 +259,7 @@ def resample_loop(
 
         if fixed_centers is False:
             # Re-estimate centers using the selected stars
-            x_c, y_c, pmra_c, pmde_c, plx_c = cp.get_knn_5D_center(
+            x_c, y_c, pmra_c, pmde_c, plx_c = st.get_knn_5D_center(
                 lon[st_idx],
                 lat[st_idx],
                 pmRA[st_idx],

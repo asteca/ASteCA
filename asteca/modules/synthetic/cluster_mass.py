@@ -84,7 +84,7 @@ def cluster_masses(
     :param synthcls: Synthetic clusters of the sampled models
     :type synthcls: list[np.ndarray]
     :param mass_infos: IMF data of the simulated cluster of each model, filled by
-        :py:func:`synth_model.get_model` (see :py:func:`get_M_actual`)
+        :py:func:`generate.get_model` (see :py:func:`get_M_actual`)
     :type mass_infos: list[dict]
     :param m_ini_idx: Index of the initial mass in the synthetic clusters
     :type m_ini_idx: int
@@ -264,7 +264,7 @@ def get_M_actual(
     :param sampled_synthcl: Sampled synthetic cluster data.
     :type sampled_synthcl: np.ndarray
     :param mass_info: IMF data of the simulated cluster, filled by
-        :py:func:`synth_model.get_model`
+        :py:func:`generate.get_model`
     :type mass_info: dict
 
     :return: Observed, photometric, and actual mass, and the scale factor applied
@@ -296,7 +296,7 @@ def get_M_actual(
 def companion_mass(m1: np.ndarray, mass_info: dict) -> np.ndarray:
     """Expected mass of the companion of each primary mass, with the binary
     probability and mass ratios used to generate the synthetic clusters (see
-    :py:func:`synth_model.binarity`): the probability of being a binary times the
+    :py:func:`generate.binarity`): the probability of being a binary times the
     secondary mass of the isochrone, interpolated through its mass ratio ``q``
     (the value of the closest isochrone point is used for masses outside of its
     range).
@@ -304,7 +304,7 @@ def companion_mass(m1: np.ndarray, mass_info: dict) -> np.ndarray:
     :param m1: Primary masses.
     :type m1: np.ndarray
     :param mass_info: IMF data of the simulated cluster, filled by
-        :py:func:`synth_model.get_model`
+        :py:func:`generate.get_model`
     :type mass_info: dict
 
     :return: Expected companion masses.

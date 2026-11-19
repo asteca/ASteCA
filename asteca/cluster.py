@@ -451,7 +451,7 @@ class Cluster:
         :raises ValueError: If required data is missing from the
             :py:class:`Cluster <asteca.cluster.Cluster>` object
         """
-        from .modules import cluster_priv as cp
+        from .modules import structure as st
 
         if algo == "knn_5d":
             if (
@@ -466,13 +466,13 @@ class Cluster:
                 )
 
             # To galactic coordinates (not optional, always use instead of equatorial)
-            glon, glat = cp.radec2lonlat(self.ra, self.dec)
+            glon, glat = st.radec2lonlat(self.ra, self.dec)
             lonlat_c = None
             if radec_c is not None:
-                lon, lat = cp.radec2lonlat(radec_c[0], radec_c[1])
+                lon, lat = st.radec2lonlat(radec_c[0], radec_c[1])
                 lonlat_c = (lon, lat)
 
-            x_c, y_c, pmra_c, pmde_c, plx_c = cp.get_knn_5D_center(
+            x_c, y_c, pmra_c, pmde_c, plx_c = st.get_knn_5D_center(
                 glon,
                 glat,
                 self.pmra,
@@ -482,7 +482,7 @@ class Cluster:
                 vpd_c=pms_c,
                 plx_c=plx_c,
             )
-            ra_c, dec_c = cp.lonlat2radec(x_c, y_c)
+            ra_c, dec_c = st.lonlat2radec(x_c, y_c)
 
             self.radec_c = (ra_c, dec_c)
             self.pms_c = (pmra_c, pmde_c)
@@ -510,7 +510,7 @@ class Cluster:
             array_2d = np.array([x, y])
             x, y = array_2d[:, ~np.isnan(array_2d).any(axis=0)]
 
-            x_c, y_c = cp.get_2D_center(x, y)
+            x_c, y_c = st.get_2D_center(x, y)
 
             if c_str == "radec_c":
                 self.radec_c = (x_c, y_c)
@@ -560,7 +560,7 @@ class Cluster:
         if algo not in ("members", "king"):
             raise ValueError(f"Unrecognized method '{algo}")
 
-        from .modules import cluster_priv as cp
+        from .modules import structure as st
 
         # (x, y) coordinates
         xv, yv = self.ra, self.dec
@@ -569,7 +569,7 @@ class Cluster:
         # Convert (RA, DEC) to (lon, lat)
         xv_t = np.array(list(xv) + [xy_center[0]])
         yv_t = np.array(list(yv) + [xy_center[1]])
-        xv_t, yv_t = cp.radec2lonlat(xv_t, yv_t)
+        xv_t, yv_t = st.radec2lonlat(xv_t, yv_t)
         # Extract center value
         xv, yv = xv_t[:-1], yv_t[:-1]
         xy_center = (xv_t[-1], yv_t[-1])
@@ -600,10 +600,10 @@ class Cluster:
             self.field_density = fdens_final
 
         elif algo == "king":
-            # amplitude_k, r_core_k, r_tidal_k, field_density_k = cp.king_radius_LS(
+            # amplitude_k, r_core_k, r_tidal_k, field_density_k = st.king_radius_LS(
             #     xv, yv, xy_center, A_bounds, rc_bounds, rt_bounds, fd
             # )
-            r_core_k, r_tidal_k = cp.king_radius_LS(
+            r_core_k, r_tidal_k = st.king_radius_LS(
                 xv, yv, xy_center, rc_bounds, rt_bounds, fd
             )
 
@@ -641,8 +641,8 @@ class Cluster:
         :raises AttributeError: If required attributes are  missing from the
             :py:class:`Cluster <asteca.cluster.Cluster>` object
         """
-        from .modules import cluster_priv as cp
         from .modules import nmembers as nm
+        from .modules import structure as st
 
         if algo not in ("ripley", "density"):
             raise ValueError(f"Selected method '{algo}' not recognized")
@@ -667,7 +667,7 @@ class Cluster:
             xv_t = np.array(list(xv) + [xy_center[0]])
             yv_t = np.array(list(yv) + [xy_center[1]])
             # Convert
-            xv_t, yv_t = cp.radec2lonlat(xv_t, yv_t)
+            xv_t, yv_t = st.radec2lonlat(xv_t, yv_t)
             # Extract center value
             xv, yv = xv_t[:-1], yv_t[:-1]
             xy_center = (xv_t[-1], yv_t[-1])

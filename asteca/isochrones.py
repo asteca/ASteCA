@@ -107,7 +107,7 @@ class Isochrones:
         self.parsec_rm_stages = parsec_rm_stages
         self.verbose = verbose
 
-        from .modules import isochrones_priv
+        from .modules import isochrone_loader
 
         # Check that the number of colors match
         if self.color2 is not None and self.color2_effl is None:
@@ -127,7 +127,7 @@ class Isochrones:
                 f"Model '{self.model}' not recognized. Should be one of {models}"
             )
 
-        # NOTE: the 'adaptive' method in isochrones_priv.adaptive_interpolation() is
+        # NOTE: the 'adaptive' method in isochrone_loader.adaptive_interpolation() is
         # still under development and not exposed to the user
         mass_interps = ("mass_skewed", "mass_uniform")
         if self.mass_interpolation not in mass_interps:
@@ -139,7 +139,7 @@ class Isochrones:
         self._vp("\nInstantiating isochrones")
         # Load isochrone files
         self.theor_tracks, self.color_filters, self.met_age_dict, N_isoch_files = (
-            isochrones_priv.load(
+            isochrone_loader.load(
                 self.model,
                 self.isochs_path,
                 self.mag,
