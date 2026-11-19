@@ -2,8 +2,8 @@ import numpy as np
 import numpy.typing as npt
 from scipy import stats
 
-from . import HAS_NUMBA as _HAS_NUMBA
-from . import njit
+from .. import HAS_NUMBA as _HAS_NUMBA
+from .. import njit
 from .imfs import invCDF_lut, invTrnsfSmpl, sampleInv
 
 
@@ -488,7 +488,7 @@ def sample_params(
     :param model_std: Dictionary with the STDDEV of each parameter in ``model``
     :type model_std: dict[str, float]
     :param limits: Valid range of each parameter, see
-        :py:attr:`ModelEngine.limits <model_data.ModelEngine.limits>`
+        :py:attr:`ModelEngine.limits <engine.ModelEngine.limits>`
     :type limits: dict[str, tuple[float, float]]
     :param N_models: Number of sets of parameters
     :type N_models: int
@@ -599,9 +599,9 @@ def mass_idx_lookup(
     theor_tracks: np.ndarray, st_dist_mass: list, m_ini_idx: int
 ) -> dict:
     """Pre-compute the search indexes of each sampled IMF mass distribution into
-    the mass grid of the isochrones, used by :py:func:`synth_model.mass_interp`.
+    the mass grid of the isochrones, used by :py:func:`generate.mass_interp`.
 
-    In :py:func:`synth_model.get_model` the masses of the isochrone are always taken
+    In :py:func:`generate.get_model` the masses of the isochrone are always taken
     from a single node of the (z, log(age)) grid: the closest node (m0, a0) to the
     model, with m0 in (ml, mh) and a0 in (al, ah). The IMF sample used is
     ``st_dist_mass[ml][al]``. Hence, for each IMF sample (ml, al) only the (up to)
@@ -644,7 +644,7 @@ def mass_idx_lookup(
     # Output arrays are allocated here and filled by the compiled function. They
     # are passed in a typed list where the indexes for the (ml, al) sample and the
     # node (m0, a0) are at position ((ml * N_a + al) * 2 + (m0 - ml)) * 2 + (a0 - al),
-    # the same layout used by synth_batch.batch_data(). Nodes beyond the grid's
+    # the same layout used by batch.batch_data(). Nodes beyond the grid's
     # edges repeat the key (and the array) of the node inside the grid
     lookup, st_list, midx_list = {}, List(), List()
     for ml in range(N_z):

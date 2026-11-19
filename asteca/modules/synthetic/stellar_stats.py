@@ -5,11 +5,11 @@ from typing import TYPE_CHECKING
 import numpy as np
 from scipy.spatial import KDTree
 
-from . import HAS_NUMBA as _HAS_NUMBA
-from . import njit
+from .. import HAS_NUMBA as _HAS_NUMBA
+from .. import njit
 
 if TYPE_CHECKING:
-    from ..isochrones import Isochrones
+    from ...isochrones import Isochrones
 
 
 def turn_off_points(
@@ -509,8 +509,8 @@ def get_bss_masses(
     :return: Median and STDDEVS of BSS mass estimated for each observed star.
     :rtype: tuple[np.ndarray, np.ndarray]
     """
-    from . import synth_cluster_priv as scp
-    from . import synth_model as sm
+    from . import generate as gen
+    from . import precompute as pre
 
     # Extract young isochrones. Shape of 'isoch_youngs_arrs' is (Na, Nm, Nc, Ni):
     # Na: Number of ages
@@ -538,7 +538,7 @@ def get_bss_masses(
     N_samples = max(1, int(N_models / (Na * Nm) + 1))
     # Truncated to the valid ranges of the parameters
     sampled_models = {
-        k: scp.truncnorm_sample(
+        k: pre.truncnorm_sample(
             rng,
             f_val,
             extrinsic_pars["stddevs"][k],
@@ -565,7 +565,7 @@ def get_bss_masses(
                 sampled_models["dm"],
             ):
                 # Move theoretical isochrone.
-                isoch_moved = sm.move_isochrone(
+                isoch_moved = gen.move_isochrone(
                     isochrone.copy(),  # copy to avoid overwriting in move_isochrone()
                     binar_flag,
                     m_ini_idx,
@@ -574,7 +574,7 @@ def get_bss_masses(
                 # Only the magnitude and first color are present in the
                 # (magnitude, color, initial mass) array: drop the coefficients of
                 # a second color, which would otherwise be applied to the mass row
-                isoch = sm.extinction(
+                isoch = gen.extinction(
                     ext_law,
                     ext_coefs[:2],
                     dr_frac,

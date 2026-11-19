@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import asteca
-from asteca.modules import stellar_stats_funcs as ssf
+from asteca.modules.synthetic import stellar_stats as ssf
 
 # Color shift applied to the turn-off point, same value used by
 # ssf.get_bss_probabilities()

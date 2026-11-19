@@ -4,8 +4,8 @@ from fast_histogram import histogram2d
 from scipy.ndimage import convolve1d
 from scipy.special import gammaln
 
-from . import HAS_NUMBA as _HAS_NUMBA
-from . import njit
+from .. import HAS_NUMBA as _HAS_NUMBA
+from .. import njit
 
 # cmd_overlap(): the kernel sums are computed on a grid (see _k_sums_grid) if the
 # number of observed-synthetic pairs is at least _GRID_MIN_PAIRS (below it the exact
@@ -261,7 +261,7 @@ def no_overlap_dist(
     d_mag = (obs_mag_median - _median(synth_clust[0])) / cmd_widths[0]
     d_col = (obs_col_median - _median(synth_clust[1])) / cmd_widths[1]
     # x*x instead of x**2: the latter (libm's pow) can differ by one ulp, and the
-    # same operation is used in synth_batch._lnl_one()
+    # same operation is used in batch._lnl_one()
     return 1 + (d_mag * d_mag + d_col * d_col)
 
 
@@ -726,7 +726,7 @@ class Tremmel:
         self.lkl_range = self.max_lkl - self.min_lkl
 
         # Data passed (as a single tuple, the 'lkl' argument) to the compiled
-        # functions that evaluate the likelihood, see synth_batch._lnl_one()
+        # functions that evaluate the likelihood, see batch._lnl_one()
         self.kernel_args = (
             self.m_ini_idx,
             self.hist_args,
@@ -772,7 +772,7 @@ class Tremmel:
 
         # The 'no match' distances are converted to log-likelihood units as
         # 'max_lkl - d * lkl_range'. Same operations (in the same order) as in
-        # synth_batch, so that the values are identical
+        # batch, so that the values are identical
         if synth_clust.size == 0:
             # Empty synthetic cluster, distance of '10'
             lkl = self.max_lkl - 10.0 * self.lkl_range

@@ -5,7 +5,7 @@ import numpy as np
 
 from .cluster import Cluster
 from .isochrones import Isochrones
-from .modules.model_data import ModelEngine, ObservedData
+from .modules.synthetic.engine import ModelEngine, ObservedData
 
 # Default values of the fundamental parameters, used for those not in 'def_params'
 DEFAULT_PARAMS = {
@@ -133,7 +133,7 @@ class Synthetic:
                 f"gamma '{self.gamma}' not recognized. Should be one of {gammas}"
             )
 
-        from .modules import synth_cluster_priv as scp
+        from .modules.synthetic import precompute as pre
 
         # Check IMF function
         imfs = ("salpeter_1955", "kroupa_2001", "chabrier_2014")
@@ -155,12 +155,12 @@ class Synthetic:
         # Sample the selected IMF
         Nmets, Nages = self.isochs.theor_tracks.shape[:2]
         self._vp("(Sampling IMF)", 1)
-        st_dist_mass = scp.sample_imf(
+        st_dist_mass = pre.sample_imf(
             self.rng, self.IMF_name, self.max_mass, Nmets, Nages
         )
 
         # Add binary systems
-        theor_tracks = scp.add_binarity(
+        theor_tracks = pre.add_binarity(
             self.rng,
             self.gamma,
             self.isochs.color,
@@ -213,7 +213,7 @@ class Synthetic:
                     f"Extinction law '{self.ext_law}' requires effective lambda\n"
                     + "values for the magnitude and first color."
                 )
-            ext_coefs = scp.ccmo_ext_coeffs(
+            ext_coefs = pre.ccmo_ext_coeffs(
                 self.isochs.magnitude_effl,
                 self.isochs.color_effl,
                 self.isochs.color2_effl,
@@ -231,10 +231,10 @@ class Synthetic:
             ext_law=self.ext_law,
             ext_coefs=ext_coefs,
             # Random floats used by `generate()`
-            rand_floats=scp.randVals(self.rng, theor_tracks, st_dist_mass),
+            rand_floats=pre.randVals(self.rng, theor_tracks, st_dist_mass),
             st_dist_mass=st_dist_mass,
             # Pre-computed search indexes used by mass_interp()
-            mass_idx=scp.mass_idx_lookup(theor_tracks, st_dist_mass, m_ini_idx),
+            mass_idx=pre.mass_idx_lookup(theor_tracks, st_dist_mass, m_ini_idx),
         )
         # Observed cluster data, set by calibrate()
         self._obs: ObservedData | None = None
@@ -273,12 +273,12 @@ class Synthetic:
 
     @DR_distribution.setter
     def DR_distribution(self, name: str) -> None:
-        from .modules import synth_cluster_priv as scp
+        from .modules.synthetic import precompute as pre
 
-        if name not in scp.DR_MODELS:
+        if name not in pre.DR_MODELS:
             raise ValueError(
                 f"Differential reddening model '{name}' not recognized. Should be "
-                + f"one of {scp.DR_MODELS}"
+                + f"one of {pre.DR_MODELS}"
             )
         self._DR_distribution = name
 
@@ -308,8 +308,8 @@ class Synthetic:
             - If the number of colors defined in the :py:class:`Cluster` and
               :py:class:`Synthetic` objects do not match
         """
-        from .modules import likelihood_priv as lpriv
-        from .modules import synth_cluster_priv as scp
+        from .modules.synthetic import likelihood as lh
+        from .modules.synthetic import precompute as pre
 
         required = ("mag", "e_mag", "color", "e_color")
         values = [getattr(cluster, attr) for attr in required]
@@ -362,7 +362,7 @@ class Synthetic:
             # Calibrate parameters using the observed cluster
             max_mag=float(np.nanmax(mag)),
             N_stars=cluster.N_stars - cluster.N_nan_phot,
-            err_dist=scp.error_distribution(
+            err_dist=pre.error_distribution(
                 mag,
                 e_mag,
                 e_color,
@@ -370,9 +370,7 @@ class Synthetic:
                 self._engine.rand_floats["norm"][1],
             ),
             # Likelihood used by asteca.Sampler, with the defined colors
-            lkl=lpriv.Tremmel(
-                mag, [c for c in (color, cluster.color2) if c is not None]
-            ),
+            lkl=lh.Tremmel(mag, [c for c in (color, cluster.color2) if c is not None]),
         )
         self._obs = obs
 
@@ -526,14 +524,14 @@ class Synthetic:
         """
         obs = self._check_calibrated()
 
-        from .modules import likelihood_priv as lpriv
+        from .modules.synthetic import likelihood as lh
 
         # Same synthetic cluster as generate(params); the isochrone (with DR=0) is
         # used to locate the turn-off point
         # isochrone, synth_clust = self._get_model(params, isoch_flag=True)
         _, synth_clust = self._get_model(params, isoch_flag=False)
 
-        D, D_std = lpriv.cmd_overlap(obs.mag, obs.colors[0], synth_clust, h_mag, h_col)
+        D, D_std = lh.cmd_overlap(obs.mag, obs.colors[0], synth_clust, h_mag, h_col)
 
         # Turn-off check: the observed and synthetic stars inside a box around the
         # turn-off are compared with the cmd_overlap() statistic. The check is skipped
@@ -547,10 +545,10 @@ class Synthetic:
         # max_mass = synth_clust[self._engine.m_ini_idx].max()
         # if (isochrone[self._engine.m_ini_idx] < max_mass).sum() < 2:
         #     return D, D_std
-        # to = ssf.turn_off_points([isochrone[[0, 1, self._engine.m_ini_idx]]], [max_mass], 0)
+        # to = sst.turn_off_points([isochrone[[0, 1, self._engine.m_ini_idx]]], [max_mass], 0)
         # to_col, to_mag = to["to_col"][0], to["to_mag"][0]
 
-        # lpriv.cmd_overlap_turnoff_box(
+        # lh.cmd_overlap_turnoff_box(
         #     self.cluster_mag,
         #     self.cluster_colors[0],
         #     synth_clust[0],
@@ -711,9 +709,9 @@ class Synthetic:
         """
         obs = self._check_calibrated()
 
-        from .modules import cluster_mass_funcs as cmf
-        from .modules import stellar_stats_funcs as ssf
-        from .modules import synth_cluster_priv as scp
+        from .modules.synthetic import cluster_mass as cm
+        from .modules.synthetic import precompute as pre
+        from .modules.synthetic import stellar_stats as sst
 
         # Check the arguments before generating the synthetic clusters
         if turn_off is not None:
@@ -726,10 +724,10 @@ class Synthetic:
                 raise ValueError("The STDDEVs in 'turn_off' must be >= 0")
         if rho_amb is not None and not (np.isfinite(rho_amb) and rho_amb > 0):
             raise ValueError(f"'rho_amb' must be a finite value > 0, got {rho_amb}")
-        gal_pot = cmf.update_pars(
-            "galaxy_potential", cmf.GALAXY_POTENTIAL, galaxy_potential
+        gal_pot = cm.update_pars(
+            "galaxy_potential", cm.GALAXY_POTENTIAL, galaxy_potential
         )
-        disrup = cmf.update_pars("disruption", cmf.DISRUPTION, disruption)
+        disrup = cm.update_pars("disruption", cm.DISRUPTION, disruption)
         if isochs_young is not None and isochs_young.amin > 7:
             raise ValueError("No isochrones with log(ages)<=7 found in 'isochs_young'")
 
@@ -767,7 +765,7 @@ class Synthetic:
         # Models that result in empty synthetic clusters are discarded
         models, synthcls, isoch_tracks, max_masses = [], [], [], []
         mass_infos = []
-        for smodel in scp.sample_params(
+        for smodel in pre.sample_params(
             self.rng, model, model_std, self._engine.limits, N_models
         ):
             mass_info = {}
@@ -794,9 +792,9 @@ class Synthetic:
         self._vp(f"N_models       : {N_models_non_empty}", 1)
 
         if turn_off is None:
-            turn_off_points = ssf.turn_off_points(isoch_tracks, max_masses, color_idx)
+            turn_off_points = sst.turn_off_points(isoch_tracks, max_masses, color_idx)
         else:
-            turn_off_points = ssf.turn_off_points_manual(
+            turn_off_points = sst.turn_off_points_manual(
                 self.rng, turn_off, N_models_non_empty, color_idx
             )
         self.turn_off_points = turn_off_points
@@ -808,7 +806,7 @@ class Synthetic:
             "limits": self._engine.limits,
         }
 
-        stars, m2_obs, valid = ssf.stellar_parameters(
+        stars, m2_obs, valid = sst.stellar_parameters(
             obs.mag,
             obs.e_mag,
             obs.colors,
@@ -837,8 +835,8 @@ class Synthetic:
         # Binary fraction and number of BSSs, from the stars with valid photometry
         N_valid = int(valid.sum())
         binar_p, bss_p = stars["binar_prob"][valid], stars["bss_prob"][valid]
-        binar_fr = ssf.poisson_binomial_percentiles(binar_p) / N_valid
-        N_bss = ssf.poisson_binomial_percentiles(bss_p)
+        binar_fr = sst.poisson_binomial_percentiles(binar_p) / N_valid
+        N_bss = sst.poisson_binomial_percentiles(bss_p)
         # Binary fraction of each sampled model. The binary systems are weighted by
         # (1 - bss_prob), as the 'binar_prob' values
         binar_fr_models = (np.isfinite(m2_obs[:, valid]) * (1.0 - bss_p)).sum(
@@ -868,7 +866,7 @@ class Synthetic:
             self._vp(
                 "\nUsing ambient density estimated from observed cluster (ra, dec)", 1
             )
-        masses = cmf.cluster_masses(
+        masses = cm.cluster_masses(
             models,
             synthcls,
             mass_infos,
@@ -1013,7 +1011,7 @@ class Synthetic:
         mass_info: dict | None = None,
     ) -> tuple[np.ndarray, np.ndarray]:
         """Generate a synthetic cluster (and its isochrone) with
-        :py:func:`synth_model.get_model`, from the data stored in the object
+        :py:func:`generate.get_model`, from the data stored in the object
 
         :param params: Dictionary with the values for the fundamental parameters. If
             ``None``, the default values are used
@@ -1031,7 +1029,7 @@ class Synthetic:
         :type isoch_dr_frac: float
         :param mass_info: If a dictionary is given, it is filled with the data
             required to estimate the total mass of the simulated cluster, see
-            :py:func:`synth_model.get_model`
+            :py:func:`generate.get_model`
         :type mass_info: dict | None
 
         :raises ValueError: If the parameters are not valid, or if more than one value

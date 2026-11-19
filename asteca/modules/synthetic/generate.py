@@ -3,11 +3,11 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from . import HAS_NUMBA as _HAS_NUMBA
-from . import njit
+from .. import HAS_NUMBA as _HAS_NUMBA
+from .. import njit
 
 if TYPE_CHECKING:
-    from .model_data import ModelEngine
+    from .engine import ModelEngine
 
 # The 'coeffs' values are the main sequence values taken from:
 # https://www.cosmos.esa.int/web/gaia/edr3-extinction-law
@@ -57,18 +57,18 @@ def get_model(
     The synthetic cluster is generated according to the parameters in ``p`` and the
     data of the :py:class:`Synthetic` object. This is the Python implementation of
     the synthetic cluster recipe, used when numba is not installed; with numba, the
-    compiled ``synth_batch._synth_one()`` is used instead (through
-    ``model_data.ModelEngine.get_model()``), with identical results.
+    compiled ``batch._synth_one()`` is used instead (through
+    ``engine.ModelEngine.get_model()``), with identical results.
 
     :param ctx: Data that defines the synthetic clusters
     :type ctx: ModelEngine
     :param p: Values of the fundamental parameters, in the order of ``FULL_PARAMS``:
         a row of the array returned by :py:meth:`ModelEngine.params_array
-        <model_data.ModelEngine.params_array>` (the values are not validated here)
+        <engine.ModelEngine.params_array>` (the values are not validated here)
     :type p: np.ndarray
     :param dr_model: Differential reddening model, it selects the fractions of the
         differential reddening applied to each star (see
-        :py:func:`synth_cluster_priv.dr_fractions`)
+        :py:func:`precompute.dr_fractions`)
     :type dr_model: str
     :param calib: Maximum synthetic magnitude allowed, error distributions used to
         perturb the synthetic photometry, and number of synthetic stars to generate
@@ -86,7 +86,7 @@ def get_model(
     :type isoch_dr_frac: float
     :param mass_info: If a dictionary is given, it is filled with the data required
         to estimate the total mass of the simulated cluster (see
-        :py:func:`cluster_mass_funcs.get_M_actual`): the IMF sampled masses used to
+        :py:func:`cluster_mass.get_M_actual`): the IMF sampled masses used to
         generate it (``imf_masses``: all the masses up to the last star kept in the
         synthetic cluster, or the full sample if it was exhausted), the indexes of
         the stars kept (``kept_idx``), the number of stars requested
@@ -261,7 +261,7 @@ def get_model(
 
 
 # Reasons for an empty synthetic cluster, indexed by the status code returned by
-# synth_batch._synth_one() (0: not empty)
+# batch._synth_one() (0: not empty)
 EMPTY_REASONS = ("", "max magnitude cut", "IMF interpolation", "the extinction")
 
 
@@ -689,7 +689,7 @@ def extinction(
 
     where 'f_i' (in [0, 1]) are the fractions in 'dr_frac', drawn from the
     distribution selected with 'DR_distribution' (see
-    :py:func:`synth_cluster_priv.dr_fractions`). Hence Av is the minimum and
+    :py:func:`precompute.dr_fractions`). Hence Av is the minimum and
     Av + dr the maximum absorption.
 
     Ax = ef * Av
@@ -1152,7 +1152,7 @@ def mass_interp(
     :type N_synth_stars: int
     :param mass_idx: Pre-computed search indexes of 'st_dist_mass' into the full
         (before the maximum magnitude cut) mass grid of the isochrone, see
-        :py:func:`synth_cluster_priv.mass_idx_lookup`.
+        :py:func:`precompute.mass_idx_lookup`.
     :type mass_idx: np.ndarray
 
     :returns: Interpolated isochrone array.

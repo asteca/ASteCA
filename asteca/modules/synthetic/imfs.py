@@ -1,8 +1,8 @@
 import numpy as np
 from scipy.interpolate import BSpline, make_interp_spline
 
-from . import HAS_NUMBA as _HAS_NUMBA
-from . import njit
+from .. import HAS_NUMBA as _HAS_NUMBA
+from .. import njit
 
 
 def invTrnsfSmpl(IMF_name: str, m_low: float = 0.08, m_high: float = 100) -> BSpline:
