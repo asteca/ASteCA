@@ -73,9 +73,10 @@ class Isochrones:
 
     :raises ValueError: If any of the attributes is not recognized as a valid option,
         or there are missing required attributes
+    :raises FileNotFoundError: If no files are found in ``isochs_path``
     """
 
-    def __init__(
+    def __init__(  # noqa: DOC503, RUF100
         self,
         model: str,
         isochs_path: str,

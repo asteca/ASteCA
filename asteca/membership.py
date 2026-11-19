@@ -76,7 +76,9 @@ class Membership:
         :raises AttributeError: If any of the required attributes (``ra, dec,
             N_cluster, radec_c, radius``) are missing from the
             :py:class:`Cluster <asteca.cluster.Cluster>` object
-        :raises ValueError: If the ``N_runs`` parameter is less than 10
+        :raises ValueError: If the ``N_runs`` parameter is less than 10, or if the
+            :py:class:`Cluster <asteca.cluster.Cluster>` object contains no data
+            dimension beyond ``(ra, dec)`` (photometry, parallax or proper motions)
         """
         self._vp("\nRunning Bayesian DA")
 
@@ -321,8 +323,9 @@ class Membership:
 
             - both ``prob_min`` and ``N_prob_max`` are provided,
             - ``prob_min`` is not between 0 and 1,
-            - no members are found with probability above ``prob_min``
-            - ``N_prob_max`` is greater than the total number of stars
+            - no members are found with probability equal to or above ``prob_min``,
+            - ``N_prob_max`` is not a positive integer, or is greater than the total
+              number of stars
 
         :return: A new :py:class:`Cluster <asteca.cluster.Cluster>` object containing
             only the selected members
