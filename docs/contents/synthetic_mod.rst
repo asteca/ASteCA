@@ -868,8 +868,12 @@ stricter threshold can be used.
 The second value returned, ``D_std``, is the approximate standard deviation of
 :math:`D` for a synthetic cluster drawn from the same distribution as the observed one
 (i.e.: a correct model). It decreases with the number of stars and gives the size of
-the fluctuations expected by chance alone. If the synthetic cluster has fewer than two
-stars, ``D=1`` and ``D_std=0`` are returned.
+the fluctuations expected by chance alone.
+
+Both the observed cluster (stars with valid photometry) and the synthetic cluster must
+contain at least ``10`` stars, otherwise a ``ValueError`` is raised. This includes an
+empty synthetic cluster, e.g.: for parameters that place all the stars below the
+maximum observed magnitude.
 
 Notes:
 

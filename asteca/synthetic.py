@@ -513,13 +513,14 @@ class Synthetic:
         :type h_col: float
 
         :raises ValueError: If :py:meth:`calibrate` was not called, if the observed
-            cluster has fewer than two stars with valid photometry, or in the same
-            cases as :py:meth:`generate`
+            cluster has fewer than ``10`` stars with valid photometry, if the
+            synthetic cluster has fewer than ``10`` stars (e.g.: an empty synthetic
+            cluster, for parameters that place all the stars below the maximum
+            magnitude), or in the same cases as :py:meth:`generate`
 
         :return: ``(D, D_std)``, where ``D_std`` is the approximate standard
             deviation of ``D`` for a synthetic cluster drawn from the same
-            distribution as the observed one (it decreases with the number of stars).
-            If the synthetic cluster has fewer than two stars, ``D=1`` and ``D_std=0``
+            distribution as the observed one (it decreases with the number of stars)
         :rtype: tuple[float, float]
         """
         obs = self._check_calibrated()

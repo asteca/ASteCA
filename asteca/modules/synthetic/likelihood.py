@@ -445,11 +445,13 @@ def cmd_overlap(
     :type h_col: float
     :param chunk: Number of stars processed at once, limits the memory used.
     :type chunk: int
-    :param N_min_stars: Minimum number of observed stars with valid photometry
+    :param N_min_stars: Minimum number of observed stars (with valid photometry) and
+        of synthetic stars
     :type N_min_stars: int
 
-    :raises ValueError: If the observed cluster has fewer than two stars with valid
-        photometry
+    :raises ValueError: If the observed cluster has fewer than ``N_min_stars`` stars
+        with valid photometry, or the synthetic cluster has fewer than
+        ``N_min_stars`` stars
 
     :return: Overlap distance and its approximate standard deviation for a synthetic
         cluster drawn from the same distribution as the observed one.
@@ -466,11 +468,13 @@ def cmd_overlap(
             "with valid photometry"
         )
 
-    # Check synthetic cluster
-    if synth_clust.size < N_min_stars:
+    # Number of synthetic stars: one per column (an empty synthetic cluster is an
+    # empty 1D array)
+    M_stars = synth_clust.shape[1] if synth_clust.ndim == 2 else 0
+    if M_stars < N_min_stars:
         raise ValueError(
-            f"The synthetic cluster must contain at least {N_min_stars} stars "
-            "with valid photometry"
+            f"The synthetic cluster must contain at least {N_min_stars} stars, "
+            f"found {M_stars}"
         )
 
     # Scale the synthetic cluster by the kernel widths
