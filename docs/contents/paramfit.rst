@@ -52,7 +52,9 @@ core sampler.
 
 **asteca.Sampler** (as pocoMC, from which it is adapted) was several times faster in
 our tests (about ten times on real clusters), stops on its own once the posterior is
-reached, and is reproducible through its ``seed`` argument. It also avoided some high ``Av`` and ``DR`` solutions where
+reached, and is reproducible through the ``seed`` argument of the
+:py:class:`asteca.Synthetic` object, which it inherits. It also avoided some high
+``Av`` and ``DR`` solutions where
 pyABC occasionally got stuck. On the other hand the width of the posterior depends on
 the chosen ``temperature``: with ``temperature=1`` the uncertainties can be too small
 for clusters with many members, while large values give too wide uncertainties for
