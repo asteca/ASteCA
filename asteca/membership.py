@@ -55,7 +55,7 @@ class Membership:
     def bayesian(
         self,
         N_runs: int = 1000,
-        eq_to_gal: bool = False,
+        eq_to_gal: bool = True,
         seed: int | None = None,
     ) -> None:
         """Assign membership probabilities.
