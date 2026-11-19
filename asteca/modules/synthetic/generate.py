@@ -42,6 +42,11 @@ _BPRP_COEFFS = (
 _X_MIN, _X_MAX = -0.06, 2.5
 
 
+# Reasons for an empty synthetic cluster, indexed by the status code returned by
+# batch._synth_one() (0: not empty)
+EMPTY_REASONS = ("", "max magnitude cut", "IMF interpolation", "the extinction")
+
+
 def get_model(
     ctx: "ModelEngine",
     p: np.ndarray,
@@ -258,11 +263,6 @@ def get_model(
     synth_clust = add_errors(isoch_binar, err_dist_synth)
 
     return isoch_extin_dr_0, synth_clust
-
-
-# Reasons for an empty synthetic cluster, indexed by the status code returned by
-# batch._synth_one() (0: not empty)
-EMPTY_REASONS = ("", "max magnitude cut", "IMF interpolation", "the extinction")
 
 
 def empty_message(status: int, p: np.ndarray) -> str:
