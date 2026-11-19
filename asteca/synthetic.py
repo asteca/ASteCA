@@ -904,23 +904,50 @@ class Synthetic:
     ) -> np.ndarray:
         """Generate an isochrone for plotting.
 
-        The isochrone is generated using the fundamental parameter values
-        given in the ``fit_params`` dictionary.
+        The isochrone is generated using the fundamental parameter values given in
+        the ``fit_params`` dictionary (defined as in :py:meth:`generate`): it is
+        interpolated in metallicity and age, shifted by the distance modulus ``dm``,
+        and moved by the extinction ``Av`` (and ``Rv``) with no differential
+        reddening. ``DR`` is ignored, so the isochrone marks the least extincted edge
+        of the synthetic cluster. It contains only single systems.
+
+        The upper end of the isochrone is cut to match the synthetic cluster
+        generated with these parameters: the maximum mass is the percentile (from
+        95 to 100) of the synthetic masses for which the brightest point of the
+        isochrone is closest to the brightest synthetic star. This removes the
+        massive, short lived end of the track, rarely populated when a finite number
+        of stars is sampled from the IMF. If the object was calibrated with
+        :py:meth:`calibrate`, this synthetic cluster has the number of stars, the
+        maximum magnitude and the uncertainties of the observed cluster; otherwise it
+        has ``N_stars`` stars. If the synthetic cluster is empty (e.g.: the whole
+        isochrone is fainter than the maximum magnitude), the cut can not be applied
+        and the full isochrone is returned with a warning.
+
+        A ``ValueError`` is raised in the same cases as :py:meth:`generate` (e.g.:
+        parameters outside of their valid ranges).
+
+        See :ref:`ref_get_isochrone` for more details.
 
         :param fit_params: Dictionary with the values for the fundamental parameters.
             Parameters not included take the default values defined in the
             ``def_params`` argument of the :py:class:`Synthetic` object
         :type fit_params: dict
-        :param color_idx: Index of the color to plot. If ``0`` (default), plot the
-            first color. If ``1`` plot the second color
+        :param color_idx: Index of the color to return. If ``0`` (default), the
+            first color. If ``1``, the second color (only if the
+            :py:class:`Isochrones <asteca.isochrones.Isochrones>` object defines
+            ``color2``)
         :type color_idx: int
-        :param full_track: If ``True``, return the full isochrone (ie: do not apply
-            the max mass filter)
+        :param full_track: If ``True``, return the full isochrone (i.e.: do not apply
+            the maximum mass cut)
         :type full_track: bool
-        :param N_stars: Number of synthetic stars to generate
+        :param N_stars: Number of stars of the synthetic cluster used for the maximum
+            mass cut. Only used if the object was not calibrated; after calling
+            :py:meth:`calibrate` the number of observed stars (with valid photometry)
+            is used and this argument is ignored
         :type N_stars: int
 
-        :return: Array with the isochrone data to plot
+        :return: Array of shape ``(2, N_points)`` with the magnitude (first row) and
+            the selected color (second row) of the isochrone
         :rtype: np.ndarray
         """
         # Generate displaced isochrone and full synthetic CMD array
