@@ -38,6 +38,11 @@ class Cluster:
     This object contains the basic data required to load a group of observed stars
     that could represent a cluster or an entire field.
 
+    The object holds a :py:class:`Membership <asteca.membership.Membership>` object
+    tied to it in its ``membership`` attribute, so the membership methods can be
+    called directly from it, e.g.: ``my_field.membership.fastmp()`` (equivalent to
+    ``asteca.Membership(my_field).fastmp()``).
+
     If the data is loaded from the UCC members file, a ``TypeError`` is raised if
     ``UCC_members_file`` is not a ``pandas.DataFrame`` or ``cluster_name`` is not a
     string, and an ``ImportError`` is raised if the optional ``pandas`` package is not
@@ -85,16 +90,21 @@ class Cluster:
     :param e_pmde: Array that contains the DEC proper motion's uncertainty
     :type e_pmde: np.ndarray | None
     :param probs: Array that contains the membership probabilities for each star. The
-        ``membership`` method stores here the estimated probabilities, but this
-        attribute can be used to store membership probabilities estimated in other ways.
-        The ``select_members`` method uses these values to select stars with
-        probabilities above a given threshold.
+        :py:meth:`Membership.fastmp <asteca.membership.Membership.fastmp>` and
+        :py:meth:`Membership.bayesian <asteca.membership.Membership.bayesian>`
+        methods store here the estimated probabilities, but this attribute can be used
+        to store membership probabilities estimated in other ways. The
+        :py:meth:`Membership.select_members
+        <asteca.membership.Membership.select_members>` method uses these values to
+        select stars with probabilities above a given threshold.
     :type probs: np.ndarray | None
-    :param N_clust_min: Lower limit on cluster size assumed by the membership
-        estimation algorithm
+    :param N_clust_min: Lower limit for the number of members estimated by
+        :py:meth:`get_nmembers`: smaller estimates are replaced by this value (with a
+        warning). Also used by its ``ripley`` algorithm
     :type N_clust_min: int
-    :param N_clust_max: Upper limit on cluster size assumed by the membership
-        estimation algorithm
+    :param N_clust_max: Upper limit for the number of members estimated by
+        :py:meth:`get_nmembers`: larger estimates are replaced by this value (with a
+        warning). Also used by its ``ripley`` algorithm
     :type N_clust_max: int
     :param verbose: Verbose level. A value of ``0`` hides all output
     :type verbose: int
@@ -629,6 +639,10 @@ class Cluster:
           cluster region (center+radius) and subtracts the expected number of field
           stars within that region. Requires the ``(ra, dec)`` center and the radius of
           the cluster to be defined.
+
+        The estimate is limited to the ``[N_clust_min, N_clust_max]`` range given when
+        the object was created: a value outside of it is replaced by the closest limit
+        and a warning is shown. The result is stored in the ``N_cluster`` attribute.
 
         :param algo: Algorithm used to estimate the number of members, one of
             (``ripley, density``)
