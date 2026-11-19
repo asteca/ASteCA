@@ -389,8 +389,8 @@ class Synthetic:
         """Generate a synthetic cluster, or a batch of synthetic clusters.
 
         The synthetic cluster is generated according to the parameters given in
-        the ``params`` dictionary and the already calibrated
-        :py:class:`Synthetic` object.
+        the ``params`` dictionary, using the data of the :py:class:`Synthetic` object
+        (calibrated or not, see below).
 
         The ``params`` dictionary can include values for all or some of the parameters.
         E.g. of a dictionary with some fundamental parameters:
