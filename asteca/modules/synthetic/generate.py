@@ -1160,7 +1160,7 @@ def mass_interp(
     """
     # ==IMPORTANT==
     # Assumes `mass_ini=isochrone[m_ini_idx]` is sorted min to max. This is checked
-    # when loading the isochrones in isochrones_priv.interp_isochrones()
+    # when loading the isochrones in isochrone_loader.interp_isochrones()
     # ==IMPORTANT==
     mass_ini = isochrone[m_ini_idx]
 

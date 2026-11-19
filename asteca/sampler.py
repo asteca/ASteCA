@@ -126,7 +126,7 @@ class Sampler:
         self._n_lnl = 0
         self._n_lnl_no_overlap = 0
 
-        from .modules.sampler_priv import PersistentSMC
+        from .modules.smc import PersistentSMC
 
         self._smc = PersistentSMC(
             self._log_like,
