@@ -29,6 +29,13 @@ class Membership:
     used to estimate the probabilities; the magnitude is only used to correct them
     if ``mag_correct=True``.
 
+    Every :py:class:`Cluster <asteca.cluster.Cluster>` object with data already holds
+    a :py:class:`Membership` object tied to it in its ``membership`` attribute, so
+    there is usually no need to create one: ``my_field.membership.fastmp()`` is
+    equivalent to ``asteca.Membership(my_field).fastmp()``. The estimated
+    probabilities are stored in the ``probs`` attribute of the
+    :py:class:`Cluster <asteca.cluster.Cluster>` object.
+
     :param my_field: :py:class:`Cluster <asteca.cluster.Cluster>` object with the
         loaded data for the observed field
     :type my_field: Cluster

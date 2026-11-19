@@ -66,6 +66,10 @@ of the :py:class:`Membership <asteca.membership.Membership>` class) as follows:
     # Run `bayesian` method
     my_field.membership.bayesian()
 
+Here ``my_field.membership`` is a :py:class:`Membership <asteca.membership.Membership>`
+object tied to ``my_field``, created along with it, so there is no need to create one.
+The calls above are equivalent to ``asteca.Membership(my_field).fastmp()`` and
+``asteca.Membership(my_field).bayesian()``.
 
 The per-star membership probabilities arrays are stored in the ``probs`` attribute
 of the ``my_field`` object.
