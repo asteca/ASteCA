@@ -513,11 +513,12 @@ approximation to the distribution of photometric uncertainties is required.
 This process is optional. The user can generate synthetic clusters
 via the :py:meth:`asteca.Synthetic.generate` method (see :ref:`ref_generating`)
 without calibrating the :obj:`synthcl` object. In this case, the synthetic
-clusters will be generated with a given number of observed stars (default value is
+clusters will be generated with a given number of stars (default value is
 100 but the user can select any other value), the maximum photometric magnitude
 allowed by the loaded isochrones, and no photometric uncertainties added.
 
-The following section explains this process in more detail.
+The following section explains how the synthetic clusters are generated, with or
+without calibration.
 
 
 

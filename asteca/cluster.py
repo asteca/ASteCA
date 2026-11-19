@@ -514,7 +514,10 @@ class Cluster:
                 c_str = "pms_c"
                 x, y = self.pmra, self.pmde
             else:
-                raise ValueError(f"Algorithm '{data_2d}' argument not recognized")
+                raise ValueError(
+                    f"Argument data_2d='{data_2d}' not recognized. Should be one of "
+                    + "('radec', 'pms')"
+                )
 
             # Remove rows containing any NaNs
             array_2d = np.array([x, y])

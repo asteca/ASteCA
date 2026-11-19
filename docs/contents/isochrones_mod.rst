@@ -17,8 +17,10 @@ produced with these services will contain:
 * BASTI  : single metallicity and single age
 
 
-All isochrones files must be stored in a single folder; **ASteCA** assumes that
-all files within that folder are isochrone files that should be loaded. 
+The ``isochs_path`` argument can point to a single isochrone file, or to a folder. In
+the latter case **ASteCA** assumes that all the files within that folder, and within
+its sub-folders, are isochrone files that should be loaded (hidden files and folders,
+i.e.: those whose names start with a ``.``, are skipped).
 
 .. note::
     The user can combine files for different photometric systems as long as they

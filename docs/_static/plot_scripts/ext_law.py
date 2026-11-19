@@ -30,7 +30,7 @@ def main():
     # If this model is used the first color is always expected to be BP-RP.
     # The coefficients were fitted for X_MIN < (BP-RP)_0 < X_MAX; ASteCA clamps the
     # colors outside of this range to the closest limit (see 'gaiadr3_ext()' in
-    # 'asteca/modules/synth_model.py'). The solid lines show the values used by
+    # 'asteca/modules/synthetic/generate.py'). The solid lines show the values used by
     # ASteCA, the dotted lines the polynomials extrapolated outside the valid range.
     X_MIN, X_MAX = -0.06, 2.5
     BP_RP = np.linspace(-0.5, 5.0, 500)
