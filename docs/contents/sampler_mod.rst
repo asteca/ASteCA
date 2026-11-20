@@ -256,11 +256,21 @@ described below), and this term is a constant that can also be discarded.
 .. important::
 
     A synthetic cluster can contain fewer stars than the observed one
-    (:math:`M<N`) only when the IMF sample (see the ``max_mass`` argument of
+    (:math:`M<N`) only when the IMF sample (see the ``max_mass`` attribute of
     :py:class:`asteca.Synthetic`) can not provide enough stars brighter than the
-    maximum observed magnitude. This only happens for models far from the observed
-    cluster (e.g.: too distant or too old), which have a large distance with or
-    without this term.
+    maximum observed magnitude. This usually happens only for models far from the
+    observed cluster (e.g.: too distant or too old), which have a large distance with
+    or without this term. But for clusters whose observations only reach down to near
+    the turn-off (e.g.: old and distant clusters) it can also happen for the models
+    close to the observed cluster. These are then penalized for having fewer stars,
+    and the fit settles on a model that the IMF sample can just supply, which can be
+    far from the true one. :py:meth:`asteca.Sampler.run` checks the IMF mass that the
+    fitted model (best and median) needs to produce the observed number of stars. If
+    it is more than :math:`2/3` of the IMF sample in use, a warning is shown, and a
+    larger ``max_mass`` value for :py:meth:`asteca.Synthetic.calibrate` is stored in
+    the ``max_mass_suggested`` attribute of the :py:class:`asteca.Sampler` object.
+    The fit should then be repeated with a new :py:class:`asteca.Sampler` object,
+    after calibrating with that value.
 
 Finally, discarding the last three terms, we have the expression for the Poisson
 likelihood ratio:

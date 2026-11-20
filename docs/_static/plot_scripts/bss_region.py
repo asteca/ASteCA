@@ -23,7 +23,6 @@ def main():
     synthcl = asteca.Synthetic(
         isochs,
         ext_law="GAIADR3",
-        max_mass=5000,
         seed=42519,
         verbose=3,
     )

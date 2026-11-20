@@ -37,10 +37,12 @@ _SCALARS = (int, float, np.integer, np.floating)
 @dataclass(frozen=True, eq=False)
 class ModelEngine:
     """Data that defines the synthetic clusters of a :py:class:`asteca.Synthetic`
-    object (fixed once the object is created), and the methods that validate their
-    parameters, generate them and evaluate their likelihood. The differential
-    reddening model is not included, as it can be changed at any time: it is passed to
-    each method, which selects the corresponding random values in ``rand_floats``.
+    object (fixed once created; :py:meth:`asteca.Synthetic.calibrate` replaces it
+    with a copy with the IMF sample the cluster requires), and the methods that
+    validate their parameters, generate them and evaluate their likelihood. The
+    differential reddening model is not included, as it can be changed at any time: it
+    is passed to each method, which selects the corresponding random values in
+    ``rand_floats``.
 
     :ivar met_age_dict: Metallicity and age grids of the isochrones
     :vartype met_age_dict: dict
@@ -60,6 +62,8 @@ class ModelEngine:
     :vartype ext_coefs: list
     :ivar rand_floats: Random values drawn in advance
     :vartype rand_floats: dict
+    :ivar imf_mass: Total initial mass of each IMF sample in ``st_dist_mass``
+    :vartype imf_mass: int
     :ivar st_dist_mass: Sampled IMF masses for each (z, a) box
     :vartype st_dist_mass: list
     :ivar mass_idx: Search indexes of the sampled IMF masses into the mass grid of
@@ -76,6 +80,7 @@ class ModelEngine:
     ext_law: str
     ext_coefs: list
     rand_floats: dict
+    imf_mass: int
     st_dist_mass: list
     mass_idx: dict
 

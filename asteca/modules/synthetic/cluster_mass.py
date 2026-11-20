@@ -6,6 +6,13 @@ import numpy.typing as npt
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
+from .precompute import suggest_imf_mass
+
+# Largest ratio of observed to synthetic stars for the scaling of the masses of a
+# synthetic cluster that ran out of IMF stars before a warning is shown (see
+# cluster_masses())
+MAX_MASS_SCALE = 3.0
+
 # Default parameters of the Galaxy's potential, used to estimate the ambient density.
 # Bulge and disc: Haghi et al. (2015), Table 1; dark matter halo: Sanderson et al.
 # (2017), Table 1
@@ -71,6 +78,7 @@ def cluster_masses(
     rho_amb: float | None,
     gal_pot: dict[str, float],
     disrup: dict[str, float],
+    imf_mass: int,
 ) -> dict[str, np.ndarray]:
     """Masses of the cluster for each sampled model, used by
     :py:meth:`asteca.Synthetic.cluster_properties`.
@@ -99,6 +107,9 @@ def cluster_masses(
     :type gal_pot: dict[str, float]
     :param disrup: Parameters of the cluster's disruption, see ``DISRUPTION``
     :type disrup: dict[str, float]
+    :param imf_mass: Total initial mass of the IMF sample in use, used to suggest a
+        larger one if the synthetic clusters run out of IMF stars
+    :type imf_mass: int
 
     :return: Dictionary with an array of values (one per model) for each mass
     :rtype: dict[str, np.ndarray]
@@ -168,15 +179,24 @@ def cluster_masses(
 
         masses_all.append([M_obs, M_phot, M_evol, M_dyn])
 
+    # The masses of the synthetic clusters that ran out of IMF stars were scaled by
+    # the ratio of observed to synthetic stars (see get_M_actual()). This was
+    # checked on a mock cluster with a ratio of ~3 (masses within 4% of those
+    # obtained with a large enough IMF sample). Larger ratios extrapolate further,
+    # hence the warning
     scales = np.array(scales)
-    N_short = int((scales > 1).sum())
-    if N_short > 0:
+    big = scales > MAX_MASS_SCALE
+    if big.any():
+        # No margin: these models are random draws, their ratio is not biased
+        suggested = suggest_imf_mass(float(np.max(scales)), imf_mass, margin=1.0)
         warnings.warn(
-            f"\nN={N_short} synthetic clusters (of {len(models)}) have fewer stars than "
-            + "the observed cluster\n(IMF sample exhausted). Their masses were scaled "
-            + "by the ratio of observed\nto synthetic stars (median: "
-            + f"{np.median(scales[scales > 1]):.2f}). Increase the 'max_mass' argument\n"
-            + "in `asteca.Synthetic()` for a more accurate mass estimation"
+            f"\nN={int(big.sum())} synthetic clusters (of {len(models)}) ran out of "
+            + "IMF stars with less than a\nthird of the observed stars (the smallest: "
+            + f"{100 / np.max(scales):.0f}% of them). Their masses were scaled\nup by "
+            + "the ratio of observed to synthetic stars, an extrapolation that can be\n"
+            + "inaccurate this large. Calibrate the 'Synthetic' object with a larger IMF "
+            + f"sample\n(in use: {imf_mass} Msun), e.g.: "
+            + f"'synthcl.calibrate(cluster, max_mass={suggested})'"
         )
     if Z_out:
         warnings.warn(

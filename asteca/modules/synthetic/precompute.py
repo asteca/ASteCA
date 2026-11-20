@@ -6,14 +6,66 @@ from .. import HAS_NUMBA as _HAS_NUMBA
 from .. import njit
 from .imfs import invCDF_lut, invTrnsfSmpl, sampleInv
 
+# Number of stars sampled from the IMF in each chunk (see sampleInv()). It is fixed
+# so that the IMF samples of different total masses are nested
+IMF_N_CHUNK = 250
+# Margin applied to the IMF mass suggested when the IMF sample is not large enough
+# (see suggest_imf_mass()): the inverse of sampler.IMF_CAP_FRAC, so that the same
+# model passes Sampler's check after re-calibrating
+IMF_SUGGEST_MARGIN = 1.5
+
+
+def suggest_imf_mass(
+    ratio: float, imf_mass: int, margin: float = IMF_SUGGEST_MARGIN
+) -> int:
+    """IMF mass suggested when synthetic clusters run out of IMF stars: the mass of
+    the sample in use scaled by the ratio of observed to synthetic stars and by
+    ``margin``, rounded up to a multiple of ``10000``
+
+    :param ratio: Largest ratio of observed to synthetic stars of the models
+    :type ratio: float
+    :param imf_mass: Total initial mass of the IMF sample in use
+    :type imf_mass: int
+    :param margin: Factor applied to the scaled mass, see ``IMF_SUGGEST_MARGIN``
+    :type margin: float
+
+    :returns: Suggested total initial mass of the IMF sample
+    :rtype: int
+    """
+    mass = margin * ratio * imf_mass
+    return max(1, int(np.ceil(mass / 10_000))) * 10_000
+
+
+def _stream(seed: int, *key: int) -> np.random.Generator:
+    """Independent random generator for the random values identified by ``key``,
+    obtained from ``seed``. The values drawn from it do not depend on how many are
+    drawn, nor on any other random values, which makes the IMF samples (and the
+    random values whose number depends on their size) nested: those obtained for a
+    larger total mass start with those obtained for a smaller one
+
+    :param seed: Random seed
+    :type seed: int
+    :param key: Integers that identify the stream
+    :type key: int
+
+    :returns: Random number generator
+    :rtype: np.random.Generator
+    """
+    return np.random.default_rng(np.random.SeedSequence(seed, spawn_key=key))
+
 
 def sample_imf(
-    rng: np.random.Generator, IMF_name: str, max_mass: float, Nmets: int, Nages: int
+    seed: int, IMF_name: str, max_mass: float, Nmets: int, Nages: int
 ) -> list:
     """Returns arrays of sampled stars for the selected IMF.
 
-    :param rng: Random number generator.
-    :type rng: np.random.Generator
+    Each (metallicity, age) sample is drawn from its own random stream (see
+    :py:func:`_stream`) in chunks of ``IMF_N_CHUNK`` stars, until the total mass
+    reaches ``max_mass``. Hence the samples are nested: those obtained for a larger
+    ``max_mass`` start with those obtained for a smaller one.
+
+    :param seed: Random seed.
+    :type seed: int
     :param IMF_name: Name of the IMF to be used.
     :type IMF_name: str
     :param max_mass: Maximum mass defined.
@@ -27,10 +79,7 @@ def sample_imf(
     :rtype: list
     """
     inv_cdf = invTrnsfSmpl(IMF_name)
-
-    # Sample in chunks until the maximum defined mass is reached. A simple
-    # analysis points to this being the optimal N_chunk
-    N_chunk = max(100, int(max_mass / 40))
+    N_chunk = IMF_N_CHUNK
 
     # Number of values drawn at once: the expected number of chunks required to
     # reach 'max_mass' (the mean mass is the integral of the inverse CDF in [0, 1])
@@ -47,7 +96,13 @@ def sample_imf(
         met_lst = []
         for j in range(Nages):
             sampled_IMF = sampleInv(
-                rng, max_mass, inv_cdf, N_chunk, N_draw, lut=lut, buf=buf
+                _stream(seed, 0, i, j),
+                max_mass,
+                inv_cdf,
+                N_chunk,
+                N_draw,
+                lut=lut,
+                buf=buf,
             )
             met_lst.append(sampled_IMF)
         st_dist_mass.append(met_lst)
@@ -386,16 +441,113 @@ def ccmo_model(mw: float) -> tuple[float, float]:
     return float(a), float(b)
 
 
+def imf_chunk_masses(st_dist_mass: list) -> list:
+    """Total mass at the end of each chunk of ``IMF_N_CHUNK`` stars of each IMF
+    sample, summed in the same order as :py:func:`imfs.sampleInv` (each chunk in
+    order, then the chunks in order), so that the values are identical to those it
+    compares with the maximum mass. Used by :py:func:`imf_prefix_view`.
+
+    :param st_dist_mass: Sampled IMF masses for each (z, a) box
+    :type st_dist_mass: list
+
+    :returns: Arrays of total masses, one per (z, a) box
+    :rtype: list
+    """
+    return [
+        [
+            np.cumsum(np.cumsum(arr.reshape(-1, IMF_N_CHUNK), axis=1)[:, -1])
+            for arr in met
+        ]
+        for met in st_dist_mass
+    ]
+
+
+def imf_prefix_view(
+    max_mass: int,
+    theor_tracks: np.ndarray,
+    st_dist_mass: list,
+    rand_floats: dict,
+    mass_idx: dict,
+    chunk_masses: list,
+) -> dict:
+    """IMF data for a total mass ``max_mass`` obtained from that of a larger one.
+
+    The IMF samples are nested (see :py:func:`sample_imf`): the sample for
+    ``max_mass`` of each (z, a) box is the first part of the larger one, up to the
+    end of the first chunk whose total mass reaches ``max_mass`` (the same chunk at
+    which :py:func:`imfs.sampleInv` stops). The random values and the search indexes
+    are cut accordingly (their number is that obtained by :py:func:`randVals` for
+    the smaller samples). All the arrays are views of the larger ones (no copies),
+    and identical to those obtained by sampling ``max_mass`` directly.
+
+    :param max_mass: Total initial mass of the IMF samples, not larger than that of
+        the given ones
+    :type max_mass: int
+    :param theor_tracks: Theoretical isochrones
+    :type theor_tracks: np.ndarray
+    :param st_dist_mass: Sampled IMF masses for each (z, a) box (larger mass)
+    :type st_dist_mass: list
+    :param rand_floats: Random values of the larger samples, see :py:func:`randVals`
+    :type rand_floats: dict
+    :param mass_idx: Search indexes of the larger samples, see
+        :py:func:`mass_idx_lookup`
+    :type mass_idx: dict
+    :param chunk_masses: Total mass at the end of each chunk of the larger samples,
+        see :py:func:`imf_chunk_masses`
+    :type chunk_masses: list
+
+    :raises ValueError: If any of the given samples does not reach ``max_mass``
+
+    :returns: Values of the ``rand_floats, imf_mass, st_dist_mass, mass_idx`` fields
+        of :py:class:`engine.ModelEngine`
+    :rtype: dict
+    """
+    sizes = []
+    for met in chunk_masses:
+        sizes_met = []
+        for cm in met:
+            # First chunk whose total mass is >= max_mass, as in sampleInv()
+            i = int(np.searchsorted(cm, max_mass))
+            if i >= cm.size:
+                raise ValueError(f"IMF sample smaller than max_mass={max_mass}")
+            sizes_met.append((i + 1) * IMF_N_CHUNK)
+        sizes.append(sizes_met)
+
+    st_view = [
+        [arr[:n] for arr, n in zip(met, sizes_met)]
+        for met, sizes_met in zip(st_dist_mass, sizes)
+    ]
+    # Keys are (ml, al, m0, a0), the sample is that of (ml, al)
+    midx_view = {k: v[: sizes[k[0]][k[1]]] for k, v in mass_idx.items()}
+    # Same number of random values as randVals() for the smaller samples
+    N_mass = max(theor_tracks.shape[-1], max(max(_) for _ in sizes))
+    rf_view = {
+        "norm": rand_floats["norm"][:, :N_mass],
+        "unif": rand_floats["unif"][:, :N_mass],
+        "dr_frac": {k: v[:N_mass] for k, v in rand_floats["dr_frac"].items()},
+    }
+    return {
+        "rand_floats": rf_view,
+        "imf_mass": max_mass,
+        "st_dist_mass": st_view,
+        "mass_idx": midx_view,
+    }
+
+
 def randVals(
-    rng: np.random.Generator,
+    seed: int,
     theor_tracks: np.ndarray,
     st_dist_mass: list,
 ) -> dict:
     """Generate lists of random values used by the synthetic cluster generating
     function.
 
-    :param rng: Random number generator.
-    :type rng: np.random.Generator
+    Each row of values is drawn from its own random stream (see :py:func:`_stream`),
+    so that the values obtained for larger IMF samples start with those obtained for
+    smaller ones.
+
+    :param seed: Random seed.
+    :type seed: int
     :param theor_tracks: Array of theoretical isochrones.
     :type theor_tracks: np.ndarray
     :param st_dist_mass: List of sampled masses.
@@ -415,12 +567,13 @@ def randVals(
     N_mass = max(N_isoch, max(arr.size for met in st_dist_mass for arr in met))
 
     # Row 1: used by error_distribution() (Synthetic.calibrate()). Row 0 is not
-    # used, but it is drawn so that the random values that follow (and hence the
-    # results for a given seed) do not change
-    rand_norm_vals = rng.normal(0.0, 1.0, (2, N_mass))
-
+    # used (it keeps the layout of the array)
+    rand_norm_vals = np.empty((2, N_mass))
     # Row 0: used by dr_fractions() (below). Row 1: used by binarity()
-    rand_unif_vals = rng.uniform(0.0, 1.0, (2, N_mass))
+    rand_unif_vals = np.empty((2, N_mass))
+    for row in (0, 1):
+        _stream(seed, 1, row).standard_normal(out=rand_norm_vals[row])
+        _stream(seed, 2, row).random(out=rand_unif_vals[row])
 
     # Used by `extinction()`. The fractions of every differential reddening model
     # are obtained (from the same uniform values) so that the model can be selected

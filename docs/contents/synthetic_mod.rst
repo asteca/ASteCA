@@ -29,7 +29,7 @@ To instantiate a :py:class:`asteca.Synthetic` object you need to pass the
 
 This will load the theoretical isochrones and perform the required initial processing
 to define a :obj:`synthcl` object. The processing involves sampling an `initial
-mass function`_ (IMF) up to a total maximum mass, setting the distributions for the
+mass function`_ (IMF) up to a total mass of :math:`10000\;M_{\odot}`, setting the distributions for the
 binary systems' mass ratio, defining the extinction law, and selecting the differential
 reddening model.
 
@@ -41,7 +41,6 @@ are (also see :py:class:`asteca.Synthetic`):
 
     def_params       : Default values for the fundamental parameters
     IMF_name         : Initial mass function
-    max_mass         : Maximum total initial mass
     gamma            : Distribution for the mass ratio of the binary systems
     ext_law          : Extinction law
     DR_distribution  : Model for the differential reddening
@@ -62,7 +61,7 @@ the following sub-sections.
 Initial mass function
 =====================
 
-The ``IMF_name`` and ``max_mass`` arguments are used to generate random mass samples from
+The ``IMF_name`` argument is used to generate random mass samples from
 an IMF. To improve the performance of the code, this step is performed when the
 :py:class:`asteca.Synthetic` object is created instead of every time a new synthetic
 cluster is generated. The ``IMF_name`` argument must be one of those available in
@@ -74,14 +73,41 @@ shown in the figure below:
     :align: center
 
 
-The ``max_mass`` argument fixes the total mass value to be sampled from the IMF (hence,
-it also controls the total number of synthetic stars). This
-value should be large enough to allow generating as many synthetic stars as those
-present in the observed cluster. The default value is :math:`10000\;M_{\odot}` which
-should be more than enough for the majority of clusters. As a rule of thumb, it should
-be at least 7 times the number of observed stars (i.e.: :math:`7\times N` in
-:math:`M_{\odot}`); a warning is shown by the :py:meth:`asteca.Synthetic.calibrate`
-method if this is not the case.
+The total mass sampled from the IMF (for each metallicity and age of the isochrones)
+limits the number of synthetic stars that can be generated. It must be large enough
+to allow generating as many synthetic stars as those present in the observed
+cluster. The IMF is sampled up to :math:`10000\;M_{\odot}` when the
+:py:class:`asteca.Synthetic` object is created. For clusters with more than
+:math:`\sim1400` stars the :py:meth:`asteca.Synthetic.calibrate` method grows the
+sample to a total mass of at least :math:`7\times N\;M_{\odot}` for :math:`N`
+observed stars, or to the value of its ``max_mass`` argument if it is given (rounded
+up to a multiple of :math:`10000\;M_{\odot}`). This takes a
+few seconds and uses more memory (about :math:`0.55` GB per :math:`10000\;M_{\odot}`
+for a grid of :math:`\sim2500` isochrones). The total mass of the sample in use is
+given by the ``max_mass`` attribute.
+
+The samples are nested, i.e.: a larger sample starts with the same stars (and random
+values) as a smaller one. Only the largest sample drawn is kept in memory: a cluster
+calibrated afterwards that requires a smaller sample uses the first part of it, at no
+cost in time or memory. Hence the results for a cluster do not depend on the
+clusters calibrated before with the same :py:class:`asteca.Synthetic` object: they
+are identical to those obtained with a new one.
+
+.. note::
+
+    The :math:`7\times N\;M_{\odot}` value is enough for most clusters, but the mass
+    required per observed star depends on how deep the observations reach relative
+    to the cluster's turn-off. For an old (:math:`\log(age)=9.8`) and distant
+    (:math:`\mu=14`, :math:`A_V=1`) cluster observed down to :math:`G=19`, only
+    :math:`\sim350` stars per :math:`10000\;M_{\odot}` are brighter than this limit
+    (:math:`\sim29\;M_{\odot}` per observed star). :py:meth:`asteca.Sampler.run`
+    shows a warning if the fitted model needs more than :math:`2/3` of the IMF
+    sample, with a suggested ``max_mass`` value to pass to
+    :py:meth:`asteca.Synthetic.calibrate` (see :ref:`sampler_module`). The masses
+    estimated by :py:meth:`asteca.Synthetic.cluster_properties` for synthetic
+    clusters with fewer stars than the observed one are scaled by the ratio of
+    observed to synthetic stars. A warning is shown if this ratio is larger than
+    :math:`3` for any of them, as the scaling is then a large extrapolation.
 
 
 
@@ -416,8 +442,8 @@ How the two distributions differ
    end up fainter than the maximum magnitude of the observed cluster are discarded,
    and more stars are generated until the synthetic cluster has as many stars as
    the observed one. With a large :math:`DR` the number of stars required from
-   the IMF sample grows accordingly, so a larger ``max_mass`` value may be needed
-   (see :ref:`ref_defining`).
+   the IMF sample grows accordingly. A model far from the observed cluster may then
+   contain fewer stars than the observed one (see :ref:`ref_defining`).
 
 The figure below shows the two distributions of :math:`f` (left). The middle
 panel shows the absorption they produce for the same parameters,
