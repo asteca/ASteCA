@@ -1,11 +1,11 @@
-import warnings
-
 import astropy.units as u
 import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.modeling.models import KingProjectedAnalytic1D
 from scipy import spatial, stats
 from scipy.optimize import least_squares
+
+from .warn import warn
 
 
 def radec2lonlat(ra: float | np.ndarray, dec: float | np.ndarray) -> np.ndarray:
@@ -433,7 +433,7 @@ def get_pms_center(
         if vpd_c is None:
             raise ValueError("Could not estimate the PMs center value")
         cx, cy = vpd_c
-        warnings.warn("Could not estimate a better PMs center value")
+        warn("Could not estimate a better PMs center value")
 
     return cx, cy
 
@@ -554,8 +554,8 @@ def get_2D_center(
     if values.shape[-1] > N_max:
         # idx = np.random.choice(values.shape[-1], N_max, replace=False)
         xc, yc = np.median([x, y], 1)
-        warnings.warn(
-            f"\nUsing closest {N_max} stars to center of frame ({xc:.2f}, {yc:.2f})"
+        warn(
+            f"Using closest {N_max} stars to center of frame ({xc:.2f}, {yc:.2f})"
             + " to avoid performance issues."
         )
         dist = np.sqrt((x - xc) ** 2 + (y - yc) ** 2)

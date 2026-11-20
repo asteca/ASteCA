@@ -6,9 +6,10 @@ if TYPE_CHECKING:
     from types import ModuleType
 
     import pandas as pd
-import warnings
 
 import numpy as np
+
+from .modules.warn import warn
 
 
 def _import_pandas(method: str) -> ModuleType:
@@ -726,14 +727,10 @@ class Cluster:
             N_cluster = nm.density_nmembs(xv, yv, xy_center, self.radius)
 
         if N_cluster < self.N_clust_min:
-            warnings.warn(
-                "The estimated number of cluster members is " + f"<{self.N_clust_min}"
-            )
+            warn("The estimated number of cluster members is " + f"<{self.N_clust_min}")
             N_cluster = self.N_clust_min
         if N_cluster > self.N_clust_max:
-            warnings.warn(
-                "The estimated number of cluster members is " + f">{self.N_clust_max}"
-            )
+            warn("The estimated number of cluster members is " + f">{self.N_clust_max}")
             N_cluster = self.N_clust_max
 
         self.N_cluster = N_cluster

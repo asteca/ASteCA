@@ -1,7 +1,8 @@
 import os
-import warnings
 
 import numpy as np
+
+from .warn import warn
 
 # IMPORTANT: this dictionary contains fixed data required to read isochrones from
 # each of the models. If this ever changes, this function will no longer work
@@ -145,7 +146,7 @@ def load(
         len(met_age_dict["loga"]) > 1
         and max(met_age_dict["loga"][1:] - met_age_dict["loga"][:-1]) > 0.25
     ):
-        warnings.warn(
+        warn(
             "The isochrones grid has very large steps in log(age). This can impact "
             + "the proper generation of synthetic clusters. Consider using a smaller step."
         )
@@ -509,11 +510,11 @@ def keep_common_ages(
             f"{len(loga_drop)} ages in the range "
             + f"log(age)=[{loga_drop[0]:.3f}, {loga_drop[-1]:.3f}]"
         )
-    warnings.warn(
-        f"\n{N_drop} isochrones were discarded because their ages are not present "
-        + f"in all the metallicities.\nDiscarded: {drop_str}.\nThe grid was reduced "
+    warn(
+        f"{N_drop} isochrones were discarded because their ages are not present "
+        + f"in all the metallicities. Discarded: {drop_str}. The grid was reduced "
         + f"to {len(common_ages)} ages, in the range "
-        + f"log(age)=[{min(loga):.3f}, {max(loga):.3f}]\n"
+        + f"log(age)=[{min(loga):.3f}, {max(loga):.3f}]"
     )
 
     keep = [i for i, (_, age) in enumerate(met_age_vals) if age in common_ages]
@@ -926,8 +927,8 @@ def merge_ps_massini_check(mass_col: str, isochrones: dict) -> tuple[list, list]
     N_missing = int((~present).sum())
     if N_missing:
         i, j = np.argwhere(~present)[0]
-        warnings.warn(
-            f"\nThe (metallicity, age) isochrone grid is missing {N_missing} "
+        warn(
+            f"The (metallicity, age) isochrone grid is missing {N_missing} "
             + f"points, e.g.: (met={met_vals[i]:g}, age={age_vals[j]:g})"
         )
 

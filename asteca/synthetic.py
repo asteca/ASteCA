@@ -1,5 +1,4 @@
 import dataclasses
-import warnings
 from collections.abc import Sequence
 
 import numpy as np
@@ -7,6 +6,7 @@ import numpy as np
 from .cluster import Cluster
 from .isochrones import Isochrones
 from .modules.synthetic.engine import ModelEngine, ObservedData
+from .modules.warn import warn
 
 # Default values of the fundamental parameters, used for those not in 'def_params'
 DEFAULT_PARAMS = {
@@ -178,9 +178,9 @@ class Synthetic:
                 self.isochs.magnitude_effl is not None
                 or self.isochs.color_effl is not None
             ):
-                warnings.warn(
-                    f"\nExtinction law '{self.ext_law}' does not require effective lambda"
-                    + " values for the\nmagnitude and first color (assumed to be 'G' "
+                warn(
+                    f"Extinction law '{self.ext_law}' does not require effective lambda"
+                    + " values for the magnitude and first color (assumed to be 'G' "
                     + "and 'BP-RP', respectively)."
                 )
 
@@ -193,8 +193,8 @@ class Synthetic:
 
             # The Rv parameter is not used by this law
             if self.def_params.get("Rv", 3.1) != 3.1:
-                warnings.warn(
-                    f"\nExtinction law '{self.ext_law}' does not use the 'Rv' parameter: "
+                warn(
+                    f"Extinction law '{self.ext_law}' does not use the 'Rv' parameter: "
                     + f"the default value Rv={self.def_params['Rv']} will have no effect."
                 )
 
@@ -253,7 +253,7 @@ class Synthetic:
         try:
             self._engine.params_array(None)
         except ValueError as err:
-            warnings.warn(
+            warn(
                 f"Invalid 'def_params': {err}. The parameter must be included in "
                 + "'params' when generating synthetic clusters"
             )
@@ -793,9 +793,7 @@ class Synthetic:
         if N_models_non_empty == 0:
             raise ValueError("All sampled models produced empty synthetic clusters.")
         if N_models_non_empty < N_models:
-            warnings.warn(
-                f"Empty synthetic arrays generated: {N_models - N_models_non_empty}"
-            )
+            warn(f"Empty synthetic arrays generated: {N_models - N_models_non_empty}")
         self._vp(f"N_models       : {N_models_non_empty}", 1)
 
         if turn_off is None:
@@ -833,9 +831,9 @@ class Synthetic:
         N_nan = int((~valid).sum())
         if N_nan > 0:
             self._vp("", 0)
-            warnings.warn(
-                f"\nN={N_nan} stars found with no valid photometric data. "
-                + "These will be assigned 'nan' values\nfor masses and "
+            warn(
+                f"N={N_nan} stars found with no valid photometric data. "
+                + "These will be assigned 'nan' values for masses and "
                 + "probabilities"
             )
 
@@ -966,7 +964,7 @@ class Synthetic:
         if full_arr.size == 0:
             # No synthetic stars were generated (e.g.: all the isochrone is below
             # the maximum magnitude), the max mass filter can not be applied
-            warnings.warn(
+            warn(
                 "The synthetic cluster for these parameters is empty, returning "
                 + "the full isochrone",
                 stacklevel=2,
@@ -1060,8 +1058,8 @@ class Synthetic:
             return self._engine
         N_stars = int(N_stars)
         if N_stars > N_STARS_WARN:
-            warnings.warn(
-                f"\nGenerating N_stars={N_stars} synthetic stars requires about "
+            warn(
+                f"Generating N_stars={N_stars} synthetic stars requires about "
                 + f"{N_stars * BYTES_PER_STAR / 1e9:.1f} GB of memory",
                 stacklevel=3,
             )

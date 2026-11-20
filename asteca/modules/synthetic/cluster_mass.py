@@ -1,10 +1,10 @@
-import warnings
-
 import astropy.coordinates as coord
 import numpy as np
 import numpy.typing as npt
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+
+from ..warn import warn
 
 # Number of points used to integrate the mass of the IMF outside of the mass range
 # of the candidate stars (see get_M_actual())
@@ -124,9 +124,9 @@ def cluster_masses(
             gal_pot["M_s"],
         )
     else:
-        warnings.warn(
-            "\nNo 'rho_amb', 'radec_c', or (ra, dec) values in the calibrated "
-            + "Cluster object:\nthe initial, evolutionary and dynamical masses "
+        warn(
+            "No 'rho_amb', 'radec_c', or (ra, dec) values in the calibrated "
+            + "Cluster object: the initial, evolutionary and dynamical masses "
             + "can not be estimated"
         )
 
@@ -172,10 +172,10 @@ def cluster_masses(
         masses_all.append([M_obs, M_phot, M_evol, M_dyn])
 
     if Z_out:
-        warnings.warn(
-            "\nMetallicity outside of the range of the stellar evolution mass loss "
-            + f"model\n({MU_EV_COEFFS['Z'][0]} <= Z <= {MU_EV_COEFFS['Z'][-1]}) for some "
-            + "models: the closest metallicity is\nused for the initial, evolutionary "
+        warn(
+            "Metallicity outside of the range of the stellar evolution mass loss "
+            + f"model ({MU_EV_COEFFS['Z'][0]} <= Z <= {MU_EV_COEFFS['Z'][-1]}) for some "
+            + "models: the closest metallicity is used for the initial, evolutionary "
             + "and dynamical masses"
         )
 

@@ -2,6 +2,8 @@ import warnings
 
 import numpy as np
 
+from .warn import warn
+
 
 def bayesian_mp(
     N_cluster: int,
@@ -55,9 +57,9 @@ def bayesian_mp(
     arr_shape = (N_cl_region, N_cluster, cl_region.shape[0])
     size_Mb = np.prod(arr_shape) * np.dtype(np.float64).itemsize / (1024 * 1024)
     if size_Mb > 1000:
-        warnings.warn(
-            f"\nThe array generated will be larger than {size_Mb:.0f} Mb."
-            + " Consider reducing the size\nof the frame or the radius."
+        warn(
+            f"The array generated will be larger than {size_Mb:.0f} Mb."
+            + " Consider reducing the size of the frame or the radius."
         )
 
     # Normalize data
@@ -164,8 +166,8 @@ def get_regions(
 
     msk_in_rad = dist_sq <= radius_sq
     if msk_in_rad.sum() > N_max:
-        warnings.warn(
-            f"\nNumber of stars within the radius ({msk_in_rad.sum()}) is greater than"
+        warn(
+            f"Number of stars within the radius ({msk_in_rad.sum()}) is greater than"
             f" the accepted maximum ({N_max}). Selecting {N_max} stars closest to center."
             " Consider reducing the radius or employing another method to improve the performance."
         )

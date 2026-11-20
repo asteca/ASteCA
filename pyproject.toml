@@ -14,6 +14,8 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Astronomy",
 ]
 requires-python = ">=3.12"
@@ -26,10 +28,10 @@ dependencies = [
 
 [project.optional-dependencies]
 # Compiles the most demanding functions (faster synthetic clusters and likelihood)
-numba = ["numba"]
+numba = ["numba>=0.64"]
 # Required to load the UCC members file and by Cluster.to_csv()
-pandas = ["pandas"]
-all = ["numba", "pandas"]
+pandas = ["pandas>=2.3"]
+all = ["numba>=0.64", "pandas>=2.3"]
 
 [tool.pyrefly]
 project-includes = [

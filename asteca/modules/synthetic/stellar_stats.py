@@ -7,6 +7,7 @@ from scipy.spatial import KDTree
 
 from .. import HAS_NUMBA as _HAS_NUMBA
 from .. import njit
+from ..warn import warn
 
 if TYPE_CHECKING:
     from ...isochrones import Isochrones
@@ -189,9 +190,7 @@ def stellar_parameters(
             isochs_young.theor_tracks,
         )
     else:
-        warnings.warn(
-            "No young isochrones were provided, BSSs masses can not be estimated"
-        )
+        warn("No young isochrones were provided, BSSs masses can not be estimated")
 
     data = {
         "mass_single": m1_med,
