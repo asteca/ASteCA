@@ -18,7 +18,7 @@ from .warn import warn
 #
 # sep_cols: regular expression to separate columns in the isochrone files
 
-phot_systs_data = {
+PHOT_SYSTS_DATA = {
     "PARSEC": {
         "col_names": {
             "eep_col": None,
@@ -185,10 +185,10 @@ def get_columns(
     :rtype: tuple[list, str | None, str, str, str]
     """
     if column_names is None:
-        eep_col = phot_systs_data[model]["col_names"]["eep_col"]
-        mass_col = phot_systs_data[model]["col_names"]["mass_col"]
-        met_col = phot_systs_data[model]["col_names"]["met_col"]
-        age_col = phot_systs_data[model]["col_names"]["age_col"]
+        eep_col = PHOT_SYSTS_DATA[model]["col_names"]["eep_col"]
+        mass_col = PHOT_SYSTS_DATA[model]["col_names"]["mass_col"]
+        met_col = PHOT_SYSTS_DATA[model]["col_names"]["met_col"]
+        age_col = PHOT_SYSTS_DATA[model]["col_names"]["age_col"]
     else:
         eep_col = column_names["eep_col"]
         mass_col = column_names["mass_col"]
@@ -288,13 +288,13 @@ def read(
         # np.genfromtxt (C parser) and returns the same structured array
         cols_read = set(cols_keep_ps) | {met_col, age_col}
         if model == "PARSEC":
-            cols_read.add(phot_systs_data[model]["parsec_stages_col"])
+            cols_read.add(PHOT_SYSTS_DATA[model]["parsec_stages_col"])
         cols_idx = sorted(col_names.index(c) for c in cols_read if c in col_names)
 
         # Load file
         data = np.loadtxt(
             file_path,
-            comments=phot_systs_data[model]["comment_char"],
+            comments=PHOT_SYSTS_DATA[model]["comment_char"],
             usecols=cols_idx,
             dtype=[(col_names[i], float) for i in cols_idx],
             encoding="utf-8",
@@ -319,7 +319,7 @@ def read(
                     # Remove bad values in filters
                     mag_msk = np.logical_and.reduce(
                         [
-                            df[_filter] < phot_systs_data[model]["max_mag"]
+                            df[_filter] < PHOT_SYSTS_DATA[model]["max_mag"]
                             for _filter in all_filters
                         ]
                     )
@@ -327,7 +327,7 @@ def read(
 
                     # Remove all stages equal or larger than this value
                     df = df[
-                        df[phot_systs_data[model]["parsec_stages_col"]]
+                        df[PHOT_SYSTS_DATA[model]["parsec_stages_col"]]
                         < parsec_rm_stages
                     ]
 
@@ -381,14 +381,14 @@ def get_header(model: str, file_path: str) -> tuple[list, list]:
     with open(file_path, mode="r") as f_iso:
         full_header = []
         for line in f_iso:
-            if not line.startswith(phot_systs_data[model]["comment_char"]):
+            if not line.startswith(PHOT_SYSTS_DATA[model]["comment_char"]):
                 break
             full_header.append(line)
 
     # Extract column names
-    column_line = full_header[phot_systs_data[model]["idx_col_line"]]
+    column_line = full_header[PHOT_SYSTS_DATA[model]["idx_col_line"]]
     column_names = column_line.replace(
-        phot_systs_data[model]["comment_char"], ""
+        PHOT_SYSTS_DATA[model]["comment_char"], ""
     ).split()
 
     return column_names, full_header
@@ -409,13 +409,13 @@ def get_MIST_z_val(met_col: str, full_header: list) -> str:
     """
     met = None
     for i, line in enumerate(full_header):
-        line = line.replace(phot_systs_data["MIST"]["comment_char"], "")
+        line = line.replace(PHOT_SYSTS_DATA["MIST"]["comment_char"], "")
         if met_col in line:
             # Identify lines that contain the metallicity column
             z_header_cols = line.split()
             # Assume the metallicity value is in the next line
             next_line = full_header[i + 1].replace(
-                phot_systs_data["MIST"]["comment_char"], ""
+                PHOT_SYSTS_DATA["MIST"]["comment_char"], ""
             )
             z_header_vals = next_line.split()
             # Extract metallicity value as string
@@ -446,14 +446,14 @@ def get_BASTI_z_a_val(full_header: list, met_col: str, age_col: str) -> tuple[st
     """
     met, age = None, None
     for line in full_header:
-        line = line.replace(phot_systs_data["BASTI"]["comment_char"], "").strip()
+        line = line.replace(PHOT_SYSTS_DATA["BASTI"]["comment_char"], "").strip()
         if met_col in line:
             # Assume both values exist in the same line
             met = line.split(met_col)[1].split()[0]
             age = line.split(age_col)[1].split()[0]
 
             # Basti ages are expressed in Myr, convert to log10
-            if phot_systs_data["BASTI"]["myr_to_log10"]:
+            if PHOT_SYSTS_DATA["BASTI"]["myr_to_log10"]:
                 age = np.log10(float(age) * 1e6)
                 # Back to (rounded) string
                 age = str(round(age, 5))

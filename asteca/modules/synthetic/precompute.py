@@ -13,6 +13,8 @@ IMF_N_EXTRA = 1000
 # Number of buckets of the lookup table of the IMF CDF of each grid node (see
 # imf_cdf_tables())
 IMF_LUT_BUCKETS = 4096
+# Differential reddening models, see dr_fractions()
+DR_MODELS = ("foreground", "internal")
 
 
 def n_candidates(N_stars: int, N_isoch: int) -> int:
@@ -549,10 +551,6 @@ def sample_params(
         low, high = limits[k]
         sampled[k] = truncnorm_sample(rng, f_val, model_std[k], low, high, N_models)
     return [dict(zip(sampled, t)) for t in zip(*sampled.values())]
-
-
-# Differential reddening models, see dr_fractions()
-DR_MODELS = ("foreground", "internal")
 
 
 def dr_fractions(rand_unif: np.ndarray, DR_distribution: str) -> np.ndarray:
