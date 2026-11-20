@@ -38,7 +38,8 @@ _SCALARS = (int, float, np.integer, np.floating)
 class ModelEngine:
     """Data that defines the synthetic clusters of a :py:class:`asteca.Synthetic`
     object (fixed once created; :py:meth:`asteca.Synthetic.calibrate` replaces it
-    with a copy with the IMF sample the cluster requires), and the methods that
+    with a copy with the random values sized for the observed cluster), and the
+    methods that
     validate their parameters, generate them and evaluate their likelihood. The
     differential reddening model is not included, as it can be changed at any time: it
     is passed to each method, which selects the corresponding random values in
@@ -60,15 +61,16 @@ class ModelEngine:
     :vartype ext_law: str
     :ivar ext_coefs: Extinction coefficients (empty for ``GAIADR3``)
     :vartype ext_coefs: list
-    :ivar rand_floats: Random values drawn in advance
+    :ivar rand_floats: Random values drawn in advance, see
+        :py:func:`precompute.randVals`
     :vartype rand_floats: dict
-    :ivar imf_mass: Total initial mass of each IMF sample in ``st_dist_mass``
-    :vartype imf_mass: int
-    :ivar st_dist_mass: Sampled IMF masses for each (z, a) box
-    :vartype st_dist_mass: list
-    :ivar mass_idx: Search indexes of the sampled IMF masses into the mass grid of
-        the isochrones, see :py:func:`precompute.mass_idx_lookup`
-    :vartype mass_idx: dict
+    :ivar imf_knots: Knots ``(x, y)`` (CDF values, masses) of the inverse CDF of the
+        IMF, see :py:func:`precompute.imf_cdf_tables`
+    :vartype imf_knots: tuple
+    :ivar imf_cdf: IMF CDF at the initial masses of each grid node of the isochrones
+    :vartype imf_cdf: np.ndarray
+    :ivar imf_lut: Bucket lookup tables of ``imf_cdf``
+    :vartype imf_lut: np.ndarray
     """
 
     met_age_dict: dict
@@ -80,9 +82,9 @@ class ModelEngine:
     ext_law: str
     ext_coefs: list
     rand_floats: dict
-    imf_mass: int
-    st_dist_mass: list
-    mass_idx: dict
+    imf_knots: tuple
+    imf_cdf: np.ndarray
+    imf_lut: np.ndarray
 
     def params_array(self, params: dict | None) -> np.ndarray:
         """Validated values of all the parameters of one or more models, in the

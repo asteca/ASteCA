@@ -1,5 +1,3 @@
-import warnings
-
 import numpy as np
 
 from .modules.synthetic.engine import FULL_PARAMS
@@ -13,14 +11,6 @@ from .synthetic import Synthetic
 # between the model and the data (and for the random sampling of the synthetic
 # clusters), which otherwise produces too narrow posteriors.
 AUTO_TEMPERATURES = ((150, 1.0), (400, 2.0), (np.inf, 4.0))
-
-# Largest fraction of the IMF sample that the fitted model may need to produce the
-# observed number of stars before Sampler.run() shows a warning. A fit limited by the
-# IMF sample settles on a model that needs all of it (the models that need more are
-# penalized for having fewer stars than observed). Checked on 9 UCC clusters and 6
-# mocks: the biased fits needed 1.00 to 1.78 of the sample, those that were not
-# biased 0.06 to 0.28, or 0.81 to 0.98 if the sample was just large enough
-IMF_CAP_FRAC = 2 / 3
 
 
 class Sampler:
@@ -131,9 +121,6 @@ class Sampler:
         # Best solution found during the run (largest log-likelihood)
         self.best_lnl = -np.inf
         self.best_params = {}
-        # Suggested 'max_mass' for Synthetic.calibrate(), set by run() if the fit may
-        # have been limited by the IMF sample
-        self.max_mass_suggested: int | None = None
         # Number of log-likelihood evaluations, and of those whose synthetic cluster
         # does not overlap the observed one, used by summary()
         self._n_lnl = 0
@@ -259,15 +246,6 @@ class Sampler:
         the ``synthcl`` object (see :py:attr:`asteca.Synthetic.DR_distribution`) at
         the time of the first call, stored in the ``DR_distribution`` attribute.
 
-        At the end of the run, the IMF mass that the fitted model (the best and the
-        median ones) needs to produce the observed number of stars is checked. If it
-        is more than ``2/3`` of the IMF sample in use, the fit may have been limited
-        by it (models that need more stars are penalized for having fewer stars than
-        observed): a warning is shown, and a larger ``max_mass`` value for
-        :py:meth:`asteca.Synthetic.calibrate` is stored in the ``max_mass_suggested``
-        attribute (``None`` otherwise). The fit should then be repeated with a new
-        :py:class:`Sampler` object, after calibrating with that value.
-
         :param n_total: Effective sample size of the posterior samples required to
             stop the run
         :type n_total: int
@@ -297,7 +275,6 @@ class Sampler:
         # Normalized distance of the best solution, from 0 (exact match) to 1 (no
         # overlap), see likelihood.Tremmel.log_lkl()
         self.best_dist = float(self._obs.lkl.distance(self.best_lnl, self.temperature))
-        self._check_imf_capacity()
 
         self._vp(f"Iterations     : {self.n_iter}", 1)
         self._vp(f"Likelihood calls: {self.n_calls}", 1)
@@ -307,57 +284,6 @@ class Sampler:
             self._vp(f"ESS            : {_ess(weights):.0f}", 1)
         self._vp(f"Best distance  : {self.best_dist:.3f}", 1)
         self._vp("Sampler run completed")
-
-    def _imf_mass_needed(self, params: dict[str, float]) -> float:
-        """IMF mass needed by a model to produce as many stars as the observed
-        cluster: the model is generated with all the stars of its IMF sample (no
-        photometric errors) and those brighter than the maximum magnitude are counted
-
-        :param params: Values of the fitted parameters
-        :type params: dict[str, float]
-
-        :return: IMF mass needed (``inf`` if no star is brighter than the maximum
-            magnitude)
-        :rtype: float
-        """
-        p = self._P_default.copy()
-        p[self._P_cols] = [params[k] for k in self.names]
-        assert self.DR_distribution is not None
-        _, synth = self._engine.get_model(
-            p, self.DR_distribution, (self._obs.max_mag, [], 10**8)
-        )
-        n_avail = synth.shape[1] if synth.ndim == 2 else 0
-        if n_avail == 0:
-            return np.inf
-        return self._obs.N_stars / n_avail * self._engine.imf_mass
-
-    def _check_imf_capacity(self) -> None:
-        """Warn and set ``max_mass_suggested`` if the best or the median model needs
-        more than ``IMF_CAP_FRAC`` of the IMF sample. The suggested value is
-        given by :py:func:`precompute.suggest_imf_mass`: ``1.5`` times the IMF
-        mass needed, rounded up to a multiple of ``10000``, so that the same model
-        passes the check after re-calibrating
-        """
-        from .modules.synthetic.precompute import suggest_imf_mass
-
-        median = self.summary()["median"]
-        need = max(
-            self._imf_mass_needed(self.best_params), self._imf_mass_needed(median)
-        )
-        imf_mass = self._engine.imf_mass
-        self.max_mass_suggested = None
-        if not np.isfinite(need) or need <= IMF_CAP_FRAC * imf_mass:
-            return
-        self.max_mass_suggested = suggest_imf_mass(need / imf_mass, imf_mass)
-        warnings.warn(
-            f"\nThe fitted model needs {need:.0f} Msun of IMF sample to produce the "
-            + f"{self._obs.N_stars} observed stars\n({100 * need / imf_mass:.0f}% of "
-            + f"the sample in use, {imf_mass} Msun). The fit may have been limited by "
-            + "the IMF\nsample (models that need more stars are penalized). Calibrate "
-            + "the 'Synthetic' object with\na larger IMF sample, e.g.: "
-            + f"'synthcl.calibrate(cluster, max_mass={self.max_mass_suggested})', "
-            + "and run a\nnew 'Sampler' object"
-        )
 
     def posterior(self, resample: bool = False) -> tuple[np.ndarray, np.ndarray]:
         """Posterior samples, after :py:meth:`run`.

@@ -90,14 +90,9 @@ def get_model(
         ``Av``. It does not affect the synthetic cluster
     :type isoch_dr_frac: float
     :param mass_info: If a dictionary is given, it is filled with the data required
-        to estimate the total mass of the simulated cluster (see
-        :py:func:`cluster_mass.get_M_actual`): the IMF sampled masses used to
-        generate it (``imf_masses``: all the masses up to the last star kept in the
-        synthetic cluster, or the full sample if it was exhausted), the indexes of
-        the stars kept (``kept_idx``), the number of stars requested
-        (``N_target``), the initial and secondary masses of the
-        isochrone (``mass_row``, ``m2_row``), and the binary fraction parameters
-        (``alpha``, ``beta``). It is not modified if the synthetic cluster is empty
+        to estimate the total mass of the simulated cluster, see
+        :py:func:`fill_mass_info`. It is not modified if the synthetic cluster is
+        empty
     :type mass_info: dict | None
 
     :return: Synthetic isochrone plus synthetic array; if ``isoch_flag=False``,
@@ -182,29 +177,30 @@ def get_model(
             print(empty_message(1, p))
         return isoch_extin_dr_0, np.array([])
 
-    # Pre-computed search indexes for this IMF sample and grid node
-    mass_idx = ctx.mass_idx[(ml, al, m0, a0)]
-    st_mass = ctx.st_dist_mass[ml][al]
+    # Uniform values of the candidate stars of this IMF node, and the IMF CDF at the
+    # masses of the isochrone (those of the grid node (m0, a0))
+    imf_u = imf_window(rand_floats, ml * theor_tracks.shape[1] + al)
+    imf_F = ctx.imf_cdf[m0, a0]
 
     # The extinction is applied to each synthetic star (after the interpolation and
     # the binarity), so that each star gets its own differential reddening draw
     # (see per_star_pool()). As some stars end up below the maximum magnitude, a
-    # pool of candidates is generated: the first stars of the IMF sample within the
-    # isochrone's mass range. The pool is grown until 'N_synth_stars' stars are
-    # brighter than the maximum magnitude, or the IMF sample is exhausted. The
-    # stars (and their random values) are always taken in the same order, so the
-    # result does not depend on the pool sizes
+    # pool of candidates is generated, with masses drawn from the IMF within the
+    # isochrone's mass range (see mass_interp()). The pool is grown until
+    # 'N_synth_stars' stars are brighter than the maximum magnitude, or all the
+    # candidates are used. The candidates (and their random values) are always taken
+    # in the same order, so the result does not depend on the pool sizes
     N_pool = per_star_pool(N_synth_stars, dr)
     while True:
-        # Interpolate IMF's sampled masses into the isochrone.
+        # Draw the masses of the candidates and interpolate them into the isochrone
         isoch_mass = mass_interp(
             isoch_moved,
             idx_cut,
             msk_cut,
             m_ini_idx,
-            st_mass,
+            imf_u,
             N_pool,
-            mass_idx,
+            imf_F,
         )
         if isoch_mass.size == 0:
             if show_errors:
@@ -237,11 +233,11 @@ def get_model(
         )
 
         keep = np.flatnonzero(isoch_binar[0] < max_mag_syn)
-        # Enough stars, or IMF sample exhausted
+        # Enough stars, or all the candidates used
         if keep.size >= N_synth_stars or N_stars < N_pool:
             break
         N_new = per_star_pool_next(
-            N_pool, keep.size, N_stars, N_synth_stars, st_mass.size
+            N_pool, keep.size, N_stars, N_synth_stars, imf_u.size
         )
         if N_new <= N_pool:
             break
@@ -344,7 +340,21 @@ def fill_mass_info(
     keep: np.ndarray,
 ) -> None:
     """Fill ``mass_info`` with the data required to estimate the total mass of a
-    (non empty) simulated cluster, see :py:func:`get_model`
+    (non empty) simulated cluster (see :py:func:`cluster_mass.get_M_actual`).
+
+    The candidates of the synthetic cluster are drawn from the IMF restricted to the
+    mass range of the isochrone points brighter than the maximum magnitude (see
+    :py:func:`mass_interp`). The simulated cluster is made of the candidates up to
+    the last one kept (or all of them, if fewer than ``N_synth_stars`` were kept),
+    plus the stars of the IMF outside of that range that they represent.
+
+    Keys: the masses of those candidates (``pool_masses``), the indexes of the
+    stars kept (``kept_idx``), the number of stars requested (``N_target``), the IMF
+    CDF at the limits of the mass range (``F_lo``, ``F_hi``) and at the largest
+    mass of the isochrone (``F_alive``), the knots of the inverse CDF
+    (``imf_knots``), the initial and secondary masses of the isochrone
+    (``mass_row``, ``m2_row``), and the binary fraction parameters (``alpha``,
+    ``beta``)
 
     :param mass_info: Dictionary to fill
     :type mass_info: dict
@@ -366,32 +376,66 @@ def fill_mass_info(
     """
     m_ini_idx = ctx.m_ini_idx
     met, loga, alpha, beta = p[:4].tolist()
-    # Sampled IMF masses used (see get_model())
-    ml, _, al, _ = grid_box(ctx.met_age_dict, met, loga)
-    st_mass = ctx.st_dist_mass[ml][al]
     binar_flag = not (alpha == 0.0 and beta == 0.0)
-    # Indexes in the IMF sample of the stars in the pool (the same selection done by
-    # mass_interp()), and of those kept in the synthetic cluster
+    # IMF node and grid node of the model (see get_model())
+    ml, mh, al, ah = grid_box(ctx.met_age_dict, met, loga)
+    m0, a0 = 0, 0
+    if not ml == al == mh == ah == 0:
+        _, m0, a0 = zaWAverage(
+            ctx.theor_tracks, ctx.met_age_dict, m_ini_idx, met, loga, ml, mh, al, ah
+        )
+    imf_u = imf_window(ctx.rand_floats, ml * ctx.theor_tracks.shape[1] + al)
+    imf_F = ctx.imf_cdf[m0, a0]
     mass_row = isoch_moved[m_ini_idx]
-    pool_idx = first_in_range(
-        st_mass, mass_row[idx_cut[0]], mass_row[idx_cut[-1]], N_pool
+
+    kept_idx = keep[:N_synth_stars]
+    N_end = int(kept_idx[-1]) + 1 if keep.size >= N_synth_stars else N_pool
+    N_end = min(N_end, imf_u.size)
+    i_lo, i_hi = idx_cut[0], idx_cut[-1]
+    F_lo = imf_F[i_lo]
+    _, pool_masses = cdf_masses(
+        mass_row,
+        imf_F,
+        F_lo,
+        imf_F[i_hi] - F_lo,
+        mass_row[i_lo],
+        mass_row[i_hi],
+        imf_u[:N_end],
     )
-    kept_idx = pool_idx[keep[:N_synth_stars]]
-    # The simulated cluster is made of the IMF masses up to the last kept star. If
-    # fewer than 'N_synth_stars' stars were kept, the whole IMF sample was used (see
-    # get_model())
-    N_end = kept_idx[-1] + 1 if keep.size >= N_synth_stars else st_mass.size
     mass_info.update(
         {
-            "imf_masses": st_mass[:N_end],
+            "pool_masses": pool_masses,
             "kept_idx": kept_idx,
             "N_target": N_synth_stars,
+            "F_lo": float(F_lo),
+            "F_hi": float(imf_F[i_hi]),
+            "F_alive": float(imf_F[-1]),
+            "imf_knots": ctx.imf_knots,
             "mass_row": mass_row.copy(),
             "m2_row": isoch_moved[m_ini_idx + 1].copy() if binar_flag else None,
             "alpha": alpha,
             "beta": beta,
         }
     )
+
+
+def imf_window(rand_floats: dict, node: int) -> np.ndarray:
+    """Uniform values of the candidate stars of the IMF node ``node`` (the index of
+    the lower corner ``(ml, al)`` of the model's (z, log(age)) box, ``ml * N_a +
+    al``): a window of ``imf_u`` starting at its offset, see
+    :py:func:`precompute.randVals`
+
+    :param rand_floats: Random values, see :py:func:`precompute.randVals`
+    :type rand_floats: dict
+    :param node: Index of the IMF node
+    :type node: int
+
+    :return: Uniform values (a view)
+    :rtype: np.ndarray
+    """
+    imf_u = rand_floats["imf_u"]
+    off = int(rand_floats["imf_offsets"][node])
+    return imf_u[off : off + imf_u.size // 2]
 
 
 def per_star_pool(N_synth_stars: int, dr: float) -> int:
@@ -424,7 +468,7 @@ def per_star_pool_next(
     """Size of the next pool of candidates in :py:func:`get_model`, when the
     current one gave too few stars above the maximum magnitude: the size required
     by the observed fraction of surviving stars, plus a 20% margin (at least 1.5x
-    the current size), and at most the size of the IMF sample.
+    the current size), and at most the number of candidates available.
 
     :param N_pool: Current number of candidates
     :type N_pool: int
@@ -434,7 +478,7 @@ def per_star_pool_next(
     :type N_stars: int
     :param N_synth_stars: Number of synthetic stars required
     :type N_synth_stars: int
-    :param N_max: Size of the IMF sample
+    :param N_max: Number of candidates available
     :type N_max: int
 
     :return: Number of candidates
@@ -1116,25 +1160,75 @@ def cut_max_mag(
     return np.flatnonzero(msk), msk
 
 
+def cdf_masses(
+    mass_ini: np.ndarray,
+    imf_F: np.ndarray,
+    F_lo: float,
+    dF: float,
+    v_min: float,
+    v_max: float,
+    u: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Masses of the candidate stars drawn from the IMF restricted to ``[v_min,
+    v_max]``: each uniform value ``u`` gives the CDF value ``F = F_lo + u * dF`` (with
+    ``F_lo, dF`` the CDF at ``v_min`` and its range), whose mass is interpolated
+    linearly between the two grid points of the isochrone that bracket it.
+
+    Same operations, in the same order, as the compiled version in
+    :py:func:`_mass_interp_nb`, so the results are identical.
+
+    :param mass_ini: Initial masses of the isochrone (sorted)
+    :type mass_ini: np.ndarray
+    :param imf_F: IMF CDF at ``mass_ini``, see :py:func:`precompute.imf_cdf_tables`
+    :type imf_F: np.ndarray
+    :param F_lo: IMF CDF at ``v_min``
+    :type F_lo: float
+    :param dF: IMF CDF at ``v_max`` minus ``F_lo``
+    :type dF: float
+    :param v_min: Smallest mass
+    :type v_min: float
+    :param v_max: Largest mass
+    :type v_max: float
+    :param u: Uniform values
+    :type u: np.ndarray
+
+    :return: Indexes of the first grid point with a CDF value not smaller than that
+        of each candidate (``np.searchsorted(imf_F, F)``), and the masses
+    :rtype: tuple[np.ndarray, np.ndarray]
+    """
+    F = F_lo + u * dF
+    s = np.searchsorted(imf_F, F)
+    N_g = imf_F.size
+    s0 = np.clip(s - 1, 0, N_g - 1)
+    s1 = np.clip(s, 0, N_g - 1)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        m = mass_ini[s0] + (F - imf_F[s0]) * (mass_ini[s1] - mass_ini[s0]) / (
+            imf_F[s1] - imf_F[s0]
+        )
+    m[s == 0] = mass_ini[0]
+    m[s == N_g] = mass_ini[N_g - 1]
+    m = np.minimum(np.maximum(m, v_min), v_max)
+    return s, m
+
+
 def mass_interp(
     isochrone: np.ndarray,
     idx_cut: np.ndarray,
     msk_cut: np.ndarray,
     m_ini_idx: int,
-    st_dist_mass: np.ndarray,
-    N_synth_stars: int,
-    mass_idx: np.ndarray,
-    # binar_flag: bool,
+    imf_u: np.ndarray,
+    N_pool: int,
+    imf_F: np.ndarray,
 ) -> np.ndarray:
-    """For each mass in the sampled IMF mass distribution, interpolate its value
-    (and those of all the sub-arrays in the isochrone) into the isochrone.
+    """Draw the masses of (up to) ``N_pool`` candidate stars and interpolate them
+    (and all the sub-arrays of the isochrone) into the isochrone.
 
-    Only the isochrone points given by 'idx_cut' (those below the maximum
-    magnitude, see :py:func:`cut_max_mag`) are used. The result is identical to
-    interpolating into the cut isochrone ``isochrone[:, idx_cut]``, without
-    having to copy it.
-
-    Masses that fall outside of the (cut) isochrone's mass range are rejected.
+    The masses are drawn from the IMF restricted to the mass range ``[v_min,
+    v_max]`` of the isochrone points given by ``idx_cut`` (those brighter than the
+    maximum magnitude, see :py:func:`cut_max_mag`): no star outside of that range
+    can be brighter than the maximum magnitude, so every candidate can end up in the
+    synthetic cluster (see :py:func:`cdf_masses`). Only those isochrone points are
+    used for the interpolation, without having to copy the cut isochrone.
 
     :param isochrone: Isochrone array (not cut).
     :type isochrone: np.ndarray
@@ -1146,16 +1240,15 @@ def mass_interp(
     :type msk_cut: np.ndarray
     :param m_ini_idx: Index of the initial mass.
     :type m_ini_idx: int
-    :param st_dist_mass: Array of sampled masses.
-    :type st_dist_mass: np.ndarray
-    :param N_synth_stars: Number of observed stars.
-    :type N_synth_stars: int
-    :param mass_idx: Pre-computed search indexes of 'st_dist_mass' into the full
-        (before the maximum magnitude cut) mass grid of the isochrone, see
-        :py:func:`precompute.mass_idx_lookup`.
-    :type mass_idx: np.ndarray
+    :param imf_u: Uniform values of the candidates, see :py:func:`imf_window`
+    :type imf_u: np.ndarray
+    :param N_pool: Number of candidates.
+    :type N_pool: int
+    :param imf_F: IMF CDF at the initial masses of the isochrone, see
+        :py:func:`precompute.imf_cdf_tables`
+    :type imf_F: np.ndarray
 
-    :returns: Interpolated isochrone array.
+    :returns: Interpolated isochrone array (empty if the mass range is empty)
     :rtype: np.ndarray
     """
     # ==IMPORTANT==
@@ -1163,37 +1256,31 @@ def mass_interp(
     # when loading the isochrones in isochrone_loader.interp_isochrones()
     # ==IMPORTANT==
     mass_ini = isochrone[m_ini_idx]
-
-    # Extract up to 'N_synth_stars' masses sampled from an IMF, within the mass range
-    # of the cut isochrone (the first ones, as np.nonzero(msk)[0][:N_synth_stars]
-    # with 'msk' the masses in that range)
-    idx = first_in_range(
-        st_dist_mass, mass_ini[idx_cut[0]], mass_ini[idx_cut[-1]], N_synth_stars
-    )
-
-    mass_dist = st_dist_mass[idx]
-
-    if mass_dist.size == 0:
+    i_lo, i_hi = idx_cut[0], idx_cut[-1]
+    F_lo = imf_F[i_lo]
+    dF = imf_F[i_hi] - F_lo
+    # A single isochrone point (or an empty CDF range): no mass in the range
+    if idx_cut.size < 2 or dF <= 0.0:
         return np.array([])
 
-    mass_dist = np.ascontiguousarray(mass_dist, dtype=mass_ini.dtype)
+    N = min(N_pool, imf_u.size)
+    s, mass_dist = cdf_masses(
+        mass_ini, imf_F, F_lo, dF, mass_ini[i_lo], mass_ini[i_hi], imf_u[:N]
+    )
 
-    # Indexes into the *cut* mass grid, i.e.:
-    # np.searchsorted(mass_ini[idx_cut], mass_dist)
-    # Obtained by converting the pre-computed indexes into the full mass grid, into
-    # indexes into the cut grid: the number of grid points with a mass smaller than
-    # the sampled mass that survived the cut
+    # Indexes into the *cut* mass grid: the number of grid points before 's' that
+    # survived the cut
     N_kept = np.empty(msk_cut.size + 1, dtype=np.intp)
     N_kept[0] = 0
     np.cumsum(msk_cut, out=N_kept[1:])
-    hi_cut = N_kept[mass_idx[idx]]
+    hi_cut = N_kept[s]
 
     # Map back to indexes into the full isochrone. Note that hi_cut=0 gives
     # lo=idx_cut[-1], exactly as indexing the cut isochrone with -1 would
     x_new_indices = idx_cut[hi_cut]
     lo = idx_cut[hi_cut - 1]
 
-    # Interpolate the sampled stars (masses) into the isochrone
+    # Interpolate the candidates (masses) into the isochrone
     isoch_mass = interp_mass_isoch(isochrone, mass_ini, mass_dist, x_new_indices, lo)
 
     return isoch_mass
@@ -1207,43 +1294,39 @@ if _HAS_NUMBA:
         idx_cut: np.ndarray,
         msk_cut: np.ndarray,
         m_ini_idx: int,
-        st_dist_mass: np.ndarray,
-        N_synth_stars: int,
-        mass_idx: np.ndarray,
+        imf_u: np.ndarray,
+        N_pool: int,
+        imf_F: np.ndarray,
+        imf_lut: np.ndarray,
     ) -> np.ndarray:
-        """Compiled (numba) version of :py:func:`mass_interp` (with the
-        pre-computed 'mass_idx' search indexes). It performs the same floating
-        point operations in the same order, so the results are identical to the
-        NumPy version, but it avoids most temporary arrays and Python calls:
+        """Compiled (numba) version of :py:func:`mass_interp`. It performs the same
+        floating point operations in the same order, so the results are identical
+        to the NumPy version, but it avoids most temporary arrays and Python calls:
 
-        1. Select the first 'N_synth_stars' sampled masses within the mass range
-           of the cut isochrone, stopping as soon as they are found. The loop is
-           written without branches, which is faster.
-        2. Bracketing points: for each point 'k' of the full mass grid, the next
+        1. Bracketing points: for each point 'k' of the full mass grid, the next
            kept point at or after 'k' and the last kept point before 'k' are
-           tabulated once. With 'mass_idx' this replaces the cumulative count
-           used in the NumPy version.
+           tabulated once.
+        2. For each candidate, the grid index ``np.searchsorted(imf_F, F)`` is
+           found by a short walk from the bucket lookup table 'imf_lut' (see
+           :py:func:`precompute.imf_cdf_tables`), and its mass as in
+           :py:func:`cdf_masses`.
         3. Interpolate the isochrone linearly, one row at a time (rows are
            contiguous in memory).
         """
         mass_ini = isochrone[m_ini_idx]
         N_cut = idx_cut.size
-        v_min = mass_ini[idx_cut[0]]
-        v_max = mass_ini[idx_cut[N_cut - 1]]
+        i_lo, i_hi = idx_cut[0], idx_cut[N_cut - 1]
+        v_min, v_max = mass_ini[i_lo], mass_ini[i_hi]
+        F_lo = imf_F[i_lo]
+        dF = imf_F[i_hi] - F_lo
+        N_rows = isochrone.shape[0]
+        if N_cut < 2 or dF <= 0.0:
+            return np.empty((N_rows, 0), dtype=isochrone.dtype)
+        N = min(N_pool, imf_u.size)
+        N_g = imf_F.size
+        N_b = imf_lut.size - 1
 
-        # 1. First 'N_synth_stars' masses within [v_min, v_max]. The index is
-        # always written and the counter only advances for masses in range.
-        sel = np.empty(st_dist_mass.size, dtype=np.intp)
-        N = 0
-        for i in range(st_dist_mass.size):
-            m = st_dist_mass[i]
-            sel[N] = i
-            N += (m >= v_min) & (m <= v_max)
-            if N >= N_synth_stars:
-                break
-        N = min(N, N_synth_stars)
-
-        # 2. Next kept point at or after k (nxt), and last kept point before k
+        # 1. Next kept point at or after k (nxt), and last kept point before k
         # (prv). If there is no kept point before k, prv=idx_cut[-1], as indexing
         # the cut isochrone with -1 does in the NumPy version.
         N_grid = msk_cut.size
@@ -1260,21 +1343,34 @@ if _HAS_NUMBA:
                 nxt_k = k
             nxt[k] = nxt_k
 
+        # 2. Grid index and mass of each candidate
         hi = np.empty(N, dtype=np.intp)
         lo = np.empty(N, dtype=np.intp)
         w = np.empty(N, dtype=isochrone.dtype)
         for j in range(N):
-            i = sel[j]
-            k = mass_idx[i]
-            hi[j] = nxt[k]
-            lo[j] = prv[k]
+            F = F_lo + imf_u[j] * dF
+            s = np.intp(imf_lut[min(int(F * N_b), N_b)])
+            while s < N_g and imf_F[s] < F:
+                s += 1
+            while s > 0 and imf_F[s - 1] >= F:
+                s -= 1
+            if s == 0:
+                m = mass_ini[0]
+            elif s == N_g:
+                m = mass_ini[N_g - 1]
+            else:
+                m = mass_ini[s - 1] + (F - imf_F[s - 1]) * (
+                    mass_ini[s] - mass_ini[s - 1]
+                ) / (imf_F[s] - imf_F[s - 1])
+            m = min(max(m, v_min), v_max)
+            hi[j] = nxt[s]
+            lo[j] = prv[s]
             x_lo = mass_ini[lo[j]]
-            w_j = st_dist_mass[i] - x_lo
+            w_j = m - x_lo
             w_j /= mass_ini[hi[j]] - x_lo
             w[j] = w_j
 
         # 3. Linear interpolation, y_lo + (y_hi - y_lo) * w
-        N_rows = isochrone.shape[0]
         isoch_mass = np.empty((N_rows, N), dtype=isochrone.dtype)
         for r in range(N_rows):
             row = isochrone[r]
@@ -1284,51 +1380,6 @@ if _HAS_NUMBA:
                 out[j] = (row[hi[j]] - y_lo) * w[j] + y_lo
 
         return isoch_mass
-
-
-def first_in_range(
-    arr: np.ndarray, v_min: float, v_max: float, N_max: int
-) -> np.ndarray:
-    """Return the indexes of the first (at most) 'N_max' elements of 'arr' that
-    fall within the closed range [v_min, v_max].
-
-    Equivalent to ``np.nonzero((arr >= v_min) & (arr <= v_max))[0][:N_max]`` but
-    the mask is evaluated over progressively larger chunks of 'arr', stopping as
-    soon as 'N_max' elements are found. Since the IMF sampled array is usually
-    much larger than the number of required stars (e.g.: ~55000 vs ~1500), this
-    avoids masking the entire array in most cases.
-
-    :param arr: Array of values.
-    :type arr: np.ndarray
-    :param v_min: Minimum value of the range.
-    :type v_min: float
-    :param v_max: Maximum value of the range.
-    :type v_max: float
-    :param N_max: Maximum number of indexes to return.
-    :type N_max: int
-
-    :returns: Array of indexes.
-    :rtype: np.ndarray
-    """
-    N_tot = arr.size
-    # The initial chunk size of 4*N_max was found to be a good compromise for
-    # typical in-range fractions; the chunk size is doubled in each iteration
-    i_end = min(N_tot, 4 * N_max)
-    i_start, N_found, idx_lst = 0, 0, []
-    while True:
-        chunk = arr[i_start:i_end]
-        idx = np.flatnonzero((chunk >= v_min) & (chunk <= v_max))
-        if i_start > 0:
-            idx += i_start
-        idx_lst.append(idx)
-        N_found += idx.size
-        if N_found >= N_max or i_end == N_tot:
-            break
-        i_start, i_end = i_end, min(N_tot, 2 * i_end)
-
-    if len(idx_lst) == 1:
-        return idx[:N_max]
-    return np.concatenate(idx_lst)[:N_max]
 
 
 def interp_mass_isoch(

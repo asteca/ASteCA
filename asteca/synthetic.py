@@ -20,13 +20,13 @@ DEFAULT_PARAMS = {
     "dm": 9.0,
 }
 
-# Total initial mass (in solar masses) of the IMF sample drawn when the object is
-# created, enough for clusters with up to IMF_MASS / IMF_MASS_PER_STAR stars
-IMF_MASS = 10_000
-# Initial mass of the IMF sample required per observed star. For larger clusters
-# calibrate() grows the IMF sample, to a total mass that is the smallest multiple of
-# IMF_MASS above IMF_MASS_PER_STAR * N_stars
-IMF_MASS_PER_STAR = 7
+# Number of synthetic stars requested by generate() (object not calibrated) above which
+# a warning about the memory required is shown
+N_STARS_WARN = 1_000_000
+# Approximate peak memory used per synthetic star requested in that case (the random
+# values, the candidates and the synthetic cluster): 185 to 220 bytes measured with
+# 10^6 and 3*10^6 stars
+BYTES_PER_STAR = 220
 
 
 class Synthetic:
@@ -123,40 +123,36 @@ class Synthetic:
         self.ext_law = ext_law
         # Validated by the property setter
         self.DR_distribution = DR_distribution
-        # Set seed
         self.seed: int = (
             int(np.random.randint(0, 100_000)) if seed is None else int(seed)
         )
         self.verbose = verbose
         self.rng = np.random.default_rng(self.seed)
 
-        # Check gamma distribution
-        gammas = ("D&K", "fisher_stepped", "fisher_peaked", "raghavan")
-        if isinstance(self.gamma, str) and self.gamma not in gammas:
-            raise ValueError(
-                f"gamma '{self.gamma}' not recognized. Should be one of {gammas}"
-            )
-
-        from .modules.synthetic import precompute as pre
-
-        # Check IMF function
-        imfs = ("salpeter_1955", "kroupa_2001", "chabrier_2014")
-        if self.IMF_name not in imfs:
-            raise ValueError(
-                f"IMF '{self.IMF_name}' not recognized. Should be one of {imfs}"
-            )
-
-        # Check extinction law
-        ext_laws = ("CCMO", "GAIADR3")
-        if self.ext_law not in ext_laws:
-            raise ValueError(
-                f"Extinction law '{self.ext_law}' not recognized. Should be "
-                + f"one of {ext_laws}"
-            )
+        # Check options: gamma distribution, IMF function, extinction law
+        options = {
+            "gamma": (
+                self.gamma,
+                ("D&K", "fisher_stepped", "fisher_peaked", "raghavan"),
+            ),
+            "IMF": (self.IMF_name, ("salpeter_1955", "kroupa_2001", "chabrier_2014")),
+            "Extinction law": (self.ext_law, ("CCMO", "GAIADR3")),
+        }
+        for name, (value, valid) in options.items():
+            if name == "gamma" and not isinstance(value, str):
+                continue  # numeric gamma values are allowed
+            if value not in valid:
+                raise ValueError(
+                    f"{name} '{value}' not recognized. Should be one of {valid}"
+                )
 
         self._vp("\nInstantiating synthetic")
+        from .modules.synthetic import precompute as pre
 
-        # Add binary systems
+        # Add binary systems to the theoretical isochrones, store the resulting
+        # tracks in the :py:class:`Synthetic` object. The binary systems are
+        # generated with the same random values for all the synthetic clusters, so
+        # they can be compared without random noise
         theor_tracks = pre.add_binarity(
             self.rng,
             self.gamma,
@@ -170,6 +166,7 @@ class Synthetic:
         m_ini_idx = 2  # (0->mag, 1->color, 2->mass_ini)
         if self.isochs.color2_effl is not None:
             m_ini_idx = 3  # (0->mag, 1->color, 2->color2, 3->mass_ini)
+
         # Set tolerances for the ranges of the isochrones in `generate()`
         age_tol = 0.01
         met_tol = 0.001  # z
@@ -216,6 +213,13 @@ class Synthetic:
                 self.isochs.color2_effl,
             )
 
+        # IMF data used to draw the masses of the candidate stars of the synthetic
+        # clusters (see generate.mass_interp())
+        self._vp("(Tabulating IMF)", 1)
+        imf_x, imf_y, imf_cdf, imf_lut = pre.imf_cdf_tables(
+            self.IMF_name, theor_tracks, m_ini_idx
+        )
+
         # Data that defines the synthetic clusters, and the single entry point used to
         # generate them (one or many) and to evaluate their likelihood (Sampler)
         self._engine = ModelEngine(
@@ -227,20 +231,19 @@ class Synthetic:
             theor_tracks=theor_tracks,
             ext_law=self.ext_law,
             ext_coefs=ext_coefs,
-            # Sampled IMF, and the random values and search indexes that depend on
-            # its size. calibrate() replaces the engine with one with the IMF sample
-            # that the observed cluster requires (see _engine_for())
-            **self._imf_data(IMF_MASS, theor_tracks, m_ini_idx),
+            # Random values sized for the synthetic clusters. calibrate() replaces
+            # the engine with one sized for the observed cluster, and generate() uses
+            # one sized for 'N_stars' if the object is not calibrated (see
+            # _engine_for_stars())
+            rand_floats=self._rand_floats(0, theor_tracks, calibrated=False),
+            imf_knots=(imf_x, imf_y),
+            imf_cdf=imf_cdf,
+            imf_lut=imf_lut,
         )
-        # Engine with the largest IMF sample drawn (it never shrinks, see
-        # _grow_imf()), engines whose IMF samples are views of the first part of its
-        # samples (see _engine_for()), and the total mass of its chunks of stars
-        self._engine_full = self._engine
-        self._engine_views: dict[int, ModelEngine] = {}
-        self._chunk_masses: list | None = None
+        # Engine used by an object not calibrated, and its number of stars
+        self._engine_uncal: tuple[int, ModelEngine] | None = None
         # Observed cluster data, set by calibrate()
         self._obs: ObservedData | None = None
-
         # Turn-off points used to define the BSS region, stored by the last call to
         # cluster_properties()
         self.turn_off_points: dict | None = None
@@ -259,7 +262,6 @@ class Synthetic:
         self._vp(f"Extinction law : {self.ext_law}", 1)
         self._vp(f"Diff reddening : {self.DR_distribution}", 1)
         self._vp(f"IMF            : {self.IMF_name}", 1)
-        self._vp(f"Max init mass  : {self.max_mass}", 1)
         self._vp(f"Gamma dist     : {self.gamma}", 1)
         self._vp(f"Random seed    : {self.seed}", 1)
         self._vp("Synthetic clusters object generated")
@@ -284,23 +286,12 @@ class Synthetic:
             )
         self._DR_distribution = name
 
-    @property
-    def max_mass(self) -> int:
-        """Total initial mass (in solar masses) of the IMF sample used to generate
-        the synthetic clusters (read only). It is ``10000`` when the object is created,
-        enough for clusters with up to ``~1400`` stars. :py:meth:`calibrate` sets it to
-        the value the observed cluster requires: at least ``7`` times its number of
-        stars, or the value of its ``max_mass`` argument if it is given (rounded up to
-        a multiple of ``10000``)
-        """
-        return self._engine.imf_mass
-
     def _vp(self, mssg: str, level: int = 0) -> None:
         """Verbose print method"""
         if self.verbose > level:
             print(mssg)
 
-    def calibrate(self, cluster: Cluster, max_mass: float | None = None):
+    def calibrate(self, cluster: Cluster):
         """Calibrate a :py:class:`Synthetic` object based on a
         :py:class:`Cluster` object .
 
@@ -310,45 +301,23 @@ class Synthetic:
         for the number of bins), used by the likelihood of the
         :py:class:`asteca.Sampler` (see :ref:`sampler_module`).
 
-        The IMF sample used is that required by the observed cluster: a total mass
-        of at least ``7`` times its number of stars, or the ``max_mass`` value if it
-        is given (see :py:attr:`max_mass`). The IMF samples are nested (a larger one
-        starts with the stars of a smaller one), and only the largest one drawn is
-        kept in memory: a cluster that requires a smaller sample uses the first part
-        of it (at no cost), and a cluster that requires a larger one grows it (a few
-        seconds). Hence the results for a cluster do not depend on the clusters
-        calibrated before: they are identical to those obtained with a new
-        :py:class:`Synthetic` object.
+        The random values used to generate the synthetic clusters are drawn for the
+        number of stars of the observed cluster, from the object's seed, so the
+        results for a cluster do not depend on the clusters calibrated before.
 
         See the :ref:`synthetic_module` section for more details.
 
         :param cluster: :py:class:`Cluster` object with the
             processed data from your observed cluster
         :type cluster: Cluster
-        :param max_mass: Total initial mass (in solar masses) of the IMF sample
-            required by this cluster, rounded up to a multiple of ``10000``. If
-            ``None``, ``7`` times the number of stars is used. The ``7`` factor is
-            enough for most clusters, but not for those whose observations only reach
-            down to near the turn-off (e.g.: old and distant clusters), which can
-            require several times more. :py:meth:`asteca.Sampler.run` shows a warning,
-            with a suggested value, if this is the case
-        :type max_mass: float | None
 
         :raises ValueError:
             - If required 'Cluster' attributes are missing
             - If the number of colors defined in the :py:class:`Cluster` and
               :py:class:`Synthetic` objects do not match
-            - If ``max_mass`` is not a positive number
         """
         from .modules.synthetic import likelihood as lh
         from .modules.synthetic import precompute as pre
-
-        if max_mass is not None and not (
-            isinstance(max_mass, (int, float, np.integer, np.floating))
-            and np.isfinite(max_mass)
-            and max_mass > 0
-        ):
-            raise ValueError(f"'max_mass' must be a positive number, got {max_mass}")
 
         required = ("mag", "e_mag", "color", "e_color")
         values = [getattr(cluster, attr) for attr in required]
@@ -374,11 +343,15 @@ class Synthetic:
         # Likelihood used by asteca.Sampler, with the defined colors
         lkl = lh.Tremmel(mag, [c for c in (color, cluster.color2) if c is not None])
 
-        # IMF sample large enough for this cluster
-        imf_mass = self._imf_mass_for(mag.size, max_mass)
-        if imf_mass > self._engine_full.imf_mass:
-            self._grow_imf(imf_mass)
-        engine = self._engine_for(imf_mass)
+        # Random values sized for this cluster (at least as many as observed stars,
+        # including those with nan photometry, for error_distribution())
+        N_stars = cluster.N_stars - cluster.N_nan_phot
+        engine = dataclasses.replace(
+            self._engine,
+            rand_floats=self._rand_floats(
+                N_stars, self._engine.theor_tracks, N_min=mag.size
+            ),
+        )
 
         # All the data is obtained before it is stored, so that the object is left
         # unchanged if any step fails
@@ -392,7 +365,7 @@ class Synthetic:
             dec=cluster.dec,
             # Calibrate parameters using the observed cluster
             max_mag=float(np.nanmax(mag)),
-            N_stars=cluster.N_stars - cluster.N_nan_phot,
+            N_stars=N_stars,
             err_dist=pre.error_distribution(
                 mag,
                 e_mag,
@@ -406,7 +379,6 @@ class Synthetic:
 
         self._vp("\nCalibrated observed cluster")
         self._vp(f"N_stars_obs    : {obs.N_stars}", 1)
-        self._vp(f"Max init mass  : {self.max_mass}", 1)
         self._vp(f"Max magnitude  : {obs.max_mag:.2f}", 1)
         self._vp("Error distribution loaded", 1)
 
@@ -467,7 +439,9 @@ class Synthetic:
         :param N_stars: Number of synthetic stars to generate. Only used if the
             object was not calibrated; after calling :py:meth:`calibrate` the
             synthetic clusters contain up to as many stars as the observed cluster
-            (with valid photometry) and this argument is ignored.
+            (with valid photometry) and this argument is ignored. The memory required
+            grows with it (``~0.2`` GB per million stars), a warning is shown above
+            ``10^6`` stars.
         :type N_stars: int
         :param batch: If ``True``, generate one synthetic cluster for each set of
             parameters in ``params`` and return them in a list.
@@ -486,8 +460,9 @@ class Synthetic:
         :rtype: np.ndarray | list[np.ndarray]
         """
         if batch:
-            return self._engine.generate(
-                self._engine.params_array(params),
+            engine = self._engine_for_stars(N_stars)
+            return engine.generate(
+                engine.params_array(params),
                 self.DR_distribution,
                 self._calib_values(N_stars),
             )
@@ -908,7 +883,6 @@ class Synthetic:
             rho_amb,
             gal_pot,
             disrup,
-            self._engine.imf_mass,
         )
 
         per_model = {"binar_fr_models": binar_fr_models, **masses}
@@ -1031,126 +1005,75 @@ class Synthetic:
 
         return isochrone
 
-    @staticmethod
-    def _imf_mass_for(N_stars: int, max_mass: float | None = None) -> int:
-        """Total initial mass of the IMF sample required by a cluster: the smallest
-        multiple of ``IMF_MASS`` (at least ``IMF_MASS``) above ``max_mass`` or, if it
-        is not given, above ``IMF_MASS_PER_STAR * N_stars`` (rounded up so that
-        clusters of similar sizes share the same sample)
-
-        :param N_stars: Number of observed stars
-        :type N_stars: int
-        :param max_mass: Total initial mass required, if given
-        :type max_mass: float | None
-
-        :return: Total initial mass of the IMF sample
-        :rtype: int
-        """
-        mass = IMF_MASS_PER_STAR * int(N_stars) if max_mass is None else max_mass
-        return max(1, int(np.ceil(mass / IMF_MASS))) * IMF_MASS
-
-    def _imf_data(
-        self, imf_mass: int, theor_tracks: np.ndarray, m_ini_idx: int
+    def _rand_floats(
+        self,
+        N_stars: int,
+        theor_tracks: np.ndarray,
+        N_min: int = 0,
+        calibrated: bool = True,
     ) -> dict:
-        """IMF sample of total mass ``imf_mass`` for each node of the isochrones
-        grid, and the random values and search indexes that depend on its size: the
-        fields of :py:class:`ModelEngine` that depend on the IMF sample.
+        """Random values used to generate synthetic clusters of ``N_stars`` stars,
+        drawn from the object's seed (see :py:func:`precompute.randVals`).
 
-        All of them are drawn from random streams obtained from the seed alone (see
-        :py:func:`precompute.sample_imf`), so ``self.rng`` is not used, and those
-        obtained for a larger ``imf_mass`` start with those for a smaller one
+        With a magnitude cut (``calibrated=True``) candidates fainter than it are
+        discarded, and enough values are drawn for extreme cases (see
+        :py:func:`precompute.n_candidates`). Without it every candidate is kept, and
+        the first pool of candidates (:py:func:`generate.per_star_pool`) is always
+        enough
 
-        :param imf_mass: Total initial mass of the IMF sample
-        :type imf_mass: int
-        :param theor_tracks: Theoretical isochrones, with the binary systems added
+        :param N_stars: Number of synthetic stars
+        :type N_stars: int
+        :param theor_tracks: Theoretical isochrones
         :type theor_tracks: np.ndarray
-        :param m_ini_idx: Index of the initial mass row
-        :type m_ini_idx: int
+        :param N_min: Minimum number of values
+        :type N_min: int
+        :param calibrated: If ``True``, the synthetic clusters have a magnitude cut
+        :type calibrated: bool
 
-        :return: Values of the ``rand_floats, imf_mass, st_dist_mass, mass_idx``
-            fields
+        :return: Random values
         :rtype: dict
         """
+        from .modules.synthetic import generate as gen
         from .modules.synthetic import precompute as pre
 
-        # self._vp(f"(Sampling IMF up to {imf_mass} Msun)", 1)
-        Nmets, Nages = theor_tracks.shape[:2]
-        st_dist_mass = pre.sample_imf(self.seed, self.IMF_name, imf_mass, Nmets, Nages)
-        return {
-            # Random floats used by `generate()`
-            "rand_floats": pre.randVals(self.seed, theor_tracks, st_dist_mass),
-            "imf_mass": imf_mass,
-            "st_dist_mass": st_dist_mass,
-            # Pre-computed search indexes used by mass_interp()
-            "mass_idx": pre.mass_idx_lookup(theor_tracks, st_dist_mass, m_ini_idx),
-        }
+        N_z, N_a, _, N_isoch = theor_tracks.shape
+        if calibrated:
+            N_cand = pre.n_candidates(N_stars, N_isoch)
+        else:
+            # The largest of the initial pools (with differential reddening)
+            N_cand = max(gen.per_star_pool(int(N_stars), 1.0), N_isoch)
+        N_cand = max(N_cand, int(N_min))
+        return pre.randVals(self.seed, N_cand, N_z * N_a)
 
-    def _grow_imf(self, imf_mass: int) -> None:
-        """Replace the engine with the largest IMF sample with one with an IMF sample
-        of total mass ``imf_mass``, and use it. As the samples are nested, the stored
-        observed cluster data (if any) remains valid.
+    def _engine_for_stars(self, N_stars: int) -> ModelEngine:
+        """Engine used to generate synthetic clusters: the calibrated one, or one
+        with random values sized for ``N_stars`` stars if the object was not
+        calibrated (the last one is kept)
 
-        The current IMF sample (and the views of it) are released before the new one
-        is drawn, to avoid holding both in memory. If drawing the new one fails, the
-        object is left with a new ``IMF_MASS`` sample and not calibrated
+        :param N_stars: Number of synthetic stars if the object was not calibrated
+        :type N_stars: int
 
-        :param imf_mass: Total initial mass of the IMF sample
-        :type imf_mass: int
-        """
-        # Engine without the IMF data, used as a template
-        template = dataclasses.replace(
-            self._engine_full, rand_floats={}, imf_mass=0, st_dist_mass=[], mass_idx={}
-        )
-        self._engine = self._engine_full = template
-        self._engine_views, self._chunk_masses = {}, None
-        try:
-            self._engine_full = dataclasses.replace(
-                template,
-                **self._imf_data(imf_mass, template.theor_tracks, template.m_ini_idx),
-            )
-        except BaseException:
-            self._obs = None
-            self._engine_full = dataclasses.replace(
-                template,
-                **self._imf_data(IMF_MASS, template.theor_tracks, template.m_ini_idx),
-            )
-            raise
-        finally:
-            self._engine = self._engine_full
-
-    def _engine_for(self, imf_mass: int) -> ModelEngine:
-        """Engine with an IMF sample of total mass ``imf_mass``, not larger than that
-        of the largest one drawn: that one, or a copy of it whose IMF samples (and
-        the random values and search indexes that depend on them) are views of their
-        first part (see :py:func:`precompute.imf_prefix_view`), identical to those of
-        a new object for ``imf_mass``. These are kept, as they take no memory
-
-        :param imf_mass: Total initial mass of the IMF sample
-        :type imf_mass: int
-
-        :return: Engine with the IMF sample of total mass ``imf_mass``
+        :return: Engine
         :rtype: ModelEngine
         """
-        from .modules.synthetic import precompute as pre
-
-        full = self._engine_full
-        if imf_mass == full.imf_mass:
-            return full
-        if imf_mass not in self._engine_views:
-            if self._chunk_masses is None:
-                self._chunk_masses = pre.imf_chunk_masses(full.st_dist_mass)
-            self._engine_views[imf_mass] = dataclasses.replace(
-                full,
-                **pre.imf_prefix_view(
-                    imf_mass,
-                    full.theor_tracks,
-                    full.st_dist_mass,
-                    full.rand_floats,
-                    full.mass_idx,
-                    self._chunk_masses,
+        if self._obs is not None:
+            return self._engine
+        N_stars = int(N_stars)
+        if N_stars > N_STARS_WARN:
+            warnings.warn(
+                f"\nGenerating N_stars={N_stars} synthetic stars requires about "
+                + f"{N_stars * BYTES_PER_STAR / 1e9:.1f} GB of memory",
+                stacklevel=3,
+            )
+        if self._engine_uncal is None or self._engine_uncal[0] != N_stars:
+            engine = dataclasses.replace(
+                self._engine,
+                rand_floats=self._rand_floats(
+                    N_stars, self._engine.theor_tracks, calibrated=False
                 ),
             )
-        return self._engine_views[imf_mass]
+            self._engine_uncal = (N_stars, engine)
+        return self._engine_uncal[1]
 
     def _check_calibrated(self) -> ObservedData:
         """Data of the observed cluster stored by :py:meth:`calibrate`
@@ -1219,13 +1142,14 @@ class Synthetic:
         :return: Isochrone (empty if ``isoch_flag=False``) and synthetic cluster
         :rtype: tuple[np.ndarray, np.ndarray]
         """
-        P = self._engine.params_array(params)
+        engine = self._engine_for_stars(N_stars)
+        P = engine.params_array(params)
         if P.shape[0] != 1:
             raise ValueError(
                 "A single value is required for each parameter (use 'batch=True' to "
                 + "generate several synthetic clusters)"
             )
-        return self._engine.get_model(
+        return engine.get_model(
             P[0],
             self.DR_distribution,
             self._calib_values(N_stars),

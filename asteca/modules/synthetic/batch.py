@@ -17,7 +17,7 @@ installed, and :py:func:`generate.get_model` otherwise.
 """
 
 from collections import namedtuple
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .engine import ModelEngine
@@ -58,9 +58,8 @@ def ccmo_array(ext_law: str, ext_coefs: list) -> np.ndarray:
 
 def batch_data(ctx: "ModelEngine") -> dict:
     """Arrays used by the compiled functions that do not change after the
-    :py:class:`asteca.Synthetic` object is created. The typed lists hold references
-    to the existing IMF samples and mass indexes (no copies). Obtained once and
-    cached by :py:attr:`ModelEngine.batch_data <engine.ModelEngine.batch_data>`.
+    :py:class:`asteca.Synthetic` object is calibrated. Obtained once and cached by
+    :py:attr:`ModelEngine.batch_data <engine.ModelEngine.batch_data>`.
 
     :param ctx: Data that defines the synthetic clusters
     :type ctx: ModelEngine
@@ -68,30 +67,16 @@ def batch_data(ctx: "ModelEngine") -> dict:
     :return: Dictionary with the data
     :rtype: dict
     """
-    from numba.typed.typedlist import List
-
-    N_z, N_a = ctx.theor_tracks.shape[:2]
-    st_list = List()
-    for ml in range(N_z):
-        for al in range(N_a):
-            st_list.append(ctx.st_dist_mass[ml][al])
-    # Indexes for the (ml, al) box and its closest node (m0, a0) are stored at
-    # position ((ml * N_a + al) * 2 + (m0 - ml)) * 2 + (a0 - al). Nodes beyond the
-    # grid's edges are never used (repeated keys keep the positions consistent)
-    midx_list = List()
-    for ml in range(N_z):
-        for al in range(N_a):
-            for dz in (0, 1):
-                for da in (0, 1):
-                    key = (ml, al, min(ml + dz, N_z - 1), min(al + da, N_a - 1))
-                    midx_list.append(ctx.mass_idx[key])
-
     return {
         "met_grid": np.asarray(ctx.met_age_dict["met"], dtype=float),
         "age_grid": np.asarray(ctx.met_age_dict["loga"], dtype=float),
-        "N_a": N_a,
-        "st_list": st_list,
-        "midx_list": midx_list,
+        "N_a": ctx.theor_tracks.shape[1],
+        "imf": (
+            ctx.imf_cdf,
+            ctx.imf_lut,
+            ctx.rand_floats["imf_u"],
+            np.ascontiguousarray(ctx.rand_floats["imf_offsets"], dtype=np.int64),
+        ),
         "dr_frac": {
             k: np.ascontiguousarray(v) for k, v in ctx.rand_floats["dr_frac"].items()
         },
@@ -105,12 +90,14 @@ def model_args(
     ctx: "ModelEngine",
     dr_model: str,
     calib: tuple[float, list[np.ndarray], int],
-) -> tuple[tuple, Any, Any]:
+) -> tuple[tuple, tuple]:
     """Data of the synthetic clusters passed to the compiled functions
     :py:func:`_synth_one`, :py:func:`_generate_batch`, :py:func:`_lnl_batch_serial`
-    and :py:func:`_lnl_batch_parallel`: the ``model`` tuple, and the typed lists of
-    the IMF samples and of their mass indexes. The typed lists are separate
-    arguments because numba types a tuple that contains them on every call (~0.1 ms)
+    and :py:func:`_lnl_batch_parallel`: the ``model`` tuple, and the ``imf`` tuple
+    with the data used to draw the masses of the candidate stars: the IMF CDF of each
+    grid node and their lookup tables (see :py:func:`precompute.imf_cdf_tables`), and
+    the uniform values and the offset of the window of each IMF node (see
+    :py:func:`precompute.randVals`)
 
     :param ctx: Data that defines the synthetic clusters
     :type ctx: ModelEngine
@@ -120,10 +107,10 @@ def model_args(
         synthetic clusters, as given by ``Synthetic._calib_values()``
     :type calib: tuple[float, list[np.ndarray], int]
 
-    :return: ``(model, st_list, midx_list)``, with ``model = (met_grid, age_grid,
-        theor_tracks, m_ini_idx, N_a, dr_frac, ext_kind, ccm, unif1, max_mag, err,
-        N_synth)``
-    :rtype: tuple[tuple, Any, Any]
+    :return: ``(model, imf)``, with ``model = (met_grid, age_grid, theor_tracks,
+        m_ini_idx, N_a, dr_frac, ext_kind, ccm, unif1, max_mag, err, N_synth)`` and
+        ``imf = (imf_cdf, imf_lut, imf_u, imf_offsets)``
+    :rtype: tuple[tuple, tuple]
     """
     bd = ctx.batch_data
 
@@ -148,7 +135,7 @@ def model_args(
         err,
         int(N_synth_stars),
     )
-    return model, bd["st_list"], bd["midx_list"]
+    return model, bd["imf"]
 
 
 if _HAS_NUMBA:
@@ -171,9 +158,9 @@ if _HAS_NUMBA:
     _per_star_pool_next_nb = njit(cache=True)(per_star_pool_next)
 
     @njit(cache=True)
-    def _synth_one(p, model, st_list, midx_list):
+    def _synth_one(p, model, imf):
         """One synthetic cluster, with the same steps and operations as
-        :py:func:`generate.get_model` (numba). ``model, st_list, midx_list`` are
+        :py:func:`generate.get_model` (numba). ``model, imf`` are
         returned by :py:func:`model_args`; the ``ext_kind`` of ``model`` is ``0`` for
         the GAIADR3 extinction law and ``1`` for CCMO, with the coefficients in
         ``ccm`` (see :py:func:`ccmo_array`).
@@ -294,8 +281,11 @@ if _HAS_NUMBA:
 
         # Pool of candidate stars, grown until N_synth stars are brighter than the
         # maximum magnitude after their extinction (see generate.get_model())
-        k = ((ml * N_a + al) * 2 + (m0 - ml)) * 2 + (a0 - al)
-        st_mass = st_list[ml * N_a + al]
+        # Uniform values of the candidates of the IMF node (see
+        # generate.imf_window()), and the IMF CDF of the grid node (m0, a0)
+        imf_cdf, imf_lut, imf_u_all, imf_offsets = imf
+        off = imf_offsets[ml * N_a + al]
+        imf_u = imf_u_all[off : off + imf_u_all.size // 2]
         dr_kind = 1 if dr > 0.0 else 0
         N_pool = _per_star_pool_nb(N_synth, dr)
         while True:
@@ -305,9 +295,10 @@ if _HAS_NUMBA:
                 idx_cut,
                 msk_cut,
                 m_ini_idx,
-                st_mass,
+                imf_u,
                 N_pool,
-                midx_list[k],
+                imf_cdf[m0, a0],
+                imf_lut[m0, a0],
             )
             if isoch_mass.shape[1] == 0:
                 return SynthOut(empty, 2, isochrone, isoch_av, idx_cut, N_pool, keep)
@@ -344,7 +335,7 @@ if _HAS_NUMBA:
             if keep.size >= N_synth or N_stars < N_pool:
                 break
             N_new = _per_star_pool_next_nb(
-                N_pool, keep.size, N_stars, N_synth, st_mass.size
+                N_pool, keep.size, N_stars, N_synth, imf_u.size
             )
             if N_new <= N_pool:
                 break
@@ -397,32 +388,32 @@ if _HAS_NUMBA:
         return (lnl - max_lkl) / temperature
 
     @njit(cache=True)
-    def _generate_batch(P, model, st_list, midx_list):
+    def _generate_batch(P, model, imf):
         """List with the synthetic clusters for each set of parameters in ``P``"""
         out = List()
         for j in range(P.shape[0]):
-            out.append(_synth_one(P[j], model, st_list, midx_list).synth)
+            out.append(_synth_one(P[j], model, imf).synth)
         return out
 
     @njit(cache=True)
-    def _lnl_batch_serial(P, model, st_list, midx_list, lkl, temperature):
+    def _lnl_batch_serial(P, model, imf, lkl, temperature):
         """Log-likelihoods of the synthetic clusters for each set of parameters in
         ``P``. The synthetic clusters are not returned"""
         out = np.empty(P.shape[0])
         for j in range(P.shape[0]):
-            synth = _synth_one(P[j], model, st_list, midx_list).synth
+            synth = _synth_one(P[j], model, imf).synth
             out[j] = _lnl_one(synth, lkl, temperature)
         return out
 
     # A separate function, not _lnl_batch_serial() compiled with parallel=True:
     # numba's cache does not tell the two versions of the same function apart
     @njit(cache=True, parallel=True)
-    def _lnl_batch_parallel(P, model, st_list, midx_list, lkl, temperature):
+    def _lnl_batch_parallel(P, model, imf, lkl, temperature):
         """Same as :py:func:`_lnl_batch_serial`, with the models distributed among
         numba's threads. Each model only reads the shared arrays and writes its own
         output, so the results are identical"""
         out = np.empty(P.shape[0])
         for j in prange(P.shape[0]):
-            synth = _synth_one(P[j], model, st_list, midx_list).synth
+            synth = _synth_one(P[j], model, imf).synth
             out[j] = _lnl_one(synth, lkl, temperature)
         return out

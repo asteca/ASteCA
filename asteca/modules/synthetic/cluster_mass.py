@@ -6,12 +6,9 @@ import numpy.typing as npt
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-from .precompute import suggest_imf_mass
-
-# Largest ratio of observed to synthetic stars for the scaling of the masses of a
-# synthetic cluster that ran out of IMF stars before a warning is shown (see
-# cluster_masses())
-MAX_MASS_SCALE = 3.0
+# Number of points used to integrate the mass of the IMF outside of the mass range
+# of the candidate stars (see get_M_actual())
+N_INTEG = 2000
 
 # Default parameters of the Galaxy's potential, used to estimate the ambient density.
 # Bulge and disc: Haghi et al. (2015), Table 1; dark matter halo: Sanderson et al.
@@ -78,7 +75,6 @@ def cluster_masses(
     rho_amb: float | None,
     gal_pot: dict[str, float],
     disrup: dict[str, float],
-    imf_mass: int,
 ) -> dict[str, np.ndarray]:
     """Masses of the cluster for each sampled model, used by
     :py:meth:`asteca.Synthetic.cluster_properties`.
@@ -107,9 +103,6 @@ def cluster_masses(
     :type gal_pot: dict[str, float]
     :param disrup: Parameters of the cluster's disruption, see ``DISRUPTION``
     :type disrup: dict[str, float]
-    :param imf_mass: Total initial mass of the IMF sample in use, used to suggest a
-        larger one if the synthetic clusters run out of IMF stars
-    :type imf_mass: int
 
     :return: Dictionary with an array of values (one per model) for each mass
     :rtype: dict[str, np.ndarray]
@@ -142,12 +135,11 @@ def cluster_masses(
     # converted from [Fe/H])
     Z_min, Z_max = 0.999 * MU_EV_COEFFS["Z"][0], 1.001 * MU_EV_COEFFS["Z"][-1]
     Z_out = False
-    masses_all, scales = [], []
+    masses_all = []
     for i, model in enumerate(models):
         # Estimate the actual mass, ie: the sum of the observed and photometric
         # masses
-        M_obs, M_phot, M_a, scale = get_M_actual(m_ini_idx, synthcls[i], mass_infos[i])
-        scales.append(scale)
+        M_obs, M_phot, M_a, _ = get_M_actual(m_ini_idx, synthcls[i], mass_infos[i])
 
         if rho_amb_arr is None:
             masses_all.append([M_obs, M_phot, np.nan, np.nan])
@@ -179,25 +171,6 @@ def cluster_masses(
 
         masses_all.append([M_obs, M_phot, M_evol, M_dyn])
 
-    # The masses of the synthetic clusters that ran out of IMF stars were scaled by
-    # the ratio of observed to synthetic stars (see get_M_actual()). This was
-    # checked on a mock cluster with a ratio of ~3 (masses within 4% of those
-    # obtained with a large enough IMF sample). Larger ratios extrapolate further,
-    # hence the warning
-    scales = np.array(scales)
-    big = scales > MAX_MASS_SCALE
-    if big.any():
-        # No margin: these models are random draws, their ratio is not biased
-        suggested = suggest_imf_mass(float(np.max(scales)), imf_mass, margin=1.0)
-        warnings.warn(
-            f"\nN={int(big.sum())} synthetic clusters (of {len(models)}) ran out of "
-            + "IMF stars with less than a\nthird of the observed stars (the smallest: "
-            + f"{100 / np.max(scales):.0f}% of them). Their masses were scaled\nup by "
-            + "the ratio of observed to synthetic stars, an extrapolation that can be\n"
-            + "inaccurate this large. Calibrate the 'Synthetic' object with a larger IMF "
-            + f"sample\n(in use: {imf_mass} Msun), e.g.: "
-            + f"'synthcl.calibrate(cluster, max_mass={suggested})'"
-        )
     if Z_out:
         warnings.warn(
             "\nMetallicity outside of the range of the stellar evolution mass loss "
@@ -261,56 +234,96 @@ def get_M_actual(
     """Estimate the actual mass as the total present-day mass of the simulated
     cluster whose observable part is the synthetic cluster.
 
-    The synthetic cluster is generated from the IMF sampled masses, taken in order,
-    keeping the stars brighter than the maximum magnitude (after the binarity,
-    extinction and differential reddening). The simulated cluster is then made of
-    all the IMF masses up to the last star kept; those still alive (below the
-    maximum mass of the isochrone) and not kept are its unobserved members.
+    The candidate stars of the synthetic cluster are drawn from the IMF restricted to
+    the mass range ``[v_min, v_max]`` of the isochrone points brighter than the
+    maximum magnitude (at the minimum absorption), taken in order, keeping those that
+    remain brighter than it after the binarity, extinction and differential
+    reddening (see :py:func:`generate.mass_interp`). The simulated cluster is made of
+    the candidates up to the last one kept, plus the stars of the IMF outside of
+    ``[v_min, v_max]`` that they represent: the candidates are a fraction ``F(v_max)
+    - F(v_min)`` of all the stars, with ``F`` the IMF CDF. Its unobserved members
+    are the candidates not kept, and the stars outside of that range still alive
+    (below the maximum mass of the isochrone).
 
     M_obs: primary and secondary masses of the stars in the synthetic cluster
     M_phot: masses of the unobserved members plus the expected mass of their
-    companions (see :py:func:`companion_mass`)
+    companions (see :py:func:`companion_mass`). For the stars outside of ``[v_min,
+    v_max]`` their expected mass is used, integrated over the IMF (see
+    :py:func:`imf_mass_integral`)
 
     M_actual = M_obs + M_phot
 
-    If the IMF sample was exhausted before the requested number of stars
-    (``N_target``, the number of observed stars) was generated, the simulated cluster
-    is smaller than the observed one. The masses are then scaled by
-    ``N_target / N_kept``, the expected ratio between the masses of both clusters
-    (the fraction of observable stars only depends on the model's parameters).
+    If fewer than the requested number of stars (``N_target``, the number of observed
+    stars) were generated (all the candidates were used), the simulated cluster is
+    smaller than the observed one. The masses are then scaled by ``N_target /
+    N_kept``, the expected ratio between the masses of both clusters (the fraction
+    of observable stars only depends on the model's parameters).
 
     :param m_ini_idx: Index of the initial mass column
     :type m_ini_idx: int
     :param sampled_synthcl: Sampled synthetic cluster data.
     :type sampled_synthcl: np.ndarray
     :param mass_info: IMF data of the simulated cluster, filled by
-        :py:func:`generate.get_model`
+        :py:func:`generate.fill_mass_info`
     :type mass_info: dict
 
     :return: Observed, photometric, and actual mass, and the scale factor applied
-        (``1`` if the IMF sample was not exhausted)
+        (``1`` if enough stars were generated)
     :rtype: tuple[float, float, float, float]
     """
     M_obs = float(
         np.nansum(sampled_synthcl[m_ini_idx]) + np.nansum(sampled_synthcl[-1])
     )
 
-    imf_masses = mass_info["imf_masses"]
-    # Members not in the synthetic cluster, still alive
-    unobs = np.ones(imf_masses.size, dtype=bool)
+    # Candidates not in the synthetic cluster
+    pool = mass_info["pool_masses"]
+    unobs = np.ones(pool.size, dtype=bool)
     unobs[mass_info["kept_idx"]] = False
-    unobs &= imf_masses <= mass_info["mass_row"][-1]
-    m_unobs = imf_masses[unobs]
-
+    m_unobs = pool[unobs]
     M_phot = float(m_unobs.sum() + companion_mass(m_unobs, mass_info).sum())
 
-    # Scale to the number of observed stars if the IMF sample was exhausted
+    # Members outside of the candidates' mass range, still alive: below it, and
+    # above it up to the maximum mass of the isochrone
+    F_lo, F_hi = mass_info["F_lo"], mass_info["F_hi"]
+    N_rep = pool.size / (F_hi - F_lo)
+    M_phot += N_rep * (
+        imf_mass_integral(0.0, F_lo, mass_info)
+        + imf_mass_integral(F_hi, mass_info["F_alive"], mass_info)
+    )
+
+    # Scale to the number of observed stars if fewer stars were generated
     N_kept = sampled_synthcl.shape[1]
     scale = max(1.0, mass_info["N_target"] / N_kept)
     M_obs, M_phot = M_obs * scale, M_phot * scale
     M_actual = M_obs + M_phot
 
     return M_obs, M_phot, M_actual, scale
+
+
+def imf_mass_integral(F_a: float, F_b: float, mass_info: dict) -> float:
+    """Expected mass per star of the IMF of the stars with CDF values in ``[F_a,
+    F_b]``, plus that of their companions (see :py:func:`companion_mass`):
+    ``integral(m(F) + m2(m(F)) dF)``, with ``m(F)`` the inverse CDF (linear between
+    its knots, and extrapolated beyond them as when sampling it). Trapezoidal rule
+    with ``N_INTEG`` points
+
+    :param F_a: Lower CDF value
+    :type F_a: float
+    :param F_b: Upper CDF value
+    :type F_b: float
+    :param mass_info: IMF data of the simulated cluster, see :py:func:`get_M_actual`
+    :type mass_info: dict
+
+    :return: Mass (per star of the IMF)
+    :rtype: float
+    """
+    if F_b <= F_a:
+        return 0.0
+    x, y = mass_info["imf_knots"]
+    F = np.linspace(F_a, F_b, N_INTEG)
+    k = np.clip(np.searchsorted(x, F) - 1, 0, x.size - 2)
+    m = y[k] + (F - x[k]) * (y[k + 1] - y[k]) / (x[k + 1] - x[k])
+    return float(np.trapezoid(m + companion_mass(m, mass_info), F))
 
 
 def companion_mass(m1: np.ndarray, mass_info: dict) -> np.ndarray:
