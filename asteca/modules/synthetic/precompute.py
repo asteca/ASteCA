@@ -2,7 +2,7 @@ import numpy as np
 import numpy.typing as npt
 from scipy import stats
 
-from .imfs import invTrnsfSmpl
+from .imfs import imf_inverse_cdf
 
 # Number of candidate stars available to each synthetic cluster, per observed star,
 # plus a fixed number (see n_candidates()). A synthetic cluster can only have fewer
@@ -37,14 +37,14 @@ def n_candidates(N_stars: int, N_isoch: int) -> int:
 def _stream(seed: int, *key: int) -> np.random.Generator:
     """Independent random generator for the random values identified by ``key``,
     obtained from ``seed``. The values drawn from it do not depend on how many are
-    drawn, nor on any other random values, which makes the IMF samples (and the
-    random values whose number depends on their size) nested: those obtained for a
-    larger total mass start with those obtained for a smaller one
+    drawn, nor on any other random values, which makes the random values of the
+    candidate stars nested: those obtained for a larger number of candidates start
+    with those obtained for a smaller one (see :py:func:`draw_rand_floats`)
 
     :param seed: Random seed
     :type seed: int
-    :param key: Integers that identify the stream
-    :type key: int
+    :param *key: Integers that identify the stream
+    :type *key: int
 
     :returns: Random number generator
     :rtype: np.random.Generator
@@ -52,7 +52,7 @@ def _stream(seed: int, *key: int) -> np.random.Generator:
     return np.random.default_rng(np.random.SeedSequence(seed, spawn_key=key))
 
 
-def add_binarity(
+def add_binary_tracks(
     rng: np.random.Generator,
     gamma: float | str,
     color: tuple,
@@ -110,9 +110,9 @@ def add_binarity(
             mass_ini = isoch[m_ini_idx]
 
             # Mass-ratio distribution
-            mass_ratios = qDistribution(mass_ini, gamma, rng)
+            q = mass_ratios(mass_ini, gamma, rng)
             # Secondary masses
-            m2 = mass_ratios * mass_ini
+            m2 = q * mass_ini
 
             # Calculate unresolved binary magnitude. Secondary masses below the
             # isochrone's minimum mass are assigned an infinite magnitude (i.e.: no
@@ -157,7 +157,7 @@ def mag_combine(
     return -2.5 * (-0.4 * m1 + np.log10(1.0 + c ** (m2 - m1)))
 
 
-def qDistribution(
+def mass_ratios(
     M1: np.ndarray, gamma: float | str, rng: np.random.Generator
 ) -> np.ndarray:
     """Distribution of q=m2/m1 for binary systems
@@ -184,7 +184,7 @@ def qDistribution(
         # Use 'gamma + 1' in the power-law distribution because in D&K this
         # distribution is defined as f(q)~q^gamma, while numpy's distribution is
         # defined as a*x^(a-1).
-        mass_ratios = rng.power(gamma + 1, N)
+        ratios = rng.power(gamma + 1, N)
 
     except ValueError:
         if gamma == "D&K":
@@ -195,7 +195,7 @@ def qDistribution(
             msk5, gamma5 = (M1 > 6.5) & (M1 <= 16), 0.0  # <- Not sure. Use uniform
             msk6, gamma6 = M1 > 16, 0.0  # <- Not sure. Use uniform
 
-            mass_ratios = np.zeros(N)
+            ratios = np.zeros(N)
             for msk, gammaX in (
                 (msk1, gamma1),
                 (msk2, gamma2),
@@ -205,7 +205,7 @@ def qDistribution(
                 (msk6, gamma6),
             ):
                 q = rng.power(gammaX + 1, msk.sum())
-                mass_ratios[msk] = q
+                ratios[msk] = q
         else:
             # The Fisher and Raghavan distributions are histograms of the number of
             # systems in equal width 'q' bins covering (0, 1]. Values of 'q' are
@@ -265,20 +265,23 @@ def qDistribution(
             # Use (0, 1] uniform values so that q=0 is never drawn (the first bin
             # has a non-zero weight in all the distributions)
             u = 1.0 - rng.uniform(0.0, 1.0, N)
-            mass_ratios = np.interp(u, cdf, q_edges)
+            ratios = np.interp(u, cdf, q_edges)
 
-    return mass_ratios
+    return ratios
 
 
-def ccmo_ext_coeffs(
+def ccmo_filter_coefs(
     magnitude_effl: float,
     color_effl: tuple,
     color2_effl: tuple | None,
-) -> list:
+) -> np.ndarray:
     """Obtain extinction coefficients for all the observed filters and colors,
     in the order in which they are stored in theor_tracks.
 
-    ext_coefs = [ec_mag, ec_col1, ...]
+    The coefficient of a filter is ``a + b / Rv`` (see :py:func:`ccmo_model`). The
+    array has a row ``[a, b, 0, 0]`` for the magnitude, and a row
+    ``[a1, b1, a2, b2]`` for each color (one pair for each of its two filters), see
+    :py:func:`generate.ccmo_ratios`.
 
     :param magnitude_effl: Effective lambda (in Angstrom) for the magnitude filter
     :type magnitude_effl: float
@@ -287,29 +290,18 @@ def ccmo_ext_coeffs(
     :param color2_effl: Effective lambdas for the filters that make up the second color
     :type color2_effl: tuple | None
 
-    :returns: List of extinction coefficients.
-    :rtype: list
+    :returns: Array of extinction coefficients, shape ``(N_colors + 1, 4)``
+    :rtype: np.ndarray
 
     """
-    # Effective wavelength in Armstrong.
-    eff_wave = magnitude_effl
-    eff_wave1, eff_wave2 = color_effl
-    # Effective wavelength in inverse microns.
-    ext_coefs = [
-        ccmo_model(10000.0 / eff_wave),
-        [
-            ccmo_model(10000.0 / eff_wave1),
-            ccmo_model(10000.0 / eff_wave2),
-        ],
-    ]
-
-    if color2_effl is not None:
-        eff_wave1, eff_wave2 = color2_effl
-        ext_coefs += [
-            [ccmo_model(10000.0 / eff_wave1), ccmo_model(10000.0 / eff_wave2)]
-        ]
-
-    return ext_coefs
+    # Effective wavelengths in Angstrom, converted to inverse microns
+    rows = [[*ccmo_model(10000.0 / magnitude_effl), 0.0, 0.0]]
+    for effl in (color_effl, color2_effl):
+        if effl is not None:
+            rows.append(
+                [*ccmo_model(10000.0 / effl[0]), *ccmo_model(10000.0 / effl[1])]
+            )
+    return np.array(rows, dtype=float)
 
 
 def ccmo_model(mw: float) -> tuple[float, float]:
@@ -387,9 +379,9 @@ def imf_cdf_tables(
     IMF_name: str, theor_tracks: np.ndarray, m_ini_idx: int
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """IMF data used to draw the masses of the candidate stars of the synthetic
-    clusters (see :py:func:`generate.mass_interp`).
+    clusters (see :py:func:`generate.draw_candidates`).
 
-    The inverse CDF of the IMF (:py:func:`imfs.invTrnsfSmpl`) is linear between its
+    The inverse CDF of the IMF (:py:func:`imfs.imf_inverse_cdf`) is linear between its
     knots ``(x, y)`` (CDF values, masses). The CDF ``F`` is evaluated at the initial
     masses of every grid node of the isochrones (``np.interp(mass, y, x)``), and a
     lookup table of ``IMF_LUT_BUCKETS + 1`` equal buckets over ``[0, 1]`` stores
@@ -408,7 +400,7 @@ def imf_cdf_tables(
         ``(Nz, Na, IMF_LUT_BUCKETS + 1)``)
     :rtype: tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
     """
-    inv_cdf = invTrnsfSmpl(IMF_name)
+    inv_cdf = imf_inverse_cdf(IMF_name)
     x = np.ascontiguousarray(inv_cdf.t[1:-1], dtype=float)
     y = np.ascontiguousarray(inv_cdf.c, dtype=float)
 
@@ -426,7 +418,7 @@ def imf_cdf_tables(
     return x, y, imf_cdf, imf_lut
 
 
-def randVals(seed: int, N_cand: int, N_nodes: int) -> dict:
+def draw_rand_floats(seed: int, N_cand: int, N_nodes: int) -> dict:
     """Random values used to generate the synthetic clusters, for ``N_cand``
     candidate stars (see :py:func:`n_candidates`).
 
@@ -453,13 +445,13 @@ def randVals(seed: int, N_cand: int, N_nodes: int) -> dict:
     # Row 1: used by error_distribution() (Synthetic.calibrate()). Row 0 is not
     # used (it keeps the layout of the array)
     rand_norm_vals = np.empty((2, N_cand))
-    # Row 0: used by dr_fractions() (below). Row 1: used by binarity()
+    # Row 0: used by dr_fractions() (below). Row 1: used by assign_binaries()
     rand_unif_vals = np.empty((2, N_cand))
     for row in (0, 1):
         _stream(seed, 1, row).standard_normal(out=rand_norm_vals[row])
         _stream(seed, 2, row).random(out=rand_unif_vals[row])
 
-    # Used by `extinction()`. The fractions of every differential reddening model
+    # Used by `apply_extinction()`. The fractions of every differential reddening model
     # are obtained (from the same uniform values) so that the model can be selected
     # when a synthetic cluster is generated, at no cost
     dr_frac = {m: dr_fractions(rand_unif_vals[0], m) for m in DR_MODELS}
@@ -538,7 +530,7 @@ def sample_params(
     :param model_std: Dictionary with the STDDEV of each parameter in ``model``
     :type model_std: dict[str, float]
     :param limits: Valid range of each parameter, see
-        :py:attr:`ModelEngine.limits <engine.ModelEngine.limits>`
+        :py:attr:`SynthEngine.sampling_ranges <engine.SynthEngine.sampling_ranges>`
     :type limits: dict[str, tuple[float, float]]
     :param N_models: Number of sets of parameters
     :type N_models: int
@@ -593,7 +585,7 @@ def error_distribution(
     e_color: np.ndarray,
     e_color2: np.ndarray | None,
     rand_norm_vals: np.ndarray,
-) -> list[np.ndarray]:
+) -> np.ndarray:
     """Extract the magnitude and color(s) uncertainties to use as error model for the
     synthetic clusters.
 
@@ -608,8 +600,8 @@ def error_distribution(
     :param rand_norm_vals: Array of random normal values.
     :type rand_norm_vals: np.ndarray
 
-    :returns: List of arrays of error distributions.
-    :rtype: list[np.ndarray]
+    :returns: Error distributions, one row per magnitude and color
+    :rtype: np.ndarray
     """
 
     def filnans(data):
@@ -638,4 +630,4 @@ def error_distribution(
     for e_col in e_colors:
         err_dist.append(rand_norm_vals[:N] * e_col[idx])
 
-    return err_dist
+    return np.array(err_dist)

@@ -69,8 +69,7 @@ with the loaded ``UCC_members.parquet`` file to the class, as follows:
 
 .. code-block:: python
 
-    # Load the UCC's members data file (requires 'pyarrow' or 'fastparquet', see
-    # the Installation section)
+    # Load the UCC's members data file
     UCC_members = pd.read_parquet("UCC_members.parquet")
 
     # Define the cluster's name (case insensitive; spaces, dashes, etc are ignored)

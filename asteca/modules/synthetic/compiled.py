@@ -1,68 +1,38 @@
 """Compiled generation of synthetic clusters (and of their log-likelihoods).
 
 Once a :py:class:`asteca.Synthetic` object is created, every random value used by
-:py:func:`generate.get_model` is drawn in advance, so a model is a deterministic
-function of its parameters. :py:func:`_synth_one` generates a synthetic cluster in a
+:py:func:`generate.synth_one` is drawn in advance, so a model is a deterministic
+function of its parameters. :py:func:`synth_one_nb` generates a synthetic cluster in a
 single compiled call, chaining the numba kernels of :py:mod:`generate` in the same
-order and with the same operations as :py:func:`generate.get_model` (the Python
+order and with the same operations as :py:func:`generate.synth_one` (the Python
 implementation, used without numba), so that the results are identical. The batch
 functions loop over many parameter sets in a single call, which removes the Python
 overhead of each call (which dominates for clusters with few stars), and the batch of
 log-likelihoods can be evaluated in parallel threads.
 
-:py:class:`engine.ModelEngine` is the single entry point used to generate
+:py:class:`engine.SynthEngine` is the single entry point used to generate
 synthetic clusters (one or many) by :py:class:`asteca.Synthetic` and
 :py:class:`asteca.Sampler`: it uses the compiled functions of this module if numba is
-installed, and :py:func:`generate.get_model` otherwise.
+installed, and :py:func:`generate.synth_one` otherwise.
 """
 
-from collections import namedtuple
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .engine import ModelEngine
+    from .engine import SynthEngine
 
 import numpy as np
 
 from .. import HAS_NUMBA as _HAS_NUMBA
-
-# Output of _synth_one(): the synthetic cluster and the data used by
-# ModelEngine.get_model() to obtain the isochrone, the mass information and the reason
-# for an empty cluster
-SynthOut = namedtuple(
-    "SynthOut",
-    ("synth", "status", "isoch_moved", "isoch_av", "idx_cut", "N_pool", "keep"),
-)
+from .generate import SynthOut
 
 
-def ccmo_array(ext_law: str, ext_coefs: list) -> np.ndarray:
-    """CCMO extinction coefficients as an array for the compiled functions: one row
-    ``[a, b, 0, 0]`` for the magnitude and one row ``[a1, b1, a2, b2]`` for each
-    color (see :py:func:`generate.ccmo_coefs`). Empty for other extinction laws.
-
-    :param ext_law: Extinction law
-    :type ext_law: str
-    :param ext_coefs: List of extinction coefficients, ``[ec_mag, ec_col1, ...]``
-    :type ext_coefs: list
-
-    :return: Array of shape ``(N_colors + 1, 4)``, or ``(0, 4)``
-    :rtype: np.ndarray
-    """
-    if ext_law != "CCMO":
-        return np.zeros((0, 4))
-    rows = [[ext_coefs[0][0], ext_coefs[0][1], 0.0, 0.0]]
-    for (a1, b1), (a2, b2) in ext_coefs[1:]:
-        rows.append([a1, b1, a2, b2])
-    return np.array(rows, dtype=float)
-
-
-def batch_data(ctx: "ModelEngine") -> dict:
-    """Arrays used by the compiled functions that do not change after the
-    :py:class:`asteca.Synthetic` object is calibrated. Obtained once and cached by
-    :py:attr:`ModelEngine.batch_data <engine.ModelEngine.batch_data>`.
+def kernel_data(ctx: "SynthEngine") -> dict:
+    """Arrays used by the compiled functions, obtained once for each engine and
+    cached by :py:attr:`SynthEngine.kernel_data <engine.SynthEngine.kernel_data>`.
 
     :param ctx: Data that defines the synthetic clusters
-    :type ctx: ModelEngine
+    :type ctx: SynthEngine
 
     :return: Dictionary with the data
     :rtype: dict
@@ -81,46 +51,38 @@ def batch_data(ctx: "ModelEngine") -> dict:
             k: np.ascontiguousarray(v) for k, v in ctx.rand_floats["dr_frac"].items()
         },
         "ext_kind": 0 if ctx.ext_law == "GAIADR3" else 1,
-        "ccm": ccmo_array(ctx.ext_law, ctx.ext_coefs),
+        # Rows [a, b, 0, 0] (magnitude) and [a1, b1, a2, b2] (each color), see
+        # precompute.ccmo_filter_coefs(); no rows for GAIADR3
+        "ccm": np.ascontiguousarray(ctx.ext_coefs, dtype=float),
         "unif1": np.ascontiguousarray(ctx.rand_floats["unif"][1]),
+        "err": (
+            np.ascontiguousarray(ctx.err_dist, dtype=float)
+            if len(ctx.err_dist)
+            else np.empty((0, 0))
+        ),
     }
 
 
-def model_args(
-    ctx: "ModelEngine",
-    dr_model: str,
-    calib: tuple[float, list[np.ndarray], int],
-) -> tuple[tuple, tuple]:
+def synth_args(ctx: "SynthEngine", dr_model: str) -> tuple[tuple, tuple]:
     """Data of the synthetic clusters passed to the compiled functions
-    :py:func:`_synth_one`, :py:func:`_generate_batch`, :py:func:`_lnl_batch_serial`
-    and :py:func:`_lnl_batch_parallel`: the ``model`` tuple, and the ``imf`` tuple
+    :py:func:`synth_one_nb`, :py:func:`synth_batch_nb`, :py:func:`log_lkl_batch_nb`
+    and :py:func:`log_lkl_batch_parallel_nb`: the ``model`` tuple, and the ``imf`` tuple
     with the data used to draw the masses of the candidate stars: the IMF CDF of each
     grid node and their lookup tables (see :py:func:`precompute.imf_cdf_tables`), and
     the uniform values and the offset of the window of each IMF node (see
-    :py:func:`precompute.randVals`)
+    :py:func:`precompute.draw_rand_floats`)
 
     :param ctx: Data that defines the synthetic clusters
-    :type ctx: ModelEngine
+    :type ctx: SynthEngine
     :param dr_model: Differential reddening model
     :type dr_model: str
-    :param calib: Maximum magnitude, error distribution and number of stars of the
-        synthetic clusters, as given by ``Synthetic._calib_values()``
-    :type calib: tuple[float, list[np.ndarray], int]
 
     :return: ``(model, imf)``, with ``model = (met_grid, age_grid, theor_tracks,
         m_ini_idx, N_a, dr_frac, ext_kind, ccm, unif1, max_mag, err, N_synth)`` and
         ``imf = (imf_cdf, imf_lut, imf_u, imf_offsets)``
     :rtype: tuple[tuple, tuple]
     """
-    bd = ctx.batch_data
-
-    # Same values as in Synthetic.generate()
-    max_mag_syn, err_dist_synth, N_synth_stars = calib
-    if len(err_dist_synth):
-        err = np.array(err_dist_synth, dtype=float)
-    else:
-        err = np.empty((0, 0))
-
+    bd = ctx.kernel_data
     model = (
         bd["met_grid"],
         bd["age_grid"],
@@ -131,9 +93,9 @@ def model_args(
         bd["ext_kind"],
         bd["ccm"],
         bd["unif1"],
-        float(max_mag_syn),
-        err,
-        int(N_synth_stars),
+        float(ctx.max_mag),
+        bd["err"],
+        int(ctx.N_synth),
     )
     return model, bd["imf"]
 
@@ -143,37 +105,33 @@ if _HAS_NUMBA:
     from numba.typed.typedlist import List
 
     from .generate import (
-        _binarity_nb,
-        _extinction_ccmo_nb,
-        _extinction_gaiadr3_nb,
-        _mass_interp_nb,
+        _apply_extinction_ccmo_nb,
+        _apply_extinction_gaiadr3_nb,
+        _assign_binaries_nb,
+        _draw_candidates_nb,
+        _isochrone_at_met_age_nb,
         _scatter_add_nb,
-        _zaWAverage_nb,
-        per_star_pool,
-        per_star_pool_next,
+        initial_pool_size,
+        next_pool_size,
     )
-    from .likelihood import _tremmel_lkl_nb
+    from .likelihood import _tremmel_sum_nb
 
-    _per_star_pool_nb = njit(cache=True)(per_star_pool)
-    _per_star_pool_next_nb = njit(cache=True)(per_star_pool_next)
+    _initial_pool_size_nb = njit(cache=True)(initial_pool_size)
+    _next_pool_size_nb = njit(cache=True)(next_pool_size)
 
     @njit(cache=True)
-    def _synth_one(p, model, imf):
+    def synth_one_nb(p, model, imf):
         """One synthetic cluster, with the same steps and operations as
-        :py:func:`generate.get_model` (numba). ``model, imf`` are
-        returned by :py:func:`model_args`; the ``ext_kind`` of ``model`` is ``0`` for
+        :py:func:`generate.synth_one` (numba). ``model, imf`` are
+        returned by :py:func:`synth_args`; the ``ext_kind`` of ``model`` is ``0`` for
         the GAIADR3 extinction law and ``1`` for CCMO, with the coefficients in
-        ``ccm`` (see :py:func:`ccmo_array`).
+        ``ccm`` (see :py:func:`precompute.ccmo_filter_coefs`).
 
-        Returns a ``SynthOut`` named tuple ``(synth, status, isoch_moved, isoch_av,
-        idx_cut, N_pool, keep)``: the synthetic cluster, an array of shape ``(m_ini_idx + 2, N)`` with
-        ``N = 0`` for an empty cluster; the reason for an empty cluster (see
-        ``generate.EMPTY_REASONS``, ``0`` if not empty); and the data used by
-        :py:meth:`engine.ModelEngine.get_model` to obtain the isochrone and the mass
-        information: the isochrone moved by the distance modulus, the isochrone
-        with the minimum absorption ``Av``, the indexes of its points brighter than
-        the maximum magnitude, the final size of the pool of candidate stars, and
-        the indexes of the candidates brighter than the maximum magnitude."""
+        Returns a ``generate.SynthOut`` named tuple: the synthetic cluster (an array
+        of shape ``(m_ini_idx + 2, N)`` with ``N = 0`` for an empty cluster), the
+        reason for an empty cluster (see ``generate.EMPTY_REASONS``, ``0`` if not
+        empty), and the data used by :py:meth:`engine.SynthEngine.synth_one` to
+        obtain the isochrone and the mass information."""
         (
             met_grid,
             age_grid,
@@ -202,11 +160,14 @@ if _HAS_NUMBA:
             ah = min(age_grid.size - 1, np.searchsorted(age_grid, loga))
             al = max(0, ah - 1)
 
+        # IMF node of the model (see generate.imf_uniforms())
+        node = ml * N_a + al
+
         if ml == 0 and al == 0 and mh == 0 and ah == 0:
             isochrone = theor_tracks[0, 0].copy()
             m0, a0 = 0, 0
         else:
-            # zaWAverage(): weights and closest grid node
+            # isochrone_at_met_age(): weights and closest grid node
             z1, z2 = met_grid[ml], met_grid[mh]
             a1, a2 = age_grid[al], age_grid[ah]
             dz = z2 - z1
@@ -217,7 +178,7 @@ if _HAS_NUMBA:
             om_u = 1.0 - u
             m0 = mh if t >= 0.5 else ml
             a0 = ah if u >= 0.5 else al
-            isochrone = _zaWAverage_nb(
+            isochrone = _isochrone_at_met_age_nb(
                 theor_tracks,
                 ml,
                 mh,
@@ -234,12 +195,12 @@ if _HAS_NUMBA:
 
         binar_flag = not (alpha == 0.0 and beta == 0.0)
 
-        # move_isochrone()
+        # apply_distance()
         isochrone[0] += dm
         if binar_flag:
             isochrone[m_ini_idx + 2] += dm
 
-        # generate.ccmo_coefs()
+        # generate.ccmo_ratios()
         ec_mag = ec_col1 = ec_col2 = 0.0
         col2_flag = False
         if ext_kind == 1:
@@ -250,14 +211,14 @@ if _HAS_NUMBA:
             if col2_flag:
                 ec_col2 = (ccm[2, 0] + ccm[2, 1] / rv) - (ccm[2, 2] + ccm[2, 3] / rv)
 
-        # extinction() with the minimum absorption Av, on a copy of the isochrone
+        # apply_extinction() with the minimum absorption Av, on a copy of the isochrone
         isoch_av = isochrone.copy()
         if ext_kind == 0:
-            _extinction_gaiadr3_nb(
+            _apply_extinction_gaiadr3_nb(
                 isoch_av, dr_frac, 0, av, av, 0.0, m_ini_idx, binar_flag
             )
         else:
-            _extinction_ccmo_nb(
+            _apply_extinction_ccmo_nb(
                 isoch_av,
                 dr_frac,
                 0,
@@ -271,26 +232,28 @@ if _HAS_NUMBA:
                 col2_flag,
             )
 
-        # cut_max_mag()
+        # bright_points()
         msk_cut = isoch_av[0] < max_mag
         idx_cut = np.flatnonzero(msk_cut)
         empty = np.empty((isochrone.shape[0], 0))[:N_rows]
         keep = np.empty(0, dtype=np.intp)
         if idx_cut.size == 0:
-            return SynthOut(empty, 1, isochrone, isoch_av, idx_cut, 0, keep)
+            return SynthOut(
+                empty, 1, isochrone, isoch_av, idx_cut, 0, keep, m0, a0, node
+            )
 
         # Pool of candidate stars, grown until N_synth stars are brighter than the
-        # maximum magnitude after their extinction (see generate.get_model())
+        # maximum magnitude after their extinction (see generate.synth_one())
         # Uniform values of the candidates of the IMF node (see
-        # generate.imf_window()), and the IMF CDF of the grid node (m0, a0)
+        # generate.imf_uniforms()), and the IMF CDF of the grid node (m0, a0)
         imf_cdf, imf_lut, imf_u_all, imf_offsets = imf
-        off = imf_offsets[ml * N_a + al]
+        off = imf_offsets[node]
         imf_u = imf_u_all[off : off + imf_u_all.size // 2]
         dr_kind = 1 if dr > 0.0 else 0
-        N_pool = _per_star_pool_nb(N_synth, dr)
+        N_pool = _initial_pool_size_nb(N_synth, dr)
         while True:
-            # mass_interp()
-            isoch_mass = _mass_interp_nb(
+            # draw_candidates()
+            isoch_mass = _draw_candidates_nb(
                 isochrone,
                 idx_cut,
                 msk_cut,
@@ -301,23 +264,25 @@ if _HAS_NUMBA:
                 imf_lut[m0, a0],
             )
             if isoch_mass.shape[1] == 0:
-                return SynthOut(empty, 2, isochrone, isoch_av, idx_cut, N_pool, keep)
+                return SynthOut(
+                    empty, 2, isochrone, isoch_av, idx_cut, N_pool, keep, m0, a0, node
+                )
             N_stars = isoch_mass.shape[1]
 
-            # binarity()
+            # assign_binaries()
             if not binar_flag:
                 isoch_mass[m_ini_idx + 1] = np.nan
             else:
-                _binarity_nb(alpha, beta, m_ini_idx, unif1, isoch_mass)
+                _assign_binaries_nb(alpha, beta, m_ini_idx, unif1, isoch_mass)
             isoch_all = isoch_mass[:N_rows]
 
-            # extinction() of each star
+            # apply_extinction() of each star
             if ext_kind == 0:
-                _extinction_gaiadr3_nb(
+                _apply_extinction_gaiadr3_nb(
                     isoch_all, dr_frac, dr_kind, av, av, dr, m_ini_idx, False
                 )
             else:
-                _extinction_ccmo_nb(
+                _apply_extinction_ccmo_nb(
                     isoch_all,
                     dr_frac,
                     dr_kind,
@@ -334,15 +299,15 @@ if _HAS_NUMBA:
             keep = np.flatnonzero(isoch_all[0] < max_mag)
             if keep.size >= N_synth or N_stars < N_pool:
                 break
-            N_new = _per_star_pool_next_nb(
-                N_pool, keep.size, N_stars, N_synth, imf_u.size
-            )
+            N_new = _next_pool_size_nb(N_pool, keep.size, N_stars, N_synth, imf_u.size)
             if N_new <= N_pool:
                 break
             N_pool = N_new
 
         if keep.size == 0:
-            return SynthOut(empty, 3, isochrone, isoch_av, idx_cut, N_pool, keep)
+            return SynthOut(
+                empty, 3, isochrone, isoch_av, idx_cut, N_pool, keep, m0, a0, node
+            )
         isoch_binar = isoch_all[:, keep[:N_synth]]
 
         # add_errors()
@@ -351,10 +316,12 @@ if _HAS_NUMBA:
             for i in range(err.shape[0]):
                 _scatter_add_nb(isoch_binar[i], mag_sort, err[i])
 
-        return SynthOut(isoch_binar, 0, isochrone, isoch_av, idx_cut, N_pool, keep)
+        return SynthOut(
+            isoch_binar, 0, isochrone, isoch_av, idx_cut, N_pool, keep, m0, a0, node
+        )
 
     @njit(cache=True)
-    def _lnl_one(synth, lkl, temperature):
+    def log_lkl_one_nb(synth, lkl, temperature):
         """Same as :py:meth:`likelihood.Tremmel.log_lkl`, for one synthetic
         cluster. ``lkl`` is :py:attr:`Tremmel.kernel_args
         <likelihood.Tremmel.kernel_args>`"""
@@ -377,7 +344,7 @@ if _HAS_NUMBA:
             lnl = max_lkl - 10.0 * lkl_range
         else:
             mag = synth[0]
-            lnl = _tremmel_lkl_nb(
+            lnl = _tremmel_sum_nb(
                 mag, synth[1:n_phot], hist_args, nz_pos, row_off, table_flat, m_max
             )
             if lnl <= min_lkl:
@@ -388,32 +355,32 @@ if _HAS_NUMBA:
         return (lnl - max_lkl) / temperature
 
     @njit(cache=True)
-    def _generate_batch(P, model, imf):
+    def synth_batch_nb(P, model, imf):
         """List with the synthetic clusters for each set of parameters in ``P``"""
         out = List()
         for j in range(P.shape[0]):
-            out.append(_synth_one(P[j], model, imf).synth)
+            out.append(synth_one_nb(P[j], model, imf).synth)
         return out
 
     @njit(cache=True)
-    def _lnl_batch_serial(P, model, imf, lkl, temperature):
+    def log_lkl_batch_nb(P, model, imf, lkl, temperature):
         """Log-likelihoods of the synthetic clusters for each set of parameters in
         ``P``. The synthetic clusters are not returned"""
         out = np.empty(P.shape[0])
         for j in range(P.shape[0]):
-            synth = _synth_one(P[j], model, imf).synth
-            out[j] = _lnl_one(synth, lkl, temperature)
+            synth = synth_one_nb(P[j], model, imf).synth
+            out[j] = log_lkl_one_nb(synth, lkl, temperature)
         return out
 
-    # A separate function, not _lnl_batch_serial() compiled with parallel=True:
+    # A separate function, not log_lkl_batch_nb() compiled with parallel=True:
     # numba's cache does not tell the two versions of the same function apart
     @njit(cache=True, parallel=True)
-    def _lnl_batch_parallel(P, model, imf, lkl, temperature):
-        """Same as :py:func:`_lnl_batch_serial`, with the models distributed among
+    def log_lkl_batch_parallel_nb(P, model, imf, lkl, temperature):
+        """Same as :py:func:`log_lkl_batch_nb`, with the models distributed among
         numba's threads. Each model only reads the shared arrays and writes its own
         output, so the results are identical"""
         out = np.empty(P.shape[0])
         for j in prange(P.shape[0]):
-            synth = _synth_one(P[j], model, imf).synth
-            out[j] = _lnl_one(synth, lkl, temperature)
+            synth = synth_one_nb(P[j], model, imf).synth
+            out[j] = log_lkl_one_nb(synth, lkl, temperature)
         return out

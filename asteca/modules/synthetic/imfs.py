@@ -2,7 +2,7 @@ import numpy as np
 from scipy.interpolate import BSpline, make_interp_spline
 
 
-def invTrnsfSmpl(IMF_name: str, m_low: float = 0.08, m_high: float = 100) -> BSpline:
+def imf_inverse_cdf(IMF_name: str, m_low: float = 0.08, m_high: float = 100) -> BSpline:
     """IMF inverse transform sampling.
 
     :param IMF_name: Name of the IMF to use.
@@ -27,7 +27,7 @@ def invTrnsfSmpl(IMF_name: str, m_low: float = 0.08, m_high: float = 100) -> BSp
     # This is the length of the base of the rectangle
     length = mass_values[1:] - mass_values[:-1]
     # This is the average height of the rectangle
-    imf_val = get_imf(IMF_name, mass_values)
+    imf_val = imf_pdf(IMF_name, mass_values)
     height = 0.5 * (imf_val[1:] + imf_val[:-1])
     # Rectangle area
     r_area = length * height
@@ -43,7 +43,7 @@ def invTrnsfSmpl(IMF_name: str, m_low: float = 0.08, m_high: float = 100) -> BSp
     return inv_cdf
 
 
-def get_imf(IMF_name: str, m_star_array: np.ndarray) -> np.ndarray:
+def imf_pdf(IMF_name: str, m_star_array: np.ndarray) -> np.ndarray:
     """Define any number of IMFs.
     The package https://github.com/keflavich/imf has some more (I think).
 

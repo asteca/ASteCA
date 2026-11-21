@@ -7,7 +7,7 @@ from astropy.coordinates import SkyCoord
 from ..warn import warn
 
 # Number of points used to integrate the mass of the IMF outside of the mass range
-# of the candidate stars (see get_M_actual())
+# of the candidate stars (see actual_mass())
 N_INTEG = 2000
 
 # Default parameters of the Galaxy's potential, used to estimate the ambient density.
@@ -39,7 +39,7 @@ MU_EV_COEFFS = {
 }
 
 
-def update_pars(name: str, defaults: dict, pars: dict | None) -> dict:
+def merge_defaults(name: str, defaults: dict, pars: dict | None) -> dict:
     """Update a dictionary of default parameters with the values given by the user.
 
     :param name: Name of the argument, used in the error message
@@ -88,7 +88,7 @@ def cluster_masses(
     :param synthcls: Synthetic clusters of the sampled models
     :type synthcls: list[np.ndarray]
     :param mass_infos: IMF data of the simulated cluster of each model, filled by
-        :py:func:`generate.get_model` (see :py:func:`get_M_actual`)
+        :py:func:`generate.synth_one` (see :py:func:`actual_mass`)
     :type mass_infos: list[dict]
     :param m_ini_idx: Index of the initial mass in the synthetic clusters
     :type m_ini_idx: int
@@ -139,7 +139,7 @@ def cluster_masses(
     for i, model in enumerate(models):
         # Estimate the actual mass, ie: the sum of the observed and photometric
         # masses
-        M_obs, M_phot, M_a, _ = get_M_actual(m_ini_idx, synthcls[i], mass_infos[i])
+        M_obs, M_phot, M_a, _ = actual_mass(m_ini_idx, synthcls[i], mass_infos[i])
 
         if rho_amb_arr is None:
             masses_all.append([M_obs, M_phot, np.nan, np.nan])
@@ -226,7 +226,7 @@ def galactic_coords(
     return Z, R_GC, R_xy
 
 
-def get_M_actual(
+def actual_mass(
     m_ini_idx: int,
     sampled_synthcl: np.ndarray,
     mass_info: dict,
@@ -238,7 +238,7 @@ def get_M_actual(
     the mass range ``[v_min, v_max]`` of the isochrone points brighter than the
     maximum magnitude (at the minimum absorption), taken in order, keeping those that
     remain brighter than it after the binarity, extinction and differential
-    reddening (see :py:func:`generate.mass_interp`). The simulated cluster is made of
+    reddening (see :py:func:`generate.draw_candidates`). The simulated cluster is made of
     the candidates up to the last one kept, plus the stars of the IMF outside of
     ``[v_min, v_max]`` that they represent: the candidates are a fraction ``F(v_max)
     - F(v_min)`` of all the stars, with ``F`` the IMF CDF. Its unobserved members
@@ -311,7 +311,7 @@ def imf_mass_integral(F_a: float, F_b: float, mass_info: dict) -> float:
     :type F_a: float
     :param F_b: Upper CDF value
     :type F_b: float
-    :param mass_info: IMF data of the simulated cluster, see :py:func:`get_M_actual`
+    :param mass_info: IMF data of the simulated cluster, see :py:func:`actual_mass`
     :type mass_info: dict
 
     :return: Mass (per star of the IMF)
@@ -329,7 +329,7 @@ def imf_mass_integral(F_a: float, F_b: float, mass_info: dict) -> float:
 def companion_mass(m1: np.ndarray, mass_info: dict) -> np.ndarray:
     """Expected mass of the companion of each primary mass, with the binary
     probability and mass ratios used to generate the synthetic clusters (see
-    :py:func:`generate.binarity`): the probability of being a binary times the
+    :py:func:`generate.assign_binaries`): the probability of being a binary times the
     secondary mass of the isochrone, interpolated through its mass ratio ``q``
     (the value of the closest isochrone point is used for masses outside of its
     range).
@@ -337,7 +337,7 @@ def companion_mass(m1: np.ndarray, mass_info: dict) -> np.ndarray:
     :param m1: Primary masses.
     :type m1: np.ndarray
     :param mass_info: IMF data of the simulated cluster, filled by
-        :py:func:`generate.get_model`
+        :py:func:`generate.synth_one`
     :type mass_info: dict
 
     :return: Expected companion masses.

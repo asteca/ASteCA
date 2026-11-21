@@ -3,34 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from types import ModuleType
-
     import pandas as pd
 
 import numpy as np
 
 from .modules.warn import warn
-
-
-def _import_pandas(method: str) -> ModuleType:
-    """Import pandas, an optional dependency only required by some methods
-
-    :param method: Name of the method that requires pandas, used in the error message
-    :type method: str
-
-    :raises ImportError: If pandas is not installed
-
-    :return: The pandas module
-    :rtype: ModuleType
-    """
-    try:
-        import pandas as pd
-    except ImportError as err:
-        raise ImportError(
-            f"{method} requires the optional 'pandas' package, which is not "
-            + "installed.\nInstall it with: python -m pip install pandas"
-        ) from err
-    return pd
 
 
 class Cluster:
@@ -46,8 +23,7 @@ class Cluster:
 
     If the data is loaded from the UCC members file, a ``TypeError`` is raised if
     ``UCC_members_file`` is not a ``pandas.DataFrame`` or ``cluster_name`` is not a
-    string, and an ``ImportError`` is raised if the optional ``pandas`` package is not
-    installed.
+    string.
 
     :param cluster_name: Name of the cluster, only required if the data is to be
         loaded from the UCC members file. If provided, the ``UCC_members_file`` argument
@@ -203,7 +179,7 @@ class Cluster:
                 all_none = False
                 break
         if all_none:
-            self._vp("\nEmpty Cluster object created", 1)
+            self._print("\nEmpty Cluster object created", 1)
             return
 
         if self.cluster_name is not None and self.UCC_members_file is None:
@@ -215,10 +191,10 @@ class Cluster:
             raise ValueError("Only one of 'max_mag' or 'max_mag_perc' can be provided")
 
         if self.cluster_name is not None:
-            self._vp(f"\nInstantiating cluster '{self.cluster_name}'")
+            self._print(f"\nInstantiating cluster '{self.cluster_name}'")
             cols_read, mag_lim = self._load_UCC_data()
         else:
-            self._vp("\nInstantiating cluster from data")
+            self._print("\nInstantiating cluster from data")
             cols_read, mag_lim = self._load_column_data()
 
         if not cols_read:
@@ -228,23 +204,23 @@ class Cluster:
         nan_phot = self._count_nan_phot()
         self.N_nan_phot = nan_phot
 
-        self._vp(f"Columns read   : {', '.join(cols_read)}", 1)
+        self._print(f"Columns read   : {', '.join(cols_read)}", 1)
         if mag_lim is not None:
-            self._vp(f"Max magnitude  : {mag_lim:.2f}", 1)
-        self._vp(f"N_stars        : {self.N_stars}", 1)
+            self._print(f"Max magnitude  : {mag_lim:.2f}", 1)
+        self._print(f"N_stars        : {self.N_stars}", 1)
         if nan_phot > 0:
-            self._vp(f"N_nan_phot     : {self.N_nan_phot}", 1)
-        self._vp(f"N_clust_min    : {self.N_clust_min}", 1)
-        self._vp(f"N_clust_max    : {self.N_clust_max}", 1)
+            self._print(f"N_nan_phot     : {self.N_nan_phot}", 1)
+        self._print(f"N_clust_min    : {self.N_clust_min}", 1)
+        self._print(f"N_clust_max    : {self.N_clust_max}", 1)
 
         # Initialize membership object
         from .membership import Membership
 
         self.membership = Membership(self)
 
-        self._vp("Cluster object generated")
+        self._print("Cluster object generated")
 
-    def _vp(self, mssg: str, level: int = 0) -> None:
+    def _print(self, mssg: str, level: int = 0) -> None:
         """Verbose print method"""
         if self.verbose > level:
             print(mssg)
@@ -268,9 +244,10 @@ class Cluster:
                 "If a cluster name is provided, the 'UCC_members_file' must also be provided"
             )
 
-        self._vp("Loading data from 'UCC_members_file'")
+        self._print("Loading data from 'UCC_members_file'")
 
-        pd = _import_pandas("Loading data from the UCC members file")
+        # Imported here so that 'import asteca' does not load pandas
+        import pandas as pd
 
         if not isinstance(self.UCC_members_file, pd.DataFrame):
             raise TypeError("'UCC_members_file' must be a Pandas DataFrame")
@@ -417,7 +394,7 @@ class Cluster:
             arr = getattr(self, name)
             setattr(self, name, arr[mask])
 
-        return mag_lim, mask.sum()
+        return mag_lim, int(mask.sum())
 
     def get_center(
         self,
@@ -536,8 +513,8 @@ class Cluster:
         else:
             raise ValueError(f"Selected method '{algo}' not recognized")
 
-        self._vp("\nCenter coordinates found")
-        self._vp(mssg, 1)
+        self._print("\nCenter coordinates found")
+        self._print(mssg, 1)
 
     def _get_structure_params(
         self,
@@ -598,7 +575,7 @@ class Cluster:
             radius = np.percentile(dist_to_cent[self.ripley_idx_selected], 95)
             max_r = 0.5 * max((xv.max() - xv.min()), (yv.max() - yv.min()))
             if radius > max_r * 0.95:
-                self._vp(
+                self._print(
                     "\nWARNING: Estimated radius is too large compared to the field "
                     + "size. Adjusting it to half of the field's maximum dimension.",
                     -1,
@@ -608,8 +585,8 @@ class Cluster:
             msk = (dist_to_cent > radius) & (dist_to_cent < rad_large)
             fdens_final = msk.sum() / (np.pi * (rad_large**2 - radius**2))
 
-            self._vp(f"Radius         : {radius:.2f} [deg]", 1)
-            self._vp(f"Field density  : {fdens_final:.0f} [N/deg^2]", 1)
+            self._print(f"Radius         : {radius:.2f} [deg]", 1)
+            self._print(f"Field density  : {fdens_final:.0f} [N/deg^2]", 1)
             self.radius = radius
             self.field_density = fdens_final
 
@@ -621,11 +598,11 @@ class Cluster:
                 xv, yv, xy_center, rc_bounds, rt_bounds, fd
             )
 
-            self._vp("\nKing parameters density estimated")
-            # self._vp(f"Amplitude      : {amplitude_k:.0f}", 1)
-            self._vp(f"Radius (core)  : {r_core_k:.2f} [deg]", 1)
-            self._vp(f"Radius (tidal) : {r_tidal_k:.2f} [deg]", 1)
-            # self._vp(f"Field density  : {field_density_k:.0f} [N/deg^2]", 1)
+            self._print("\nKing parameters density estimated")
+            # self._print(f"Amplitude      : {amplitude_k:.0f}", 1)
+            self._print(f"Radius (core)  : {r_core_k:.2f} [deg]", 1)
+            self._print(f"Radius (tidal) : {r_tidal_k:.2f} [deg]", 1)
+            # self._print(f"Field density  : {field_density_k:.0f} [N/deg^2]", 1)
             # self.amplitude_k = amplitude_k
             self.r_core_k = r_core_k
             self.r_tidal_k = r_tidal_k
@@ -734,19 +711,17 @@ class Cluster:
             N_cluster = self.N_clust_max
 
         self.N_cluster = N_cluster
-        self._vp("\nNumber of members estimated")
-        self._vp(f"N_cluster      : {N_cluster}", 1)
+        self._print("\nNumber of members estimated")
+        self._print(f"N_cluster      : {N_cluster}", 1)
 
     def to_csv(self, filename: str) -> None:
         """Save cluster data to a CSV file
 
-        Requires the optional ``pandas`` package; an ``ImportError`` is raised if it is
-        not installed.
-
         :param filename: Name of the CSV file to save the cluster data
         :type filename: str
         """
-        pd = _import_pandas("Cluster.to_csv()")
+        # Imported here so that 'import asteca' does not load pandas
+        import pandas as pd
 
         data_dict = {}
         # String column, not rounded
@@ -779,4 +754,4 @@ class Cluster:
 
         df = pd.DataFrame(data_dict)
         df.to_csv(filename, index_label="index")
-        self._vp(f"\nCluster data saved to '{filename}'", 1)
+        self._print(f"\nCluster data saved to '{filename}'", 1)

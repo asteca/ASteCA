@@ -137,7 +137,7 @@ class Isochrones:
                 f"Should be one of {mass_interps}"
             )
 
-        self._vp("\nInstantiating isochrones")
+        self._print("\nInstantiating isochrones")
         # Load isochrone files
         self.theor_tracks, self.color_filters, self.met_age_dict, N_isoch_files = (
             isochrone_loader.load(
@@ -174,20 +174,20 @@ class Isochrones:
         # Actual number of points per isochrone (for isochrones with EEPs this is the
         # number of EEPs, not 'N_points')
         N_met, N_age, _, N_pts = self.theor_tracks.shape
-        self._vp(f"Model          : {self.model}", 1)
-        self._vp(f"N_files        : {N_isoch_files}", 1)
-        self._vp(f"N_mets         : {N_met}", 1)
-        self._vp(f"N_ages         : {N_age}", 1)
-        self._vp(f"N_points       : {N_pts}", 1)
-        self._vp(f"{met_n}  range     : [{self.zmin}, {self.zmax}]", 1)
-        self._vp(f"loga range     : [{self.amin}, {self.amax}]", 1)
-        self._vp(f"Magnitude      : {self.mag}", 1)
-        self._vp(f"Color          : {self.color[0]}-{self.color[1]}", 1)
+        self._print(f"Model          : {self.model}", 1)
+        self._print(f"N_files        : {N_isoch_files}", 1)
+        self._print(f"N_mets         : {N_met}", 1)
+        self._print(f"N_ages         : {N_age}", 1)
+        self._print(f"N_points       : {N_pts}", 1)
+        self._print(f"{met_n}  range     : [{self.zmin}, {self.zmax}]", 1)
+        self._print(f"loga range     : [{self.amin}, {self.amax}]", 1)
+        self._print(f"Magnitude      : {self.mag}", 1)
+        self._print(f"Color          : {self.color[0]}-{self.color[1]}", 1)
         if self.color2 is not None:
-            self._vp(f"Color2         : {self.color2[0]}-{self.color2[1]}", 1)
-        self._vp("Isochrone object generated")
+            self._print(f"Color2         : {self.color2[0]}-{self.color2[1]}", 1)
+        self._print("Isochrone object generated")
 
-    def _vp(self, mssg: str, level: int = 0) -> None:
+    def _print(self, mssg: str, level: int = 0) -> None:
         """Verbose print method"""
         if self.verbose > level:
             print(mssg)

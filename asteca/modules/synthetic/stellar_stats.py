@@ -70,7 +70,7 @@ def turn_off_points(
     return turn_off
 
 
-def turn_off_points_manual(
+def turn_off_points_from_user(
     rng: np.random.Generator,
     turn_off: Sequence[float],
     N_points: int,
@@ -103,7 +103,7 @@ def turn_off_points_manual(
     }
 
 
-def stellar_parameters(
+def per_star_properties(
     cluster_mag: np.ndarray,
     cluster_e_mag: np.ndarray,
     cluster_colors: list,
@@ -114,7 +114,7 @@ def stellar_parameters(
     isochs_young: "Isochrones | None",
     extrinsic_pars: dict,
     ext_law: str,
-    ext_coefs: list | np.ndarray,
+    ext_coefs: np.ndarray,
     rng: np.random.Generator,
 ) -> tuple[dict, np.ndarray, np.ndarray]:
     """Per-star masses and probabilities of the observed stars, used by
@@ -133,7 +133,7 @@ def stellar_parameters(
     :param synthcls: Synthetic clusters of the sampled models
     :type synthcls: list[np.ndarray]
     :param turn_off_points: Turn-off points of the synthetic clusters, see
-        :py:func:`turn_off_points` and :py:func:`turn_off_points_manual`
+        :py:func:`turn_off_points` and :py:func:`turn_off_points_from_user`
     :type turn_off_points: dict
     :param isochs_young: Isochrones with ``log(age)<=7``, or ``None``
     :type isochs_young: Isochrones | None
@@ -143,7 +143,7 @@ def stellar_parameters(
     :param ext_law: Extinction law
     :type ext_law: str
     :param ext_coefs: Extinction coefficients
-    :type ext_coefs: list | np.ndarray
+    :type ext_coefs: np.ndarray
     :param rng: Random number generator
     :type rng: np.random.Generator
 
@@ -153,7 +153,7 @@ def stellar_parameters(
     :rtype: tuple[dict, np.ndarray, np.ndarray]
     """
     # Stellar masses
-    m1_med, m1_std, m2_med, m2_std, nan_msk, m2_obs = get_stellar_masses(
+    m1_med, m1_std, m2_med, m2_std, nan_msk, m2_obs = stellar_masses(
         cluster_mag,
         cluster_e_mag,
         cluster_colors,
@@ -163,10 +163,10 @@ def stellar_parameters(
     )
 
     # Binary probabilities
-    binar_probs = get_binar_probabilities(m2_obs)
+    binar_probs = binary_probabilities(m2_obs)
 
     # BSS probabilities
-    bss_probs = get_bss_probabilities(
+    bss_probs = bss_probabilities(
         cluster_mag, cluster_colors, turn_off_points, len(synthcls)
     )
 
@@ -179,7 +179,7 @@ def stellar_parameters(
         np.full(N_cluster, np.nan),
     )
     if isochs_young is not None:
-        bss_mass_median, bss_mass_stddev = get_bss_masses(
+        bss_mass_median, bss_mass_stddev = bss_masses(
             cluster_mag,
             cluster_colors[0],
             extrinsic_pars,
@@ -211,7 +211,7 @@ def stellar_parameters(
     return data, m2_obs, ~nan_msk
 
 
-def get_stellar_masses(
+def stellar_masses(
     cluster_mag: np.ndarray,
     cluster_e_mag: np.ndarray,
     cluster_colors: list,
@@ -323,7 +323,7 @@ def get_stellar_masses(
     return m1_med, m1_std, m2_med, m2_std, nan_msk, m2_obs
 
 
-def get_binar_probabilities(m2_obs: np.ndarray) -> np.ndarray:
+def binary_probabilities(m2_obs: np.ndarray) -> np.ndarray:
     """Binary probability per observed star
 
     Count how many times the secondary mass of an observed star was assigned a
@@ -373,7 +373,7 @@ def poisson_binomial_percentiles(
     return np.minimum(idx, probs.size).astype(float)
 
 
-def get_bss_probabilities(
+def bss_probabilities(
     cluster_mag: np.ndarray,
     cluster_colors: list[np.ndarray | None],
     turn_off_points: dict,
@@ -401,7 +401,7 @@ def get_bss_probabilities(
     :param cluster_colors: Observed cluster colors.
     :type cluster_colors: list[np.ndarray | None]
     :param turn_off_points: Turn-off points of the sampled models, see
-        :py:func:`turn_off_points` and :py:func:`turn_off_points_manual`
+        :py:func:`turn_off_points` and :py:func:`turn_off_points_from_user`
     :type turn_off_points: dict
     :param N_sampled_synthcls: Number of sampled synthetic clusters.
     :type N_sampled_synthcls: int
@@ -470,12 +470,12 @@ def get_bss_probabilities(
     return bss_probs
 
 
-def get_bss_masses(
+def bss_masses(
     cluster_mag: np.ndarray,
     cluster_color: np.ndarray,
     extrinsic_pars: dict,
     ext_law: str,
-    ext_coefs: list | np.ndarray,
+    ext_coefs: np.ndarray,
     rng: np.random.Generator,
     met_age_dict: dict,
     theor_tracks: np.ndarray,
@@ -495,7 +495,7 @@ def get_bss_masses(
     :param ext_law: Extinction law.
     :type ext_law: str
     :param ext_coefs: List of extinction coefficients.
-    :type ext_coefs: list | np.ndarray
+    :type ext_coefs: np.ndarray
     :param rng: Random number generator.
     :type rng: np.random.Generator
     :param met_age_dict: Dictionary of metallicity and log(age) values
@@ -564,8 +564,8 @@ def get_bss_masses(
                 sampled_models["dm"],
             ):
                 # Move theoretical isochrone.
-                isoch_moved = gen.move_isochrone(
-                    isochrone.copy(),  # copy to avoid overwriting in move_isochrone()
+                isoch_moved = gen.apply_distance(
+                    isochrone.copy(),  # copy to avoid overwriting in apply_distance()
                     binar_flag,
                     m_ini_idx,
                     dm,
@@ -573,7 +573,7 @@ def get_bss_masses(
                 # Only the magnitude and first color are present in the
                 # (magnitude, color, initial mass) array: drop the coefficients of
                 # a second color, which would otherwise be applied to the mass row
-                isoch = gen.extinction(
+                isoch = gen.apply_extinction(
                     ext_law,
                     ext_coefs[:2],
                     dr_frac,
@@ -596,24 +596,24 @@ def get_bss_masses(
                 masses.append(isoch_mass[closest_idx])
 
     # (N_valid_stars, N_realizations)
-    bss_masses = np.column_stack(masses)
+    mass_table = np.column_stack(masses)
 
     bss_mass_median = np.full(n_stars, np.nan)
     bss_mass_stddev = np.full(n_stars, np.nan)
-    if np.isfinite(bss_masses).all():
+    if np.isfinite(mass_table).all():
         # Fast path (the usual case): no NaN masses. Same results as the
         # nan-aware functions below, ~3x faster
-        bss_mass_median[valid] = np.median(bss_masses, axis=1)
-        if bss_masses.shape[1] > 1:
-            bss_mass_stddev[valid] = np.std(bss_masses, axis=1)
+        bss_mass_median[valid] = np.median(mass_table, axis=1)
+        if mass_table.shape[1] > 1:
+            bss_mass_stddev[valid] = np.std(mass_table, axis=1)
         return bss_mass_median, bss_mass_stddev
 
     # Extract medians and STDDEVs
-    n_valid = np.sum(np.isfinite(bss_masses), axis=1)
+    n_valid = np.sum(np.isfinite(mass_table), axis=1)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", RuntimeWarning)
-        med = np.nanmedian(bss_masses, axis=1)
-        std = np.nanstd(bss_masses, axis=1)
+        med = np.nanmedian(mass_table, axis=1)
+        std = np.nanstd(mass_table, axis=1)
     # 0 valid masses: median = NaN, stddev = NaN
     # 1 valid mass: median = that mass, stddev = NaN
     # ≥2 valid masses: median and stddev are calculated normally.

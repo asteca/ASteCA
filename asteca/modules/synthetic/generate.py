@@ -1,4 +1,5 @@
 from bisect import bisect_left
+from collections import namedtuple
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -7,7 +8,7 @@ from .. import HAS_NUMBA as _HAS_NUMBA
 from .. import njit
 
 if TYPE_CHECKING:
-    from .engine import ModelEngine
+    from .engine import SynthEngine
 
 # The 'coeffs' values are the main sequence values taken from:
 # https://www.cosmos.esa.int/web/gaia/edr3-extinction-law
@@ -43,15 +44,37 @@ _X_MIN, _X_MAX = -0.06, 2.5
 
 
 # Reasons for an empty synthetic cluster, indexed by the status code returned by
-# batch._synth_one() (0: not empty)
+# compiled.synth_one_nb() (0: not empty)
 EMPTY_REASONS = ("", "max magnitude cut", "IMF interpolation", "the extinction")
 
+# Output of compiled.synth_one_nb() (also built by synth_one() for fill_mass_info()): the
+# synthetic cluster, the reason for an empty cluster (see EMPTY_REASONS), and the data
+# used to obtain the isochrone and the mass information: the isochrone moved by the
+# distance modulus, the isochrone with the minimum absorption Av, the indexes of its
+# points brighter than the maximum magnitude, the final size of the pool of candidate
+# stars, the indexes of the candidates brighter than the maximum magnitude, the grid
+# node (m0, a0) the masses are taken from, and the IMF node (see imf_uniforms())
+SynthOut = namedtuple(
+    "SynthOut",
+    (
+        "synth",
+        "status",
+        "isoch_moved",
+        "isoch_av",
+        "idx_cut",
+        "N_pool",
+        "keep",
+        "m0",
+        "a0",
+        "node",
+    ),
+)
 
-def get_model(
-    ctx: "ModelEngine",
+
+def synth_one(
+    ctx: "SynthEngine",
     p: np.ndarray,
     dr_model: str,
-    calib: tuple[float, list[np.ndarray], int],
     show_errors: bool = False,
     isoch_flag: bool = False,
     isoch_dr_frac: float = 0.0,
@@ -62,23 +85,20 @@ def get_model(
     The synthetic cluster is generated according to the parameters in ``p`` and the
     data of the :py:class:`Synthetic` object. This is the Python implementation of
     the synthetic cluster recipe, used when numba is not installed; with numba, the
-    compiled ``batch._synth_one()`` is used instead (through
-    ``engine.ModelEngine.get_model()``), with identical results.
+    compiled ``compiled.synth_one_nb()`` is used instead (through
+    ``engine.SynthEngine.synth_one()``), with identical results.
 
-    :param ctx: Data that defines the synthetic clusters
-    :type ctx: ModelEngine
+    :param ctx: Data that defines the synthetic clusters, including their maximum
+        magnitude, error distribution and number of stars
+    :type ctx: SynthEngine
     :param p: Values of the fundamental parameters, in the order of ``FULL_PARAMS``:
-        a row of the array returned by :py:meth:`ModelEngine.params_array
-        <engine.ModelEngine.params_array>` (the values are not validated here)
+        a row of the array returned by :py:meth:`SynthEngine.validate_params
+        <engine.SynthEngine.validate_params>` (the values are not validated here)
     :type p: np.ndarray
     :param dr_model: Differential reddening model, it selects the fractions of the
         differential reddening applied to each star (see
         :py:func:`precompute.dr_fractions`)
     :type dr_model: str
-    :param calib: Maximum synthetic magnitude allowed, error distributions used to
-        perturb the synthetic photometry, and number of synthetic stars to generate
-        (see ``Synthetic._calib_values()``)
-    :type calib: tuple[float, list[np.ndarray], int]
     :param show_errors: If ``True``, print the reason when an empty synthetic cluster
         is returned
     :type show_errors: bool
@@ -109,7 +129,7 @@ def get_model(
     m_ini_idx, theor_tracks = ctx.m_ini_idx, ctx.theor_tracks
     ext_law, ext_coefs, rand_floats = ctx.ext_law, ctx.ext_coefs, ctx.rand_floats
     dr_frac = rand_floats["dr_frac"][dr_model]
-    max_mag_syn, err_dist_synth, N_synth_stars = calib
+    max_mag_syn, err_dist_synth, N_synth_stars = ctx.max_mag, ctx.err_dist, ctx.N_synth
 
     met, loga, alpha, beta, av, dr, rv, dm = p.tolist()
     # Indexes of the (z, log(age)) box used for the isochrone averaging
@@ -124,7 +144,7 @@ def get_model(
         # Generate a weighted average isochrone from the (z, log(age)) values in
         # the 'model'. (m0, a0) is the closest grid node, from which the masses
         # are taken
-        isochrone, m0, a0 = zaWAverage(
+        isochrone, m0, a0 = isochrone_at_met_age(
             theor_tracks,
             met_age_dict,
             m_ini_idx,
@@ -146,14 +166,14 @@ def get_model(
         # # TODO: this was not tested thoroughly
 
     # Move theoretical isochrone using the distance modulus
-    isoch_moved = move_isochrone(isochrone, binar_flag, m_ini_idx, dm)
+    isoch_moved = apply_distance(isochrone, binar_flag, m_ini_idx, dm)
 
     # Isochrone with the minimum absorption Av (no differential reddening). It is
     # only used to identify the isochrone points that can produce stars brighter
     # than the maximum magnitude (a larger absorption only makes a star fainter),
     # and returned as the isochrone if requested. The copy avoids reddening
     # 'isoch_moved', which is interpolated below
-    isoch_av = extinction(
+    isoch_av = apply_extinction(
         ext_law,
         ext_coefs,
         dr_frac,
@@ -164,14 +184,14 @@ def get_model(
         rv,
         isoch_moved.copy(),
     )
-    isoch_extin_dr_0 = output_isochrone(
+    isoch_extin_dr_0 = isochrone_at_dr_frac(
         ctx, p, dr_model, isoch_flag, isoch_dr_frac, isoch_moved, isoch_av
     )
 
     # Identify the isochrone points below the maximum magnitude. The isochrone
     # itself is not cut (which would copy it): the points are selected through
-    # their indexes in mass_interp()
-    idx_cut, msk_cut = cut_max_mag(isoch_av, max_mag_syn)
+    # their indexes in draw_candidates()
+    idx_cut, msk_cut = bright_points(isoch_av, max_mag_syn)
     if idx_cut.size == 0:
         if show_errors:
             print(empty_message(1, p))
@@ -179,21 +199,22 @@ def get_model(
 
     # Uniform values of the candidate stars of this IMF node, and the IMF CDF at the
     # masses of the isochrone (those of the grid node (m0, a0))
-    imf_u = imf_window(rand_floats, ml * theor_tracks.shape[1] + al)
+    node = ml * theor_tracks.shape[1] + al
+    imf_u = imf_uniforms(rand_floats, node)
     imf_F = ctx.imf_cdf[m0, a0]
 
     # The extinction is applied to each synthetic star (after the interpolation and
     # the binarity), so that each star gets its own differential reddening draw
-    # (see per_star_pool()). As some stars end up below the maximum magnitude, a
+    # (see initial_pool_size()). As some stars end up below the maximum magnitude, a
     # pool of candidates is generated, with masses drawn from the IMF within the
-    # isochrone's mass range (see mass_interp()). The pool is grown until
+    # isochrone's mass range (see draw_candidates()). The pool is grown until
     # 'N_synth_stars' stars are brighter than the maximum magnitude, or all the
     # candidates are used. The candidates (and their random values) are always taken
     # in the same order, so the result does not depend on the pool sizes
-    N_pool = per_star_pool(N_synth_stars, dr)
+    N_pool = initial_pool_size(N_synth_stars, dr)
     while True:
         # Draw the masses of the candidates and interpolate them into the isochrone
-        isoch_mass = mass_interp(
+        isoch_mass = draw_candidates(
             isoch_moved,
             idx_cut,
             msk_cut,
@@ -209,7 +230,7 @@ def get_model(
         N_stars = isoch_mass.shape[1]
 
         # Assignment of binarity.
-        isoch_binar = binarity(
+        isoch_binar = assign_binaries(
             alpha,
             beta,
             binar_flag,
@@ -220,7 +241,7 @@ def get_model(
 
         # Extinction of each star, from the intrinsic color of the system. The
         # binary photometry was already combined, hence 'binar_flag=False'
-        isoch_binar = extinction(
+        isoch_binar = apply_extinction(
             ext_law,
             ext_coefs,
             dr_frac,
@@ -236,9 +257,7 @@ def get_model(
         # Enough stars, or all the candidates used
         if keep.size >= N_synth_stars or N_stars < N_pool:
             break
-        N_new = per_star_pool_next(
-            N_pool, keep.size, N_stars, N_synth_stars, imf_u.size
-        )
+        N_new = next_pool_size(N_pool, keep.size, N_stars, N_synth_stars, imf_u.size)
         if N_new <= N_pool:
             break
         N_pool = N_new
@@ -249,9 +268,10 @@ def get_model(
         return isoch_extin_dr_0, np.array([])
 
     if mass_info is not None:
-        fill_mass_info(
-            mass_info, ctx, p, N_synth_stars, isoch_moved, idx_cut, N_pool, keep
+        out = SynthOut(
+            isoch_binar, 0, isoch_moved, isoch_av, idx_cut, N_pool, keep, m0, a0, node
         )
+        fill_mass_info(mass_info, ctx, p, out)
 
     isoch_binar = isoch_binar[:, keep[:N_synth_stars]]
 
@@ -267,7 +287,7 @@ def empty_message(status: int, p: np.ndarray) -> str:
 
     :param status: Reason for the empty cluster, see ``EMPTY_REASONS``
     :type status: int
-    :param p: Values of the fundamental parameters, see :py:func:`get_model`
+    :param p: Values of the fundamental parameters, see :py:func:`synth_one`
     :type p: np.ndarray
 
     :return: Message
@@ -280,8 +300,8 @@ def empty_message(status: int, p: np.ndarray) -> str:
     )
 
 
-def output_isochrone(
-    ctx: "ModelEngine",
+def isochrone_at_dr_frac(
+    ctx: "SynthEngine",
     p: np.ndarray,
     dr_model: str,
     isoch_flag: bool,
@@ -289,13 +309,13 @@ def output_isochrone(
     isoch_moved: np.ndarray,
     isoch_av: np.ndarray,
 ) -> np.ndarray:
-    """Isochrone returned by :py:func:`get_model`: the isochrone with the minimum
+    """Isochrone returned by :py:func:`synth_one`: the isochrone with the minimum
     absorption ``Av``, or reddened with ``Av + isoch_dr_frac * DR`` if
     ``isoch_dr_frac > 0``; an empty array if ``isoch_flag=False``
 
     :param ctx: Data that defines the synthetic clusters
-    :type ctx: ModelEngine
-    :param p: Values of the fundamental parameters, see :py:func:`get_model`
+    :type ctx: SynthEngine
+    :param p: Values of the fundamental parameters, see :py:func:`synth_one`
     :type p: np.ndarray
     :param dr_model: Differential reddening model
     :type dr_model: str
@@ -315,7 +335,7 @@ def output_isochrone(
         return np.array([])
     _, _, alpha, beta, av, dr, rv, _ = p.tolist()
     if isoch_dr_frac > 0 and dr > 0:
-        return extinction(
+        return apply_extinction(
             ctx.ext_law,
             ctx.ext_coefs,
             ctx.rand_floats["dr_frac"][dr_model],
@@ -330,22 +350,15 @@ def output_isochrone(
 
 
 def fill_mass_info(
-    mass_info: dict,
-    ctx: "ModelEngine",
-    p: np.ndarray,
-    N_synth_stars: int,
-    isoch_moved: np.ndarray,
-    idx_cut: np.ndarray,
-    N_pool: int,
-    keep: np.ndarray,
+    mass_info: dict, ctx: "SynthEngine", p: np.ndarray, out: SynthOut
 ) -> None:
     """Fill ``mass_info`` with the data required to estimate the total mass of a
-    (non empty) simulated cluster (see :py:func:`cluster_mass.get_M_actual`).
+    (non empty) simulated cluster (see :py:func:`cluster_mass.actual_mass`).
 
     The candidates of the synthetic cluster are drawn from the IMF restricted to the
     mass range of the isochrone points brighter than the maximum magnitude (see
-    :py:func:`mass_interp`). The simulated cluster is made of the candidates up to
-    the last one kept (or all of them, if fewer than ``N_synth_stars`` were kept),
+    :py:func:`draw_candidates`). The simulated cluster is made of the candidates up to
+    the last one kept (or all of them, if fewer than ``ctx.N_synth`` were kept),
     plus the stars of the IMF outside of that range that they represent.
 
     Keys: the masses of those candidates (``pool_masses``), the indexes of the
@@ -359,45 +372,31 @@ def fill_mass_info(
     :param mass_info: Dictionary to fill
     :type mass_info: dict
     :param ctx: Data that defines the synthetic clusters
-    :type ctx: ModelEngine
-    :param p: Values of the fundamental parameters, see :py:func:`get_model`
+    :type ctx: SynthEngine
+    :param p: Values of the fundamental parameters, see :py:func:`synth_one`
     :type p: np.ndarray
-    :param N_synth_stars: Number of synthetic stars requested
-    :type N_synth_stars: int
-    :param isoch_moved: Isochrone moved by the distance modulus
-    :type isoch_moved: np.ndarray
-    :param idx_cut: Indexes of the isochrone points brighter than the maximum
-        magnitude
-    :type idx_cut: np.ndarray
-    :param N_pool: Final size of the pool of candidate stars
-    :type N_pool: int
-    :param keep: Indexes of the candidates brighter than the maximum magnitude
-    :type keep: np.ndarray
+    :param out: Data of the synthetic cluster, see ``SynthOut``
+    :type out: SynthOut
     """
-    m_ini_idx = ctx.m_ini_idx
-    met, loga, alpha, beta = p[:4].tolist()
+    m_ini_idx, N_synth_stars = ctx.m_ini_idx, ctx.N_synth
+    alpha, beta = p[2:4].tolist()
     binar_flag = not (alpha == 0.0 and beta == 0.0)
-    # IMF node and grid node of the model (see get_model())
-    ml, mh, al, ah = grid_box(ctx.met_age_dict, met, loga)
-    m0, a0 = 0, 0
-    if not ml == al == mh == ah == 0:
-        _, m0, a0 = zaWAverage(
-            ctx.theor_tracks, ctx.met_age_dict, m_ini_idx, met, loga, ml, mh, al, ah
-        )
-    imf_u = imf_window(ctx.rand_floats, ml * ctx.theor_tracks.shape[1] + al)
-    imf_F = ctx.imf_cdf[m0, a0]
-    mass_row = isoch_moved[m_ini_idx]
+    # IMF node and grid node of the model (see synth_one())
+    imf_u = imf_uniforms(ctx.rand_floats, out.node)
+    imf_F = ctx.imf_cdf[out.m0, out.a0]
+    mass_row = out.isoch_moved[m_ini_idx]
+    idx_cut, keep = out.idx_cut, out.keep
 
     kept_idx = keep[:N_synth_stars]
-    N_end = int(kept_idx[-1]) + 1 if keep.size >= N_synth_stars else N_pool
+    N_end = int(kept_idx[-1]) + 1 if keep.size >= N_synth_stars else out.N_pool
     N_end = min(N_end, imf_u.size)
     i_lo, i_hi = idx_cut[0], idx_cut[-1]
-    F_lo = imf_F[i_lo]
-    _, pool_masses = cdf_masses(
+    F_lo = float(imf_F[i_lo])
+    _, pool_masses = imf_masses(
         mass_row,
         imf_F,
         F_lo,
-        imf_F[i_hi] - F_lo,
+        float(imf_F[i_hi]) - F_lo,
         mass_row[i_lo],
         mass_row[i_hi],
         imf_u[:N_end],
@@ -412,20 +411,20 @@ def fill_mass_info(
             "F_alive": float(imf_F[-1]),
             "imf_knots": ctx.imf_knots,
             "mass_row": mass_row.copy(),
-            "m2_row": isoch_moved[m_ini_idx + 1].copy() if binar_flag else None,
+            "m2_row": out.isoch_moved[m_ini_idx + 1].copy() if binar_flag else None,
             "alpha": alpha,
             "beta": beta,
         }
     )
 
 
-def imf_window(rand_floats: dict, node: int) -> np.ndarray:
+def imf_uniforms(rand_floats: dict, node: int) -> np.ndarray:
     """Uniform values of the candidate stars of the IMF node ``node`` (the index of
     the lower corner ``(ml, al)`` of the model's (z, log(age)) box, ``ml * N_a +
     al``): a window of ``imf_u`` starting at its offset, see
-    :py:func:`precompute.randVals`
+    :py:func:`precompute.draw_rand_floats`
 
-    :param rand_floats: Random values, see :py:func:`precompute.randVals`
+    :param rand_floats: Random values, see :py:func:`precompute.draw_rand_floats`
     :type rand_floats: dict
     :param node: Index of the IMF node
     :type node: int
@@ -438,8 +437,8 @@ def imf_window(rand_floats: dict, node: int) -> np.ndarray:
     return imf_u[off : off + imf_u.size // 2]
 
 
-def per_star_pool(N_synth_stars: int, dr: float) -> int:
-    """Initial number of candidate stars generated by :py:func:`get_model`.
+def initial_pool_size(N_synth_stars: int, dr: float) -> int:
+    """Initial number of candidate stars generated by :py:func:`synth_one`.
 
     Each synthetic star gets its own absorption ``A = Av + f * DR``, applied after
     the interpolation of the IMF masses into the isochrone. The stars are selected
@@ -462,10 +461,10 @@ def per_star_pool(N_synth_stars: int, dr: float) -> int:
     return N_synth_stars + N_synth_stars // 20 + 10
 
 
-def per_star_pool_next(
+def next_pool_size(
     N_pool: int, N_kept: int, N_stars: int, N_synth_stars: int, N_max: int
 ) -> int:
-    """Size of the next pool of candidates in :py:func:`get_model`, when the
+    """Size of the next pool of candidates in :py:func:`synth_one`, when the
     current one gave too few stars above the maximum magnitude: the size required
     by the observed fraction of surviving stars, plus a 20% margin (at least 1.5x
     the current size), and at most the number of candidates available.
@@ -521,7 +520,7 @@ def grid_box(met_age_dict: dict, met: float, loga: float) -> tuple[int, int, int
     return int(ml), int(mh), int(al), int(ah)
 
 
-def zaWAverage(
+def isochrone_at_met_age(
     theor_tracks: np.ndarray,
     met_age_dict: dict,
     m_ini_idx: int,
@@ -624,7 +623,7 @@ def zaWAverage(
 if _HAS_NUMBA:
 
     @njit(cache=True)
-    def _zaWAverage_nb(
+    def _isochrone_at_met_age_nb(
         theor_tracks: np.ndarray,
         ml: int,
         mh: int,
@@ -639,7 +638,7 @@ if _HAS_NUMBA:
         m_ini_idx: int,
     ) -> np.ndarray:
         """Compiled (numba) version of the weighted average in
-        :py:func:`zaWAverage`. A single pass reads the four grid isochrones and
+        :py:func:`isochrone_at_met_age`. A single pass reads the four grid isochrones and
         writes the weighted sum, with the same operations in the same order as
         the NumPy version (identical results), without temporary arrays. The
         two mass rows are copied from the closest node (m0, a0) instead of being
@@ -654,7 +653,7 @@ if _HAS_NUMBA:
         isochrone = np.empty((N_rows, N_pts), dtype=t11.dtype)
         for r in range(N_rows):
             if r == m_ini_idx or r == m_ini_idx + 1:
-                # DO NOT average the masses (see zaWAverage())
+                # DO NOT average the masses (see isochrone_at_met_age())
                 for k in range(N_pts):
                     isochrone[r, k] = t00[r, k]
             else:
@@ -667,7 +666,7 @@ if _HAS_NUMBA:
         return isochrone
 
 
-def move_isochrone(
+def apply_distance(
     isochrone: np.ndarray, binar_flag: bool, m_ini_idx: int, dm: float
 ) -> np.ndarray:
     """Receives an isochrone of a given age and metallicity and modifies
@@ -697,9 +696,9 @@ def move_isochrone(
     return isochrone
 
 
-def extinction(
+def apply_extinction(
     ext_law: str,
-    ext_coefs: list | np.ndarray,
+    ext_coefs: np.ndarray,
     dr_frac: np.ndarray,
     m_ini_idx: int,
     binar_flag: bool,
@@ -716,18 +715,14 @@ def extinction(
 
     isochrone = [mag, c1, (c2), Mini, Mini_b, mag_b, c1b, (c2b)]
 
-    For the CCMO model:
+    For the CCMO model ``ext_coefs`` has a row ``[a, b, 0, 0]`` for the magnitude
+    and a row ``[a1, b1, a2, b2]`` for each color (see
+    :py:func:`precompute.ccmo_filter_coefs`), where the coefficient of each filter is:
 
-    ext_coefs = [mag_ec, c1_ec, ...]
-
-    where:
-    mag_ec = [a, b]  ; cX_ec = [[a1, b1], [a2, b2]]
-
-    and:
-    ccm_coef = a + b / Rv = ext_coefs[i][0] + ext_coefs[i][1] / Rv
+    ccm_coef = a + b / Rv
 
     With differential reddening (dr>0) the total absorption of each column (a
-    synthetic star, see :py:func:`get_model`) is:
+    synthetic star, see :py:func:`synth_one`) is:
 
     A_i = Av + f_i * dr
 
@@ -752,8 +747,8 @@ def extinction(
 
     :param ext_law: Extinction law to be used.
     :type ext_law: str
-    :param ext_coefs: List of extinction coefficients.
-    :type ext_coefs: list | np.ndarray
+    :param ext_coefs: Extinction coefficients (empty for ``GAIADR3``).
+    :type ext_coefs: np.ndarray
     :param dr_frac: Fractions of the differential reddening applied to each column.
     :type dr_frac: np.ndarray
     :param m_ini_idx: Index of the initial mass.
@@ -777,18 +772,18 @@ def extinction(
     isochrone = np.ascontiguousarray(isochrone)
 
     if _HAS_NUMBA and ext_law == "GAIADR3":
-        # Compiled version: identical results, see _extinction_gaiadr3_nb()
+        # Compiled version: identical results, see _apply_extinction_gaiadr3_nb()
         # dr_kind: 0 -> no differential reddening (scalar A), 1 -> A = Av + f*dr
         dr_kind = 1 if dr > 0.0 else 0
-        _extinction_gaiadr3_nb(
+        _apply_extinction_gaiadr3_nb(
             isochrone, dr_frac, dr_kind, Av, Av, dr, m_ini_idx, binar_flag
         )
         return isochrone
 
     if _HAS_NUMBA and ext_law == "CCMO":
-        # Compiled version: identical results, see _extinction_ccmo_nb()
-        ec_mag, ec_col1, ec_col2 = ccmo_coefs(ext_coefs, Rv)
-        _extinction_ccmo_nb(
+        # Compiled version: identical results, see _apply_extinction_ccmo_nb()
+        ec_mag, ec_col1, ec_col2 = ccmo_ratios(ext_coefs, Rv)
+        _apply_extinction_ccmo_nb(
             isochrone,
             dr_frac,
             1 if dr > 0.0 else 0,
@@ -812,13 +807,13 @@ def extinction(
 
     ec_col2 = 0.0
     if ext_law == "CCMO":
-        ec_mag, ec_col1, ec_col2 = ccmo_coefs(ext_coefs, Rv)
+        ec_mag, ec_col1, ec_col2 = ccmo_ratios(ext_coefs, Rv)
         Ax = ec_mag * Av_dr
         Ex1 = ec_col1 * Av_dr
     elif ext_law == "GAIADR3":
         # If this model is used the first color is always expected to be BP-RP
         # BP_RP = isochrone[1]
-        Ax, Ex1 = gaiadr3_ext(isochrone[1], Av_dr)
+        Ax, Ex1 = gaiadr3_extinction(isochrone[1], Av_dr)
     else:
         raise ValueError(f"Unknown extinction law: {ext_law}")
 
@@ -844,7 +839,7 @@ def extinction(
 if _HAS_NUMBA:
 
     @njit(cache=True)
-    def _extinction_gaiadr3_nb(
+    def _apply_extinction_gaiadr3_nb(
         isochrone: np.ndarray,
         dr_frac: np.ndarray,
         dr_kind: int,
@@ -855,11 +850,11 @@ if _HAS_NUMBA:
         binar_flag: bool,
     ) -> None:
         """Compiled (numba) version of the GAIADR3 branch of
-        :py:func:`extinction`, modifying 'isochrone' in place.
+        :py:func:`apply_extinction`, modifying 'isochrone' in place.
 
         A single loop over the isochrone points computes the (differentially
         reddened) absorption, A_G and E(BP-RP) (same nested form as
-        :py:func:`_ext_horner_XA` and :py:func:`_ext_horner_X`), and adds them to
+        :py:func:`_gaiadr3_poly` and :py:func:`_gaiadr3_poly_fixed_A`), and adds them to
         the magnitude and color rows. The floating point operations are the same
         and in the same order as in the NumPy version, so the results are
         identical.
@@ -885,7 +880,7 @@ if _HAS_NUMBA:
         i_cb = m_ini_idx + 3
         for i in range(isochrone.shape[1]):
             # Clamped to the range of validity of the coefficients, as in
-            # gaiadr3_ext()
+            # gaiadr3_extinction()
             X = isochrone[1, i]
             if X < _X_MIN:
                 X = _X_MIN
@@ -957,7 +952,7 @@ if _HAS_NUMBA:
                 isochrone[i_cb, i] += Ex  # First color (binary system)
 
     @njit(cache=True)
-    def _extinction_ccmo_nb(
+    def _apply_extinction_ccmo_nb(
         isochrone: np.ndarray,
         dr_frac: np.ndarray,
         dr_kind: int,
@@ -970,9 +965,9 @@ if _HAS_NUMBA:
         ec_col2: float,
         col2_flag: bool,
     ) -> None:
-        """Compiled (numba) version of the CCMO branch of :py:func:`extinction`,
+        """Compiled (numba) version of the CCMO branch of :py:func:`apply_extinction`,
         modifying 'isochrone' in place. The coefficients ``ec_*`` (``a + b / Rv``
-        values, see :py:func:`ccmo_coefs`) multiply the (differentially reddened)
+        values, see :py:func:`ccmo_ratios`) multiply the (differentially reddened)
         absorption of each point. The floating point operations are the same and in
         the same order as in the NumPy version, so the results are identical.
 
@@ -1001,13 +996,14 @@ if _HAS_NUMBA:
                     isochrone[i_c2b, i] += Ex2  # Second color (binary system)
 
 
-def ccmo_coefs(ext_coefs: list | np.ndarray, Rv: float) -> tuple[float, float, float]:
+def ccmo_ratios(ext_coefs: np.ndarray, Rv: float) -> tuple[float, float, float]:
     """Coefficients of the CCMO extinction law for a given ``Rv``: the ratios
     ``A_mag / Av`` and ``E(color) / Av`` for the magnitude and the color(s), see
-    :py:func:`extinction`.
+    :py:func:`apply_extinction`. Same operations as in ``compiled.synth_one_nb()``.
 
-    :param ext_coefs: List of extinction coefficients, ``[ec_mag, ec_col1, ...]``
-    :type ext_coefs: list | np.ndarray
+    :param ext_coefs: Extinction coefficients, see
+        :py:func:`precompute.ccmo_filter_coefs`
+    :type ext_coefs: np.ndarray
     :param Rv: Total-to-selective extinction ratio.
     :type Rv: float
 
@@ -1015,19 +1011,18 @@ def ccmo_coefs(ext_coefs: list | np.ndarray, Rv: float) -> tuple[float, float, f
         (``0`` if there is no second color).
     :rtype: tuple[float, float, float]
     """
-    ec_mag = ext_coefs[0][0] + ext_coefs[0][1] / Rv
-    ec_col1 = (ext_coefs[1][0][0] + ext_coefs[1][0][1] / Rv) - (
-        ext_coefs[1][1][0] + ext_coefs[1][1][1] / Rv
-    )
+    c = ext_coefs
+    ec_mag = c[0, 0] + c[0, 1] / Rv
+    ec_col1 = (c[1, 0] + c[1, 1] / Rv) - (c[1, 2] + c[1, 3] / Rv)
     ec_col2 = 0.0
-    if len(ext_coefs) > 2:
-        ec_col2 = (ext_coefs[2][0][0] + ext_coefs[2][0][1] / Rv) - (
-            ext_coefs[2][1][0] + ext_coefs[2][1][1] / Rv
-        )
+    if len(c) > 2:
+        ec_col2 = (c[2, 0] + c[2, 1] / Rv) - (c[2, 2] + c[2, 3] / Rv)
     return float(ec_mag), float(ec_col1), float(ec_col2)
 
 
-def gaiadr3_ext(X: np.ndarray, A: float | np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def gaiadr3_extinction(
+    X: np.ndarray, A: float | np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
     """Gaia DR3 extinction law for main sequence stars, returning the extinction
     in G and the color excess in BP-RP directly:
 
@@ -1060,11 +1055,13 @@ def gaiadr3_ext(X: np.ndarray, A: float | np.ndarray) -> tuple[np.ndarray, np.nd
     """
     X = np.clip(X, _X_MIN, _X_MAX)
     if isinstance(A, np.ndarray):
-        return _ext_horner_XA(_G_COEFFS, X, A), _ext_horner_XA(_BPRP_COEFFS, X, A)
-    return _ext_horner_X(_G_COEFFS, X, A), _ext_horner_X(_BPRP_COEFFS, X, A)
+        return _gaiadr3_poly(_G_COEFFS, X, A), _gaiadr3_poly(_BPRP_COEFFS, X, A)
+    return _gaiadr3_poly_fixed_A(_G_COEFFS, X, A), _gaiadr3_poly_fixed_A(
+        _BPRP_COEFFS, X, A
+    )
 
 
-def _ext_horner_XA(c: tuple, X: np.ndarray, A: np.ndarray) -> np.ndarray:
+def _gaiadr3_poly(c: tuple, X: np.ndarray, A: np.ndarray) -> np.ndarray:
     """Evaluate ``A * ec(X, A)`` for array ``A``, written as:
 
     A * [P0(X) + A * (P1(X) + A * (P2(X) + c6 * A))]
@@ -1106,7 +1103,7 @@ def _ext_horner_XA(c: tuple, X: np.ndarray, A: np.ndarray) -> np.ndarray:
     return R
 
 
-def _ext_horner_X(c: tuple, X: np.ndarray, A: float) -> np.ndarray:
+def _gaiadr3_poly_fixed_A(c: tuple, X: np.ndarray, A: float) -> np.ndarray:
     """Evaluate ``A * ec(X, A)`` for scalar ``A`` as a cubic polynomial in X:
 
     k0 + k1*X + k2*X^2 + k3*X^3
@@ -1136,14 +1133,14 @@ def _ext_horner_X(c: tuple, X: np.ndarray, A: float) -> np.ndarray:
     return R
 
 
-def cut_max_mag(
+def bright_points(
     isoch_moved: np.ndarray, max_mag_syn: float
 ) -> tuple[np.ndarray, np.ndarray]:
     """Identify the isochrone points with magnitude values smaller than the maximum
     observed value.
 
     The isochrone is not cut here: ``isoch_moved[:, idx]`` would copy the entire
-    array, which is not needed since :py:func:`mass_interp` only reads the
+    array, which is not needed since :py:func:`draw_candidates` only reads the
     points it interpolates. Instead, the indexes of the kept points are returned.
 
     :param isoch_moved: Isochrone array.
@@ -1160,7 +1157,7 @@ def cut_max_mag(
     return np.flatnonzero(msk), msk
 
 
-def cdf_masses(
+def imf_masses(
     mass_ini: np.ndarray,
     imf_F: np.ndarray,
     F_lo: float,
@@ -1175,7 +1172,7 @@ def cdf_masses(
     linearly between the two grid points of the isochrone that bracket it.
 
     Same operations, in the same order, as the compiled version in
-    :py:func:`_mass_interp_nb`, so the results are identical.
+    :py:func:`_draw_candidates_nb`, so the results are identical.
 
     :param mass_ini: Initial masses of the isochrone (sorted)
     :type mass_ini: np.ndarray
@@ -1211,7 +1208,7 @@ def cdf_masses(
     return s, m
 
 
-def mass_interp(
+def draw_candidates(
     isochrone: np.ndarray,
     idx_cut: np.ndarray,
     msk_cut: np.ndarray,
@@ -1225,22 +1222,22 @@ def mass_interp(
 
     The masses are drawn from the IMF restricted to the mass range ``[v_min,
     v_max]`` of the isochrone points given by ``idx_cut`` (those brighter than the
-    maximum magnitude, see :py:func:`cut_max_mag`): no star outside of that range
+    maximum magnitude, see :py:func:`bright_points`): no star outside of that range
     can be brighter than the maximum magnitude, so every candidate can end up in the
-    synthetic cluster (see :py:func:`cdf_masses`). Only those isochrone points are
+    synthetic cluster (see :py:func:`imf_masses`). Only those isochrone points are
     used for the interpolation, without having to copy the cut isochrone.
 
     :param isochrone: Isochrone array (not cut).
     :type isochrone: np.ndarray
     :param idx_cut: Sorted indexes of the isochrone points kept by
-        :py:func:`cut_max_mag`.
+        :py:func:`bright_points`.
     :type idx_cut: np.ndarray
     :param msk_cut: Boolean mask of the isochrone points kept by
-        :py:func:`cut_max_mag`.
+        :py:func:`bright_points`.
     :type msk_cut: np.ndarray
     :param m_ini_idx: Index of the initial mass.
     :type m_ini_idx: int
-    :param imf_u: Uniform values of the candidates, see :py:func:`imf_window`
+    :param imf_u: Uniform values of the candidates, see :py:func:`imf_uniforms`
     :type imf_u: np.ndarray
     :param N_pool: Number of candidates.
     :type N_pool: int
@@ -1257,14 +1254,14 @@ def mass_interp(
     # ==IMPORTANT==
     mass_ini = isochrone[m_ini_idx]
     i_lo, i_hi = idx_cut[0], idx_cut[-1]
-    F_lo = imf_F[i_lo]
-    dF = imf_F[i_hi] - F_lo
+    F_lo = float(imf_F[i_lo])
+    dF = float(imf_F[i_hi]) - F_lo
     # A single isochrone point (or an empty CDF range): no mass in the range
     if idx_cut.size < 2 or dF <= 0.0:
         return np.array([])
 
     N = min(N_pool, imf_u.size)
-    s, mass_dist = cdf_masses(
+    s, mass_dist = imf_masses(
         mass_ini, imf_F, F_lo, dF, mass_ini[i_lo], mass_ini[i_hi], imf_u[:N]
     )
 
@@ -1281,7 +1278,7 @@ def mass_interp(
     lo = idx_cut[hi_cut - 1]
 
     # Interpolate the candidates (masses) into the isochrone
-    isoch_mass = interp_mass_isoch(isochrone, mass_ini, mass_dist, x_new_indices, lo)
+    isoch_mass = interp_at_masses(isochrone, mass_ini, mass_dist, x_new_indices, lo)
 
     return isoch_mass
 
@@ -1289,7 +1286,7 @@ def mass_interp(
 if _HAS_NUMBA:
 
     @njit(cache=True)
-    def _mass_interp_nb(
+    def _draw_candidates_nb(
         isochrone: np.ndarray,
         idx_cut: np.ndarray,
         msk_cut: np.ndarray,
@@ -1299,7 +1296,7 @@ if _HAS_NUMBA:
         imf_F: np.ndarray,
         imf_lut: np.ndarray,
     ) -> np.ndarray:
-        """Compiled (numba) version of :py:func:`mass_interp`. It performs the same
+        """Compiled (numba) version of :py:func:`draw_candidates`. It performs the same
         floating point operations in the same order, so the results are identical
         to the NumPy version, but it avoids most temporary arrays and Python calls:
 
@@ -1309,7 +1306,7 @@ if _HAS_NUMBA:
         2. For each candidate, the grid index ``np.searchsorted(imf_F, F)`` is
            found by a short walk from the bucket lookup table 'imf_lut' (see
            :py:func:`precompute.imf_cdf_tables`), and its mass as in
-           :py:func:`cdf_masses`.
+           :py:func:`imf_masses`.
         3. Interpolate the isochrone linearly, one row at a time (rows are
            contiguous in memory).
         """
@@ -1382,7 +1379,7 @@ if _HAS_NUMBA:
         return isoch_mass
 
 
-def interp_mass_isoch(
+def interp_at_masses(
     isoch_cut: np.ndarray,
     mass_ini: np.ndarray,
     mass_dist: np.ndarray,
@@ -1405,7 +1402,7 @@ def interp_mass_isoch(
     :type x_new_indices: np.ndarray | None
     :param lo: Indexes of the lower bracketing points, ``x_new_indices - 1`` if
         not given. Used when the isochrone points are selected through indexes
-        (see :py:func:`mass_interp`).
+        (see :py:func:`draw_candidates`).
     :type lo: np.ndarray | None
 
     :returns: Interpolated isochrone array.
@@ -1434,7 +1431,7 @@ def interp_mass_isoch(
     return isoch_mass
 
 
-def binarity(
+def assign_binaries(
     alpha: float,
     beta: float,
     binar_flag: bool,
@@ -1518,14 +1515,14 @@ if _HAS_NUMBA:
 if _HAS_NUMBA:
 
     @njit(cache=True)
-    def _binarity_nb(
+    def _assign_binaries_nb(
         alpha: float,
         beta: float,
         m_ini_idx: int,
         rand_unif_vals: np.ndarray,
         isoch_mass: np.ndarray,
     ) -> None:
-        """Compiled (numba) version of :py:func:`binarity` (with binaries),
+        """Compiled (numba) version of :py:func:`assign_binaries` (with binaries),
         modifying 'isoch_mass' in place. A single loop over the stars computes
         the binary probability (same operations, in the same order, as the
         NumPy version: identical results), compares it with the uniform random
@@ -1547,18 +1544,19 @@ if _HAS_NUMBA:
                 mass_b[j] = np.nan
 
 
-def add_errors(isoch_binar: np.ndarray, err_dist: list[np.ndarray]) -> np.ndarray:
+def add_errors(isoch_binar: np.ndarray, err_dist: np.ndarray) -> np.ndarray:
     """Add random synthetic uncertainties to the magnitude and color(s)
 
     :param isoch_binar: Isochrone array.
     :type isoch_binar: np.ndarray
-    :param err_dist: List of arrays of error distributions.
-    :type err_dist: list[np.ndarray]
+    :param err_dist: Error distributions, one row per magnitude and color (no rows
+        if the synthetic clusters have no uncertainties)
+    :type err_dist: np.ndarray
 
     :returns: Isochrone array with added errors.
     :rtype: np.ndarray
     """
-    if not err_dist:
+    if len(err_dist) == 0:
         return isoch_binar
 
     N = isoch_binar.shape[1]

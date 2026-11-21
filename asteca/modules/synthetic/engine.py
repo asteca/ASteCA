@@ -1,46 +1,48 @@
 """Data used to generate synthetic clusters and to evaluate their likelihood.
 
-:py:class:`ModelEngine` holds everything a :py:class:`asteca.Synthetic` object needs
+:py:class:`SynthEngine` holds everything a :py:class:`asteca.Synthetic` object needs
 to generate a synthetic cluster, and is the single entry point used to generate them
-(one or many, :py:meth:`ModelEngine.get_model` and :py:meth:`ModelEngine.generate`)
-and to evaluate their likelihood (:py:meth:`ModelEngine.log_lkl`, used by
-:py:class:`asteca.Sampler`), with the compiled functions of :py:mod:`batch` if
-numba is installed, else with :py:func:`generate.get_model`. Its parameters are
-validated by :py:meth:`ModelEngine.params_array`. :py:class:`ObservedData` holds what
-:py:meth:`asteca.Synthetic.calibrate` obtains from the observed cluster. Both are
-created once and not modified afterwards.
+(one or many, :py:meth:`SynthEngine.synth_one` and :py:meth:`SynthEngine.synth_batch`)
+and to evaluate their likelihood (:py:meth:`SynthEngine.log_lkl_batch`, used by
+:py:class:`asteca.Sampler`), with the compiled functions of :py:mod:`compiled` if
+numba is installed, else with :py:func:`generate.synth_one`. Its parameters are
+validated by :py:meth:`SynthEngine.validate_params`. :py:class:`ObservedData` holds the
+observed cluster stored by :py:meth:`asteca.Synthetic.calibrate`. Both are created
+once and not modified afterwards.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import cached_property
 from typing import TYPE_CHECKING
 
 import numpy as np
 
 from .. import HAS_NUMBA
-from . import batch as bt
+from . import compiled
 from . import generate as gen
 
 if TYPE_CHECKING:
     from .likelihood import Tremmel
 
-# Order of the full parameter vector of a model (see ModelEngine.params_array())
+# Order of the full parameter vector of a model (see SynthEngine.validate_params())
 FULL_PARAMS = ("met", "loga", "alpha", "beta", "Av", "DR", "Rv", "dm")
 _FULL_PARAMS_SET = frozenset(FULL_PARAMS)
 # Order in which the parameters are checked (it defines which error is raised when
 # several parameters are invalid): met, loga, alpha, beta, Av, DR, dm, Rv
 _CHECK_ORDER = (0, 1, 2, 3, 4, 5, 7, 6)
-# Types accepted as single values by the fast path of ModelEngine.params_array()
+# Types accepted as single values by the fast path of SynthEngine.validate_params()
 _SCALARS = (int, float, np.integer, np.floating)
 
 
 @dataclass(frozen=True, eq=False)
-class ModelEngine:
+class SynthEngine:
     """Data that defines the synthetic clusters of a :py:class:`asteca.Synthetic`
-    object (fixed once created; :py:meth:`asteca.Synthetic.calibrate` replaces it
-    with a copy with the random values sized for the observed cluster), and the
-    methods that
-    validate their parameters, generate them and evaluate their likelihood. The
+    object, and the methods that validate their parameters, generate them and
+    evaluate their likelihood. It is fixed once created:
+    :py:meth:`asteca.Synthetic.calibrate` replaces it with a copy with the random
+    values, maximum magnitude, error distribution and number of stars of the
+    observed cluster (an object not calibrated uses a copy sized for the requested
+    number of stars, with no magnitude cut and no errors). The
     differential reddening model is not included, as it can be changed at any time: it
     is passed to each method, which selects the corresponding random values in
     ``rand_floats``.
@@ -59,10 +61,12 @@ class ModelEngine:
     :vartype theor_tracks: np.ndarray
     :ivar ext_law: Extinction law
     :vartype ext_law: str
-    :ivar ext_coefs: Extinction coefficients (empty for ``GAIADR3``)
-    :vartype ext_coefs: list
+    :ivar ext_coefs: Extinction coefficients, see
+        :py:func:`precompute.ccmo_filter_coefs` (no rows for ``GAIADR3``)
+    :vartype ext_coefs: np.ndarray
     :ivar rand_floats: Random values drawn in advance, see
-        :py:func:`precompute.randVals`
+        :py:func:`precompute.draw_rand_floats` (empty for the engine of an object not yet
+        sized for a number of stars)
     :vartype rand_floats: dict
     :ivar imf_knots: Knots ``(x, y)`` (CDF values, masses) of the inverse CDF of the
         IMF, see :py:func:`precompute.imf_cdf_tables`
@@ -71,6 +75,14 @@ class ModelEngine:
     :vartype imf_cdf: np.ndarray
     :ivar imf_lut: Bucket lookup tables of ``imf_cdf``
     :vartype imf_lut: np.ndarray
+    :ivar max_mag: Maximum magnitude of the synthetic clusters
+    :vartype max_mag: float
+    :ivar err_dist: Error distributions added to the synthetic photometry, one row
+        per magnitude and color (no rows: no errors), see
+        :py:func:`precompute.error_distribution`
+    :vartype err_dist: np.ndarray
+    :ivar N_synth: Number of stars of the synthetic clusters
+    :vartype N_synth: int
     """
 
     met_age_dict: dict
@@ -80,13 +92,16 @@ class ModelEngine:
     m_ini_idx: int
     theor_tracks: np.ndarray
     ext_law: str
-    ext_coefs: list
+    ext_coefs: np.ndarray
     rand_floats: dict
     imf_knots: tuple
     imf_cdf: np.ndarray
     imf_lut: np.ndarray
+    max_mag: float = np.inf
+    err_dist: np.ndarray = field(default_factory=lambda: np.empty((0, 0)))
+    N_synth: int = 0
 
-    def params_array(self, params: dict | None) -> np.ndarray:
+    def validate_params(self, params: dict | None) -> np.ndarray:
         """Validated values of all the parameters of one or more models, in the
         order of ``FULL_PARAMS``. The parameters not in ``params`` take their default
         values. Used by both the single-model and the batched paths, so that they
@@ -116,58 +131,43 @@ class ModelEngine:
         lo, hi = self._bounds
         if all(isinstance(v, _SCALARS) for v in values):
             vals = [float(v) for v in values]
-            ok = all(lo[i] <= v <= hi[i] for i, v in enumerate(vals)) and all(
-                abs(vals[i] - g) <= tol for i, g, tol in self._fixed
-            )
-            if ok:
+            if all(lo[i] <= v <= hi[i] for i, v in enumerate(vals)):
                 return np.array([vals])
 
         P = _broadcast_params(values)
         # 'nan' values are rejected, as they fail both comparisons
         bad = ~((P >= lo) & (P <= hi))
-        for i, g, tol in self._fixed:
-            bad[:, i] = ~(np.abs(P[:, i] - g) <= tol)
         if bad.any():
             self._raise_invalid(P, bad)
         return P
 
     @cached_property
     def _bounds(self) -> tuple[list[float], list[float]]:
-        """Valid ranges of the parameters (``met, loga`` with a single value in the
-        grid are checked separately, see :py:attr:`_fixed`)"""
+        """Valid ranges of the parameters. ``met, loga`` with a single value in the
+        grid must be equal to it, within their tolerance"""
         lo = [0.0] * len(FULL_PARAMS)
         hi = [float("inf")] * len(FULL_PARAMS)
         # Rv must be > 0
         lo[FULL_PARAMS.index("Rv")] = float(np.nextafter(0.0, 1.0))
-        for i, k in enumerate(("met", "loga")):
+        for i, (k, tol) in enumerate((("met", self.met_tol), ("loga", self.age_tol))):
             grid = self.met_age_dict[k]
             if len(grid) > 1:
                 lo[i], hi[i] = float(grid[0]), float(grid[-1])
             else:
-                lo[i], hi[i] = -float("inf"), float("inf")
+                lo[i], hi[i] = float(grid[0]) - tol, float(grid[0]) + tol
         return lo, hi
 
     @cached_property
-    def _fixed(self) -> tuple[tuple[int, float, float], ...]:
-        """Index, grid value and tolerance of ``met, loga`` if their grid has a
-        single value: the parameter must then be equal to it, within the tolerance"""
-        return tuple(
-            (i, float(self.met_age_dict[k][0]), tol)
-            for i, (k, tol) in enumerate(
-                (("met", self.met_tol), ("loga", self.age_tol))
-            )
-            if len(self.met_age_dict[k]) == 1
-        )
-
-    @cached_property
-    def limits(self) -> dict[str, tuple[float, float]]:
+    def sampling_ranges(self) -> dict[str, tuple[float, float]]:
         """Valid range ``(low, high)`` of each parameter, used to sample parameter
         values. ``met, loga`` with a single value in the grid have ``low = high``
         (equal to that value)"""
         lo, hi = self._bounds
         lims = {k: (lo[i], hi[i]) for i, k in enumerate(FULL_PARAMS)}
-        for i, g, _ in self._fixed:
-            lims[FULL_PARAMS[i]] = (g, g)
+        for k in ("met", "loga"):
+            grid = self.met_age_dict[k]
+            if len(grid) == 1:
+                lims[k] = (float(grid[0]), float(grid[0]))
         return lims
 
     def _raise_invalid(self, P: np.ndarray, bad: np.ndarray) -> None:
@@ -196,71 +196,27 @@ class ModelEngine:
                 raise ValueError(f"Parameter Rv={v:.5f} must be > 0")
             raise ValueError(f"Parameter {k}={v:.5f} must be >= 0")
 
-    @property
-    def compiled(self) -> bool:
-        """``True`` if the compiled functions of :py:mod:`batch` are used (numba
-        installed), else the Python implementation :py:func:`generate.get_model`
-        is used. The results are identical"""
-        return HAS_NUMBA
-
-    def check_threads(self, parallel: bool, n_threads: int | None) -> None:
-        """Validate ``n_threads``, only if the threads are used (compiled functions
-        and ``parallel=True``)
-
-        :param parallel: Evaluate the log-likelihoods in parallel threads
-        :type parallel: bool
-        :param n_threads: Number of threads, or ``None`` for numba's current setting
-        :type n_threads: int | None
-
-        :raises ValueError: If ``n_threads`` is not an integer between ``1`` and
-            ``NUMBA_NUM_THREADS``
-        """
-        if not (self.compiled and parallel and n_threads is not None):
-            return
-        import numba
-
-        if (
-            isinstance(n_threads, bool)
-            or not isinstance(n_threads, (int, np.integer))
-            or n_threads < 1
-        ):
-            raise ValueError(
-                f"'n_threads' must be a positive integer, got {n_threads!r}"
-            )
-        # NUMBA_NUM_THREADS is set dynamically in numba.config (unknown to type
-        # checkers)
-        max_threads = numba.config.NUMBA_NUM_THREADS  # pyright: ignore[reportPrivateImportUsage, reportAttributeAccessIssue]
-        if n_threads > max_threads:
-            raise ValueError(
-                f"'n_threads={n_threads}' can not be larger than NUMBA_NUM_THREADS="
-                + f"{max_threads}"
-            )
-
-    def get_model(
+    def synth_one(
         self,
         p: np.ndarray,
         dr_model: str,
-        calib: tuple[float, list[np.ndarray], int],
         show_errors: bool = False,
         isoch_flag: bool = False,
         isoch_dr_frac: float = 0.0,
         mass_info: dict | None = None,
     ) -> tuple[np.ndarray, np.ndarray]:
         """One synthetic cluster (and its isochrone), identical to
-        :py:func:`generate.get_model` (which is used if the compiled functions
+        :py:func:`generate.synth_one` (which is used if the compiled functions
         are not available). The synthetic cluster is generated by the compiled
-        :py:func:`batch._synth_one`, the isochrone and ``mass_info`` are
+        :py:func:`compiled.synth_one_nb`, the isochrone and ``mass_info`` are
         obtained from the data it returns.
 
         :param p: Values of the fundamental parameters: a row of the array
-            returned by :py:meth:`ModelEngine.params_array
-            <engine.ModelEngine.params_array>`
+            returned by :py:meth:`SynthEngine.validate_params
+            <engine.SynthEngine.validate_params>`
         :type p: np.ndarray
         :param dr_model: Differential reddening model
         :type dr_model: str
-        :param calib: Maximum magnitude, error distribution and number of stars of
-            the synthetic cluster, as given by ``Synthetic._calib_values()``
-        :type calib: tuple[float, list[np.ndarray], int]
         :param show_errors: Print the reason when an empty cluster is returned
         :type show_errors: bool
         :param isoch_flag: Also return the isochrone
@@ -269,27 +225,26 @@ class ModelEngine:
             returned isochrone
         :type isoch_dr_frac: float
         :param mass_info: Filled with the data required to estimate the total mass,
-            see :py:func:`generate.get_model`
+            see :py:func:`generate.synth_one`
         :type mass_info: dict | None
 
         :return: Isochrone (empty if ``isoch_flag=False``) and synthetic cluster (an
             empty 1D array if the cluster is empty)
         :rtype: tuple[np.ndarray, np.ndarray]
         """
-        if not self.compiled:
-            return gen.get_model(
+        if not HAS_NUMBA:
+            return gen.synth_one(
                 self,
                 p,
                 dr_model,
-                calib,
                 show_errors=show_errors,
                 isoch_flag=isoch_flag,
                 isoch_dr_frac=isoch_dr_frac,
                 mass_info=mass_info,
             )
 
-        out = bt._synth_one(p, *bt.model_args(self, dr_model, calib))
-        isoch = gen.output_isochrone(
+        out = compiled.synth_one_nb(p, *compiled.synth_args(self, dr_model))
+        isoch = gen.isochrone_at_dr_frac(
             self, p, dr_model, isoch_flag, isoch_dr_frac, out.isoch_moved, out.isoch_av
         )
         if out.status != 0:
@@ -298,70 +253,53 @@ class ModelEngine:
             return isoch, np.array([])
 
         if mass_info is not None:
-            gen.fill_mass_info(
-                mass_info,
-                self,
-                p,
-                calib[2],
-                out.isoch_moved,
-                out.idx_cut,
-                out.N_pool,
-                out.keep,
-            )
+            gen.fill_mass_info(mass_info, self, p, out)
         return isoch, out.synth
 
-    def generate(
-        self,
-        P: np.ndarray,
-        dr_model: str,
-        calib: tuple[float, list[np.ndarray], int],
-    ) -> list[np.ndarray]:
+    def synth_batch(self, P: np.ndarray, dr_model: str) -> list[np.ndarray]:
         """Synthetic clusters of a batch of models, identical to those generated
-        one at a time by :py:func:`generate.get_model`
+        one at a time by :py:func:`generate.synth_one`
 
-        :param P: Array of parameters, see :py:meth:`ModelEngine.params_array
-            <engine.ModelEngine.params_array>`
+        :param P: Array of parameters, see :py:meth:`SynthEngine.validate_params
+            <engine.SynthEngine.validate_params>`
         :type P: np.ndarray
         :param dr_model: Differential reddening model
         :type dr_model: str
-        :param calib: Maximum magnitude, error distribution and number of stars of
-            the synthetic clusters, as given by ``Synthetic._calib_values()``
-        :type calib: tuple[float, list[np.ndarray], int]
 
         :return: One synthetic cluster per model (an empty 1D array if the cluster
             is empty)
         :rtype: list[np.ndarray]
         """
-        if not self.compiled:
-            return [gen.get_model(self, p, dr_model, calib)[1] for p in P]
-        out = bt._generate_batch(P, *bt.model_args(self, dr_model, calib))
+        if not HAS_NUMBA:
+            return [gen.synth_one(self, p, dr_model)[1] for p in P]
+        out = compiled.synth_batch_nb(P, *compiled.synth_args(self, dr_model))
         # An empty synthetic cluster is returned as an empty 1D array, as with
-        # get_model()
+        # synth_one()
         return [a if a.shape[1] else np.array([]) for a in out]
 
-    def log_lkl(
+    def log_lkl_batch(
         self,
         P: np.ndarray,
         dr_model: str,
-        obs: "ObservedData",
+        lkl: "Tremmel",
         temperature: float,
         parallel: bool = False,
         n_threads: int | None = None,
     ) -> np.ndarray:
         """Log-likelihoods of a batch of models, identical to
-        ``obs.lkl.log_lkl(generate.get_model(self, p, dr_model, obs.calib_values())[1],
-        temperature)`` for each row ``p`` of ``P``. With the compiled functions,
-        each synthetic cluster is generated and evaluated in the same call (the
-        synthetic clusters never go back to Python, which is where the gain comes
-        from), optionally distributing the models among parallel threads.
+        ``lkl.log_lkl(generate.synth_one(self, p, dr_model)[1], temperature)`` for
+        each row ``p`` of ``P``. With the compiled functions, each synthetic cluster
+        is generated and evaluated in the same call (the synthetic clusters never go
+        back to Python, which is where the gain comes from), optionally distributing
+        the models among parallel threads.
 
-        :param P: Array of parameters, see :py:meth:`ModelEngine.params_array
-            <engine.ModelEngine.params_array>`
+        :param P: Array of parameters, see :py:meth:`SynthEngine.validate_params
+            <engine.SynthEngine.validate_params>`
         :type P: np.ndarray
         :param dr_model: Differential reddening model
         :type dr_model: str
-        :param obs: Data of the observed cluster
-        :type obs: ObservedData
+        :param lkl: Likelihood of the observed cluster
+        :type lkl: Tremmel
         :param temperature: Likelihood temperature, assumed positive (validated by
             :py:class:`asteca.Sampler`)
         :type temperature: float
@@ -369,33 +307,31 @@ class ModelEngine:
             compiled functions are available)
         :type parallel: bool
         :param n_threads: Number of threads used if ``parallel=True``, assumed valid
-            (see :py:meth:`check_threads`). If ``None``, numba's current setting is
-            used
+            (validated by :py:class:`asteca.Sampler`). If ``None``, numba's current
+            setting is used
         :type n_threads: int | None
 
         :return: Array with the log-likelihood of each model, ``0`` is the best value
         :rtype: np.ndarray
         """
-        lk = obs.lkl
-        calib = obs.calib_values()
-        if not self.compiled:
+        if not HAS_NUMBA:
             return np.array(
                 [
-                    lk.log_lkl(gen.get_model(self, p, dr_model, calib)[1], temperature)
+                    lkl.log_lkl(gen.synth_one(self, p, dr_model)[1], temperature)
                     for p in P
                 ]
             )
 
         args = (
             P,
-            *bt.model_args(self, dr_model, calib),
-            lk.kernel_args,
+            *compiled.synth_args(self, dr_model),
+            lkl.kernel_args,
             float(temperature),
         )
         if not parallel:
-            return bt._lnl_batch_serial(*args)
+            return compiled.log_lkl_batch_nb(*args)
         if n_threads is None:
-            return bt._lnl_batch_parallel(*args)
+            return compiled.log_lkl_batch_parallel_nb(*args)
 
         import numba
 
@@ -403,20 +339,22 @@ class ModelEngine:
         prev_threads = numba.get_num_threads()
         numba.set_num_threads(int(n_threads))
         try:
-            return bt._lnl_batch_parallel(*args)
+            return compiled.log_lkl_batch_parallel_nb(*args)
         finally:
             numba.set_num_threads(prev_threads)
 
     @cached_property
-    def batch_data(self) -> dict:
+    def kernel_data(self) -> dict:
         """Arrays used by the compiled batch functions, obtained the first time they
-        are needed (see :py:func:`batch.batch_data`). Requires numba"""
-        return bt.batch_data(self)
+        are needed (see :py:func:`compiled.kernel_data`). Requires numba"""
+        return compiled.kernel_data(self)
 
 
 @dataclass(frozen=True, eq=False)
 class ObservedData:
-    """Data of the observed cluster stored by :py:meth:`asteca.Synthetic.calibrate`
+    """Data of the observed cluster stored by :py:meth:`asteca.Synthetic.calibrate`.
+    The data that defines its synthetic clusters (maximum magnitude, error
+    distribution, number of stars) is stored in the :py:class:`SynthEngine`
 
     :ivar mag: Magnitudes
     :vartype mag: np.ndarray
@@ -432,12 +370,6 @@ class ObservedData:
     :vartype ra: np.ndarray | None
     :ivar dec: Declinations (can be ``None``)
     :vartype dec: np.ndarray | None
-    :ivar max_mag: Maximum magnitude of the synthetic clusters
-    :vartype max_mag: float
-    :ivar N_stars: Number of stars of the synthetic clusters
-    :vartype N_stars: int
-    :ivar err_dist: Error distribution of the synthetic clusters
-    :vartype err_dist: list[np.ndarray]
     :ivar lkl: Likelihood of synthetic clusters given the observed one
     :vartype lkl: Tremmel
     """
@@ -449,19 +381,7 @@ class ObservedData:
     star_id: np.ndarray | None
     ra: np.ndarray | None
     dec: np.ndarray | None
-    max_mag: float
-    N_stars: int
-    err_dist: list[np.ndarray]
     lkl: "Tremmel"
-
-    def calib_values(self) -> tuple[float, list[np.ndarray], int]:
-        """Maximum magnitude, error distribution and number of stars of the
-        synthetic clusters
-
-        :return: Maximum magnitude, error distribution and number of stars
-        :rtype: tuple[float, list[np.ndarray], int]
-        """
-        return self.max_mag, self.err_dist, self.N_stars
 
 
 def _broadcast_params(values: list) -> np.ndarray:

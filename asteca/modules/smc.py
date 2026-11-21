@@ -159,7 +159,7 @@ class PersistentSMC:
         if self.warmup:
             self._warmup()
 
-        while self._not_termination():
+        while self._should_continue():
             self._reweight()
             self._train()
             self._resample()
@@ -219,7 +219,7 @@ class PersistentSMC:
 
         self.warmup = False
 
-    def _not_termination(self) -> bool:
+    def _should_continue(self) -> bool:
         """True while the termination criterion is not satisfied"""
         logw, _ = self.particles.compute_logw_and_logz(1.0)
         ess = effective_sample_size(np.exp(logw - np.max(logw)))
@@ -672,7 +672,8 @@ def trim_weights(
 
 
 def effective_sample_size(weights: np.ndarray) -> float:
-    """Kish effective sample size of (unnormalized) weights"""
+    """Kish effective sample size of (unnormalized) weights, ``sum(w)**2 /
+    sum(w**2)``"""
     weights = weights / np.sum(weights)
     return float(1.0 / np.sum(weights**2.0))
 

@@ -23,15 +23,18 @@ dependencies = [
     "astropy>=7.2.0",
     "fast-histogram>=0.14",
     "numpy>=2.4.0",
+    "pandas>=2.3",
+    # Reads the UCC members file with pandas (same minimum version as pandas' own
+    # 'parquet' extra)
+    "pyarrow>=16.0",
     "scipy>=1.17.0"
 ]
 
 [project.optional-dependencies]
 # Compiles the most demanding functions (faster synthetic clusters and likelihood)
 numba = ["numba>=0.64"]
-# Required to load the UCC members file and by Cluster.to_csv()
-pandas = ["pandas>=2.3"]
-all = ["numba>=0.64", "pandas>=2.3"]
+# All the optional dependencies (only numba)
+all = ["numba>=0.64"]
 
 [tool.pyrefly]
 project-includes = [

@@ -5,7 +5,7 @@ import asteca
 from asteca.modules.synthetic import stellar_stats as ssf
 
 # Color shift applied to the turn-off point, same value used by
-# ssf.get_bss_probabilities()
+# ssf.bss_probabilities()
 COL_OFFSET = -0.05
 
 

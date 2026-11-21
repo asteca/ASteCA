@@ -1,5 +1,6 @@
 import numpy as np
 
+from .modules import HAS_NUMBA
 from .modules.synthetic.engine import FULL_PARAMS
 from .synthetic import Synthetic
 
@@ -107,11 +108,8 @@ class Sampler:
 
         self.names = list(priors)
         self.bounds = np.array([priors[k] for k in self.names], dtype=float)
-        # Generates the synthetic clusters and evaluates their log-likelihoods.
-        # 'n_threads' (only used with parallel=True and numba installed) is validated
-        # here, so that an invalid value is reported before the run starts
+        # Generates the synthetic clusters and evaluates their log-likelihoods
         self._engine = synthcl._engine
-        self._engine.check_threads(parallel, n_threads)
         self._check_args(temperature)
 
         # A legacy RandomState is used so that the results match those of pocoMC
@@ -129,7 +127,7 @@ class Sampler:
         from .modules.smc import PersistentSMC
 
         self._smc = PersistentSMC(
-            self._log_like,
+            self._log_lkl_batch,
             self.bounds,
             self.n_effective,
             self.n_active,
@@ -137,16 +135,16 @@ class Sampler:
             callback=self._progress if self.verbose > 1 else None,
         )
 
-        self._vp("\nSampler object generated")
-        self._vp(f"Fitted params  : {self.names}", 1)
-        self._vp(f"Temperature    : {self.temperature:g}", 1)
-        self._vp(f"n_effective    : {self.n_effective}", 1)
-        self._vp(f"n_active       : {self.n_active}", 1)
+        self._print("\nSampler object generated")
+        self._print(f"Fitted params  : {self.names}", 1)
+        self._print(f"Temperature    : {self.temperature:g}", 1)
+        self._print(f"n_effective    : {self.n_effective}", 1)
+        self._print(f"n_active       : {self.n_active}", 1)
         if self.parallel:
-            self._vp(f"Parallel       : True (n_threads={self.n_threads})", 1)
-        self._vp(f"Random seed    : {self.seed}", 1)
+            self._print(f"Parallel       : True (n_threads={self.n_threads})", 1)
+        self._print(f"Random seed    : {self.seed}", 1)
 
-    def _vp(self, mssg: str, level: int = 0) -> None:
+    def _print(self, mssg: str, level: int = 0) -> None:
         """Verbose print method"""
         if self.verbose > level:
             print(mssg)
@@ -154,7 +152,7 @@ class Sampler:
     def _check_args(self, temperature: float | str) -> None:
         """Validate the input arguments, and set the ``temperature``, ``_obs``,
         ``_P_default`` and ``_P_cols`` attributes"""
-        obs = self.synthcl._check_calibrated()
+        obs = self.synthcl._require_calibrated()
         # Observed cluster used by the likelihood. A later call to
         # 'synthcl.calibrate()' does not affect this object
         self._obs = obs
@@ -169,10 +167,10 @@ class Sampler:
         # ranges, negative values, Rv > 0). As the priors are uniform, this makes
         # all the values that the sampler can propose valid
         try:
-            corners = self._engine.params_array(dict(zip(self.names, self.bounds)))
+            corners = self._engine.validate_params(dict(zip(self.names, self.bounds)))
         except ValueError as err:
             raise ValueError(f"Invalid 'priors': {err}") from None
-        # Parameters of the models evaluated by _log_like(): the default values, with
+        # Parameters of the models evaluated by _log_lkl_batch(): the default values, with
         # the sampled ones in the columns of the fitted parameters
         self._P_default = corners[0]
         self._P_cols = [FULL_PARAMS.index(k) for k in self.names]
@@ -192,7 +190,30 @@ class Sampler:
         if self.n_active < 2 or self.n_effective < self.n_active:
             raise ValueError("Must have 'n_effective' >= 'n_active' >= 2")
 
-    def _log_like(self, params_arr: np.ndarray) -> np.ndarray:
+        # 'n_threads' is only used with parallel=True and numba installed. It is
+        # validated here, so that an invalid value is reported before the run starts
+        n_threads = self.n_threads
+        if HAS_NUMBA and self.parallel and n_threads is not None:
+            import numba
+
+            if (
+                isinstance(n_threads, bool)
+                or not isinstance(n_threads, (int, np.integer))
+                or n_threads < 1
+            ):
+                raise ValueError(
+                    f"'n_threads' must be a positive integer, got {n_threads!r}"
+                )
+            # NUMBA_NUM_THREADS is set dynamically in numba.config (unknown to type
+            # checkers)
+            max_threads = numba.config.NUMBA_NUM_THREADS  # pyright: ignore[reportPrivateImportUsage, reportAttributeAccessIssue]
+            if n_threads > max_threads:
+                raise ValueError(
+                    f"'n_threads={n_threads}' can not be larger than "
+                    + f"NUMBA_NUM_THREADS={max_threads}"
+                )
+
+    def _log_lkl_batch(self, params_arr: np.ndarray) -> np.ndarray:
         """Vectorized log-likelihood, ``params_arr`` has shape
         ``(n_particles, n_dim)``"""
         # The sampler only proposes values inside the priors, which are all valid
@@ -201,10 +222,10 @@ class Sampler:
         P[:, self._P_cols] = params_arr
         # Differential reddening model of this run, set by run()
         assert self.DR_distribution is not None
-        lnl = self._engine.log_lkl(
+        lnl = self._engine.log_lkl_batch(
             P,
             self.DR_distribution,
-            self._obs,
+            self._obs.lkl,
             self.temperature,
             self.parallel,
             self.n_threads,
@@ -265,8 +286,8 @@ class Sampler:
                 + "it to continue the run, or create a new Sampler object"
             )
 
-        self._vp("\nRunning sampler...", 1)
-        self._vp(f"Diff reddening : {self.DR_distribution}", 1)
+        self._print("\nRunning sampler...", 1)
+        self._print(f"Diff reddening : {self.DR_distribution}", 1)
         self._smc.run(n_total)
 
         self.n_calls = int(self._smc.calls)
@@ -276,14 +297,16 @@ class Sampler:
         # overlap), see likelihood.Tremmel.log_lkl()
         self.best_dist = float(self._obs.lkl.distance(self.best_lnl, self.temperature))
 
-        self._vp(f"Iterations     : {self.n_iter}", 1)
-        self._vp(f"Likelihood calls: {self.n_calls}", 1)
+        self._print(f"Iterations     : {self.n_iter}", 1)
+        self._print(f"Likelihood calls: {self.n_calls}", 1)
         if self.verbose > 1:
+            from .modules.smc import effective_sample_size
+
             # Effective sample size of the posterior samples, see summary()
             _, weights = self.posterior()
-            self._vp(f"ESS            : {_ess(weights):.0f}", 1)
-        self._vp(f"Best distance  : {self.best_dist:.3f}", 1)
-        self._vp("Sampler run completed")
+            self._print(f"ESS            : {effective_sample_size(weights):.0f}", 1)
+        self._print(f"Best distance  : {self.best_dist:.3f}", 1)
+        self._print("Sampler run completed")
 
     def posterior(self, resample: bool = False) -> tuple[np.ndarray, np.ndarray]:
         """Posterior samples, after :py:meth:`run`.
@@ -368,6 +391,8 @@ class Sampler:
             the keys ``ess, ess_unique, accept, steps, no_overlap_frac``
         :rtype: dict[str, dict[str, float]]
         """
+        from .modules.smc import effective_sample_size
+
         samples, weights = self.posterior()
         w_sum = np.sum(weights)
 
@@ -402,23 +427,10 @@ class Sampler:
         w_unique = np.bincount(inv.ravel(), weights=weights)
 
         summ["diagnostics"] = {
-            "ess": _ess(weights),
-            "ess_unique": _ess(w_unique),
+            "ess": effective_sample_size(weights),
+            "ess_unique": effective_sample_size(w_unique),
             "accept": float(self._smc.current["accept"]),
             "steps": float(self._smc.current["steps"]),
             "no_overlap_frac": self._n_lnl_no_overlap / max(self._n_lnl, 1),
         }
         return summ
-
-
-def _ess(weights: np.ndarray) -> float:
-    """Effective sample size of importance weighted samples, ``sum(w)**2 /
-    sum(w**2)`` (the weights do not need to be normalized)
-
-    :param weights: Importance weights
-    :type weights: np.ndarray
-
-    :return: Effective sample size
-    :rtype: float
-    """
-    return float(np.sum(weights) ** 2 / np.sum(weights**2))

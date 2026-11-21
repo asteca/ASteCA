@@ -1,11 +1,12 @@
 import dataclasses
 from collections.abc import Sequence
+from typing import Literal, overload
 
 import numpy as np
 
 from .cluster import Cluster
 from .isochrones import Isochrones
-from .modules.synthetic.engine import ModelEngine, ObservedData
+from .modules.synthetic.engine import ObservedData, SynthEngine
 from .modules.warn import warn
 
 # Default values of the fundamental parameters, used for those not in 'def_params'
@@ -146,14 +147,14 @@ class Synthetic:
                     f"{name} '{value}' not recognized. Should be one of {valid}"
                 )
 
-        self._vp("\nInstantiating synthetic")
+        self._print("\nInstantiating synthetic")
         from .modules.synthetic import precompute as pre
 
         # Add binary systems to the theoretical isochrones, store the resulting
         # tracks in the :py:class:`Synthetic` object. The binary systems are
         # generated with the same random values for all the synthetic clusters, so
         # they can be compared without random noise
-        theor_tracks = pre.add_binarity(
+        theor_tracks = pre.add_binary_tracks(
             self.rng,
             self.gamma,
             self.isochs.color,
@@ -198,31 +199,30 @@ class Synthetic:
                     + f"the default value Rv={self.def_params['Rv']} will have no effect."
                 )
 
-        # Get extinction coefficients for these filters
-        ext_coefs = []  # It is important to pass an empty list because the
-        # function `extinction()` checks its length later on
+        # Get extinction coefficients for these filters (no rows for GAIADR3)
+        ext_coefs = np.zeros((0, 4))
         if self.ext_law == "CCMO":
             if self.isochs.magnitude_effl is None or self.isochs.color_effl is None:
                 raise ValueError(
                     f"Extinction law '{self.ext_law}' requires effective lambda\n"
                     + "values for the magnitude and first color."
                 )
-            ext_coefs = pre.ccmo_ext_coeffs(
+            ext_coefs = pre.ccmo_filter_coefs(
                 self.isochs.magnitude_effl,
                 self.isochs.color_effl,
                 self.isochs.color2_effl,
             )
 
         # IMF data used to draw the masses of the candidate stars of the synthetic
-        # clusters (see generate.mass_interp())
-        self._vp("(Tabulating IMF)", 1)
+        # clusters (see generate.draw_candidates())
+        self._print("(Tabulating IMF)", 1)
         imf_x, imf_y, imf_cdf, imf_lut = pre.imf_cdf_tables(
             self.IMF_name, theor_tracks, m_ini_idx
         )
 
         # Data that defines the synthetic clusters, and the single entry point used to
         # generate them (one or many) and to evaluate their likelihood (Sampler)
-        self._engine = ModelEngine(
+        self._engine = SynthEngine(
             met_age_dict=self.isochs.met_age_dict,
             met_tol=met_tol,
             age_tol=age_tol,
@@ -231,17 +231,17 @@ class Synthetic:
             theor_tracks=theor_tracks,
             ext_law=self.ext_law,
             ext_coefs=ext_coefs,
-            # Random values sized for the synthetic clusters. calibrate() replaces
-            # the engine with one sized for the observed cluster, and generate() uses
-            # one sized for 'N_stars' if the object is not calibrated (see
-            # _engine_for_stars())
-            rand_floats=self._rand_floats(0, theor_tracks, calibrated=False),
+            # No random values: this engine is never used to generate synthetic
+            # clusters. calibrate() replaces it with one sized for the observed
+            # cluster, and an object not calibrated uses one sized for 'N_stars'
+            # (see _sized_engine())
+            rand_floats={},
             imf_knots=(imf_x, imf_y),
             imf_cdf=imf_cdf,
             imf_lut=imf_lut,
         )
         # Engine used by an object not calibrated, and its number of stars
-        self._engine_uncal: tuple[int, ModelEngine] | None = None
+        self._engine_uncal: tuple[int, SynthEngine] | None = None
         # Observed cluster data, set by calibrate()
         self._obs: ObservedData | None = None
         # Turn-off points used to define the BSS region, stored by the last call to
@@ -251,20 +251,20 @@ class Synthetic:
         # Validate the default values with the same checks as the parameters of the
         # synthetic clusters. An invalid value is only an error if it is used
         try:
-            self._engine.params_array(None)
+            self._engine.validate_params(None)
         except ValueError as err:
             warn(
                 f"Invalid 'def_params': {err}. The parameter must be included in "
                 + "'params' when generating synthetic clusters"
             )
 
-        self._vp(f"Default params : {self.def_params}", 1)
-        self._vp(f"Extinction law : {self.ext_law}", 1)
-        self._vp(f"Diff reddening : {self.DR_distribution}", 1)
-        self._vp(f"IMF            : {self.IMF_name}", 1)
-        self._vp(f"Gamma dist     : {self.gamma}", 1)
-        self._vp(f"Random seed    : {self.seed}", 1)
-        self._vp("Synthetic clusters object generated")
+        self._print(f"Default params : {self.def_params}", 1)
+        self._print(f"Extinction law : {self.ext_law}", 1)
+        self._print(f"Diff reddening : {self.DR_distribution}", 1)
+        self._print(f"IMF            : {self.IMF_name}", 1)
+        self._print(f"Gamma dist     : {self.gamma}", 1)
+        self._print(f"Random seed    : {self.seed}", 1)
+        self._print("Synthetic clusters object generated")
 
     @property
     def DR_distribution(self) -> str:
@@ -286,7 +286,7 @@ class Synthetic:
             )
         self._DR_distribution = name
 
-    def _vp(self, mssg: str, level: int = 0) -> None:
+    def _print(self, mssg: str, level: int = 0) -> None:
         """Verbose print method"""
         if self.verbose > level:
             print(mssg)
@@ -346,15 +346,20 @@ class Synthetic:
         # Random values sized for this cluster (at least as many as observed stars,
         # including those with nan photometry, for error_distribution())
         N_stars = cluster.N_stars - cluster.N_nan_phot
-        engine = dataclasses.replace(
-            self._engine,
-            rand_floats=self._rand_floats(
-                N_stars, self._engine.theor_tracks, N_min=mag.size
-            ),
-        )
+        rand_floats = self._rand_floats(N_stars, N_min=mag.size)
 
         # All the data is obtained before it is stored, so that the object is left
-        # unchanged if any step fails
+        # unchanged if any step fails. The synthetic clusters have the number of
+        # stars, the maximum magnitude and the uncertainties of the observed cluster
+        engine = dataclasses.replace(
+            self._engine,
+            rand_floats=rand_floats,
+            max_mag=float(np.nanmax(mag)),
+            err_dist=pre.error_distribution(
+                mag, e_mag, e_color, cluster.e_color2, rand_floats["norm"][1]
+            ),
+            N_synth=N_stars,
+        )
         obs = ObservedData(
             mag=mag,
             e_mag=e_mag,
@@ -363,24 +368,43 @@ class Synthetic:
             star_id=cluster.star_id,
             ra=cluster.ra,
             dec=cluster.dec,
-            # Calibrate parameters using the observed cluster
-            max_mag=float(np.nanmax(mag)),
-            N_stars=N_stars,
-            err_dist=pre.error_distribution(
-                mag,
-                e_mag,
-                e_color,
-                cluster.e_color2,
-                engine.rand_floats["norm"][1],
-            ),
             lkl=lkl,
         )
         self._engine, self._obs = engine, obs
 
-        self._vp("\nCalibrated observed cluster")
-        self._vp(f"N_stars_obs    : {obs.N_stars}", 1)
-        self._vp(f"Max magnitude  : {obs.max_mag:.2f}", 1)
-        self._vp("Error distribution loaded", 1)
+        self._print("\nCalibrated observed cluster")
+        self._print(f"N_stars_obs    : {engine.N_synth}", 1)
+        self._print(f"Max magnitude  : {engine.max_mag:.2f}", 1)
+        self._print("Error distribution loaded", 1)
+
+    # The return type depends on 'batch': one array, or a list of arrays
+    @overload
+    def generate(
+        self,
+        params: dict | None = None,
+        N_stars: int = 100,
+        batch: Literal[False] = False,
+        show_errors: bool = False,
+    ) -> np.ndarray: ...
+
+    @overload
+    def generate(
+        self,
+        params: dict | None = None,
+        N_stars: int = 100,
+        *,
+        batch: Literal[True],
+        show_errors: bool = False,
+    ) -> list[np.ndarray]: ...
+
+    @overload
+    def generate(
+        self,
+        params: dict | None = None,
+        N_stars: int = 100,
+        batch: bool = False,
+        show_errors: bool = False,
+    ) -> np.ndarray | list[np.ndarray]: ...
 
     def generate(
         self,
@@ -460,14 +484,12 @@ class Synthetic:
         :rtype: np.ndarray | list[np.ndarray]
         """
         if batch:
-            engine = self._engine_for_stars(N_stars)
-            return engine.generate(
-                engine.params_array(params),
-                self.DR_distribution,
-                self._calib_values(N_stars),
+            engine = self._sized_engine(N_stars)
+            return engine.synth_batch(
+                engine.validate_params(params), self.DR_distribution
             )
 
-        _, synth_arr = self._get_model(params, N_stars, show_errors=show_errors)
+        _, synth_arr = self._synth_one(params, N_stars, show_errors=show_errors)
 
         return synth_arr
 
@@ -529,14 +551,14 @@ class Synthetic:
             distribution as the observed one (it decreases with the number of stars)
         :rtype: tuple[float, float]
         """
-        obs = self._check_calibrated()
+        obs = self._require_calibrated()
 
         from .modules.synthetic import likelihood as lh
 
         # Same synthetic cluster as generate(params); the isochrone (with DR=0) is
         # used to locate the turn-off point
-        # isochrone, synth_clust = self._get_model(params, isoch_flag=True)
-        _, synth_clust = self._get_model(params, isoch_flag=False)
+        # isochrone, synth_clust = self._synth_one(params, isoch_flag=True)
+        _, synth_clust = self._synth_one(params, isoch_flag=False)
 
         D, D_std = lh.cmd_overlap(obs.mag, obs.colors[0], synth_clust, h_mag, h_col)
 
@@ -714,7 +736,7 @@ class Synthetic:
             M_evol, M_dyn``)
         :rtype: dict
         """
-        obs = self._check_calibrated()
+        obs = self._require_calibrated()
 
         from .modules.synthetic import cluster_mass as cm
         from .modules.synthetic import precompute as pre
@@ -731,10 +753,10 @@ class Synthetic:
                 raise ValueError("The STDDEVs in 'turn_off' must be >= 0")
         if rho_amb is not None and not (np.isfinite(rho_amb) and rho_amb > 0):
             raise ValueError(f"'rho_amb' must be a finite value > 0, got {rho_amb}")
-        gal_pot = cm.update_pars(
+        gal_pot = cm.merge_defaults(
             "galaxy_potential", cm.GALAXY_POTENTIAL, galaxy_potential
         )
-        disrup = cm.update_pars("disruption", cm.DISRUPTION, disruption)
+        disrup = cm.merge_defaults("disruption", cm.DISRUPTION, disruption)
         if isochs_young is not None and isochs_young.amin > 7:
             raise ValueError("No isochrones with log(ages)<=7 found in 'isochs_young'")
 
@@ -742,10 +764,12 @@ class Synthetic:
         # passed by the user are not modified
         model = self.def_params | model
         model_std = {k: 0 for k in self.def_params} | model_std
-        self._vp("\nGenerate synthetic models", 1)
-        self._vp("par            : mean +/ STDDEV", 2)
+        self._print("\nGenerate synthetic models", 1)
+        self._print("par            : mean +/ STDDEV", 2)
         for k in ("met", "loga", "alpha", "beta", "Rv", "DR", "Av", "dm"):
-            self._vp(f"{k:<15}: {round(model[k], 4)} +/- {round(model_std[k], 4)}", 2)
+            self._print(
+                f"{k:<15}: {round(model[k], 4)} +/- {round(model_std[k], 4)}", 2
+            )
 
         # The isochrone with DR=0 is the bluest edge of the synthetic cluster. The
         # turn-off points are located on the isochrone moved to the absorption
@@ -773,10 +797,10 @@ class Synthetic:
         models, synthcls, isoch_tracks, max_masses = [], [], [], []
         mass_infos = []
         for smodel in pre.sample_params(
-            self.rng, model, model_std, self._engine.limits, N_models
+            self.rng, model, model_std, self._engine.sampling_ranges, N_models
         ):
             mass_info = {}
-            isoch_arr, synth_arr = self._get_model(
+            isoch_arr, synth_arr = self._synth_one(
                 smodel, isoch_flag=True, isoch_dr_frac=f_to, mass_info=mass_info
             )
             if not synth_arr.any():
@@ -794,12 +818,12 @@ class Synthetic:
             raise ValueError("All sampled models produced empty synthetic clusters.")
         if N_models_non_empty < N_models:
             warn(f"Empty synthetic arrays generated: {N_models - N_models_non_empty}")
-        self._vp(f"N_models       : {N_models_non_empty}", 1)
+        self._print(f"N_models       : {N_models_non_empty}", 1)
 
         if turn_off is None:
             turn_off_points = sst.turn_off_points(isoch_tracks, max_masses, color_idx)
         else:
-            turn_off_points = sst.turn_off_points_manual(
+            turn_off_points = sst.turn_off_points_from_user(
                 self.rng, turn_off, N_models_non_empty, color_idx
             )
         self.turn_off_points = turn_off_points
@@ -808,10 +832,10 @@ class Synthetic:
         extrinsic_pars = {
             "values": {k: model[k] for k in ("Av", "dm", "Rv")},
             "stddevs": {k: model_std[k] for k in ("Av", "dm", "Rv")},
-            "limits": self._engine.limits,
+            "limits": self._engine.sampling_ranges,
         }
 
-        stars, m2_obs, valid = sst.stellar_parameters(
+        stars, m2_obs, valid = sst.per_star_properties(
             obs.mag,
             obs.e_mag,
             obs.colors,
@@ -830,7 +854,7 @@ class Synthetic:
             stars = {"star_id": obs.star_id, **stars}
         N_nan = int((~valid).sum())
         if N_nan > 0:
-            self._vp("", 0)
+            self._print("", 0)
             warn(
                 f"N={N_nan} stars found with no valid photometric data. "
                 + "These will be assigned 'nan' values for masses and "
@@ -868,7 +892,7 @@ class Synthetic:
                 float((ra_ref + np.nanmedian(ra_off)) % 360.0),
                 float(np.nanmedian(obs.dec)),
             )
-            self._vp(
+            self._print(
                 "\nUsing ambient density estimated from observed cluster (ra, dec)", 1
             )
         masses = cm.cluster_masses(
@@ -895,7 +919,7 @@ class Synthetic:
             **per_model,
         }
 
-        self._vp("\nCluster properties estimated", 1)
+        self._print("\nCluster properties estimated", 1)
 
         return {"stars": stars, "cluster": cluster}
 
@@ -955,7 +979,7 @@ class Synthetic:
         :rtype: np.ndarray
         """
         # Generate displaced isochrone and full synthetic CMD array
-        isochrone, full_arr = self._get_model(fit_params, N_stars, isoch_flag=True)
+        isochrone, full_arr = self._synth_one(fit_params, N_stars, isoch_flag=True)
 
         if full_track:
             # Return the full track without applying the max mass filter
@@ -1004,25 +1028,19 @@ class Synthetic:
         return isochrone
 
     def _rand_floats(
-        self,
-        N_stars: int,
-        theor_tracks: np.ndarray,
-        N_min: int = 0,
-        calibrated: bool = True,
+        self, N_stars: int, N_min: int = 0, calibrated: bool = True
     ) -> dict:
         """Random values used to generate synthetic clusters of ``N_stars`` stars,
-        drawn from the object's seed (see :py:func:`precompute.randVals`).
+        drawn from the object's seed (see :py:func:`precompute.draw_rand_floats`).
 
         With a magnitude cut (``calibrated=True``) candidates fainter than it are
         discarded, and enough values are drawn for extreme cases (see
         :py:func:`precompute.n_candidates`). Without it every candidate is kept, and
-        the first pool of candidates (:py:func:`generate.per_star_pool`) is always
+        the first pool of candidates (:py:func:`generate.initial_pool_size`) is always
         enough
 
         :param N_stars: Number of synthetic stars
         :type N_stars: int
-        :param theor_tracks: Theoretical isochrones
-        :type theor_tracks: np.ndarray
         :param N_min: Minimum number of values
         :type N_min: int
         :param calibrated: If ``True``, the synthetic clusters have a magnitude cut
@@ -1034,25 +1052,25 @@ class Synthetic:
         from .modules.synthetic import generate as gen
         from .modules.synthetic import precompute as pre
 
-        N_z, N_a, _, N_isoch = theor_tracks.shape
+        N_z, N_a, _, N_isoch = self._engine.theor_tracks.shape
         if calibrated:
             N_cand = pre.n_candidates(N_stars, N_isoch)
         else:
             # The largest of the initial pools (with differential reddening)
-            N_cand = max(gen.per_star_pool(int(N_stars), 1.0), N_isoch)
+            N_cand = max(gen.initial_pool_size(int(N_stars), 1.0), N_isoch)
         N_cand = max(N_cand, int(N_min))
-        return pre.randVals(self.seed, N_cand, N_z * N_a)
+        return pre.draw_rand_floats(self.seed, N_cand, N_z * N_a)
 
-    def _engine_for_stars(self, N_stars: int) -> ModelEngine:
+    def _sized_engine(self, N_stars: int) -> SynthEngine:
         """Engine used to generate synthetic clusters: the calibrated one, or one
-        with random values sized for ``N_stars`` stars if the object was not
-        calibrated (the last one is kept)
+        with random values sized for ``N_stars`` stars (no magnitude cut, no errors)
+        if the object was not calibrated (the last one is kept)
 
         :param N_stars: Number of synthetic stars if the object was not calibrated
         :type N_stars: int
 
         :return: Engine
-        :rtype: ModelEngine
+        :rtype: SynthEngine
         """
         if self._obs is not None:
             return self._engine
@@ -1066,14 +1084,13 @@ class Synthetic:
         if self._engine_uncal is None or self._engine_uncal[0] != N_stars:
             engine = dataclasses.replace(
                 self._engine,
-                rand_floats=self._rand_floats(
-                    N_stars, self._engine.theor_tracks, calibrated=False
-                ),
+                rand_floats=self._rand_floats(N_stars, calibrated=False),
+                N_synth=N_stars,
             )
             self._engine_uncal = (N_stars, engine)
         return self._engine_uncal[1]
 
-    def _check_calibrated(self) -> ObservedData:
+    def _require_calibrated(self) -> ObservedData:
         """Data of the observed cluster stored by :py:meth:`calibrate`
 
         :raises ValueError: If :py:meth:`calibrate` was not called
@@ -1088,22 +1105,7 @@ class Synthetic:
             )
         return self._obs
 
-    def _calib_values(self, N_stars: int) -> tuple[float, list[np.ndarray], int]:
-        """Maximum magnitude, error distribution and number of stars of the
-        synthetic clusters: those of the observed cluster if :py:meth:`calibrate` was
-        called, else no magnitude cut, no errors and ``N_stars`` stars
-
-        :param N_stars: Number of synthetic stars if the object was not calibrated
-        :type N_stars: int
-
-        :return: Maximum magnitude, error distribution and number of stars
-        :rtype: tuple[float, list[np.ndarray], int]
-        """
-        if self._obs is None:
-            return np.inf, [], int(N_stars)
-        return self._obs.calib_values()
-
-    def _get_model(
+    def _synth_one(
         self,
         params: dict | None,
         N_stars: int = 100,
@@ -1113,7 +1115,7 @@ class Synthetic:
         mass_info: dict | None = None,
     ) -> tuple[np.ndarray, np.ndarray]:
         """Generate a synthetic cluster (and its isochrone) with
-        :py:func:`generate.get_model`, from the data stored in the object
+        :py:func:`generate.synth_one`, from the data stored in the object
 
         :param params: Dictionary with the values for the fundamental parameters. If
             ``None``, the default values are used
@@ -1131,7 +1133,7 @@ class Synthetic:
         :type isoch_dr_frac: float
         :param mass_info: If a dictionary is given, it is filled with the data
             required to estimate the total mass of the simulated cluster, see
-            :py:func:`generate.get_model`
+            :py:func:`generate.synth_one`
         :type mass_info: dict | None
 
         :raises ValueError: If the parameters are not valid, or if more than one value
@@ -1140,17 +1142,16 @@ class Synthetic:
         :return: Isochrone (empty if ``isoch_flag=False``) and synthetic cluster
         :rtype: tuple[np.ndarray, np.ndarray]
         """
-        engine = self._engine_for_stars(N_stars)
-        P = engine.params_array(params)
+        engine = self._sized_engine(N_stars)
+        P = engine.validate_params(params)
         if P.shape[0] != 1:
             raise ValueError(
                 "A single value is required for each parameter (use 'batch=True' to "
                 + "generate several synthetic clusters)"
             )
-        return engine.get_model(
+        return engine.synth_one(
             P[0],
             self.DR_distribution,
-            self._calib_values(N_stars),
             show_errors=show_errors,
             isoch_flag=isoch_flag,
             isoch_dr_frac=isoch_dr_frac,

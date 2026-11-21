@@ -47,7 +47,7 @@ class Membership:
     ) -> None:
         self.my_field = my_field
 
-    def _vp(self, mssg: str, level: int = 0) -> None:
+    def _print(self, mssg: str, level: int = 0) -> None:
         """Verbose print method"""
         if self.my_field.verbose > level:
             print(mssg)
@@ -80,7 +80,7 @@ class Membership:
             :py:class:`Cluster <asteca.cluster.Cluster>` object contains no data
             dimension beyond ``(ra, dec)`` (photometry, parallax or proper motions)
         """
-        self._vp("\nRunning Bayesian DA")
+        self._print("\nRunning Bayesian DA")
 
         # These two are checked separately to avoid type checking issues
         if self.my_field.ra is None or self.my_field.dec is None:
@@ -146,10 +146,10 @@ class Membership:
                 + " for the Bayesian DA method"
             )
 
-        self._vp("{}       : ({:.4f}, {:.4f})".format(cent_str, *xy_center), 1)
-        self._vp(f"radius         : {self.my_field.radius:.4f} [deg]", 1)
-        self._vp(f"N_cluster      : {self.my_field.N_cluster}", 1)
-        self._vp(f"N_runs         : {N_runs}", 1)
+        self._print("{}       : ({:.4f}, {:.4f})".format(cent_str, *xy_center), 1)
+        self._print(f"radius         : {self.my_field.radius:.4f} [deg]", 1)
+        self._print(f"N_cluster      : {self.my_field.N_cluster}", 1)
+        self._print(f"N_runs         : {N_runs}", 1)
 
         out_mssg, probs = bayesian_mp(
             self.my_field.N_cluster,
@@ -160,9 +160,9 @@ class Membership:
             N_runs,
             self.rng,
         )
-        self._vp(out_mssg, 1)
+        self._print(out_mssg, 1)
         self.my_field.probs = probs
-        self._vp("Probabilities stored in 'probs' attribute", 1)
+        self._print("Probabilities stored in 'probs' attribute", 1)
 
     def fastmp(
         self,
@@ -201,7 +201,7 @@ class Membership:
             object is missing a required attribute
         :raises ValueError: If the ``N_runs`` parameter is less than 10
         """
-        self._vp("\nRunning fastMP")
+        self._print("\nRunning fastMP")
 
         # These two are checked separately to avoid type checking issues
         if self.my_field.ra is None or self.my_field.dec is None:
@@ -254,16 +254,16 @@ class Membership:
             xy_center = (xv_t[-1], yv_t[-1])
             cent_str = "lonlat_c"
 
-        self._vp("{}       : ({:.4f}, {:.4f})".format(cent_str, *xy_center), 1)
-        self._vp("pms_c          : ({:.3f}, {:.3f})".format(*self.my_field.pms_c), 1)
-        self._vp(f"plx_c          : {self.my_field.plx_c:.3f}", 1)
-        self._vp(f"fixed_centers  : {fixed_centers}", 1)
-        self._vp(f"N_cluster      : {self.my_field.N_cluster}", 1)
+        self._print("{}       : ({:.4f}, {:.4f})".format(cent_str, *xy_center), 1)
+        self._print("pms_c          : ({:.3f}, {:.3f})".format(*self.my_field.pms_c), 1)
+        self._print(f"plx_c          : {self.my_field.plx_c:.3f}", 1)
+        self._print(f"fixed_centers  : {fixed_centers}", 1)
+        self._print(f"N_cluster      : {self.my_field.N_cluster}", 1)
         # centers_ex_flag = False
         # if centers_ex is not None:
         #     centers_ex_flag = True
-        # self._vp(f"centers_ex     : {centers_ex_flag}", 1)
-        self._vp(f"N_resample     : {N_runs}", 1)
+        # self._print(f"centers_ex     : {centers_ex_flag}", 1)
+        self._print(f"N_resample     : {N_runs}", 1)
 
         # Generate input data array for fastMP
         X = np.array(
@@ -290,14 +290,14 @@ class Membership:
             self.my_field.mag if mag_correct is True else None,
         )
 
-        self._vp(out_mssg, 1)
+        self._print(out_mssg, 1)
         self.my_field.probs = probs
         if mag_correct:
-            self._vp(
+            self._print(
                 "Probabilities stored in 'probs' attribute (magnitude corrected)", 1
             )
         else:
-            self._vp("Probabilities stored in 'probs' attribute", 1)
+            self._print("Probabilities stored in 'probs' attribute", 1)
 
     def select_members(
         self, prob_min: float | None = None, N_prob_max: int | None = None
@@ -357,7 +357,7 @@ class Membership:
             sorted_indices = np.argsort(self.my_field.probs)[::-1]
             msk = np.zeros_like(self.my_field.probs, dtype=bool)
             msk[sorted_indices[:N_prob_max]] = True
-            self._vp(f"\nTop {N_prob_max} members selected based on probability")
+            self._print(f"\nTop {N_prob_max} members selected based on probability")
         else:
             # If bot are None, or only 'prob_min' is provided, use 'prob_min'
             # Default selection
@@ -368,7 +368,7 @@ class Membership:
             msk = self.my_field.probs >= prob_min
             if not msk.any():
                 raise ValueError(f"No members found with probability >= {prob_min}")
-            self._vp(f"\nMembers selected with probability >= {prob_min}")
+            self._print(f"\nMembers selected with probability >= {prob_min}")
 
         from .cluster import Cluster
 
@@ -382,7 +382,7 @@ class Membership:
             else:
                 setattr(new_cluster, attr, arr)
 
-        new_cluster.N_stars = msk.sum()
+        new_cluster.N_stars = int(msk.sum())
         new_cluster.N_cluster = new_cluster.N_stars
         # Count the nan values in the photometry of the selected stars only (the
         # value copied above is that of the full field)
@@ -390,8 +390,8 @@ class Membership:
         # The 'membership' object copied above belongs to the full field: replace it
         # with one tied to the new object
         new_cluster.membership = Membership(new_cluster)
-        self._vp("New Cluster object created", 1)
-        self._vp(f"N_cluster      : {new_cluster.N_cluster} (kept)", 1)
-        self._vp(f"Field stars    : {N_all - new_cluster.N_cluster} (removed)", 1)
+        self._print("New Cluster object created", 1)
+        self._print(f"N_cluster      : {new_cluster.N_cluster} (kept)", 1)
+        self._print(f"Field stars    : {N_all - new_cluster.N_cluster} (removed)", 1)
 
         return new_cluster

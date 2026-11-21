@@ -28,7 +28,7 @@ except ImportError:  # private module, fall back to the public function
         return histogram2d(x, y, bins=[nx, ny], range=[[xmin, xmax], [ymin, ymax]])
 
 
-def bin_edges_f(mag: np.ndarray, colors: list[np.ndarray]) -> tuple[list, list]:
+def hess_bin_edges(mag: np.ndarray, colors: list[np.ndarray]) -> tuple[list, list]:
     """Calculate bin edges for the Hess diagram.
 
     The number of bins in magnitude and in each color is set with Knuth's rule (see
@@ -59,7 +59,7 @@ def bin_edges_f(mag: np.ndarray, colors: list[np.ndarray]) -> tuple[list, list]:
     return ranges, Nbins
 
 
-def lkl_data(
+def tremmel_tables(
     mag_v: np.ndarray, colors_v: list[np.ndarray], ranges: list, Nbins: list
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Prepare data for likelihood calculation.
@@ -141,7 +141,7 @@ def lkl_data(
     return cl_z_idx, cl_histo_f_z, table2d
 
 
-def tremmel(
+def tremmel_sum(
     hist_args: np.ndarray,
     nz_pos: np.ndarray,
     row_off: np.ndarray,
@@ -179,7 +179,7 @@ def tremmel(
     # flat prior instead, that 1/2 term becomes a 1
     # Equivalent to table2d[cl_histo_f_z, syn_histo_f_z].sum()
     if _HAS_NUMBA:
-        return _tremmel_lkl_nb(
+        return _tremmel_sum_nb(
             mag, synth_clust[1:], hist_args, nz_pos, row_off, table_flat, m_max
         )
 
@@ -202,11 +202,11 @@ def tremmel(
     # Remove all bins where n_i = 0 (no observed stars). Counts beyond the
     # table's last column are clipped, otherwise they would read the next row
     syn_histo_f_z = np.minimum(syn_histo_f.take(nz_pos).astype(np.intp), m_max)
-    # Added in order, as in _tremmel_lkl_nb(), so that the result is identical
-    return _seq_sum(0.0, table_flat.take(row_off + syn_histo_f_z))
+    # Added in order, as in _tremmel_sum_nb(), so that the result is identical
+    return _sequential_sum(0.0, table_flat.take(row_off + syn_histo_f_z))
 
 
-def _seq_sum(start: float, v: np.ndarray) -> float:
+def _sequential_sum(start: float, v: np.ndarray) -> float:
     """``start + v[0] + v[1] + ...`` added in order, as the loops of the compiled
     functions do. ``v.sum()`` adds pairwise and can round differently
 
@@ -261,7 +261,7 @@ def no_overlap_dist(
     d_mag = (obs_mag_median - _median(synth_clust[0])) / cmd_widths[0]
     d_col = (obs_col_median - _median(synth_clust[1])) / cmd_widths[1]
     # x*x instead of x**2: the latter (libm's pow) can differ by one ulp, and the
-    # same operation is used in batch._lnl_one()
+    # same operation is used in compiled.log_lkl_one_nb()
     return 1 + (d_mag * d_mag + d_col * d_col)
 
 
@@ -286,7 +286,7 @@ def _median(x: np.ndarray) -> float:
 if _HAS_NUMBA:
 
     @njit(cache=True)
-    def _tremmel_lkl_nb(
+    def _tremmel_sum_nb(
         mag: np.ndarray,
         colors: np.ndarray,
         hist_args: np.ndarray,
@@ -295,7 +295,7 @@ if _HAS_NUMBA:
         table_flat: np.ndarray,
         m_max: int,
     ) -> float:
-        """Compiled (numba) version of the likelihood sum in :py:func:`tremmel`.
+        """Compiled (numba) version of the likelihood sum in :py:func:`tremmel_sum`.
         A single pass bins the synthetic stars into one flattened Hess diagram
         (same binning as ``fast_histogram``: values outside ``[min, max)`` or NaN
         are dropped), then the table values of the non-empty observed bins are
@@ -328,7 +328,7 @@ if _HAS_NUMBA:
 
         lkl = 0.0
         for p in range(nz_pos.shape[0]):
-            # Clip counts beyond the table's last column (see tremmel())
+            # Clip counts beyond the table's last column (see tremmel_sum())
             m = min(counts[nz_pos[p]], m_max)
             lkl += table_flat[row_off[p] + m]
         return float(lkl)
@@ -497,8 +497,8 @@ def cmd_overlap(
                 k = k[np.arange(len(y)) > rows]
             else:
                 k = k.ravel()
-            s1 = _seq_sum(s1, k)
-            s2 = _seq_sum(s2, k * k)
+            s1 = _sequential_sum(s1, k)
+            s2 = _sequential_sum(s2, k * k)
         if self_pairs:
             return len(x) + 2 * s1, len(x) + 2 * s2
         return s1, s2
@@ -665,8 +665,8 @@ class Tremmel:
         self.m_ini_idx = 1 + len(colors)
 
         # Binned observed cluster
-        self.ranges, self.Nbins = bin_edges_f(mag, colors)
-        self.cl_z_idx, self.cl_histo_f_z, self.table2d = lkl_data(
+        self.ranges, self.Nbins = hess_bin_edges(mag, colors)
+        self.cl_z_idx, self.cl_histo_f_z, self.table2d = tremmel_tables(
             mag, colors, self.ranges, self.Nbins
         )
         self.obs_mag_median = np.nanmedian(mag).astype(float)
@@ -678,7 +678,7 @@ class Tremmel:
             float(self.ranges[1][1] - self.ranges[1][0]),
         )
 
-        # Pre-compute 'tremmel' parameters
+        # Pre-compute the parameters of tremmel_sum()
         # Per-color histogram2d arguments: (nx, xmin, xmax, ny, ymin, ymax)
         self.hist_args = np.array(
             [
@@ -719,18 +719,18 @@ class Tremmel:
             [[self.hist_args[0, 1] - 1.0]]
             + [[ymin - 1.0] for ymin in self.hist_args[:, 4]]
         )
-        self.min_lkl = float(tremmel(*tremmel_args, no_overlap_star))
+        self.min_lkl = float(tremmel_sum(*tremmel_args, no_overlap_star))
 
         # Maximum likelihood, obtained evaluating the cluster against itself. This is
         # equal to: sum([gammaln(2*_ + 0.5) - gammaln(_ + 0.5) for _ in cl_histo_f_z])
-        self.max_lkl = float(tremmel(*tremmel_args, np.array([mag, *colors])))
+        self.max_lkl = float(tremmel_sum(*tremmel_args, np.array([mag, *colors])))
         # Range of the likelihood for synthetic clusters that overlap the observed
         # one, used to convert between log-likelihoods and distances (the distance
         # of a log-likelihood value 'lnl' at temperature T is -lnl * T / lkl_range)
         self.lkl_range = self.max_lkl - self.min_lkl
 
         # Data passed (as a single tuple, the 'lkl' argument) to the compiled
-        # functions that evaluate the likelihood, see batch._lnl_one()
+        # functions that evaluate the likelihood, see compiled.log_lkl_one_nb()
         self.kernel_args = (
             self.m_ini_idx,
             self.hist_args,
@@ -781,7 +781,7 @@ class Tremmel:
             # Empty synthetic cluster, distance of '10'
             lkl = self.max_lkl - 10.0 * self.lkl_range
         else:
-            lkl = tremmel(
+            lkl = tremmel_sum(
                 self.hist_args,
                 self.nz_pos,
                 self.row_off,
