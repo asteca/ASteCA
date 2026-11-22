@@ -29,20 +29,26 @@ N_STARS_WARN = 1_000_000
 # 10^6 and 3*10^6 stars
 BYTES_PER_STAR = 220
 
+# cmd_overlap(): largest D value of a good fit, and number of D_std that D must exceed
+# for a poor fit warning (so that a correct model with few stars, for which D
+# fluctuates strongly, does not trigger it)
+D_GOOD_FIT = 0.25
+D_NSIGMA_WARN = 3
+
 
 class Synthetic:
     """Define a :py:class:`Synthetic` object.
 
     Use the isochrones loaded in the
-    :py:class:`Isochrones <asteca.isochrones.Isochrones>` object
+    :py:class:`Isochrones <asteca.Isochrones>` object
     to generate a :py:class:`Synthetic` object. This object is used
-    to generate synthetic clusters given a :py:class:`Cluster <asteca.cluster.Cluster>`
+    to generate synthetic clusters given a :py:class:`Cluster <asteca.Cluster>`
     object and a set of input fundamental parameters (metallicity, age, distance,
     extinction, etc.).
 
     See the :ref:`synthetic_module` section for more details.
 
-    :param isochs: :py:class:`Isochrones <asteca.isochrones.Isochrones>` object with
+    :param isochs: :py:class:`Isochrones <asteca.Isochrones>` object with
         the loaded files for the theoretical isochrones
     :type isochs: Isochrones
     :param def_params: Default values of the fundamental parameters, used for the
@@ -72,8 +78,8 @@ class Synthetic:
     :type gamma: float | str
     :param ext_law: Extinction law, one of ``CCMO, GAIADR3``.
         If ``GAIADR3`` is selected, the magnitude and first
-        color defined in the :py:class:`Isochrones <asteca.isochrones.Isochrones>` and
-        :py:class:`Cluster <asteca.cluster.Cluster>` objects are assumed to be Gaia's
+        color defined in the :py:class:`Isochrones <asteca.Isochrones>` and
+        :py:class:`Cluster <asteca.Cluster>` objects are assumed to be Gaia's
         (E)DR3 **G** and **(BP-RP)** respectively. A second color can not be used with
         this law (a ``ValueError`` is raised if one is defined); use ``CCMO`` instead.
         The ``Rv`` parameter has no effect with this law (its coefficients were derived
@@ -522,7 +528,10 @@ class Synthetic:
         negative: ``D<0`` is a match within the noise (compare it with ``D_std``),
         not an error. Values are not clipped to ``0``, as this would bias their
         average upwards. ``D<=0.25`` is a reasonable general threshold for a good
-        fit (see :ref:`cmd_overlap`). The kernel widths set the scale at which the
+        fit (see :ref:`cmd_overlap`). A warning is shown if ``D>0.25`` and
+        ``D>3*D_std`` (i.e.: too large to be a fluctuation of a correct model, which
+        for clusters with few stars requires larger values). The kernel widths set
+        the scale at which the
         CMDs are compared, so the same values must be used for all the clusters
         whose ``D`` values are compared.
 
@@ -561,6 +570,17 @@ class Synthetic:
         _, synth_clust = self._synth_one(params, isoch_flag=False)
 
         D, D_std = lh.cmd_overlap(obs.mag, obs.colors[0], synth_clust, h_mag, h_col)
+
+        # Poor fit: D above the threshold of a good fit, and too large to be a
+        # fluctuation of a correct model
+        if D > D_GOOD_FIT and D > D_NSIGMA_WARN * D_std:
+            warn(
+                f"CMD overlap D={D:.3f} (D_std={D_std:.3f}) is larger than "
+                + f"{D_GOOD_FIT}: the synthetic cluster is a poor match to the "
+                + "observed cluster. Check the parameters (e.g.: a fit stuck in a "
+                + "wrong solution) and the observed cluster (e.g.: strong field "
+                + "contamination)"
+            )
 
         # Turn-off check: the observed and synthetic stars inside a box around the
         # turn-off are compared with the cmd_overlap() statistic. The check is skipped
@@ -962,7 +982,7 @@ class Synthetic:
         :type fit_params: dict
         :param color_idx: Index of the color to return. If ``0`` (default), the
             first color. If ``1``, the second color (only if the
-            :py:class:`Isochrones <asteca.isochrones.Isochrones>` object defines
+            :py:class:`Isochrones <asteca.Isochrones>` object defines
             ``color2``)
         :type color_idx: int
         :param full_track: If ``True``, return the full isochrone (i.e.: do not apply
@@ -1036,8 +1056,8 @@ class Synthetic:
         With a magnitude cut (``calibrated=True``) candidates fainter than it are
         discarded, and enough values are drawn for extreme cases (see
         :py:func:`precompute.n_candidates`). Without it every candidate is kept, and
-        the first pool of candidates (:py:func:`generate.initial_pool_size`) is always
-        enough
+        ``1.5 * N_stars + 10`` values (more than the first pool of candidates, see
+        :py:func:`generate.initial_pool_size`) are always enough
 
         :param N_stars: Number of synthetic stars
         :type N_stars: int
@@ -1049,15 +1069,15 @@ class Synthetic:
         :return: Random values
         :rtype: dict
         """
-        from .modules.synthetic import generate as gen
         from .modules.synthetic import precompute as pre
 
         N_z, N_a, _, N_isoch = self._engine.theor_tracks.shape
         if calibrated:
             N_cand = pre.n_candidates(N_stars, N_isoch)
         else:
-            # The largest of the initial pools (with differential reddening)
-            N_cand = max(gen.initial_pool_size(int(N_stars), 1.0), N_isoch)
+            # The random values (including the windows of each IMF node) depend on
+            # this number, so it must not change
+            N_cand = max(int(N_stars) + int(N_stars) // 2 + 10, N_isoch)
         N_cand = max(N_cand, int(N_min))
         return pre.draw_rand_floats(self.seed, N_cand, N_z * N_a)
 
