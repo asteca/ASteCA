@@ -1,9 +1,9 @@
 pyqt6
 matplotlib
-pyabc
 astroquery
-fastparquet
 pandas
+pyarrow
+pytest
 ruff
 ty
 pyrefly

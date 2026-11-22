@@ -86,7 +86,7 @@ the documentation for the
 of the Spanish Virtual Observatory.
 
 The effective lambda values are required to generate synthetic clusters later on,
-as these values are used to calculate the extinction coefficients for the magnitude and color filters when using the default ``CCMO`` extinction law. If the :py:class:`Synthetic`
+as these values are used to calculate the extinction coefficients for the magnitude and color filters when using the default ``CCMO`` extinction law. If the :py:class:`Synthetic <asteca.Synthetic>`
 object is generated with the ``GAIADR3`` extinction law, then the effective lambda
 values are not used and the extinction coefficients are calculated internally by
 the :py:class:`asteca.Synthetic` class using the extinction coefficients provided by the
@@ -188,7 +188,7 @@ and it indicates that the `post_AGB` stage (``label=9``) should be removed. This
 because this stage is still `"in preparation" <https://stev.oapd.inaf.it/cmd/faq.html>`_
 
 Finally, the ``column_names`` argument is an internal dictionary that should only be
-manually passed if the :py:class:`Isochrones` class fails to parse the column names of
+manually passed if the :py:class:`Isochrones <asteca.Isochrones>` class fails to parse the column names of
 the isochrones files. Please `contact me <mailto:gabrielperren@gmail.com>`_ if you have any
 issues with the loading process of the theoretical isochrones and need to modify
 this argument.

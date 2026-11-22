@@ -132,7 +132,9 @@ The :py:meth:`asteca.Sampler.summary` method returns the median, mean, standard
 deviation, and 16th and 84th percentiles of each fitted parameter, as dictionaries
 that can be passed directly to other methods. It also returns, for each parameter,
 the fraction of the posterior close to the lower and upper limits of its prior
-(``edge_low, edge_high``), and a ``diagnostics`` dictionary for the run:
+(``edge_low, edge_high``), the same statistics for the mean extinction of the cluster
+stars (``A_mean``, see :ref:`mean_extinction`), and a ``diagnostics`` dictionary for
+the run:
 
 - ``ess``: effective sample size (ESS) of the importance weighted posterior samples,
   i.e.: the number of independent samples they are equivalent to. It should not be
@@ -172,6 +174,48 @@ whether the fitted synthetic cluster is a good representation of the observed on
 use :py:meth:`asteca.Synthetic.cmd_overlap` (see :ref:`cmd_overlap`).
 
 See the :ref:`paramfit_sampler_ntbk` tutorial for a complete example.
+
+
+.. _mean_extinction:
+
+Mean extinction
+---------------
+
+When the differential reddening ``DR`` is fitted, ``Av`` is the *minimum* extinction
+of the cluster stars and ``Av + DR`` the maximum (see :ref:`dr_models`). The observed
+CMD constrains the mean extinction of the stars much better than its split into
+``Av`` and ``DR``: a ``DR`` that is too large is compensated by an ``Av`` that is too
+low, so the posteriors of both parameters are anti-correlated. In our tests, fitting
+``DR`` to simulated clusters generated with ``DR=0`` gave a spurious ``DR`` of about
+``0.2`` (larger for clusters with few stars) and an ``Av`` about ``0.1`` mag too low,
+while the mean extinction was unbiased.
+
+The mean extinction of the stars is:
+
+.. math::
+
+    \langle A\rangle = A_V + \bar{f}\,DR
+
+where :math:`\bar{f}` is the mean fraction of ``DR`` received by the stars, which
+depends on the differential reddening model: ``0.5`` for ``foreground`` and ``0.375``
+for ``internal`` (see the table in :ref:`dr_models`). When ``DR`` is fitted, this is
+a more robust value to report than ``Av``.
+
+Its statistics are returned by :py:meth:`asteca.Sampler.summary` in the ``A_mean``
+key (``median, mean, std, p16, p84``), using the differential reddening model of the
+run:
+
+.. code-block:: python
+
+    summ = sampler.summary()
+    A = summ["A_mean"]
+    print(f"<A> = {A['median']:.2f} (+{A['p84'] - A['median']:.2f} / -{A['median'] - A['p16']:.2f})")
+
+The value is obtained for each posterior sample, and its statistics from those values.
+Combining the percentiles of ``Av`` and ``DR`` instead gives a wrong (too wide)
+interval, because the two parameters are anti-correlated. If ``Av`` or ``DR`` were not
+fitted their default values are used, so :math:`\langle A\rangle` is equal to ``Av``
+if ``DR`` was fixed to ``0`` (the default).
 
 
 

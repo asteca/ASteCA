@@ -36,8 +36,8 @@ can generate a :py:class:`asteca.Cluster` object as follows:
     arrays or lists/tuples for each of the data dimensions.
 
 All the data arguments are optional, but the ones given must have the same length.
-Every data dimension except ``(ra, dec)`` requires its uncertainty
-(``e_mag, e_color, e_color2, e_plx, e_pmra, e_pmde``), and all the uncertainty values
+Every data dimension except ``(ra, dec)``, ``star_id`` and ``probs`` requires its
+uncertainty (``e_mag, e_color, e_color2, e_plx, e_pmra, e_pmde``), and all the uncertainty values
 must be larger than ``0`` (a ``ValueError`` is raised otherwise). Other arguments that
 can be passed when creating the object are:
 

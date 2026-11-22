@@ -28,8 +28,8 @@ currently require manual input or external estimation.
 The :ref:`membership_ntbk` notebook serves as a practical guide to applying the
 :py:meth:`asteca.Membership.fastmp` and :py:meth:`asteca.Membership.bayesian` membership
 probability estimation methods. It highlights the different data requirements (5D for
-:py:obj:`fastmp`, photometric for :py:obj:`bayesian`) and necessary preliminary parameter
-estimations (center, ``N_cluster``, radius for :py:obj:`bayesian`) for each method,
+:py:meth:`fastmp <asteca.Membership.fastmp>`, photometric for :py:meth:`bayesian <asteca.Membership.bayesian>`) and necessary preliminary parameter
+estimations (center, ``N_cluster``, radius for :py:meth:`bayesian <asteca.Membership.bayesian>`) for each method,
 concluding with a visual comparison of their results.
 
 

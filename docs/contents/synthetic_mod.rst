@@ -27,8 +27,9 @@ To instantiate a :py:class:`asteca.Synthetic` object you need to pass the
     # Synthetic clusters object
     synthcl = asteca.Synthetic(isochs)
 
-This will load the theoretical isochrones and perform the required initial processing
-to define a :obj:`synthcl` object. The processing involves tabulating an `initial
+This will perform the required initial processing of the theoretical isochrones
+loaded in the :obj:`isochs` object to define a :obj:`synthcl` object. The processing
+involves adding the binary systems to the isochrones, tabulating an `initial
 mass function`_ (IMF), setting the distributions for the binary systems' mass ratio,
 defining the extinction law, and selecting the differential reddening model.
 
@@ -421,7 +422,7 @@ How the two distributions differ
    Since a star's absorption is only known after it is generated, the stars that
    end up fainter than the maximum magnitude of the observed cluster are discarded,
    and more stars are generated until the synthetic cluster has as many stars as
-   the observed one (see :ref:`ref_defining`).
+   the observed one (see :ref:`ref_calibrating`).
 
 The figure below shows the two distributions of :math:`f` (left). The middle
 panel shows the absorption they produce for the same parameters,
@@ -433,7 +434,8 @@ deviation of :math:`A` as the ``foreground`` case.
     :align: center
 
 For the same parameters the ``internal`` model gives a lower mean absorption with a
-larger spread. Most of its stars stay close to :math:`A_V`, with a tail towards
+larger spread (when ``DR`` is fitted, the mean absorption is better constrained than
+``Av`` and ``DR``, see :ref:`mean_extinction`). Most of its stars stay close to :math:`A_V`, with a tail towards
 :math:`A_V + DR`. With the mean and spread matched, the two differ only in shape.
 The ``internal`` distribution has a sharp lower edge and a long upper tail, while
 the ``foreground`` one is symmetric with soft edges on both sides.
@@ -613,7 +615,7 @@ The three remaining parameters are linked to the extinction process: the extinct
 ``Av``, the ratio of total to selective extinction ``Rv``, and the differential
 reddening ``DR``. If ``DR=0``, ``Av`` is the total extinction of all the cluster stars;
 if ``DR>0``, it is the minimum extinction, and each star has an extinction between
-``Av`` and ``Av+DR`` (see :ref:`ref_defining`). The first two are related through the
+``Av`` and ``Av+DR`` (see :ref:`dr_models`). The first two are related through the
 equation:
 
 .. math::
@@ -628,7 +630,7 @@ absorption of the cluster stars. Each star receives an absorption between ``Av``
 minimum) and ``Av + DR`` (the maximum), distributed according to the model selected
 with the ``DR_distribution`` argument (or attribute) of the
 :py:class:`asteca.Synthetic` object: ``foreground`` (the default) or ``internal``. See
-:ref:`ref_defining` for details.
+:ref:`dr_models` for details.
 
 
 
@@ -743,7 +745,8 @@ fundamental parameters (the parameters not included take the default values of t
     plt.plot(isoch_arr[1], isoch_arr[0], c="k")
     plt.gca().invert_yaxis()
 
-The returned array has shape ``(2, N_points)``: the first row is the magnitude and the
+The returned array has shape ``(2, N)``, with ``N`` the number of isochrone points
+kept after the mass cut described below: the first row is the magnitude and the
 second row the color. The isochrone is interpolated in metallicity and age, shifted by
 the distance modulus ``dm``, and moved by the extinction ``Av`` (and ``Rv``) with no
 differential reddening (``DR`` is ignored, so the isochrone marks the least extincted
@@ -868,7 +871,11 @@ of stars:
 
 In tests with simulated clusters a value of :math:`D\leq 0.25` was found to be
 a reasonable general threshold for a good fit; for clusters with many stars a
-stricter threshold can be used.
+stricter threshold can be used. A warning is shown when :math:`D>0.25` and
+:math:`D>3\,D_{std}` (see below), i.e.: when the value is also too large to be a
+chance fluctuation of a correct model. For clusters with few stars, where
+:math:`D_{std}` is large (e.g.: ~0.1 for 50 stars and ~0.2 for 30 stars), the warning
+thus requires values larger than ``0.25``.
 
 The second value returned, ``D_std``, is the approximate standard deviation of
 :math:`D` for a synthetic cluster drawn from the same distribution as the observed one
@@ -899,7 +906,8 @@ Notes:
 - The cost of the sums over all the pairs of stars grows with the product of the
   numbers of observed and synthetic stars. For large clusters (more than about
   300,000 pairs, i.e. ~550 stars each) the stars are binned on a grid with a
-  spacing of 0.2 kernel widths and the sums are obtained by convolving the binned
+  spacing of 0.2 kernel widths (unless the grid would have more than 10^6 cells,
+  e.g. because of very distant outliers, in which case the exact sums are used) and the sums are obtained by convolving the binned
   CMDs with the kernel, at a cost that does not depend on the number of stars (e.g.:
   ~20 ms instead of ~600 ms for 4,000 stars). This is equivalent to using a very
   slightly wider kernel, with the self-pairs removed exactly, so the properties
@@ -975,7 +983,9 @@ and/or of being a blue straggler star (BSS). The method is called
 1. Starting from an observed cluster
 2. Generate a synthetic cluster with some fundamental parameters
 3. Select a given star from the observed cluster
-4. Find the closest synthetic star (in photometric space) to this observed star
+4. Find the closest synthetic star (in photometric space, with each magnitude and
+   color divided by the median uncertainty of the observed stars) to this observed
+   star
 5. Extract from that synthetic star its primary and secondary mass values (see
    :ref:`stellar_masses`)
 6. Classify as a binary system if the synthetic star is a binary system (see
@@ -1173,6 +1183,15 @@ where the turn-off point ``(to_col, to_mag)`` is estimated by ASteCA for each of
 synthetic clusters sampled by :py:meth:`asteca.Synthetic.cluster_properties`, and
 shifted ``-0.05`` in color to detach the region from the isochrone.
 
+To estimate the turn-off point, the isochrone of each synthetic cluster is cut at the
+cluster's maximum mass and its points are ordered by initial mass. Starting from the
+lowest mass, the main sequence gets bluer with increasing mass until the turn-off,
+after which the color increases (subgiant and giant branches). The turn-off point is
+the bluest point before the color rises more than ``0.3`` mag above it (this avoids
+stopping at small wiggles of the main sequence, such as the overshooting hook). If the
+color never rises this much (young isochrones), it is the bluest point of the
+isochrone.
+
 The turn-off point is not located on the ``DR=0`` isochrone (the isochrone returned
 by :py:meth:`asteca.Synthetic.get_isochrone`), which is the bluest edge of the
 synthetic cluster (see :ref:`dr_models`). For large ``DR`` values few stars, or none,
@@ -1270,28 +1289,32 @@ further split as:
     M_{a} = M_{obs} + M_{phot}
 
 where :math:`M_{obs}` is the observed mass and :math:`M_{phot}` is the mass unobserved
-due to photometric effects (i.e: the low mass stars beyond the maximum observed
-magnitude). The observed mass :math:`M_{obs}` is the sum of individual stellar masses
-in the observed CMD:
+due to photometric effects (i.e: the stars fainter than the maximum observed
+magnitude). Both are obtained from the synthetic cluster generated for each model. The
+observed mass :math:`M_{obs}` is the sum of the masses of its stars:
 
 .. math::
 
-    M_{obs} = \sum_{i}^{N} m_i
+    M_{obs} = \sum_{i}^{N} \left(m_{1,i} + m_{2,i}\right)
 
-where :math:`N` is the total number of observed stars which also includes the identified
-stellar binary masses.
+where :math:`N` is the number of stars in the synthetic cluster (equal to the number
+of observed stars), and :math:`m_{1,i}` and :math:`m_{2,i}` are the primary and
+secondary masses of each star (:math:`m_{2,i}=0` for single stars).
 
-The photometric mass :math:`M_{phot}` is inferred by summing the mass that exists below
-the mass value associated to the maximum observed magnitude in the cluster. This
-requires sampling an IMF with a large mass and obtaining the ratio of the mass of the
-stars fainter than the maximum observed magnitude :math:`M_{phot,s}` (i.e.: with
-masses below the smallest mass in the synthetic cluster) to the mass of the stars
-brighter than it :math:`M_{obs,s}`. This ratio is then applied to the observed mass :math:`M_{obs}` to
-estimate :math:`M_{phot}`.
+The synthetic cluster is the observable part of a larger simulated cluster. Its stars
+are drawn from the IMF restricted to the mass range of the isochrone points brighter
+than the maximum magnitude, and those that remain brighter than it after the binarity,
+extinction and differential reddening are kept. The photometric mass :math:`M_{phot}`
+is the mass of the members of the simulated cluster that are not observed:
 
-.. math::
+* the drawn stars that were not kept (fainter than the maximum magnitude), and
+* the stars of the IMF outside of that mass range that they represent and that are
+  still alive (i.e.: below the maximum mass of the isochrone), obtained by
+  integrating the IMF,
 
-    M_{phot} = \frac{M_{phot,s}}{M_{obs,s}} \times M_{obs}
+plus the expected mass of their binary companions. If fewer stars than observed could
+be generated, both :math:`M_{obs}` and :math:`M_{phot}` are scaled by the ratio of
+the number of observed stars to the number of generated stars.
 
 
 Following `Lamers et al. (2005)

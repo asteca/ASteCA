@@ -8,20 +8,20 @@ for all the stars in a given observed field. There are currently two methods inc
 this class: :py:meth:`asteca.Membership.bayesian` and
 :py:meth:`asteca.Membership.fastmp`.
 
-The :py:meth:`bayesian` method was described in detail in the `article`_ where **ASteCA**
+The :py:meth:`bayesian <asteca.Membership.bayesian>` method was described in detail in the `article`_ where **ASteCA**
 was originally introduced. The method requires ``(ra, dec)``  data and will use any extra
-data dimensions stored in the :py:class:`Cluster <asteca.cluster.Cluster>` object, i.e.:
+data dimensions stored in the :py:class:`Cluster <asteca.Cluster>` object, i.e.:
 photometry, proper motions, and parallax. At least one extra data dimension beyond
 ``(ra, dec)`` is required (three dimensions total minimum). This method can produce
 membership probabilities on photometric data alone. It also requires the ``(ra, dec)``
 center (``radec_c``) and the ``radius`` of the cluster, in degrees, to be stored in the
-:py:class:`Cluster <asteca.cluster.Cluster>` object (see :ref:`structure`).
+:py:class:`Cluster <asteca.Cluster>` object (see :ref:`structure`).
 
-The :py:meth:`fastmp` method was described in detail in the
+The :py:meth:`fastmp <asteca.Membership.fastmp>` method was described in detail in the
 `article <https://academic.oup.com/mnras/article/526/3/4107/7276628>`__
 where the `Unified Cluster Catalogue (UCC) <https://ucc.ar/>`__ was introduced. The
 method requires proper motions, and parallax data dimensions stored in the
-:py:class:`Cluster <asteca.cluster.Cluster>` object, along with the center values
+:py:class:`Cluster <asteca.Cluster>` object, along with the center values
 ``radec_c, pms_c, plx_c`` (see :ref:`structure`). Photometric data is not employed to
 estimate the probabilities, but the magnitude can be used to correct them: since the
 method resamples the data using their uncertainties, it favors stars with small
@@ -42,9 +42,9 @@ a larger effect in fields with a wider range of uncertainties.
     :align: center
 
 .. important::
-    The only advantage of the :py:meth:`bayesian` method over the :py:meth:`fastmp`
+    The only advantage of the :py:meth:`bayesian <asteca.Membership.bayesian>` method over the :py:meth:`fastmp <asteca.Membership.fastmp>`
     method is that the former works with photometric data. Hence it should only be used
-    in cases where only photometric data is available, as :py:meth:`fastmp` is not only
+    in cases where only photometric data is available, as :py:meth:`fastmp <asteca.Membership.fastmp>` is not only
     much faster but also more precise in those cases where proper motions and/or
     parallax data is available.
 
@@ -53,9 +53,9 @@ the :ref:`nmembers` section, which is done by calling the
 :py:meth:`asteca.Cluster.get_nmembers` method.
 
 With the ``N_cluster`` attribute in place in a
-:py:class:`Cluster <asteca.cluster.Cluster>` object, here called ``my_field``, you can
-apply either the :py:meth:`bayesian` or the :py:meth:`fastmp` method (both part
-of the :py:class:`Membership <asteca.membership.Membership>` class) as follows:
+:py:class:`Cluster <asteca.Cluster>` object, here called ``my_field``, you can
+apply either the :py:meth:`bayesian <asteca.Membership.bayesian>` or the :py:meth:`fastmp <asteca.Membership.fastmp>` method (both part
+of the :py:class:`Membership <asteca.Membership>` class) as follows:
 
 
 .. code-block:: python
@@ -66,7 +66,7 @@ of the :py:class:`Membership <asteca.membership.Membership>` class) as follows:
     # Run `bayesian` method
     my_field.membership.bayesian()
 
-Here ``my_field.membership`` is a :py:class:`Membership <asteca.membership.Membership>`
+Here ``my_field.membership`` is a :py:class:`Membership <asteca.Membership>`
 object tied to ``my_field``, created along with it, so there is no need to create one.
 The calls above are equivalent to ``asteca.Membership(my_field).fastmp()`` and
 ``asteca.Membership(my_field).bayesian()``.
@@ -80,7 +80,7 @@ achieved using the :py:meth:`asteca.Membership.select_members` method, which all
 users to retain only those stars that meet specific membership probability thresholds or
 to limit the number of accepted members based on their probabilities.
 
-This operation returns a new :py:class:`Cluster <asteca.cluster.Cluster>` object
+This operation returns a new :py:class:`Cluster <asteca.Cluster>` object
 that contains only the selected stars:
 
 .. code-block:: python
