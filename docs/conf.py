@@ -46,6 +46,9 @@ extensions = [
     "sphinx_automodapi.automodapi",
 ]
 
+# MyST: render '$...$' and '$$...$$' as math in the notebooks and Markdown files
+myst_enable_extensions = ["dollarmath", "amsmath"]
+
 #  automodapi
 numpydoc_show_class_members = False
 automodapi_toctreedirnm = "build/api"
@@ -58,8 +61,14 @@ nb_execution_mode = "off"
 
 # Ignore the output of local builds into 'docs/build/' (otherwise their copies of the
 # notebooks produce duplicate labels). 'build/api' is not excluded: it holds the
-# 'automodapi' pages
-exclude_patterns = ["build/html", "build/doctrees", "build/jupyter_execute"]
+# 'automodapi' pages. Deprecated notebooks, kept in the repository but not built:
+# paramfit_pocomc
+exclude_patterns = [
+    "build/html",
+    "build/doctrees",
+    "build/jupyter_execute",
+    "contents/notebooks/paramfit_pocomc.ipynb",
+]
 
 
 # -- Options for HTML output -------------------------------------------------

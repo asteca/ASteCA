@@ -1,0 +1,50 @@
+# Common matplotlib style of the ASteCA tutorials. Load it with:
+#   plt.style.use("../../_static/asteca.mplstyle")
+
+# Figure: default size of a single panel, resolution and margins
+figure.figsize: 7, 6
+figure.dpi: 120
+savefig.dpi: 150
+savefig.bbox: tight
+
+# Fonts: Times-like serif (STIX ships with matplotlib), also for math text
+font.family: serif
+font.serif: STIXGeneral, DejaVu Serif
+mathtext.fontset: stix
+font.size: 13
+axes.titlesize: 14
+axes.labelsize: 14
+xtick.labelsize: 12
+ytick.labelsize: 12
+legend.fontsize: 12
+
+# Axes: frame on all sides, no grid
+axes.linewidth: 1.0
+axes.grid: False
+axes.titlepad: 8
+
+# Ticks: inward, on all four sides, with minor ticks
+xtick.direction: in
+ytick.direction: in
+xtick.top: True
+ytick.right: True
+xtick.minor.visible: True
+ytick.minor.visible: True
+xtick.major.size: 6
+ytick.major.size: 6
+xtick.minor.size: 3
+ytick.minor.size: 3
+xtick.major.width: 1.0
+ytick.major.width: 1.0
+
+# Lines, markers and legends
+lines.linewidth: 1.5
+lines.markersize: 6
+legend.frameon: True
+legend.framealpha: 0.85
+legend.edgecolor: 0.6
+legend.fancybox: False
+legend.markerscale: 1.5
+
+# Color maps and images
+image.cmap: viridis

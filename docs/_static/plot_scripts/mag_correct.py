@@ -25,6 +25,9 @@ fmp.mag_dist_correct = _capture
 
 
 def main():
+    # Same style as the plots in the tutorials
+    plt.style.use("../asteca.mplstyle")
+
     df = pd.read_csv("../field.csv")
     my_field = asteca.Cluster(
         ra=df["RA_ICRS"],
@@ -84,8 +87,8 @@ def main():
     for i in np.flatnonzero(promoted | demoted):
         ax1.plot([mag[i], mag[i]], [probs_0[i], probs_1[i]], c="k", lw=0.5, alpha=0.5)
     ax1.axhline(0.5, ls=":", c="k", lw=1)
-    ax1.set_xlabel("G")
-    ax1.set_ylabel("P")
+    ax1.set_xlabel("$G$")
+    ax1.set_ylabel("Membership probability")
     ax1.legend(loc="lower left")
 
     # Right: magnitude distribution of the P>=0.5 members
@@ -117,7 +120,7 @@ def main():
     )
     ax2.set_xlim(edges[0], np.nanmax(mag_ref) + 1)
     ax2.set_ylim(0, ax2.get_ylim()[1] * 1.3)
-    ax2.set_xlabel("G")
+    ax2.set_xlabel("$G$")
     ax2.set_ylabel("N")
     ax2.legend(loc="upper left")
 

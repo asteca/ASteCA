@@ -8,10 +8,18 @@ import asteca
 print(f"ASteCA version: {asteca.__version__}")
 
 
+# Metallicity of each isochrone model (the BASTI and MIST example files hold a
+# single metallicity)
+MET = {"parsec": 0.0152, "basti": 0.01258, "mist": 0.0127212}
+
+
 def main(seed=142):
     """
-    Generate random synthetic clusters from the three supported isochrone services
+    Plot isochrones of three ages from the three supported isochrone services
     """
+    # Same style as the plots in the tutorials
+    plt.style.use("../asteca.mplstyle")
+
     path = "../cluster.csv"
     obs_df = pd.read_csv(path)
     my_cluster = asteca.Cluster(
@@ -52,25 +60,26 @@ def main(seed=142):
                 verbose=3,
             )
 
-        synthcl = asteca.Synthetic(isochs, ext_law="GAIADR3", verbose=3, seed=seed)
+        synthcl = asteca.Synthetic(
+            isochs,
+            ext_law="GAIADR3",
+            def_params={"met": MET[isoch_model]},
+            verbose=3,
+            seed=seed,
+        )
         synthcl.calibrate(my_cluster)
         synthcl_dict[isoch_model] = synthcl
 
     xmin, xmax = np.inf, -np.inf
     ymin, ymax = -np.inf, np.inf
 
-    fig, axes = plt.subplots(1, 3, figsize=(10, 5), sharey=True)
+    fig, axes = plt.subplots(1, 3, figsize=(14, 6), sharex=True, sharey=True)
 
     for i, (isoch_model, synthcl) in enumerate(synthcl_dict.items()):
         ax = axes[i]
         dm, Av = 0, 0
 
-        if isoch_model == "basti":
-            met = 0.01258
-        elif isoch_model == "mist":
-            met = 0.0127212
-        else:
-            met = 0.0152
+        met = MET[isoch_model]
         for loga in (7.5, 8.5, 9.5):
             model = {
                 "met": met,
@@ -85,14 +94,17 @@ def main(seed=142):
             ax.plot(isoch_arr[1], isoch_arr[0], lw=2, label=f"log(age)={loga:.1f}")
 
             ax.set_title(str(isoch_model).upper())
-            ax.set_xlabel("color")
+            ax.set_xlabel("$G_{BP}-G_{RP}$")
             if i == 1:
                 ax.legend()  # loc="upper left")
 
     xmin, xmax = xmin - xmax * 0.1, xmax + xmax * 0.02
     ymin, ymax = ymin + ymin * 0.02, ymax - (ymin - ymax) * 0.05
     ax = axes[0]
-    ax.set_ylabel("magnitude")
+    ax.set_ylabel("$M_G$")
+    # Color range of the main sequence and giant branches (the PARSEC isochrones
+    # extend to much redder colors in the TP-AGB phase)
+    ax.set_xlim(-0.5, 5)
     # ax.set_xlim(xmin, xmax)
     ax.set_ylim(ymin, ymax)
     ax = axes[1]

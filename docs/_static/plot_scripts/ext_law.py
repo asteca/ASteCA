@@ -9,6 +9,9 @@ def main():
     temperature ranges used, the latter corresponding to
     -0.06< (GBP − GRP )0 < 2.5 mag
     """
+    # Same style as the plots in the tutorials
+    plt.style.use("../asteca.mplstyle")
+
     eff_wave = np.linspace(1000, 10000, 1000)  # Angstrom
     eff_micron = eff_wave / 10000
 

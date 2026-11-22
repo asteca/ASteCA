@@ -18,19 +18,84 @@ jump to 0.8.0. The most important changes are:
   (dust mixed with the cluster stars, behind a uniform foreground screen). In both the
   absorption of each star is ``Av + f * DR`` with ``f`` in ``[0, 1]``, so ``Av`` is now
   the minimum absorption. The ``uniform`` (previous default) and ``normal`` models were
-  removed: their clipping at zero produced a spurious population of unreddened stars
-- ``Synthetic.stellar_parameters()`` (**breaking change**): the returned keys
+  removed: their clipping at zero produced a spurious population of unreddened stars.
+  The model can be changed at any time by setting the ``DR_distribution`` attribute
+  of the ``Synthetic`` object (e.g.: ``synthcl.DR_distribution = "internal"``), which
+  is used by all its methods and by ``Sampler``. The fractions of both models are
+  computed once from the same random values, so changing the model has no cost
+- The differential reddening is drawn for each synthetic star, instead of each
+  isochrone point. Previously, the stars interpolated between two isochrone points
+  shared their absorption values, which produced straight streaks in the synthetic
+  CMDs and a spread of the absorption ~18% narrower than that of the selected model.
+  On mock clusters this biased the fitted ``DR`` and ``loga`` (e.g.: ``loga`` too
+  young by 0.2 dex in a ``DR=2.4`` cluster), and the ``DR`` of clusters with more
+  than ~1000 stars. The extinction is applied after the binarity, with the
+  ``GAIADR3`` coefficients evaluated at the intrinsic color of the system. The cost
+  per synthetic cluster is about the same, but more candidate stars are generated for
+  large ``DR`` values. Results are not identical to previous versions for the same
+  ``seed``
+- The mass ratio of the binary systems is drawn for each synthetic star, instead of
+  each isochrone point. Previously the binary systems interpolated between two
+  isochrone points shared their mass ratios, so the binary sequence followed a jagged
+  line through the isochrone points instead of filling the band between the single
+  star sequence and the equal-mass sequence (clearly visible in the low mass region).
+  Also, outside of the grid nodes the photometry of the binary systems was averaged
+  over the four surrounding isochrones (each with its own mass ratios), and did not
+  match the secondary masses returned (up to ~0.3 mag). The secondary of each binary
+  system is now interpolated in the isochrone and its flux added to the primary's.
+  The ``D&K`` mass-ratio distribution interpolates its ``gamma`` exponents in
+  ``log10(m1)`` between the centers of their primary mass ranges, instead of
+  changing abruptly at their limits (which made the mass ratios jump for similar
+  primary masses). A float ``gamma`` must be larger than ``-1``. The expected mass of
+  the companions used by the total mass estimates is now that of the mass-ratio
+  distribution. The cost of a likelihood evaluation increases by ~20% for clusters
+  with ~1500 stars, and decreases by ~15% for clusters with ~200 stars. Results are
+  not identical to previous versions for the same ``seed``
+- ``Synthetic.get_models()``, ``Synthetic.stellar_parameters()`` and
+  ``Synthetic.cluster_masses()`` were merged into the new
+  ``Synthetic.cluster_properties()`` method (**breaking change**). It takes the
+  ``model, model_std`` dictionaries (e.g.: from ``Sampler.summary()``), samples the
+  synthetic clusters, and returns a dictionary with the per-star values (``stars`` key,
+  as returned before by ``stellar_parameters()``) and the cluster values (``cluster``
+  key): the masses, now given as ``(median, 16th, 84th)`` percentiles instead of median
+  and STDDEV, and the new total binary fraction (``binar_fr``, from the exact
+  Poisson-binomial distribution of the ``binar_prob`` values; ``binar_fr_models``, its
+  distribution across the sampled synthetic clusters) and number of BSSs (``N_bss``).
+  The parameters of the Galaxy's potential and of the cluster's disruption are grouped
+  in the ``galaxy_potential, disruption`` dictionaries. The BSS region is now defined
+  by a single point (the turn-off point shifted ``-0.05`` in color) instead of two,
+  and a manual turn-off point can be given with the ``turn_off`` argument. The
+  turn-off point is located on the isochrone moved to the absorption
+  ``Av + f_5 * DR`` (``f_5``: 5th percentile of the differential reddening fractions)
+  instead of the ``DR=0`` isochrone, which for large ``DR`` lies far to the blue of
+  the cluster (e.g.: trumpler5, ``DR~2.1``: 14 -> 42 BSSs, injected BSSs recovered
+  7% -> 43% in a mock). This color limit is capped at the blue edge (5th percentile)
+  of the observed colors around the turn-off magnitude, so that the region never
+  extends into the observed main sequence. A manual ``turn_off`` is given as
+  ``(color, magnitude, stddev_color, stddev_magnitude)``, and the turn-off points
+  used are stored in the ``turn_off_points`` attribute (keys ``color_idx, to_col,
+  to_mag, manual``). If no coordinates are available, the initial, evolutionary and
+  dynamical masses are ``nan`` (with a warning) instead of raising an error. The
+  entries below that refer to the previous method names describe changes with
+  respect to them
+- Per-star values (``stars`` key of ``Synthetic.cluster_properties()``, previously
+  returned by ``Synthetic.stellar_parameters()``; **breaking change**): the keys
   ``m1, m1_std, m2, m2_std`` were renamed to
   ``mass_single, mass_single_std, mass_binar, mass_binar_std``, and the new keys
   ``single_prob, mass_bss, mass_bss_std`` (and ``star_id``, if available) were added.
   The three probabilities ``single_prob, binar_prob, bss_prob`` now add up to ``1``
   (``binar_prob`` is multiplied by ``1-bss_prob``)
-- Added estimation of BSSs masses, via the new ``isochs_young`` argument of
-  ``Synthetic.stellar_parameters()`` (an ``Isochrones`` object with ``log(age)<=7``
+- Added estimation of BSSs masses (``mass_bss``), via the ``isochs_young`` argument of
+  ``Synthetic.cluster_properties()`` (an ``Isochrones`` object with ``log(age)<=7``
   isochrones)
-- Stellar masses estimated by ``Synthetic.stellar_parameters()`` now take into account
-  the photometric uncertainties, and the turn-off point used to identify BSSs is
-  estimated more robustly
+- The per-star masses now take into account the photometric uncertainties
+- The turn-off point of an isochrone (used to define the BSS region) is now the bluest point of the isochrone,
+  ordered by initial mass, before its color increases by more than ``0.3`` mag. The
+  previous method (first sustained increase of the smoothed color derivative) stopped
+  ~1 mag below the turn-off for most isochrones with ``log(age)`` 7-9.5. On the
+  PARSEC and MIST grids the new turn-off is the bluest main sequence point for >98%
+  of the isochrones with ``log(age)>=7``. On 100 UCC clusters the turn-off moved up to
+  ~1 mag brighter (median 0.05 mag), with nearly unchanged numbers of BSSs
 - Generating a synthetic cluster with a negative ``alpha, beta, Av, DR, dm`` or with
   ``Rv <= 0`` now raises a ``ValueError`` (as ``met, loga`` outside of the isochrones'
   ranges already did)
@@ -45,26 +110,33 @@ jump to 0.8.0. The most important changes are:
   an empty synthetic cluster is returned
 - A warning is shown when the ``GAIADR3`` extinction law is used with a default ``Rv``
   value different from ``3.1``, since this law does not use the ``Rv`` parameter
-- ``Likelihood.get()`` was renamed to ``Likelihood.dist()`` (**breaking change**),
-  which returns the same normalized distance as before. Added the
-  ``Likelihood.log_lkl()`` method, which returns the log-likelihood (relative to its
-  maximum) for likelihood-based samplers, with an optional ``temperature`` argument
-  that flattens the likelihood to widen the posterior. Both methods share the same
-  core, so ``log_lkl()`` no longer requires converting the distance back with
-  ``max_lkl - min_lkl``
-- Added the ``Likelihood.cmd_overlap()`` method, a goodness of fit value that can be
-  compared across clusters with any number of stars
-- The likelihood distance is now normalized so that ``1`` always means no overlap
-  between the observed and synthetic clusters (before, its maximum value depended on
-  the cluster)
-- The CMD median-based penalty in the likelihood distance is now only applied to
+- The ``Likelihood`` class was removed from the public API (**breaking change**). The
+  Poisson likelihood ratio is now built into ``Sampler``: the observed cluster's Hess
+  diagram is obtained by ``Synthetic.calibrate()``, and ``Sampler`` no longer takes a
+  ``likelihood`` argument. The ``bin_method`` argument was removed: the Hess diagram
+  always uses Knuth's rule for the number of bins (the previous default). To use a
+  different likelihood or sampler, generate the synthetic clusters with
+  ``Synthetic.generate()``. Compared to the distance returned by ``Likelihood.get()``,
+  the likelihood used by ``Sampler`` is normalized so that ``1`` always means no
+  overlap between the observed and synthetic clusters (before, its maximum value
+  depended on the cluster), and the CMD median-based penalty is only applied to
   synthetic clusters with no overlap with the observed cluster (before: when the
-  distance was larger than ``0.5``). This fixes stalled fits for small clusters. The
-  magnitude and color differences are now scaled by the widths of the Hess diagram
-  ranges, so that the magnitude no longer dominates the penalty
-- ``Likelihood`` now only accepts ``lkl_name="plr"`` (the undocumented
-  ``bins_distance, chisq`` options were removed)
-- Added ``verbose`` argument to ``Likelihood`` (it always printed a message before)
+  distance was larger than ``0.5``), which fixes stalled fits for small clusters. The
+  magnitude and color differences of the penalty are scaled by the widths of the Hess
+  diagram ranges, so that the magnitude no longer dominates it
+- ``Sampler.summary()`` returns the statistics of the mean extinction of the cluster
+  stars, ``Av + f_mean * DR`` (``A_mean`` key), obtained for each posterior sample.
+  When ``DR`` is fitted it is better constrained than ``Av`` and ``DR``, which are
+  anti-correlated
+- Added the ``Synthetic.cmd_overlap()`` method, a goodness of fit value that can be
+  compared across clusters with any number of stars. It takes the parameters
+  dictionary (the synthetic cluster is generated internally), and shows a warning for
+  poor fits (``D>0.25`` and ``D>3*D_std``)
+- The ``eq_to_gal`` argument of ``Membership.bayesian()`` now defaults to ``True``
+  (**breaking change**), as in ``Membership.fastmp()`` and ``Cluster.get_nmembers()``:
+  the ``(ra, dec)`` coordinates are converted to galactic ``(lon, lat)`` before
+  estimating the probabilities. Pass ``eq_to_gal=False`` to obtain the previous
+  results
 - Added ``mag_correct`` argument to ``Membership.fastmp()`` to remove the bias towards
   stars with small uncertainties (i.e.: brighter stars). The probabilities are adjusted
   so that a ``P>=0.5`` cut follows the magnitude distribution of the members selected
@@ -76,8 +148,9 @@ jump to 0.8.0. The most important changes are:
   confused with the extinction parameter ``Rv``)
 - ``Cluster.to_csv()`` now also saves the ``star_id`` column, and the radial
   velocities (``Rad_v, eRad_v``) if they were loaded from the UCC members file
-- ``pandas`` is an optional dependency: loading data from the UCC members file and
-  ``Cluster.to_csv()`` now raise an informative ``ImportError`` if it is not installed
+- ``pandas`` and ``pyarrow`` are now required dependencies. They are used to load the
+  UCC members file and by ``Cluster.to_csv()`` (v0.7.0 imported ``pandas`` for these
+  without declaring it as a dependency)
 - Added ``mass_interpolation`` argument to ``Isochrones``, to select how the
   interpolation points are distributed along the isochrones with no EEPs (i.e.: PARSEC
   and BASTI): ``mass_skewed`` (default, more points towards the largest masses, which
@@ -85,46 +158,142 @@ jump to 0.8.0. The most important changes are:
 - More checks and warnings when loading the isochrones. The ``N_points`` value shown
   when loading them is now the number of points actually used (for MIST isochrones
   this is the number of EEPs, not the ``N_points`` argument)
+- Warnings are now shown as ``UserWarning: message``, in lines of at most 80
+  characters, without the path of the file that issued them and its source line.
+  They are still ``UserWarning``\ s (of the subclass ``ASteCAWarning``), so they can
+  be filtered as before; the format of other packages' warnings is not changed
 - ``numba`` (optional) is used if installed, to compile the most demanding functions.
-  Speed improvements compared to v0.7.0:
+  Speed compared to v0.7.0:
 
-  - Faster generation of synthetic clusters (~2.8X with ``numba``, ~30% without)
-  - Faster ``Likelihood.dist()`` (formerly ``get()``; ~2X with ``numba``, same speed
-    without)
-  - Faster IMF sampling when instantiating ``Synthetic`` (~5X with ``numba``, ~3X
-    without); the sampled masses are unchanged for a given seed
-  - Faster ``Synthetic.get_models()`` (~2X, with or without ``numba``)
+  - Generation of synthetic clusters: ~2-5X faster with ``numba`` (largest for
+    clusters with few stars; up to ~1.3X more with ``batch=True``), and ~15-20%
+    slower without it when ``DR>0`` (similar speed for clusters of a few hundred
+    stars, and for ``DR=0``). The difference comes from drawing the differential
+    reddening for each synthetic star (see above), which evaluates the extinction
+    law once per star instead of once per isochrone point
+  - Likelihood evaluation: ~5-9X faster with ``numba``, same speed without
+  - Instantiating and calibrating ``Synthetic``: ~4-10X faster (no IMF sample is
+    drawn, see the ``max_mass`` entry below), with or without ``numba``
   - Faster isochrone loading (~7X) and ``Membership.fastmp()`` (~30%), with or
     without ``numba``
 
-- Added the ``Synthetic.generate_batch()`` and ``Likelihood.log_lkl_batch()`` methods,
-  to generate many synthetic clusters (or their log-likelihoods) in a single call, with
-  identical results to calling ``Synthetic.generate()`` (and ``Likelihood.log_lkl()``)
-  for each model. With ``numba`` the whole batch is evaluated in one compiled call, and
-  ``log_lkl_batch()`` can distribute the models among several threads
-  (``parallel=True``), e.g.: for pocoMC with ``vectorize=True``. Without ``numba``
-  there is no speedup
+- Added the ``Sampler`` class, which estimates the fundamental parameters with
+  Sequential Monte Carlo and persistent sampling (adapted from pocoMC, without its
+  normalizing flow preconditioning; no extra packages required). It evaluates the particles in batches (generating the
+  synthetic clusters and their likelihoods in a single compiled call with ``numba``,
+  optionally in parallel threads), can select the likelihood temperature from the number of members (``temperature="auto"``), and
+  its ``summary()`` method returns the median, mean, standard deviation, and 16th and
+  84th percentiles of each fitted parameter, the fraction of the posterior close to
+  the limits of each prior (``edge_low, edge_high``), and diagnostics of the run
+  (``diagnostics`` key: effective sample size ``ess``, the effective sample size of
+  the distinct samples ``ess_unique``, the MCMC acceptance rate ``accept`` and number
+  of ``steps`` of the last iteration, and the fraction of likelihood evaluations with
+  no overlap between the synthetic and observed clusters ``no_overlap_frac``). All
+  its values are dictionaries. Its random seed is inherited from the ``Synthetic`` object, so a
+  single ``seed`` makes the whole fit reproducible
 
-- Loading the sampled IMF masses now uses half the memory
-- Fixed: stars very close to the edges of the Hess diagram were discarded, which
-  (combined with ``nan`` photometry) could produce negative likelihood distances for
-  some small clusters. A small buffer is now added to the edges of the Hess diagram
-- Fixed: a ``nan`` magnitude could make ``Synthetic.calibrate()`` store a ``nan``
-  maximum magnitude (all synthetic clusters were then empty), and made the
-  ``max_mag_perc`` argument of ``Cluster`` fail
-- Fixed: the ``membership`` attribute of the ``Cluster`` object returned by
-  ``Membership.select_members()`` still pointed to the full field, so that running a
-  membership method on the selected members overwrote the field's probabilities
-- Fixed: ``Membership.select_members(N_prob_max=...)`` raised an error unless
-  ``prob_min=None`` was also passed. ``prob_min`` now defaults to ``None``, and
-  ``prob_min=0.5`` is used when neither argument is given
-- Fixed: the ``GAIADR3`` extinction law was extrapolated for stars outside of the
-  intrinsic color range of its coefficients (``-0.06 < BP-RP < 2.5``), where its
-  polynomials diverge (e.g.: ``E(BP-RP)/A_V`` grew from ``0.44`` to ``~2`` for
-  ``BP-RP=5`` red dwarfs). The coefficients are now evaluated with the colors clamped
-  to that range
-- Fixed: wrong ``M_actual`` STDDEV value (was returning the median)
-- Fixed: wrong identification of BSSs when ``DR!=0``
+- Added the ``batch`` argument to ``Synthetic.generate()``, to generate many synthetic
+  clusters in a single call, with identical results to generating each model
+  separately. With ``numba`` the whole batch is generated in one compiled call, e.g.: for
+  samplers that evaluate many models at once. Without ``numba`` there is no speedup
+
+- The internal data of ``Synthetic`` was moved out of its attributes (**breaking
+  change** for code that reads them): ``theor_tracks, met_age_dict, met_tol, age_tol,
+  m_ini_idx, ext_coefs, rand_floats`` are now held by a single object built when
+  ``Synthetic`` is instantiated, and the data stored by ``Synthetic.calibrate()``
+  (``max_mag_syn_obs, N_stars_obs, err_dist_obs, cluster_mag, cluster_colors,
+  cluster_ra, cluster_dec``) by a second one. The ``max_mass, st_dist_mass,
+  st_dist_mass_ordered`` attributes (IMF sample, see the ``max_mass`` entry below) and
+  the ``sampled_models, sampled_synthcls`` attributes (stored by the removed
+  ``Synthetic.get_models()``) no longer exist. Both the single and the batched
+  generation of synthetic clusters (and the likelihood used by ``Sampler``) read their
+  data from these objects. If ``Synthetic.calibrate()`` fails, the object is left
+  unchanged (before, it could be left partially calibrated)
+- The parameters of single and batched synthetic clusters are now validated by the
+  same function, so ``Synthetic.generate()`` accepts and rejects the same values
+  with ``batch=True`` and ``batch=False``. With ``batch=False``, an unrecognized
+  parameter name (e.g.: a typo such as ``Avv``) now raises a ``ValueError`` instead
+  of being silently ignored, and a ``nan`` value of any parameter is rejected in
+  both modes (before, it was rejected for ``met, loga`` only). The limits of the priors
+  given to ``Sampler`` are validated by the same function (unknown names,
+  isochrones' ranges, negative values, ``Rv > 0``), so the same priors are
+  accepted as before but the error messages changed, e.g.:
+  ``Invalid 'priors': Parameter met=0.00900 outside isochrone range [0.01, 0.03]``
+- ``Sampler`` generates its synthetic clusters and likelihoods through the same
+  engine used by ``Synthetic.generate(batch=True)``, which selects the compiled
+  (``numba``) or pure Python implementation once. It keeps the observed cluster
+  that the ``Synthetic`` object was calibrated with when the ``Sampler`` was
+  created: calling ``Synthetic.calibrate()`` again does not affect an existing
+  ``Sampler``
+- With ``numba`` installed, single synthetic clusters are also generated by the
+  compiled function used for batches (including the isochrone and the data for the
+  mass estimates, used by ``Synthetic.cluster_properties()``,
+  ``Synthetic.get_isochrone()`` and ``Synthetic.cmd_overlap()``), so there is a
+  single implementation of the synthetic clusters when ``numba`` is available; the
+  Python implementation is used without ``numba``
+- Results are identical with and without ``numba`` for a given seed (synthetic
+  clusters, log-likelihoods and ``Synthetic.cmd_overlap()``)
+- ``Synthetic(def_params=...)`` can now include only some of the parameters, the
+  others take the built-in default values (before, a missing parameter made every
+  call that relied on it fail with a ``KeyError``). Unknown names raise a
+  ``ValueError``, and invalid default values (including the built-in ones, e.g.: a
+  metallicity outside the isochrones' range) are reported with a warning that uses
+  the same message as when generating a synthetic cluster
+- Fixed: ``Synthetic.cluster_properties()`` failed with a ``scipy`` "Domain error"
+  when the isochrones have a single metallicity (or age) and a non-zero STDDEV was
+  given for it. The parameter now takes the value of the isochrones in all the
+  sampled models
+
+- The masses of the synthetic stars are drawn, for each model, from the IMF
+  restricted to the mass range of the isochrone points brighter than the maximum
+  magnitude, instead of taken from an IMF sample of fixed total mass (``max_mass``)
+  drawn when the ``Synthetic`` object was created. Stars outside of that range can
+  never be observed, so the synthetic stars follow the same distribution, but a
+  synthetic cluster no longer runs out of stars: the mass required per observed star
+  depends on the model, and for clusters observed only down to near the turn-off
+  (old, metal rich or distant ones) the IMF sample could not supply enough stars for
+  the models close to them, which biased their fits. E.g. ``ngc6791`` (UCC members,
+  ``3987`` stars, ``~11 Msun`` of IMF per observed star) was fitted with
+  ``loga=9.5``, ``met=0.005`` with the default IMF sample instead of ``loga=9.9``,
+  ``met=0.032`` (``logz`` ``-178`` vs ``-84``). The ``max_mass`` argument of
+  ``Synthetic`` was removed (**breaking change**). The IMF is tabulated when the object
+  is created (no sampling, ``~60 MB`` instead of ``~0.5 GB`` or more for the IMF
+  samples), and the random values of the candidate stars (``20`` per observed star,
+  with a separate window for each grid node of the isochrones) are drawn by
+  ``Synthetic.calibrate()``, so the results for a cluster do not depend on the
+  clusters calibrated before. Without calibration, ``Synthetic.generate()`` returns
+  exactly ``N_stars`` stars (previously at most the size of the IMF sample, ~15000
+  stars), and shows a warning above ``10^6`` stars (``~0.2 GB`` of memory per
+  million). Results are not identical to previous versions for the same ``seed``
+- ``M_actual`` is now the exact present-day mass of the simulated cluster whose
+  observable part is each synthetic cluster: the candidate stars up to the last one
+  kept, plus the alive stars of the IMF outside of their mass range that they
+  represent (integrated over the IMF), and their companions (the actual ones for the
+  synthetic stars, the expected ones for the rest). Previously ``M_phot`` was extrapolated from the observed
+  mass with the IMF mass ratio below/above the smallest synthetic mass, taken from a
+  random IMF sample. That ignored the stars near the magnitude limit lost to
+  differential reddening (or only observed when brightened by a companion), and
+  scaled the companions of unobserved low mass stars with the binary fraction of the
+  observed ones. On a mock (782 stars) the previous values differed from the new ones
+  by ``-4%`` to ``+6%``
+- Fixed: the fraction of the initial mass left after the stellar evolution mass loss
+  (``mu_ev``, Lamers et al. 2010 polynomials) was larger than ``1`` for young, metal
+  poor clusters (up to ``1.054`` for ``Z=0.0004, log(age)=6``). The evolutionary
+  and dynamical masses were then set to zero and ``M_init`` to ``M_actual``. It is now
+  clipped to ``1``; the effect on the masses is below 1%
+- The coefficients of the ``mu_ev`` polynomials are now interpolated in ``log10(Z)``
+  between the five tabulated metallicities, instead of taking those of the closest one
+  in linear ``Z``. This removes the jumps between metallicities (e.g.: ``Z=0.0059`` vs
+  ``Z=0.0061``) and the use of the ``Z=0.02`` values for solar metallicity
+  (``Z=0.0152``). A warning is shown for metallicities outside of the
+  ``0.0004 <= Z <= 0.02`` range, where the closest values are used
+- Fixed: the cluster center used to estimate the ambient density (when no ``rho_amb``
+  or ``radec_c`` is given) was the plain median of the observed RA values, wrong for
+  clusters crossing ``RA=0``. The median is now taken relative to the circular mean
+- ``Synthetic.cluster_properties()`` now raises an error if ``rho_amb`` is not a
+  finite value larger than zero (it previously returned ``nan`` or wrong masses)
+- Fixed: ``Synthetic.cluster_masses()`` returned the median of ``M_actual`` as its
+  uncertainty (instead of its STDDEV)
 - Fixed: ``stage=9`` points were not being removed from PARSEC isochrones
 - Fixed: ``Membership.fastmp()`` used the same random draw to resample ``pmRA``,
   ``pmDE``, and ``plx``; they are now resampled independently. The number of stars
@@ -158,11 +327,15 @@ jump to 0.8.0. The most important changes are:
   the user
 - Fixed: the check for isochrones with different numbers of points after the
   interpolation never raised an error
-- Fixed: the arrays of random values used to generate synthetic clusters were sized
-  using only the first age of each metallicity, and could be shorter than the IMF
-  samples of other ages. This was masked by the isochrones' minimum masses being
-  larger than the IMF's (``0.08`` Msun). Synthetic clusters for a fixed seed differ
-  from previous versions
+- Fixed: loading an isochrones grid whose metallicities do not share the same ages
+  (e.g.: BaSTI, where the maximum age depends on the metallicity) raised an
+  ``IndexError``. Only the ages present in all the metallicities are now kept, and a
+  warning shows how many isochrones were discarded
+- Documentation: the tutorial with the pocoMC sampler was replaced by one with the
+  emcee MCMC sampler and a user-defined likelihood (the pocoMC notebook is kept in the
+  repository, marked as deprecated; ``asteca.Sampler`` is adapted from pocoMC). The
+  goodness of fit tutorial compares the results of the three fitting tutorials. All
+  the tutorial plots now share a common style
 
 
 

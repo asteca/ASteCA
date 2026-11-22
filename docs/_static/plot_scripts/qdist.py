@@ -9,6 +9,9 @@ from scipy.interpolate import make_interp_spline
 
 def main():
     """ """
+    # Same style as the plots in the tutorials
+    plt.style.use("../asteca.mplstyle")
+
     qmass_plot()
     qunif_plot()
 
@@ -121,7 +124,7 @@ def qmass_plot(N_m=50000):
     plt.xlabel(r"$q=m_2/m_1$")
     plt.ylabel(r"$Frequency;\;f(q)$")
     plt.legend()
-    plt.savefig("qdist_mass.webp", dpi=300, bbox_inches="tight")
+    plt.savefig("../qdist_mass.webp", dpi=300, bbox_inches="tight")
     plt.close()
 
 
@@ -206,7 +209,7 @@ def qunif_plot(N_m=50000):
     plt.xlabel(r"$q=m_2/m_1$")
     plt.ylabel(r"$Frequency;\;f(q)$")
     plt.legend()
-    plt.savefig("qdist_unif.webp", dpi=300, bbox_inches="tight")
+    plt.savefig("../qdist_unif.webp", dpi=300, bbox_inches="tight")
     plt.close()
 
     # plt.subplot(222)

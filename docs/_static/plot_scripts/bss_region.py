@@ -10,6 +10,9 @@ COL_OFFSET = -0.05
 
 
 def main():
+    # Same style as the plots in the tutorials
+    plt.style.use("../asteca.mplstyle")
+
     # Isochrones parameters
     isochs = asteca.Isochrones(
         model="parsec",
@@ -47,13 +50,17 @@ def main():
 
 
 def mplot(isoch_mag, isoch_col, to_col, to_mag, bss_col):
-    _fig, ax = plt.subplots(figsize=(4, 4))
+    _fig, ax = plt.subplots(figsize=(5, 5))
 
     # Isochrone
-    ax.plot(isoch_col, isoch_mag, color="black", zorder=3)
+    ax.plot(isoch_col, isoch_mag, color="black", zorder=3, label="Isochrone")
 
-    ax.scatter(to_col, to_mag, color="red", s=10, label="TO point", zorder=4)
-    ax.scatter(bss_col, to_mag, color="green", s=10, label="BSS point", zorder=4)
+    ax.scatter(
+        to_col, to_mag, color="C3", s=50, ec="k", lw=0.5, label="TO point", zorder=4
+    )
+    ax.scatter(
+        bss_col, to_mag, color="C2", s=50, ec="k", lw=0.5, label="BSS point", zorder=4
+    )
 
     # BSS region: bluer and brighter than the BSS point
     xmin, ymin = -5, 0
@@ -62,16 +69,16 @@ def mplot(isoch_mag, isoch_col, to_col, to_mag, bss_col):
     ax.fill(
         [xmin, bss_col, bss_col, xmin],
         [ymin, ymin, to_mag, to_mag],
-        color="lightblue",
-        alpha=1,
+        color="C0",
+        alpha=0.2,
+        lw=0,
         zorder=1,
         label="BSS region",
     )
 
-    ax.legend(fontsize=8)
-    ax.tick_params(axis="both", which="major", labelsize=8)
-    ax.set_xlabel("Color", fontsize=8)
-    ax.set_ylabel("Magnitude", fontsize=8)
+    ax.legend(loc="lower left")
+    ax.set_xlabel("$G_{BP}-G_{RP}$")
+    ax.set_ylabel("$G$")
     ax.set_xlim(-0.5, 1.2)
     ax.set_ylim(15, 4)
 

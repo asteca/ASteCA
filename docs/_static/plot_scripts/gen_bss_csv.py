@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-df = pd.read_csv("cluster.csv")
+df = pd.read_csv("../cluster.csv")
 
 
 def add_synthetic_members(df, n_new=30, seed=0):
@@ -65,4 +65,4 @@ df = add_synthetic_members(df, n_new=N)
 
 
 
-df.to_csv("cluster_bss.csv", index=False)
+df.to_csv("../cluster_bss.csv", index=False)

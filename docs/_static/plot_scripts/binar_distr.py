@@ -4,10 +4,13 @@ import numpy as np
 
 def main():
     """
-    Find the best function to fit Duchene & Kraus (2013) Multiplicity
-    Frequency distribution. This is used by ASteCA to assign mass-dependent
-    binary probabilities.
+    Plot the multiplicity fraction of Offner et al. (2023) and the function used by
+    ASteCA to assign mass-dependent binary probabilities (with the default alpha and
+    beta values), for the documentation. See fit_alpha_beta() for the fit of these
+    values.
     """
+    # Same style as the plots in the tutorials
+    plt.style.use("../asteca.mplstyle")
 
     # # Multiplicity frequency; Duchene & Kraus (2013) Fig 1
     # mass_DK = np.array([0.08, .29, .96, 2.4, 7.65, 28.5, 151])
@@ -57,26 +60,32 @@ def main():
     x = np.linspace(0.029, 32, 100)
     y = 0.09 + 0.94 * (x / (1.4 + x))
 
-    plt.figure(figsize=(8, 4))
-    plt.scatter(
+    fig, ax = plt.subplots(figsize=(7, 4))
+    ax.scatter(
         mass_OF,
         multfreq_OF,
         marker="+",
         s=150,
-        lw=3,
-        c="b",
+        lw=2.5,
+        c="C0",
         label="Offner et al. (2023)",
         zorder=4,
     )
-    plt.plot(x, y, "--k", label=r"$\alpha=0.09;\;\beta=0.94$")
+    ax.plot(x, y, "--k", label=r"$\alpha=0.09;\;\beta=0.94$")
 
-    plt.ylim(0, 1)
-    plt.xscale("log")
-    plt.xlabel(r"$m_1\,[M_{\odot}]$")
-    plt.ylabel(r"$P_b\,(m_1)$")
-    plt.legend()
-    plt.savefig("binar_distr.webp", dpi=300, bbox_inches="tight")
-    breakpoint()
+    ax.set_ylim(0, 1)
+    ax.set_xscale("log")
+    ax.set_xlabel(r"$m_1\,[M_{\odot}]$")
+    ax.set_ylabel(r"$P_b\,(m_1)$")
+    ax.legend(loc="upper left")
+    fig.savefig("../binar_distr.webp", dpi=300, bbox_inches="tight")
+
+
+def fit_alpha_beta(mass_OF, multfreq_OF):
+    """
+    Find the best function to fit the multiplicity fraction distribution, and its
+    optimal (alpha, beta) values. Not used to generate the documentation figure.
+    """
 
     # x = np.log(mass_OF)
 

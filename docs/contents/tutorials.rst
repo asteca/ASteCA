@@ -40,12 +40,13 @@ the :py:meth:`asteca.Synthetic.calibrate` method to enhance realism in terms of 
 
 The :ref:`paramfit_section` section contains three notebooks that provide a
 step-by-step guide to estimating the fundamental parameters of a stellar cluster,
-with the :py:class:`asteca.Sampler` class (adapted from the `pocoMC`_ library), and
-with user-defined likelihoods combined with the `pyABC`_ and `pocoMC`_ libraries.
-They show how to set up the fitting process, run it, and extract the final parameter
-estimates (medians and standard deviations). A fourth notebook shows how to assess the
-goodness of fit (CMD overlap) of the fitted synthetic cluster, with a comparison
-Color-Magnitude Diagram (CMD).
+with the :py:class:`asteca.Sampler` class (adapted from the `pocoMC`_ library), with
+a user-defined distance combined with the `pyABC`_ library, and with a user-defined
+likelihood combined with the `emcee`_ library. They show how to set up the fitting
+process, run it, and extract the final parameter estimates (medians and standard
+deviations). A fourth notebook shows how to assess the
+goodness of fit (CMD overlap) of the fitted synthetic clusters, comparing the results
+of the three fitting notebooks, with comparison Color-Magnitude Diagrams (CMDs).
 
 
 The :ref:`post_process_ntbk` notebook shows how to apply the
@@ -59,3 +60,4 @@ associated cluster masses (initial, actual, dynamical, etc.)
 
 .. _pyABC: https://pyabc.readthedocs.io/
 .. _pocoMC: https://pocomc.readthedocs.io/
+.. _emcee: https://emcee.readthedocs.io/

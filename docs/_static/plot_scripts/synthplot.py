@@ -1,11 +1,15 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.colors import to_rgba
 
 import asteca
 
 
 def main():
+    # Same style as the plots in the tutorials
+    plt.style.use("../asteca.mplstyle")
+
     df = pd.read_csv("../cluster.csv")
 
     # Isochrones parameters
@@ -40,32 +44,31 @@ def main():
     y_synth = synth_clust[0]
     x_synth = synth_clust[1]
 
-    plt.figure(figsize=(5, 5))
+    fig, ax = plt.subplots(figsize=(6, 6))
+    # Isochrone below the stars (the single systems lie on it, as no uncertainties
+    # are added)
+    ax.plot(isoch_arr[1], isoch_arr[0], c="k", lw=1, zorder=0, label="Isochrone")
 
-    # Single synthetic systems
-    plt.scatter(
-        x_synth[~binar_idx],
-        y_synth[~binar_idx],
-        c="#519ddb",
-        alpha=0.35,
-        label="Single systems",
-    )
-    # Binary synthetic systems
-    plt.scatter(
-        x_synth[binar_idx],
-        y_synth[binar_idx],
-        c="#F34C4C",
-        alpha=0.35,
-        label="Binary systems",
-    )
-    plt.plot(isoch_arr[1], isoch_arr[0], c="k", label="Isochrone")
+    # Single and binary synthetic systems: semi-transparent points with a thin black
+    # edge, as in the tutorials
+    for i, (msk, label) in enumerate(
+        ((~binar_idx, "Single systems"), (binar_idx, "Binary systems"))
+    ):
+        ax.scatter(
+            x_synth[msk],
+            y_synth[msk],
+            s=25,
+            fc=to_rgba(f"C{i}", 0.25),
+            ec="k",
+            lw=0.15,
+            label=f"{label}, N={msk.sum()}",
+        )
 
-    plt.xlabel("color")
-    plt.ylabel("mag")
-    plt.legend()
+    ax.set_xlabel("$G_{BP}-G_{RP}$")
+    ax.set_ylabel("$G$")
+    ax.legend(loc="upper right")
+    ax.invert_yaxis()
 
-    plt.gca().invert_yaxis()
-    plt.tight_layout()
     plt.savefig("../synthplot.webp", dpi=300, bbox_inches="tight")
 
 

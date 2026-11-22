@@ -15,7 +15,7 @@ following tutorials show both options.
 
    notebooks/paramfit_sampler
    notebooks/paramfit_pyabc
-   notebooks/paramfit_pocomc
+   notebooks/paramfit_emcee
    notebooks/paramfit_gof
 
 
@@ -26,8 +26,9 @@ built into **ASteCA** (see :ref:`sampler_lkl`). This is the recommended option.
 The :ref:`paramfit_ntbk` notebook uses the `pyABC`_ library (Approximate Bayesian
 Computation), with a simple distance defined by the user, which pyABC minimizes.
 
-The :ref:`paramfit_pocomc_ntbk` notebook uses the `pocoMC`_ library itself, with a
-Poisson likelihood defined by the user.
+The :ref:`paramfit_emcee_ntbk` notebook uses the `emcee`_ library (affine-invariant
+ensemble MCMC), with a Poisson likelihood defined by the user, and shows how to check
+the convergence of an MCMC run.
 
 All the tutorials show how to set up the fitting process, run it, and extract the
 parameter estimates (medians and standard deviations) from the results.
@@ -35,7 +36,8 @@ parameter estimates (medians and standard deviations) from the results.
 The :ref:`paramfit_gof_ntbk` notebook shows how to assess the goodness of fit of the
 synthetic cluster generated with the fitted parameters (whichever method was used to
 obtain them) via its CMD overlap with the observed cluster (see :ref:`cmd_overlap`),
-and a comparison Color-Magnitude Diagram (CMD).
+and a comparison Color-Magnitude Diagram (CMD). It uses this method to compare the
+results of the three fitting tutorials.
 
 pyABC versus asteca.Sampler
 ---------------------------
@@ -65,3 +67,4 @@ that depends on the number of members (see :ref:`sampler_module`).
 .. _MCMC and ABC packages: https://gabriel-p.github.io/pythonMCMC/
 .. _pyABC: https://pyabc.readthedocs.io/
 .. _pocoMC: https://pocomc.readthedocs.io/
+.. _emcee: https://emcee.readthedocs.io/

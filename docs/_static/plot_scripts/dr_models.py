@@ -137,7 +137,7 @@ def plot_distr():
     ax.set_xlabel(r"$f$")
     ax.set_ylabel("density")
     ax.set_title(r"Distribution of $f$ (both bounded in $[0, 1]$)")
-    ax.legend(fontsize=8.5, loc="upper right")
+    ax.legend(fontsize=11, loc="upper right")
     ax.set_ylim(0, 3.3)
 
     def a_pdf(a, Av, DR, mode):
@@ -157,7 +157,7 @@ def plot_distr():
     ax.axvspan(Av, Av + DR, color="0.9", zorder=0)
     ax.set_title(rf"Same parameters: $A_V$={Av}, $DR$={DR}")
     ax.set_xlabel(r"$A$")
-    ax.legend(fontsize=8.5, loc="upper right")
+    ax.legend(fontsize=11, loc="upper right")
     ax.set_ylim(0, 3.3)
 
     Av_i, DR_i = matched_internal(Av, DR)
@@ -169,11 +169,9 @@ def plot_distr():
     ax.axvline(Av + m_fg * DR, c="0.3", ls=":", lw=1.2)
     ax.set_title(rf"Same mean ({Av + m_fg * DR:.2f}) and sd ({s_fg * DR:.2f}) of $A$")
     ax.set_xlabel(r"$A$")
-    ax.legend(fontsize=8.5, loc="upper right")
+    ax.legend(fontsize=11, loc="upper right")
     ax.set_ylim(0, 3.3)
 
-    for ax in axes:
-        ax.grid(alpha=0.25, lw=0.5)
     fig.tight_layout()
     fig.savefig(f"{OUT}/dr_models_distr.webp", dpi=200, bbox_inches="tight")
 
@@ -205,18 +203,19 @@ def plot_cmd():
                            (av + dr, ":", r"$A_V+DR$")):
             iso = sc.get_isochrone(dict(p0, Av=a, DR=0.0))
             ax.plot(iso[1], iso[0], c="k", ls=ls, lw=1.2, label=f"{lab} = {a:.2f}")
-        ax.set_title(f"{title}\n$A_V$={av:.2f}, $DR$={dr:.2f}", fontsize=11)
-        ax.set_xlabel("BP-RP")
-        ax.legend(fontsize=9, loc="upper right", title="isochrone at", title_fontsize=9)
-        ax.grid(alpha=0.25, lw=0.5)
+        ax.set_title(f"{title}\n$A_V$={av:.2f}, $DR$={dr:.2f}", fontsize=13)
+        ax.set_xlabel("$G_{BP}-G_{RP}$")
+        ax.legend(fontsize=11, loc="upper right", title="isochrone at", title_fontsize=11)
         ax.set_xlim(0.4, 2.3)
     axes[0].set_ylim(18.6, 9.4)
-    axes[0].set_ylabel("G")
+    axes[0].set_ylabel("$G$")
     fig.tight_layout()
     fig.savefig(f"{OUT}/dr_models_cmd.webp", dpi=200, bbox_inches="tight")
 
 
 if __name__ == "__main__":
+    # Same style as the plots in the tutorials
+    plt.style.use("../asteca.mplstyle")
     todo = sys.argv[1:] or ["geometry", "distr", "cmd"]
     for name in todo:
         {"geometry": plot_geometry, "distr": plot_distr, "cmd": plot_cmd}[name]()

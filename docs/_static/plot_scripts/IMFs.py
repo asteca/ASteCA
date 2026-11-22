@@ -3,6 +3,9 @@ import numpy as np
 
 
 def main():
+    # Same style as the plots in the tutorials
+    plt.style.use("../asteca.mplstyle")
+
     plt.figure(figsize=(8, 4))
 
     x_vals = np.array(
@@ -24,7 +27,7 @@ def main():
     plt.ylabel(r"$\xi\,(m)$")
     plt.yscale("log")
     # plt.show()
-    plt.savefig("IMFs.webp", dpi=300, bbox_inches="tight")
+    plt.savefig("../IMFs.webp", dpi=300, bbox_inches="tight")
 
 
 def get_imf(IMF_name: str, m_star_array: np.ndarray) -> np.ndarray:
