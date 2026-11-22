@@ -50,6 +50,9 @@ def kernel_data(ctx: "SynthEngine") -> dict:
         "dr_frac": {
             k: np.ascontiguousarray(v) for k, v in ctx.rand_floats["dr_frac"].items()
         },
+        "dr_frac_q": {
+            k: np.ascontiguousarray(v) for k, v in ctx.rand_floats["dr_frac_q"].items()
+        },
         "ext_kind": 0 if ctx.ext_law == "GAIADR3" else 1,
         # Rows [a, b, 0, 0] (magnitude) and [a1, b1, a2, b2] (each color), see
         # precompute.ccmo_filter_coefs(); no rows for GAIADR3
@@ -78,7 +81,8 @@ def synth_args(ctx: "SynthEngine", dr_model: str) -> tuple[tuple, tuple]:
     :type dr_model: str
 
     :return: ``(model, imf)``, with ``model = (met_grid, age_grid, theor_tracks,
-        m_ini_idx, N_a, dr_frac, ext_kind, ccm, unif1, max_mag, err, N_synth)`` and
+        m_ini_idx, N_a, dr_frac, dr_frac_q, ext_kind, ccm, unif1, max_mag, err,
+        N_synth)`` and
         ``imf = (imf_cdf, imf_lut, imf_u, imf_offsets)``
     :rtype: tuple[tuple, tuple]
     """
@@ -90,6 +94,7 @@ def synth_args(ctx: "SynthEngine", dr_model: str) -> tuple[tuple, tuple]:
         ctx.m_ini_idx,
         bd["N_a"],
         bd["dr_frac"][dr_model],
+        bd["dr_frac_q"][dr_model],
         bd["ext_kind"],
         bd["ccm"],
         bd["unif1"],
@@ -105,6 +110,9 @@ if _HAS_NUMBA:
     from numba.typed.typedlist import List
 
     from .generate import (
+        GAIADR3_K_MAX,
+        POOL_ESTIMATE_MIN_STARS,
+        Q_LOST_DEFAULT,
         _apply_extinction_ccmo_nb,
         _apply_extinction_gaiadr3_nb,
         _assign_binaries_nb,
@@ -112,12 +120,14 @@ if _HAS_NUMBA:
         _isochrone_at_met_age_nb,
         _scatter_add_nb,
         initial_pool_size,
+        lost_fraction,
         next_pool_size,
     )
     from .likelihood import _tremmel_sum_nb
 
     _initial_pool_size_nb = njit(cache=True)(initial_pool_size)
     _next_pool_size_nb = njit(cache=True)(next_pool_size)
+    _lost_fraction_nb = njit(cache=True)(lost_fraction)
 
     @njit(cache=True)
     def synth_one_nb(p, model, imf):
@@ -139,6 +149,7 @@ if _HAS_NUMBA:
             m_ini_idx,
             N_a,
             dr_frac,
+            dr_frac_q,
             ext_kind,
             ccm,
             unif1,
@@ -250,7 +261,29 @@ if _HAS_NUMBA:
         off = imf_offsets[node]
         imf_u = imf_u_all[off : off + imf_u_all.size // 2]
         dr_kind = 1 if dr > 0.0 else 0
-        N_pool = _initial_pool_size_nb(N_synth, dr)
+        # Sized with the expected fraction of lost stars (generate.lost_fraction())
+        q_lost = 0.0
+        if dr > 0.0 and N_synth < POOL_ESTIMATE_MIN_STARS:
+            q_lost = Q_LOST_DEFAULT
+        elif dr > 0.0:
+            k_av0 = k_max = GAIADR3_K_MAX
+            if ext_kind == 1:
+                k_av0 = ec_mag
+                k_max = 1.01 * ec_mag
+            q_lost = _lost_fraction_nb(
+                isoch_av[0],
+                isochrone[0],
+                av,
+                dr,
+                k_av0,
+                k_max,
+                imf_cdf[m0, a0],
+                idx_cut[0],
+                idx_cut[-1],
+                max_mag,
+                dr_frac_q,
+            )
+        N_pool = _initial_pool_size_nb(N_synth, q_lost)
         while True:
             # draw_candidates()
             isoch_mass = _draw_candidates_nb(

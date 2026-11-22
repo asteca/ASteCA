@@ -15,6 +15,13 @@ IMF_N_EXTRA = 1000
 IMF_LUT_BUCKETS = 4096
 # Differential reddening models, see dr_fractions()
 DR_MODELS = ("foreground", "internal")
+# Mean of the differential reddening fractions of each model (see dr_fractions()):
+# 1/2 for the normal truncated at +/-3 sigma around 0.5, and 3/8 for the density
+# 3/2 (1 - f^2). The mean absorption of the stars is Av + DR_MEAN_FRAC * DR
+DR_MEAN_FRAC = {"foreground": 0.5, "internal": 0.375}
+# Number of quantiles of the differential reddening fractions stored by
+# draw_rand_floats() (see generate.lost_fraction())
+DR_FRAC_N_QUANTILES = 65
 
 
 def n_candidates(N_stars: int, N_isoch: int) -> int:
@@ -437,9 +444,10 @@ def draw_rand_floats(seed: int, N_cand: int, N_nodes: int) -> dict:
         :py:func:`error_distribution`), ``unif`` (binarity and differential
         reddening), ``dr_frac`` (a dictionary with the fractions of the differential
         reddening for each model in ``DR_MODELS``, all obtained from the same uniform
-        values), ``imf_u`` (``2 * N_cand`` uniform values for the masses of the
-        candidates) and ``imf_offsets`` (the start of the window of ``N_cand`` values
-        of ``imf_u`` used by each grid node)
+        values), ``dr_frac_q`` (``DR_FRAC_N_QUANTILES`` quantiles of each ``dr_frac``
+        array, from ``0`` to ``1``), ``imf_u`` (``2 * N_cand`` uniform values for the
+        masses of the candidates) and ``imf_offsets`` (the start of the window of
+        ``N_cand`` values of ``imf_u`` used by each grid node)
     :rtype: dict
     """
     # Row 1: used by error_distribution() (Synthetic.calibrate()). Row 0 is not
@@ -455,6 +463,10 @@ def draw_rand_floats(seed: int, N_cand: int, N_nodes: int) -> dict:
     # are obtained (from the same uniform values) so that the model can be selected
     # when a synthetic cluster is generated, at no cost
     dr_frac = {m: dr_fractions(rand_unif_vals[0], m) for m in DR_MODELS}
+    # Quantiles of the fractions, used to estimate how many candidate stars are lost
+    # to the differential reddening (see generate.lost_fraction())
+    q_levels = np.linspace(0.0, 1.0, DR_FRAC_N_QUANTILES)
+    dr_frac_q = {m: np.quantile(v, q_levels) for m, v in dr_frac.items()}
 
     # Uniform values for the masses of the candidate stars. Each grid node (the
     # (z, a) box of the model) uses its own window of N_cand of them, at a random
@@ -467,6 +479,7 @@ def draw_rand_floats(seed: int, N_cand: int, N_nodes: int) -> dict:
         "norm": rand_norm_vals,
         "unif": rand_unif_vals,
         "dr_frac": dr_frac,
+        "dr_frac_q": dr_frac_q,
         "imf_u": imf_u,
         "imf_offsets": imf_offsets,
     }
