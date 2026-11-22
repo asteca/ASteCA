@@ -353,6 +353,17 @@ class Sampler:
           truncated. This is expected for limits that are physical (e.g.: ``Av=0``
           or ``DR=0``) or that are those of the isochrones (``met, loga``).
 
+        Mean extinction (``A_mean`` key): ``median, mean, std, p16, p84`` of the
+        mean extinction of the cluster stars, ``Av + f_mean * DR``, where ``f_mean``
+        is the mean fraction of ``DR`` received by the stars (``0.5`` for the
+        ``foreground`` differential reddening model, ``0.375`` for ``internal``; the
+        model used in the run). ``Av`` or ``DR`` take their default values if they
+        were not fitted, so it is equal to ``Av`` if ``DR`` was fixed to ``0``. When
+        ``DR`` is fitted it is better constrained than ``Av`` and ``DR``, which are
+        anti-correlated (see :ref:`mean_extinction`). It is obtained for each
+        posterior sample, so its interval is not the combination of those of ``Av``
+        and ``DR``.
+
         Diagnostics of the run (``diagnostics`` key, single values):
 
         - ``ess``: effective sample size of the posterior samples, ``sum(w)**2 /
@@ -387,20 +398,33 @@ class Sampler:
 
         :return: Dictionary with the keys ``median, mean, std, p16, p84, edge_low,
             edge_high``, each one a dictionary with the value of that statistic for
-            each fitted parameter, and the key ``diagnostics``, a dictionary with
-            the keys ``ess, ess_unique, accept, steps, no_overlap_frac``
+            each fitted parameter, the key ``A_mean``, a dictionary with the keys
+            ``median, mean, std, p16, p84`` of the mean extinction, and the key
+            ``diagnostics``, a dictionary with the keys ``ess, ess_unique, accept,
+            steps, no_overlap_frac``
         :rtype: dict[str, dict[str, float]]
         """
         from .modules.smc import effective_sample_size
+        from .modules.synthetic.precompute import DR_MEAN_FRAC
 
         samples, weights = self.posterior()
         w_sum = np.sum(weights)
 
-        mean = np.sum(weights[:, None] * samples, axis=0) / w_sum
-        var = np.sum(weights[:, None] * (samples - mean) ** 2, axis=0) / w_sum
-        p16, p50, p84 = np.percentile(
-            samples, (16, 50, 84), axis=0, weights=weights, method="inverted_cdf"
-        )
+        def weighted_stats(x: np.ndarray) -> dict[str, np.ndarray]:
+            """Weighted median, mean, STDDEV, and 16th and 84th percentiles of each
+            column of ``x``"""
+            mean = np.sum(weights[:, None] * x, axis=0) / w_sum
+            var = np.sum(weights[:, None] * (x - mean) ** 2, axis=0) / w_sum
+            p16, p50, p84 = np.percentile(
+                x, (16, 50, 84), axis=0, weights=weights, method="inverted_cdf"
+            )
+            return {
+                "median": p50,
+                "mean": mean,
+                "std": np.sqrt(var),
+                "p16": p16,
+                "p84": p84,
+            }
 
         # Posterior mass close to the limits of the priors
         low, high = self.bounds.T
@@ -408,18 +432,27 @@ class Sampler:
         edge_low = np.sum(weights[:, None] * (samples <= low + edge), axis=0) / w_sum
         edge_high = np.sum(weights[:, None] * (samples >= high - edge), axis=0) / w_sum
 
-        stats = {
-            "median": p50,
-            "mean": mean,
-            "std": np.sqrt(var),
-            "p16": p16,
-            "p84": p84,
-            "edge_low": edge_low,
-            "edge_high": edge_high,
-        }
+        stats = weighted_stats(samples) | {"edge_low": edge_low, "edge_high": edge_high}
         summ = {
             stat: dict(zip(self.names, map(float, vals)))
             for stat, vals in stats.items()
+        }
+
+        def par_samples(par: str) -> np.ndarray:
+            """Posterior samples of a parameter, or its fixed value if not fitted"""
+            if par in self.names:
+                return samples[:, self.names.index(par)]
+            return np.full(len(samples), self._P_default[FULL_PARAMS.index(par)])
+
+        # Mean extinction of the stars, obtained for each sample (Av and DR are
+        # anti-correlated, so combining their statistics would give a too wide
+        # interval). The model of the run is used
+        assert self.DR_distribution is not None
+        f_mean = DR_MEAN_FRAC[self.DR_distribution]
+        A_mean = par_samples("Av") + f_mean * par_samples("DR")
+        summ["A_mean"] = {
+            stat: float(vals[0])
+            for stat, vals in weighted_stats(A_mean[:, None]).items()
         }
 
         # ESS of the distinct samples: the weights of identical samples are summed
