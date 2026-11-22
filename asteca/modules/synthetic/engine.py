@@ -57,7 +57,8 @@ class SynthEngine:
     :vartype def_params: dict
     :ivar m_ini_idx: Index of the initial mass row
     :vartype m_ini_idx: int
-    :ivar theor_tracks: Theoretical isochrones, with the binary systems added
+    :ivar theor_tracks: Theoretical isochrones, with the first filter of each color
+        added (see :py:func:`precompute.add_color_filters`)
     :vartype theor_tracks: np.ndarray
     :ivar ext_law: Extinction law
     :vartype ext_law: str
@@ -75,6 +76,9 @@ class SynthEngine:
     :vartype imf_cdf: np.ndarray
     :ivar imf_lut: Bucket lookup tables of ``imf_cdf``
     :vartype imf_lut: np.ndarray
+    :ivar q_dist: Tables of the mass-ratio distribution of the binary systems, see
+        :py:func:`precompute.mass_ratio_dist`
+    :vartype q_dist: tuple
     :ivar max_mag: Maximum magnitude of the synthetic clusters
     :vartype max_mag: float
     :ivar err_dist: Error distributions added to the synthetic photometry, one row
@@ -97,6 +101,7 @@ class SynthEngine:
     imf_knots: tuple
     imf_cdf: np.ndarray
     imf_lut: np.ndarray
+    q_dist: tuple
     max_mag: float = np.inf
     err_dist: np.ndarray = field(default_factory=lambda: np.empty((0, 0)))
     N_synth: int = 0
@@ -342,6 +347,15 @@ class SynthEngine:
             return compiled.log_lkl_batch_parallel_nb(*args)
         finally:
             numba.set_num_threads(prev_threads)
+
+    @cached_property
+    def binar_tables(self) -> tuple:
+        """Data used to obtain the mass ratios and the photometry of the binary
+        systems (see :py:func:`precompute.binary_tables`), obtained the first time it
+        is needed. Requires the random values (``rand_floats``)"""
+        from .precompute import binary_tables
+
+        return binary_tables(self.q_dist, self.rand_floats["q_u"])
 
     @cached_property
     def kernel_data(self) -> dict:

@@ -5,6 +5,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 
 from ..warn import warn
+from .precompute import mean_mass_ratio
 
 # Number of points used to integrate the mass of the IMF outside of the mass range
 # of the candidate stars (see actual_mass())
@@ -328,11 +329,10 @@ def imf_mass_integral(F_a: float, F_b: float, mass_info: dict) -> float:
 
 def companion_mass(m1: np.ndarray, mass_info: dict) -> np.ndarray:
     """Expected mass of the companion of each primary mass, with the binary
-    probability and mass ratios used to generate the synthetic clusters (see
-    :py:func:`generate.assign_binaries`): the probability of being a binary times the
-    secondary mass of the isochrone, interpolated through its mass ratio ``q``
-    (the value of the closest isochrone point is used for masses outside of its
-    range).
+    probability and mass-ratio distribution used to generate the synthetic clusters
+    (see :py:func:`generate.assign_binaries`): the probability of being a binary
+    times the mean mass ratio for that primary mass (see
+    :py:func:`precompute.mean_mass_ratio`) times the primary mass.
 
     :param m1: Primary masses.
     :type m1: np.ndarray
@@ -344,13 +344,11 @@ def companion_mass(m1: np.ndarray, mass_info: dict) -> np.ndarray:
     :rtype: np.ndarray
     """
     alpha, beta = mass_info["alpha"], mass_info["beta"]
-    m2_row = mass_info["m2_row"]
-    if m2_row is None or m1.size == 0:
+    if (alpha == 0.0 and beta == 0.0) or m1.size == 0:
         return np.zeros(m1.size)
 
     b_p = np.clip(alpha + beta / (1.0 + 1.4 / m1), 0.0, 1.0)
-    mass_row = mass_info["mass_row"]
-    q = np.interp(m1, mass_row, m2_row / mass_row)
+    q = mean_mass_ratio(m1, mass_info["q_dist"])
 
     return b_p * q * m1
 

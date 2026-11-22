@@ -74,7 +74,10 @@ class Synthetic:
         one of ``salpeter_1955, kroupa_2001, chabrier_2014``
     :type IMF_name: str
     :param gamma: Distribution function for the mass ratio of the binary systems,
-        float or one of ``D&K, fisher_stepped, fisher_peaked, raghavan``
+        float (``> -1``) or one of ``D&K, fisher_stepped, fisher_peaked, raghavan``.
+        The mass ratio of each binary system is drawn from it, given its primary mass
+        (``D&K`` exponents are interpolated in primary mass, see
+        :ref:`synthetic_module`)
     :type gamma: float | str
     :param ext_law: Extinction law, one of ``CCMO, GAIADR3``.
         If ``GAIADR3`` is selected, the magnitude and first
@@ -156,18 +159,16 @@ class Synthetic:
         self._print("\nInstantiating synthetic")
         from .modules.synthetic import precompute as pre
 
-        # Add binary systems to the theoretical isochrones, store the resulting
-        # tracks in the :py:class:`Synthetic` object. The binary systems are
-        # generated with the same random values for all the synthetic clusters, so
-        # they can be compared without random noise
-        theor_tracks = pre.add_binary_tracks(
-            self.rng,
-            self.gamma,
+        # Add the first filter of each color to the theoretical isochrones, used to
+        # obtain the photometry of the binary systems. Their secondary masses are
+        # obtained for each synthetic star, from the mass-ratio distribution
+        theor_tracks = pre.add_color_filters(
             self.isochs.color,
             self.isochs.color2,
             self.isochs.theor_tracks,
             self.isochs.color_filters,
         )
+        q_dist = pre.mass_ratio_dist(self.gamma)
 
         # Index of the initial mass row of the synthetic clusters
         m_ini_idx = 2  # (0->mag, 1->color, 2->mass_ini)
@@ -245,6 +246,7 @@ class Synthetic:
             imf_knots=(imf_x, imf_y),
             imf_cdf=imf_cdf,
             imf_lut=imf_lut,
+            q_dist=q_dist,
         )
         # Engine used by an object not calibrated, and its number of stars
         self._engine_uncal: tuple[int, SynthEngine] | None = None

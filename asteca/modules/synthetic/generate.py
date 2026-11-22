@@ -156,17 +156,10 @@ def synth_one(
             ah,
         )
 
-    binar_flag = True
-    if alpha == 0.0 and beta == 0.0:
-        binar_flag = False
-
-        # # TODO: this was not tested thoroughly (April 2025)
-        # # Remove binary photometry
-        # isochrone = isochrone[: self.m_ini_idx + 2]
-        # # TODO: this was not tested thoroughly
+    binar_flag = not (alpha == 0.0 and beta == 0.0)
 
     # Move theoretical isochrone using the distance modulus
-    isoch_moved = apply_distance(isochrone, binar_flag, m_ini_idx, dm)
+    isoch_moved = apply_distance(isochrone, dm)
 
     # Isochrone with the minimum absorption Av (no differential reddening). It is
     # only used to identify the isochrone points that can produce stars brighter
@@ -177,8 +170,6 @@ def synth_one(
         ext_law,
         ext_coefs,
         dr_frac,
-        m_ini_idx,
-        binar_flag,
         av,
         0.0,
         rv,
@@ -251,24 +242,24 @@ def synth_one(
             return isoch_extin_dr_0, np.array([])
         N_stars = isoch_mass.shape[1]
 
-        # Assignment of binarity.
+        # Assignment of binarity. The secondary of each binary system is
+        # interpolated in the (full) isochrone moved by the distance modulus
         isoch_binar = assign_binaries(
             alpha,
             beta,
             binar_flag,
             m_ini_idx,
             rand_floats["unif"][1],
+            ctx.binar_tables,
+            isoch_moved,
             isoch_mass,
         )
 
-        # Extinction of each star, from the intrinsic color of the system. The
-        # binary photometry was already combined, hence 'binar_flag=False'
+        # Extinction of each star, from the intrinsic color of the system
         isoch_binar = apply_extinction(
             ext_law,
             ext_coefs,
             dr_frac,
-            m_ini_idx,
-            False,
             av,
             dr,
             rv,
@@ -355,14 +346,12 @@ def isochrone_at_dr_frac(
     """
     if not isoch_flag:
         return np.array([])
-    _, _, alpha, beta, av, dr, rv, _ = p.tolist()
+    _, _, _, _, av, dr, rv, _ = p.tolist()
     if isoch_dr_frac > 0 and dr > 0:
         return apply_extinction(
             ctx.ext_law,
             ctx.ext_coefs,
             ctx.rand_floats["dr_frac"][dr_model],
-            ctx.m_ini_idx,
-            not (alpha == 0.0 and beta == 0.0),
             av + isoch_dr_frac * dr,
             0.0,
             rv,
@@ -387,9 +376,9 @@ def fill_mass_info(
     stars kept (``kept_idx``), the number of stars requested (``N_target``), the IMF
     CDF at the limits of the mass range (``F_lo``, ``F_hi``) and at the largest
     mass of the isochrone (``F_alive``), the knots of the inverse CDF
-    (``imf_knots``), the initial and secondary masses of the isochrone
-    (``mass_row``, ``m2_row``), and the binary fraction parameters (``alpha``,
-    ``beta``)
+    (``imf_knots``), the initial masses of the isochrone (``mass_row``), the
+    binary fraction parameters (``alpha``, ``beta``), and the tables of the
+    mass-ratio distribution (``q_dist``, see :py:func:`precompute.mass_ratio_dist`)
 
     :param mass_info: Dictionary to fill
     :type mass_info: dict
@@ -402,7 +391,6 @@ def fill_mass_info(
     """
     m_ini_idx, N_synth_stars = ctx.m_ini_idx, ctx.N_synth
     alpha, beta = p[2:4].tolist()
-    binar_flag = not (alpha == 0.0 and beta == 0.0)
     # IMF node and grid node of the model (see synth_one())
     imf_u = imf_uniforms(ctx.rand_floats, out.node)
     imf_F = ctx.imf_cdf[out.m0, out.a0]
@@ -433,9 +421,9 @@ def fill_mass_info(
             "F_alive": float(imf_F[-1]),
             "imf_knots": ctx.imf_knots,
             "mass_row": mass_row.copy(),
-            "m2_row": out.isoch_moved[m_ini_idx + 1].copy() if binar_flag else None,
             "alpha": alpha,
             "beta": beta,
+            "q_dist": ctx.q_dist,
         }
     )
 
@@ -726,10 +714,7 @@ def isochrone_at_met_age(
 
     # DO NOT average the masses or their distribution will be lost.
     # Overwrite mutated mass values with the exact discrete distribution from the closest node
-    closest_iso = theor_tracks[m0][a0]
-    isochrone[m_ini_idx] = closest_iso[m_ini_idx]
-    # Now for the secondary masses
-    isochrone[m_ini_idx + 1] = closest_iso[m_ini_idx + 1]
+    isochrone[m_ini_idx] = theor_tracks[m0][a0][m_ini_idx]
 
     return isochrone, m0, a0
 
@@ -755,7 +740,7 @@ if _HAS_NUMBA:
         :py:func:`isochrone_at_met_age`. A single pass reads the four grid isochrones and
         writes the weighted sum, with the same operations in the same order as
         the NumPy version (identical results), without temporary arrays. The
-        two mass rows are copied from the closest node (m0, a0) instead of being
+        mass row is copied from the closest node (m0, a0) instead of being
         averaged and then overwritten.
         """
         t11 = theor_tracks[ml, al]
@@ -766,7 +751,7 @@ if _HAS_NUMBA:
         N_rows, N_pts = t11.shape
         isochrone = np.empty((N_rows, N_pts), dtype=t11.dtype)
         for r in range(N_rows):
-            if r == m_ini_idx or r == m_ini_idx + 1:
+            if r == m_ini_idx:
                 # DO NOT average the masses (see isochrone_at_met_age())
                 for k in range(N_pts):
                     isochrone[r, k] = t00[r, k]
@@ -780,18 +765,17 @@ if _HAS_NUMBA:
         return isochrone
 
 
-def apply_distance(
-    isochrone: np.ndarray, binar_flag: bool, m_ini_idx: int, dm: float
-) -> np.ndarray:
+def apply_distance(isochrone: np.ndarray, dm: float) -> np.ndarray:
     """Receives an isochrone of a given age and metallicity and modifies
     its magnitude values according to a given distance modulus.
 
+    The filters stored after the initial mass (see
+    :py:func:`precompute.add_color_filters`) are not moved: they are only used to
+    combine the photometry of the binary systems, which depends on the differences
+    between the magnitudes of their components.
+
     :param isochrone: Isochrone array.
     :type isochrone: np.ndarray
-    :param binar_flag: Binary flag
-    :type binar_flag: bool
-    :param m_ini_idx: Index of the initial mass.
-    :type m_ini_idx: int
     :param dm: Distance modulus.
     :type dm: float
 
@@ -801,11 +785,6 @@ def apply_distance(
     isochrone = np.ascontiguousarray(isochrone)
     # Move magnitude
     isochrone[0] += dm
-    # Move binary magnitude if required
-    if binar_flag:
-        # m_ini_idx + 1 --> Secondary binary mass
-        # m_ini_idx + 2 --> Binary magnitude
-        isochrone[m_ini_idx + 2] += dm
 
     return isochrone
 
@@ -814,8 +793,6 @@ def apply_extinction(
     ext_law: str,
     ext_coefs: np.ndarray,
     dr_frac: np.ndarray,
-    m_ini_idx: int,
-    binar_flag: bool,
     Av: float,
     dr: float,
     Rv: float,
@@ -827,7 +804,8 @@ def apply_extinction(
 
     The distance modulus was applied before this function.
 
-    isochrone = [mag, c1, (c2), Mini, Mini_b, mag_b, c1b, (c2b)]
+    Only the magnitude and color(s) (the first rows of ``isochrone``) are modified:
+    the rows after them (initial mass, filters, secondary mass) are not.
 
     For the CCMO model ``ext_coefs`` has a row ``[a, b, 0, 0]`` for the magnitude
     and a row ``[a1, b1, a2, b2]`` for each color (see
@@ -865,10 +843,6 @@ def apply_extinction(
     :type ext_coefs: np.ndarray
     :param dr_frac: Fractions of the differential reddening applied to each column.
     :type dr_frac: np.ndarray
-    :param m_ini_idx: Index of the initial mass.
-    :type m_ini_idx: int
-    :param binar_flag: Flag to indicate if binarity is being used.
-    :type binar_flag: bool
     :param Av: Total absorption.
     :type Av: float
     :param dr: Differential reddening.
@@ -889,9 +863,7 @@ def apply_extinction(
         # Compiled version: identical results, see _apply_extinction_gaiadr3_nb()
         # dr_kind: 0 -> no differential reddening (scalar A), 1 -> A = Av + f*dr
         dr_kind = 1 if dr > 0.0 else 0
-        _apply_extinction_gaiadr3_nb(
-            isochrone, dr_frac, dr_kind, Av, Av, dr, m_ini_idx, binar_flag
-        )
+        _apply_extinction_gaiadr3_nb(isochrone, dr_frac, dr_kind, Av, Av, dr)
         return isochrone
 
     if _HAS_NUMBA and ext_law == "CCMO":
@@ -903,8 +875,6 @@ def apply_extinction(
             1 if dr > 0.0 else 0,
             Av,
             dr,
-            m_ini_idx,
-            binar_flag,
             ec_mag,
             ec_col1,
             ec_col2,
@@ -934,18 +904,10 @@ def apply_extinction(
     isochrone[0] += Ax  # Magnitude
     isochrone[1] += Ex1  # First color
 
-    # Move binary data.
-    if binar_flag:
-        isochrone[m_ini_idx + 2] += Ax  # Magnitude (binary system)
-        isochrone[m_ini_idx + 3] += Ex1  # First color (binary system)
-
     # Second color (CCMO only)
     if len(ext_coefs) > 2:
         Ex2 = ec_col2 * Av_dr
         isochrone[2] += Ex2
-        # Move color with binary data.
-        if binar_flag:
-            isochrone[m_ini_idx + 4] += Ex2  # Second color (binary system)
 
     return isochrone
 
@@ -960,8 +922,6 @@ if _HAS_NUMBA:
         A_scalar: float,
         Av: float,
         dr: float,
-        m_ini_idx: int,
-        binar_flag: bool,
     ) -> None:
         """Compiled (numba) version of the GAIADR3 branch of
         :py:func:`apply_extinction`, modifying 'isochrone' in place.
@@ -990,8 +950,6 @@ if _HAS_NUMBA:
         bk2 = A * (b[2] + A * b[8])
         bk3 = A * b[3]
 
-        i_mb = m_ini_idx + 2
-        i_cb = m_ini_idx + 3
         for i in range(isochrone.shape[1]):
             # Clamped to the range of validity of the coefficients, as in
             # gaiadr3_extinction()
@@ -1061,9 +1019,6 @@ if _HAS_NUMBA:
 
             isochrone[0, i] += Ax  # Magnitude
             isochrone[1, i] += Ex  # First color
-            if binar_flag:
-                isochrone[i_mb, i] += Ax  # Magnitude (binary system)
-                isochrone[i_cb, i] += Ex  # First color (binary system)
 
     @njit(cache=True)
     def _apply_extinction_ccmo_nb(
@@ -1072,8 +1027,6 @@ if _HAS_NUMBA:
         dr_kind: int,
         Av: float,
         dr: float,
-        m_ini_idx: int,
-        binar_flag: bool,
         ec_mag: float,
         ec_col1: float,
         ec_col2: float,
@@ -1088,9 +1041,6 @@ if _HAS_NUMBA:
         dr_kind: 0 -> scalar absorption Av (no differential reddening),
         1 -> differential reddening A = Av + f * dr, with f from 'dr_frac'.
         """
-        i_mb = m_ini_idx + 2
-        i_cb = m_ini_idx + 3
-        i_c2b = m_ini_idx + 4
         A = Av
         for i in range(isochrone.shape[1]):
             if dr_kind == 1:
@@ -1100,14 +1050,9 @@ if _HAS_NUMBA:
             Ex1 = ec_col1 * A
             isochrone[0, i] += Ax  # Magnitude
             isochrone[1, i] += Ex1  # First color
-            if binar_flag:
-                isochrone[i_mb, i] += Ax  # Magnitude (binary system)
-                isochrone[i_cb, i] += Ex1  # First color (binary system)
             if col2_flag:
                 Ex2 = ec_col2 * A
                 isochrone[2, i] += Ex2  # Second color
-                if binar_flag:
-                    isochrone[i_c2b, i] += Ex2  # Second color (binary system)
 
 
 def ccmo_ratios(ext_coefs: np.ndarray, Rv: float) -> tuple[float, float, float]:
@@ -1551,9 +1496,26 @@ def assign_binaries(
     binar_flag: bool,
     m_ini_idx: int,
     rand_unif_vals: np.ndarray,
+    binar_tables: tuple,
+    isochrone: np.ndarray,
     isoch_mass: np.ndarray,
 ) -> np.ndarray:
-    """Select a fraction of stars to be binaries, given a chosen method.
+    """Select a fraction of stars to be binaries, and obtain the photometry of the
+    binary systems.
+
+    Each star is a binary system with probability ``alpha + beta / (1 + 1.4 / m1)``
+    (Offner et al. 2022; Fig 1 (left), Table 1), with ``m1`` its (primary) mass. The
+    mass ratio ``q`` of each binary system is obtained from its own uniform random
+    value and its primary mass (see :py:func:`precompute.binary_tables`), and the
+    secondary mass ``m2 = q * m1`` is interpolated linearly in the full isochrone
+    (moved by the distance modulus, before the extinction is applied). The flux of
+    the secondary is added to that of the primary in the magnitude and in both
+    filters of each color, the second one being the first minus the color. A
+    secondary with a mass below the minimum mass of the isochrone adds no flux.
+
+    With numba installed the compiled version is used (the same function called by
+    the compiled ``compiled.synth_one_nb()``), else a NumPy version with the same
+    operations.
 
     :param alpha: Alpha parameter for the binary fraction.
     :type alpha: float
@@ -1563,12 +1525,20 @@ def assign_binaries(
     :type binar_flag: bool
     :param m_ini_idx: Index of the initial mass.
     :type m_ini_idx: int
-    :param rand_unif_vals: Array of random uniform values.
+    :param rand_unif_vals: Uniform random values of the candidate stars (binarity)
     :type rand_unif_vals: np.ndarray
-    :param isoch_mass: Isochrone array.
+    :param binar_tables: Data used to obtain the mass ratios and the photometry of
+        the binary systems, see :py:func:`precompute.binary_tables`
+    :type binar_tables: tuple
+    :param isochrone: Full isochrone moved by the distance modulus, with rows
+        ``[mag, c1, (c2), mass, f1, (f2)]`` (``f*``: first filter of each color)
+    :type isochrone: np.ndarray
+    :param isoch_mass: Candidate stars interpolated in the isochrone, same rows as
+        ``isochrone``. Modified in place
     :type isoch_mass: np.ndarray
 
-    :returns: Isochrone array with binary stars.
+    :returns: Array of the stars, with rows ``[mag, c1, (c2), mass, mass_b]``, where
+        ``mass_b`` is the secondary mass (``nan`` for single systems)
     :rtype: np.ndarray
     """
     # No binarity process defined
@@ -1578,42 +1548,90 @@ def assign_binaries(
         isoch_mass[m_ini_idx + 1] = np.nan
         return isoch_mass[: m_ini_idx + 2]
 
+    if _HAS_NUMBA:
+        _assign_binaries_nb(
+            alpha, beta, m_ini_idx, rand_unif_vals, *binar_tables, isochrone, isoch_mass
+        )
+        return isoch_mass[: m_ini_idx + 2]
+
+    q_pre, log_u, e_tab, e_m_lo, e_inv_step, flux_tab, flux_inv_step = binar_tables
     Ns = isoch_mass.shape[-1]
+    m1 = isoch_mass[m_ini_idx]
 
     # Distribution of probability of binarity (multiplicity fraction) versus
-    # primary masses.
-
-    # Offner et al. (2022); Fig 1 (left), Table 1
-    # b_p = np.clip(alpha + beta / (1.0 + 1.4 / isoch_mass[m_ini_idx]), 0.0, 1.0)
-    # Same operations (hence identical values) as the line above, but in place.
-    # Clipping to [0, 1] is not needed: the probabilities are only compared below
-    # with uniform random values in [0, 1), so a value < 0 (> 1) gives the same
-    # result as 0 (1)
-    b_p = 1.4 / isoch_mass[m_ini_idx]
+    # primary masses: alpha + beta / (1.0 + 1.4 / m1). Clipping to [0, 1] is not
+    # needed: the probabilities are only compared with uniform random values in
+    # [0, 1), so a value < 0 (> 1) gives the same result as 0 (1)
+    b_p = 1.4 / m1
     b_p += 1.0
-    np.divide(beta, b_p, out=b_p)
+    b_p = beta / b_p
     b_p += alpha
+    b_idx = np.flatnonzero(b_p > rand_unif_vals[:Ns])
 
-    # Stars (masses) with the largest binary probabilities are selected
-    # proportional to their probability
-    bin_indxs = b_p > rand_unif_vals[:Ns]
+    # Secondary masses
+    m1_b = m1[b_idx]
+    if e_tab.size > 0:
+        q = np.exp(log_u[b_idx] * _table_interp(m1_b, e_tab, e_m_lo, e_inv_step))
+    else:
+        q = q_pre[b_idx]
+    m2 = q * m1_b
 
-    # Index of the binary magnitude: mag_binar = m_ini_idx + 1
-    # Update array with new values of magnitudes and colors for the binary
-    # systems. This does not change the primary mass values, just the magnitude and
-    # color(s).
-    for i in range(m_ini_idx):
-        # isoch_mass[i][bin_indxs] = isoch_mass[m_ini_idx + 2 + i][bin_indxs]
-        # Use np.copyto with where parameter (faster than boolean indexing)
-        np.copyto(isoch_mass[i], isoch_mass[m_ini_idx + 2 + i], where=bin_indxs)
+    # Secondaries with a mass in the range of the isochrone, interpolated in it
+    mass_iso = isochrone[m_ini_idx]
+    flux = m2 >= mass_iso[0]
+    j_f, m2_f = b_idx[flux], m2[flux]
+    s = np.minimum(np.maximum(np.searchsorted(mass_iso, m2_f), 1), mass_iso.size - 1)
+    lo = s - 1
+    x_lo = mass_iso[lo]
+    w = (m2_f - x_lo) / (mass_iso[s] - x_lo)
 
-    # Update the binary systems' masses so that the secondary masses for
-    # SINGLE systems are identified with a 'nan' value. Using np.copyto() on the
-    # row is faster than the 2D boolean indexing isoch_mass[m_ini_idx + 1, ~bin_indxs]
-    np.copyto(isoch_mass[m_ini_idx + 1], np.nan, where=~bin_indxs)
+    def interp_row(r: int) -> np.ndarray:
+        row = isochrone[r]
+        return (row[s] - row[lo]) * w + row[lo]
+
+    def flux_add(dmag: np.ndarray) -> np.ndarray:
+        """Change of a magnitude when the flux of a star 'dmag' fainter is added"""
+        neg = dmag < 0.0
+        out = _table_interp(np.abs(dmag), flux_tab, 0.0, flux_inv_step)
+        out[neg] += dmag[neg]
+        return out
+
+    for k in range(m_ini_idx - 1):
+        c1, f1 = isoch_mass[1 + k, j_f], isoch_mass[m_ini_idx + 1 + k, j_f]
+        c2, f2 = interp_row(1 + k), interp_row(m_ini_idx + 1 + k)
+        # First filter, and second filter (first filter minus color)
+        d_f1 = f2 - f1
+        d_f2 = (f2 - c2) - (f1 - c1)
+        isoch_mass[1 + k, j_f] = c1 + (flux_add(d_f1) - flux_add(d_f2))
+    mag1 = isoch_mass[0, j_f]
+    isoch_mass[0, j_f] = mag1 + flux_add(interp_row(0) - mag1)
+
+    # Secondary masses, 'nan' for single systems
+    isoch_mass[m_ini_idx + 1] = np.nan
+    isoch_mass[m_ini_idx + 1, b_idx] = m2
 
     # Return [mag, c1, (c2), mass, mass_b]
     return isoch_mass[: m_ini_idx + 2]
+
+
+def _table_interp(
+    v: np.ndarray, tab: np.ndarray, v_lo: float, inv_step: float
+) -> np.ndarray:
+    """Linear interpolation in the table ``tab`` of a function tabulated at the
+    values ``v_lo + k / inv_step`` (``k = 0, 1, ...``), with the first (last) value
+    of the table for ``v`` below (above) its range. NumPy version of
+    ``_table_interp_nb()``, with the same operations"""
+    x = (v - v_lo) * inv_step
+    out = np.empty(x.size)
+    below = x <= 0.0
+    above = ~below & (x >= tab.size - 1)
+    mid = ~(below | above)
+    k = x[mid].astype(np.intp)
+    y0 = tab[k]
+    out[mid] = (tab[k + 1] - y0) * (x[mid] - k) + y0
+    out[below] = tab[0]
+    out[above] = tab[-1]
+    return out
 
 
 if _HAS_NUMBA:
@@ -1629,33 +1647,108 @@ if _HAS_NUMBA:
 if _HAS_NUMBA:
 
     @njit(cache=True)
+    def _table_interp_nb(v: float, tab: np.ndarray, v_lo: float, inv_step: float):
+        """Linear interpolation in the table ``tab`` of a function tabulated at the
+        values ``v_lo + k / inv_step`` (``k = 0, 1, ...``), for a single value
+        ``v``, with the first (last) value of the table below (above) its range"""
+        x = (v - v_lo) * inv_step
+        if x <= 0.0:
+            return tab[0]
+        if x >= tab.size - 1:
+            return tab[tab.size - 1]
+        k = int(x)
+        y0 = tab[k]
+        return (tab[k + 1] - y0) * (x - k) + y0
+
+    @njit(cache=True)
+    def _flux_add_nb(dmag: float, flux_tab: np.ndarray, inv_step: float) -> float:
+        """Change of a magnitude when the flux of a star 'dmag' fainter is added (see
+        :py:func:`precompute.binary_tables`)"""
+        if dmag < 0.0:
+            return _table_interp_nb(-dmag, flux_tab, 0.0, inv_step) + dmag
+        return _table_interp_nb(dmag, flux_tab, 0.0, inv_step)
+
+    @njit(cache=True)
     def _assign_binaries_nb(
         alpha: float,
         beta: float,
         m_ini_idx: int,
         rand_unif_vals: np.ndarray,
+        q_pre: np.ndarray,
+        log_u: np.ndarray,
+        e_tab: np.ndarray,
+        e_m_lo: float,
+        e_inv_step: float,
+        flux_tab: np.ndarray,
+        flux_inv_step: float,
+        isochrone: np.ndarray,
         isoch_mass: np.ndarray,
     ) -> None:
         """Compiled (numba) version of :py:func:`assign_binaries` (with binaries),
-        modifying 'isoch_mass' in place. A single loop over the stars computes
-        the binary probability (same operations, in the same order, as the
-        NumPy version: identical results), compares it with the uniform random
-        value, and either replaces the magnitude and color(s) with those of the
-        binary system, or flags the secondary mass of a single star with 'nan'.
+        modifying 'isoch_mass' in place. A single loop over the stars computes the
+        binary probability and compares it with the uniform random value. A single
+        star gets a 'nan' secondary mass. For a binary system the mass ratio is
+        obtained (see :py:func:`precompute.binary_tables`), the secondary is
+        interpolated in the full isochrone (binary search in its masses) and its
+        flux is added to the magnitude and to both filters of each color; the
+        secondary mass replaces the first filter (read before) in row
+        ``m_ini_idx + 1``.
         """
         mass = isoch_mass[m_ini_idx]
-        mass_b = isoch_mass[m_ini_idx + 1]
+        mass_iso = isochrone[m_ini_idx]
+        N_iso = mass_iso.size
+        m_min = mass_iso[0]
+        N_colors = m_ini_idx - 1
+        mass_dep = e_tab.size > 0
         for j in range(isoch_mass.shape[1]):
+            m1 = mass[j]
             # alpha + beta / (1.0 + 1.4 / mass)
-            b_p = 1.4 / mass[j]
+            b_p = 1.4 / m1
             b_p += 1.0
             b_p = beta / b_p
             b_p += alpha
-            if b_p > rand_unif_vals[j]:
-                for i in range(m_ini_idx):
-                    isoch_mass[i, j] = isoch_mass[m_ini_idx + 2 + i, j]
+            if not b_p > rand_unif_vals[j]:
+                isoch_mass[m_ini_idx + 1, j] = np.nan
+                continue
+
+            # Mass ratio and secondary mass
+            if mass_dep:
+                q = np.exp(log_u[j] * _table_interp_nb(m1, e_tab, e_m_lo, e_inv_step))
             else:
-                mass_b[j] = np.nan
+                q = q_pre[j]
+            m2 = q * m1
+
+            # Photometry of the system. A secondary below the minimum mass of the
+            # isochrone adds no flux
+            if m2 >= m_min:
+                s = np.searchsorted(mass_iso, m2)
+                s = min(max(s, 1), N_iso - 1)
+                lo = s - 1
+                x_lo = mass_iso[lo]
+                w = (m2 - x_lo) / (mass_iso[s] - x_lo)
+                for k in range(N_colors):
+                    c_r = 1 + k
+                    f_r = m_ini_idx + 1 + k
+                    row_c, row_f = isochrone[c_r], isochrone[f_r]
+                    c2 = (row_c[s] - row_c[lo]) * w + row_c[lo]
+                    f2 = (row_f[s] - row_f[lo]) * w + row_f[lo]
+                    c1 = isoch_mass[c_r, j]
+                    f1 = isoch_mass[f_r, j]
+                    # First filter, and second filter (first filter minus color)
+                    d_f1 = f2 - f1
+                    d_f2 = (f2 - c2) - (f1 - c1)
+                    isoch_mass[c_r, j] = c1 + (
+                        _flux_add_nb(d_f1, flux_tab, flux_inv_step)
+                        - _flux_add_nb(d_f2, flux_tab, flux_inv_step)
+                    )
+                row_m = isochrone[0]
+                mag2 = (row_m[s] - row_m[lo]) * w + row_m[lo]
+                mag1 = isoch_mass[0, j]
+                isoch_mass[0, j] = mag1 + _flux_add_nb(
+                    mag2 - mag1, flux_tab, flux_inv_step
+                )
+
+            isoch_mass[m_ini_idx + 1, j] = m2
 
 
 def add_errors(isoch_binar: np.ndarray, err_dist: np.ndarray) -> np.ndarray:

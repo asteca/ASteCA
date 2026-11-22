@@ -526,8 +526,6 @@ def bss_masses(
             )
 
     # Dummy values
-    binar_flag = False
-    m_ini_idx = 99
     dr_frac = np.array([])
     # Set DR=0 to avoid disrupting the isochrone.
     dr = 0.0
@@ -566,8 +564,6 @@ def bss_masses(
                 # Move theoretical isochrone.
                 isoch_moved = gen.apply_distance(
                     isochrone.copy(),  # copy to avoid overwriting in apply_distance()
-                    binar_flag,
-                    m_ini_idx,
                     dm,
                 )
                 # Only the magnitude and first color are present in the
@@ -577,8 +573,6 @@ def bss_masses(
                     ext_law,
                     ext_coefs[:2],
                     dr_frac,
-                    m_ini_idx,
-                    binar_flag,
                     av,
                     dr,
                     rv,

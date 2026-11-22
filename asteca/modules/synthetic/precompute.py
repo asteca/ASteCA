@@ -1,5 +1,4 @@
 import numpy as np
-import numpy.typing as npt
 from scipy import stats
 
 from .imfs import imf_inverse_cdf
@@ -13,6 +12,36 @@ IMF_N_EXTRA = 1000
 # Number of buckets of the lookup table of the IMF CDF of each grid node (see
 # imf_cdf_tables())
 IMF_LUT_BUCKETS = 4096
+
+# Mass-ratio distributions f(q) ~ q^gamma of Duchene & Kraus (2013), for the primary
+# mass ranges m1 <= 0.1, (0.1, 0.6], (0.6, 1.4], (1.4, 6.5], (6.5, 16], > 16 Msun.
+# The two last ones are not given by the authors, a uniform distribution is used
+DK_MASS_EDGES = (0.1, 0.6, 1.4, 6.5, 16.0)
+DK_GAMMAS = (4.2, 0.4, 0.3, -0.5, 0.0, 0.0)
+
+# Histograms of the number of systems in equal width 'q' bins covering (0, 1]
+# "fisher_stepped", "fisher_peaked": Fisher, Schröder & Smith (2005); Table 3
+# https://doi.org/10.1111/j.1365-2966.2005.09193.x
+# "raghavan": Raghavan et al. (2010); Fig 16 (left)
+# https://iopscience.iop.org/article/10.1088/0067-0049/190/1/1
+Q_HISTOGRAMS = {
+    "fisher_stepped": (29.0, 29.0, 30.0, 32.0, 31.0, 32.0, 36.0, 45.0, 27.0, 76.0),
+    "fisher_peaked": (27.0, 30.0, 34.0, 33.0, 29.0, 26.0, 27.0, 33.0, 41.0, 89.0),
+    "raghavan": (
+        0.53, 2.61, 0.53, 4.67, 7.81, 3.64, 9.89, 5.71, 4.69, 5.73,
+        4.67, 6.76, 5.75, 5.73, 2.61, 5.71, 4.72, 5.71, 3.64, 12.99,
+    ),
+}  # fmt: skip
+
+# Tables used to obtain the photometry of the binary systems (see binary_tables()):
+# step (in magnitude) and largest magnitude difference of the table of the change of
+# a magnitude when the flux of a fainter star is added (the change is below 1e-8
+# mag beyond it), and step (in Msun) of the table of the exponent 1 / (gamma + 1) of
+# the mass ratios of a primary mass-dependent power-law
+FLUX_ADD_STEP = 0.005
+FLUX_ADD_MAX = 20.0
+Q_EXP_STEP = 0.001
+
 # Differential reddening models, see dr_fractions()
 DR_MODELS = ("foreground", "internal")
 # Mean of the differential reddening fractions of each model (see dr_fractions()):
@@ -59,222 +88,180 @@ def _stream(seed: int, *key: int) -> np.random.Generator:
     return np.random.default_rng(np.random.SeedSequence(seed, spawn_key=key))
 
 
-def add_binary_tracks(
-    rng: np.random.Generator,
-    gamma: float | str,
+def add_color_filters(
     color: tuple,
     color2: tuple | None,
     theor_tracks: np.ndarray,
     color_filters: list,
 ) -> np.ndarray:
-    """For each theoretical isochrone defined.
-        1. Draw random secondary masses for *all* stars.
-        2. Interpolate magnitude values for these masses
-        3. Calculate the magnitudes for the binary system.
-        4. Calculate the colors for the binary system.
+    """Append to each theoretical isochrone the magnitude of the first filter of
+    each color, used to obtain the photometry of the binary systems (see
+    :py:func:`generate.assign_binaries`). The magnitude of the second filter is not
+    required: it is the first one minus the color.
 
-    theor_tracks.shape = (Nz, Na, N_cols, N_interp)
+    theor_tracks.shape = (Nz, Na, N_cols, N_interp), with
+    N_cols: magnitude + color(s) + initial mass + first filter of each color
 
-    If binarity is processed:
-        N_cols: magnitude + color(s) + initial masses + secondary masses +
-                unresolved mag + unresolved color(s)
-    else:
-        N_cols: magnitude + colors + initial mass
-
-    :param rng: Random number generator.
-    :type rng: np.random.Generator
-    :param gamma: Mass-ratio distribution.
-    :type gamma: float | str
     :param color: First color defined
     :type color: tuple
     :param color2: Second color defined (optional)
     :type color2: tuple | None
-    :param theor_tracks: Array with the processed theoretical isochrones
+    :param theor_tracks: Array with the processed theoretical isochrones (magnitude,
+        color(s), initial mass)
     :type theor_tracks: np.ndarray
-    :param color_filters: Magnitude values required to generate the colors separately
+    :param color_filters: Magnitudes of the filters that make up the colors
     :type color_filters: list
 
-    :returns: Array of isochrones with binary data.
+    :returns: Array of isochrones with the filters added.
     :rtype: np.ndarray
     """
     all_colors = [color]
     if color2 is not None:
         all_colors.append(color2)
-    N_colors = len(all_colors)
 
-    mag_idx = 0
-    m_ini_idx = mag_idx + N_colors + 1
-
-    # Extend to accommodate binary data
     Nz, Na, Nd, Ni = theor_tracks.shape
-    theor_tracks = np.concatenate((theor_tracks, np.zeros([Nz, Na, Nd, Ni])), axis=2)
-
-    # For each metallicity defined.
-    for mx, met in enumerate(theor_tracks):
-        # For each age defined.
-        for ax, isoch in enumerate(met):
-            # Extract initial masses for this isochrone.
-            mass_ini = isoch[m_ini_idx]
-
-            # Mass-ratio distribution
-            q = mass_ratios(mass_ini, gamma, rng)
-            # Secondary masses
-            m2 = q * mass_ini
-
-            # Calculate unresolved binary magnitude. Secondary masses below the
-            # isochrone's minimum mass are assigned an infinite magnitude (i.e.: no
-            # flux), so that the binary system's photometry equals that of the primary
-            mag = isoch[mag_idx]
-            mag_m2 = np.interp(m2, mass_ini, mag, left=np.inf)
-            theor_tracks[mx][ax][m_ini_idx + 2] = mag_combine(mag, mag_m2)
-
-            # Calculate unresolved color for each color defined.
+    tracks = np.empty((Nz, Na, Nd + len(all_colors), Ni))
+    tracks[:, :, :Nd] = theor_tracks
+    for mx in range(Nz):
+        for ax in range(Na):
             for ic, _color in enumerate(all_colors):
-                mc1 = color_filters[mx][ax][_color[0]]
-                mc2 = color_filters[mx][ax][_color[1]]
-                f_m1 = np.interp(m2, mass_ini, mc1, left=np.inf)
-                f1 = mag_combine(mc1, f_m1)
-                f_m2 = np.interp(m2, mass_ini, mc2, left=np.inf)
-                f2 = mag_combine(mc2, f_m2)
-                theor_tracks[mx][ax][m_ini_idx + 2 + 1 + ic] = f1 - f2
-
-            # Secondary masses
-            theor_tracks[mx][ax][m_ini_idx + 1] = m2
-
-    return theor_tracks
+                tracks[mx, ax, Nd + ic] = color_filters[mx][ax][_color[0]]
+    return tracks
 
 
-def mag_combine(
-    m1: npt.NDArray[np.floating], m2: npt.NDArray[np.floating]
-) -> np.ndarray:
-    """Combine two magnitudes.
+def mass_ratio_dist(gamma: float | str) -> tuple[np.ndarray, ...]:
+    """Tables that define the distribution of the mass ratio ``q = m2 / m1`` of the
+    binary systems, used to obtain the mass ratio of each binary system from a
+    uniform random value ``u`` in ``(0, 1]`` (see :py:func:`binary_tables`).
 
-    This is a faster re-ordering of the standard formula:
-    -2.5 * np.log10(10 ** (-0.4 * m1) + 10 ** (-0.4 * m2))
+    The power-law distributions ``f(q) ~ q^gamma`` (a float ``gamma``, or ``"D&K"``)
+    are defined by the knots ``(log10(m1), gamma)`` of a piecewise linear
+    ``gamma(log10(m1))`` (a single knot: a constant ``gamma``). For ``"D&K"`` the
+    ``gamma`` value of each primary mass range of Duchene & Kraus (2013) is placed at
+    the center of the range in ``log10(m1)`` (at ``0.1 Msun`` for the lowest range,
+    which has no lower limit), and interpolated linearly between them (the values at
+    the first and last knots are kept beyond them). This avoids the jumps of the mass
+    ratios (and hence of the photometry of the binary systems) of a ``gamma`` that
+    changes abruptly at the limits of the ranges. The other distributions
+    (``"fisher_stepped", "fisher_peaked", "raghavan"``) are histograms of ``q``,
+    defined by their cumulative distribution at the edges of the bins (``q`` uniform
+    within each bin).
 
-    :param m1: Array of magnitudes.
-    :type m1: npt.NDArray[np.floating]
-    :param m2: Array of magnitudes.
-    :type m2: npt.NDArray[np.floating]
-
-    :returns: Array of combined magnitudes.
-    :rtype: np.ndarray
-    """
-    c = 10**-0.4
-    return -2.5 * (-0.4 * m1 + np.log10(1.0 + c ** (m2 - m1)))
-
-
-def mass_ratios(
-    M1: np.ndarray, gamma: float | str, rng: np.random.Generator
-) -> np.ndarray:
-    """Distribution of q=m2/m1 for binary systems
-
-    :param M1: Array of primary masses.
-    :type M1: np.ndarray
-    :param gamma: Mass-ratio distribution. Can either be a float value (in which case
-     a non mass-dependent power-law distribution with shape parameter 'gamma' will be
-     used), 'D&K' (mass dependent distribution of mass-ratios versus primary masses
-      from Duchene & Kraus 2013), or one of Fisher or Raghavan distributions (non
-      mass-dependent).
+    :param gamma: Mass-ratio distribution, see :py:class:`asteca.Synthetic`
     :type gamma: float | str
-    :param rng: Random number generator.
-    :type rng: np.random.Generator
 
-    :returns: Array of mass ratios.
+    :raises ValueError: If ``gamma`` is not a valid distribution
+
+    :returns: ``(lm_knots, g_knots, q_cdf, q_edges)``, the knots of ``gamma`` (empty
+        for a histogram), and the cumulative distribution at the edges of the ``q``
+        bins (empty for a power-law)
+    :rtype: tuple[np.ndarray, ...]
+    """
+    empty = np.empty(0)
+    if gamma == "D&K":
+        lm_edges = np.log10(DK_MASS_EDGES)
+        # Center of each range with an upper limit. The last range (> 16 Msun) has
+        # the same value as the previous one, no knot is required
+        lm_knots = np.concatenate(([lm_edges[0]], 0.5 * (lm_edges[:-1] + lm_edges[1:])))
+        g_knots = np.array(DK_GAMMAS[: lm_knots.size])
+        return lm_knots, g_knots, empty, empty
+    if isinstance(gamma, str) and gamma in Q_HISTOGRAMS:
+        pk = np.array(Q_HISTOGRAMS[gamma])
+        q_edges = np.linspace(0.0, 1.0, pk.size + 1)
+        q_cdf = np.concatenate(([0.0], np.cumsum(pk) / pk.sum()))
+        return empty, empty, q_cdf, q_edges
+    try:
+        g = float(gamma)
+    except (TypeError, ValueError):
+        raise ValueError(f"Mass-ratio distribution gamma='{gamma}' not recognized")
+    if not g > -1.0:
+        raise ValueError(f"The power-law exponent gamma={g} must be larger than -1")
+    return np.zeros(1), np.array([g]), empty, empty
+
+
+def binary_tables(q_dist: tuple[np.ndarray, ...], q_u: np.ndarray) -> tuple:
+    """Data used to obtain the mass ratios and the photometry of the binary systems
+    (see :py:func:`generate.assign_binaries`), as tables that replace the evaluation
+    of logarithms and powers for each binary system.
+
+    The mass ratio of a candidate star with uniform random value ``u`` (in ``(0, 1]``)
+    is the inverse of the cumulative distribution of ``q`` at ``u`` (see
+    :py:func:`mass_ratio_dist`). If the distribution does not depend on the primary
+    mass it is obtained here for every candidate (``q_pre``). For a primary
+    mass-dependent power-law, ``q = u^e`` with ``e = 1 / (gamma + 1)``, obtained for
+    each binary system as ``exp(log(u) * e)``, with ``log(u)`` obtained here
+    (``log_u``) and ``e`` interpolated linearly in a table of masses with a step of
+    ``Q_EXP_STEP`` (``e_tab``, starting at the mass ``e_m_lo``; ``e`` is constant
+    outside of the table). The error of this interpolation in ``e`` is below
+    ``5e-4`` (largest near ``0.1 Msun``), that of ``q`` below ``1e-3``.
+
+    The change of a magnitude when the flux of a star ``d >= 0`` magnitudes fainter is
+    added, ``-2.5 * log10(1 + 10^(-0.4 * d))``, is interpolated linearly in a table
+    with a step of ``FLUX_ADD_STEP`` up to ``d = FLUX_ADD_MAX`` (``flux_tab``; zero
+    beyond it), with an error below ``1e-6`` mag. For ``d < 0`` the change is
+    ``d`` plus that for ``-d``.
+
+    :param q_dist: Tables of the mass-ratio distribution, see
+        :py:func:`mass_ratio_dist`
+    :type q_dist: tuple[np.ndarray, ...]
+    :param q_u: Uniform random values in ``(0, 1]`` of the candidate stars
+    :type q_u: np.ndarray
+
+    :returns: ``(q_pre, log_u, e_tab, e_m_lo, e_inv_step, flux_tab,
+        flux_inv_step)``. ``q_pre`` is empty for a primary mass-dependent
+        distribution, ``log_u`` and ``e_tab`` are empty otherwise
+    :rtype: tuple
+    """
+    lm_knots, g_knots, q_cdf, q_edges = q_dist
+    empty = np.empty(0)
+    q_pre, log_u, e_tab, e_m_lo = empty, empty, empty, 0.0
+    if q_cdf.size > 0:
+        q_pre = np.interp(q_u, q_cdf, q_edges)
+    elif lm_knots.size == 1:
+        q_pre = q_u ** (1.0 / (g_knots[0] + 1.0))
+    else:
+        log_u = np.log(q_u)
+        e_m_lo, e_m_hi = 10 ** lm_knots[0], 10 ** lm_knots[-1]
+        N = int(np.ceil((e_m_hi - e_m_lo) / Q_EXP_STEP)) + 1
+        m = e_m_lo + Q_EXP_STEP * np.arange(N)
+        e_tab = 1.0 / (np.interp(np.log10(m), lm_knots, g_knots) + 1.0)
+
+    d = FLUX_ADD_STEP * np.arange(round(FLUX_ADD_MAX / FLUX_ADD_STEP) + 1)
+    flux_tab = -2.5 * np.log10(1.0 + 10.0 ** (-0.4 * d))
+
+    return (
+        np.ascontiguousarray(q_pre),
+        np.ascontiguousarray(log_u),
+        np.ascontiguousarray(e_tab),
+        float(e_m_lo),
+        1.0 / Q_EXP_STEP,
+        flux_tab,
+        1.0 / FLUX_ADD_STEP,
+    )
+
+
+def mean_mass_ratio(m1: np.ndarray, q_dist: tuple[np.ndarray, ...]) -> np.ndarray:
+    """Mean mass ratio of the binary systems with primary masses ``m1``:
+    ``(gamma + 1) / (gamma + 2)`` for a power-law, the mean of the histogram
+    (uniform within each bin) otherwise
+
+    :param m1: Primary masses
+    :type m1: np.ndarray
+    :param q_dist: Tables of the distribution, see :py:func:`mass_ratio_dist`
+    :type q_dist: tuple[np.ndarray, ...]
+
+    :returns: Mean mass ratios
     :rtype: np.ndarray
     """
-    N = M1.size
-
-    try:
-        gamma = float(gamma)
-
-        # Use 'gamma + 1' in the power-law distribution because in D&K this
-        # distribution is defined as f(q)~q^gamma, while numpy's distribution is
-        # defined as a*x^(a-1).
-        ratios = rng.power(gamma + 1, N)
-
-    except ValueError:
-        if gamma == "D&K":
-            msk1, gamma1 = M1 <= 0.1, 4.2
-            msk2, gamma2 = (M1 > 0.1) & (M1 <= 0.6), 0.4
-            msk3, gamma3 = (M1 > 0.6) & (M1 <= 1.4), 0.3
-            msk4, gamma4 = (M1 > 1.4) & (M1 <= 6.5), -0.5
-            msk5, gamma5 = (M1 > 6.5) & (M1 <= 16), 0.0  # <- Not sure. Use uniform
-            msk6, gamma6 = M1 > 16, 0.0  # <- Not sure. Use uniform
-
-            ratios = np.zeros(N)
-            for msk, gammaX in (
-                (msk1, gamma1),
-                (msk2, gamma2),
-                (msk3, gamma3),
-                (msk4, gamma4),
-                (msk5, gamma5),
-                (msk6, gamma6),
-            ):
-                q = rng.power(gammaX + 1, msk.sum())
-                ratios[msk] = q
-        else:
-            # The Fisher and Raghavan distributions are histograms of the number of
-            # systems in equal width 'q' bins covering (0, 1]. Values of 'q' are
-            # sampled uniformly within the bins, using the inverse of the
-            # (piecewise linear) cumulative distribution.
-            #
-            # Fisher's distribution
-            # "fisher_stepped":
-            # Fisher, Schröder & Smith (2005); Table 3, stepped
-            # https://doi.org/10.1111/j.1365-2966.2005.09193.x
-            #
-            # "fisher_peaked":
-            # Fisher, Schröder & Smith (2005); Table 3, peaked
-            # https://doi.org/10.1111/j.1365-2966.2005.09193.x
-            #
-            # "raghavan":
-            # Raghavan et al. (2010); Fig 16 (left)
-            # https://iopscience.iop.org/article/10.1088/0067-0049/190/1/1
-
-            xy_dict = {
-                "fisher_stepped": np.array(
-                    [29.0, 29.0, 30.0, 32.0, 31.0, 32.0, 36.0, 45.0, 27.0, 76.0]
-                ),
-                "fisher_peaked": np.array(
-                    [27.0, 30.0, 34.0, 33.0, 29.0, 26.0, 27.0, 33.0, 41.0, 89.0]
-                ),
-                "raghavan": np.array(
-                    [
-                        0.53,
-                        2.61,
-                        0.53,
-                        4.67,
-                        7.81,
-                        3.64,
-                        9.89,
-                        5.71,
-                        4.69,
-                        5.73,
-                        4.67,
-                        6.76,
-                        5.75,
-                        5.73,
-                        2.61,
-                        5.71,
-                        4.72,
-                        5.71,
-                        3.64,
-                        12.99,
-                    ]
-                ),
-            }
-
-            pk = xy_dict[str(gamma)]
-            # Bin edges and cumulative distribution evaluated at the edges
-            q_edges = np.linspace(0.0, 1.0, pk.size + 1)
-            cdf = np.concatenate(([0.0], np.cumsum(pk) / pk.sum()))
-            # Use (0, 1] uniform values so that q=0 is never drawn (the first bin
-            # has a non-zero weight in all the distributions)
-            u = 1.0 - rng.uniform(0.0, 1.0, N)
-            ratios = np.interp(u, cdf, q_edges)
-
-    return ratios
+    lm_knots, g_knots, q_cdf, q_edges = q_dist
+    if q_cdf.size > 0:
+        q_mean = np.sum(np.diff(q_cdf) * 0.5 * (q_edges[:-1] + q_edges[1:]))
+        return np.full(m1.size, q_mean)
+    if lm_knots.size == 1:
+        gamma = np.full(m1.size, g_knots[0])
+    else:
+        gamma = np.interp(np.log10(m1), lm_knots, g_knots)
+    return (gamma + 1.0) / (gamma + 2.0)
 
 
 def ccmo_filter_coefs(
@@ -447,7 +434,8 @@ def draw_rand_floats(seed: int, N_cand: int, N_nodes: int) -> dict:
         values), ``dr_frac_q`` (``DR_FRAC_N_QUANTILES`` quantiles of each ``dr_frac``
         array, from ``0`` to ``1``), ``imf_u`` (``2 * N_cand`` uniform values for the
         masses of the candidates) and ``imf_offsets`` (the start of the window of
-        ``N_cand`` values of ``imf_u`` used by each grid node)
+        ``N_cand`` values of ``imf_u`` used by each grid node), and ``q_u`` (uniform
+        values in ``(0, 1]`` for the mass ratios of the binary systems)
     :rtype: dict
     """
     # Row 1: used by error_distribution() (Synthetic.calibrate()). Row 0 is not
@@ -475,6 +463,12 @@ def draw_rand_floats(seed: int, N_cand: int, N_nodes: int) -> dict:
     imf_u = _stream(seed, 3).random(2 * N_cand)
     imf_offsets = _stream(seed, 4).integers(0, N_cand, N_nodes)
 
+    # Uniform values in (0, 1] for the mass ratios of the binary systems, one per
+    # candidate star (see generate.assign_binaries()). As the values used for the
+    # binarity, they are the same for all the models, so that the mass ratio of a
+    # star only changes with its primary mass
+    q_u = 1.0 - _stream(seed, 5).random(N_cand)
+
     rand_floats = {
         "norm": rand_norm_vals,
         "unif": rand_unif_vals,
@@ -482,6 +476,7 @@ def draw_rand_floats(seed: int, N_cand: int, N_nodes: int) -> dict:
         "dr_frac_q": dr_frac_q,
         "imf_u": imf_u,
         "imf_offsets": imf_offsets,
+        "q_u": q_u,
     }
     return rand_floats
 

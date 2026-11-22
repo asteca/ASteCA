@@ -58,6 +58,9 @@ def kernel_data(ctx: "SynthEngine") -> dict:
         # precompute.ccmo_filter_coefs(); no rows for GAIADR3
         "ccm": np.ascontiguousarray(ctx.ext_coefs, dtype=float),
         "unif1": np.ascontiguousarray(ctx.rand_floats["unif"][1]),
+        # Mass ratios and photometry of the binary systems (see
+        # precompute.binary_tables())
+        "binar": ctx.binar_tables,
         "err": (
             np.ascontiguousarray(ctx.err_dist, dtype=float)
             if len(ctx.err_dist)
@@ -81,8 +84,10 @@ def synth_args(ctx: "SynthEngine", dr_model: str) -> tuple[tuple, tuple]:
     :type dr_model: str
 
     :return: ``(model, imf)``, with ``model = (met_grid, age_grid, theor_tracks,
-        m_ini_idx, N_a, dr_frac, dr_frac_q, ext_kind, ccm, unif1, max_mag, err,
-        N_synth)`` and
+        m_ini_idx, N_a, dr_frac, dr_frac_q, ext_kind, ccm, unif1, q_pre, log_u, e_tab,
+        e_m_lo, e_inv_step, flux_tab, flux_inv_step, max_mag, err, N_synth)`` (the
+        data of the binary systems is described in
+        :py:func:`precompute.binary_tables`) and
         ``imf = (imf_cdf, imf_lut, imf_u, imf_offsets)``
     :rtype: tuple[tuple, tuple]
     """
@@ -98,6 +103,9 @@ def synth_args(ctx: "SynthEngine", dr_model: str) -> tuple[tuple, tuple]:
         bd["ext_kind"],
         bd["ccm"],
         bd["unif1"],
+        # Not a nested tuple: numba's parallel loops do not accept some nested
+        # tuples (e.g.: of arrays of the same type)
+        *bd["binar"],
         float(ctx.max_mag),
         bd["err"],
         int(ctx.N_synth),
@@ -153,6 +161,13 @@ if _HAS_NUMBA:
             ext_kind,
             ccm,
             unif1,
+            q_pre,
+            log_u,
+            e_tab,
+            e_m_lo,
+            e_inv_step,
+            flux_tab,
+            flux_inv_step,
             max_mag,
             err,
             N_synth,
@@ -208,8 +223,6 @@ if _HAS_NUMBA:
 
         # apply_distance()
         isochrone[0] += dm
-        if binar_flag:
-            isochrone[m_ini_idx + 2] += dm
 
         # generate.ccmo_ratios()
         ec_mag = ec_col1 = ec_col2 = 0.0
@@ -225,9 +238,7 @@ if _HAS_NUMBA:
         # apply_extinction() with the minimum absorption Av, on a copy of the isochrone
         isoch_av = isochrone.copy()
         if ext_kind == 0:
-            _apply_extinction_gaiadr3_nb(
-                isoch_av, dr_frac, 0, av, av, 0.0, m_ini_idx, binar_flag
-            )
+            _apply_extinction_gaiadr3_nb(isoch_av, dr_frac, 0, av, av, 0.0)
         else:
             _apply_extinction_ccmo_nb(
                 isoch_av,
@@ -235,8 +246,6 @@ if _HAS_NUMBA:
                 0,
                 av,
                 0.0,
-                m_ini_idx,
-                binar_flag,
                 ec_mag,
                 ec_col1,
                 ec_col2,
@@ -306,14 +315,26 @@ if _HAS_NUMBA:
             if not binar_flag:
                 isoch_mass[m_ini_idx + 1] = np.nan
             else:
-                _assign_binaries_nb(alpha, beta, m_ini_idx, unif1, isoch_mass)
+                _assign_binaries_nb(
+                    alpha,
+                    beta,
+                    m_ini_idx,
+                    unif1,
+                    q_pre,
+                    log_u,
+                    e_tab,
+                    e_m_lo,
+                    e_inv_step,
+                    flux_tab,
+                    flux_inv_step,
+                    isochrone,
+                    isoch_mass,
+                )
             isoch_all = isoch_mass[:N_rows]
 
             # apply_extinction() of each star
             if ext_kind == 0:
-                _apply_extinction_gaiadr3_nb(
-                    isoch_all, dr_frac, dr_kind, av, av, dr, m_ini_idx, False
-                )
+                _apply_extinction_gaiadr3_nb(isoch_all, dr_frac, dr_kind, av, av, dr)
             else:
                 _apply_extinction_ccmo_nb(
                     isoch_all,
@@ -321,8 +342,6 @@ if _HAS_NUMBA:
                     dr_kind,
                     av,
                     dr,
-                    m_ini_idx,
-                    False,
                     ec_mag,
                     ec_col1,
                     ec_col2,
