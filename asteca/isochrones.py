@@ -5,7 +5,7 @@ class Isochrones:
     """Define an :py:class:`Isochrones` object.
 
     This object contains the loaded theoretical isochrones used by the
-    :py:class:`Synthetic <asteca.synthetic.Synthetic>` class to generate synthetic
+    :py:class:`Synthetic <asteca.Synthetic>` class to generate synthetic
     clusters. See :ref:`isochrones_module` for more details.
 
     :param model: The model must be one of the supported isochrone services:

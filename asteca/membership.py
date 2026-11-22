@@ -18,25 +18,25 @@ class Membership:
     the `article <https://doi.org/10.1051/0004-6361/201424946>`__
     where we originally introduced ``ASteCA``. The method requires ``(RA, DEC)``
     data and will use any extra data dimensions stored in the
-    :py:class:`Cluster <asteca.cluster.Cluster>` object, i.e.: photometry,
+    :py:class:`Cluster <asteca.Cluster>` object, i.e.: photometry,
     proper motions, and parallax.
 
     :py:meth:`fastmp` : The algorithm was described in detail in
     the `article <https://academic.oup.com/mnras/article/526/3/4107/7276628>`__
     where we introduced the `Unified Cluster Catalogue (UCC) <https://ucc.ar/>`__.
     The method requires proper motions, and parallax data dimensions stored in the
-    :py:class:`Cluster <asteca.cluster.Cluster>` object. Photometry data is not
+    :py:class:`Cluster <asteca.Cluster>` object. Photometry data is not
     used to estimate the probabilities; the magnitude is only used to correct them
     if ``mag_correct=True``.
 
-    Every :py:class:`Cluster <asteca.cluster.Cluster>` object with data already holds
+    Every :py:class:`Cluster <asteca.Cluster>` object with data already holds
     a :py:class:`Membership` object tied to it in its ``membership`` attribute, so
     there is usually no need to create one: ``my_field.membership.fastmp()`` is
     equivalent to ``asteca.Membership(my_field).fastmp()``. The estimated
     probabilities are stored in the ``probs`` attribute of the
-    :py:class:`Cluster <asteca.cluster.Cluster>` object.
+    :py:class:`Cluster <asteca.Cluster>` object.
 
-    :param my_field: :py:class:`Cluster <asteca.cluster.Cluster>` object with the
+    :param my_field: :py:class:`Cluster <asteca.Cluster>` object with the
         loaded data for the observed field
     :type my_field: Cluster
     """
@@ -63,7 +63,7 @@ class Membership:
         Estimate the probability of being a true cluster member for all observed
         stars, using a Bayesian algorithm. The ``N_cluster``, ``radec_c`` and
         ``radius`` attributes are required to be present in the
-        :py:class:`Cluster <asteca.cluster.Cluster>` object.
+        :py:class:`Cluster <asteca.Cluster>` object.
 
         :param N_runs: Maximum number of runs
         :type N_runs: int
@@ -75,9 +75,9 @@ class Membership:
 
         :raises AttributeError: If any of the required attributes (``ra, dec,
             N_cluster, radec_c, radius``) are missing from the
-            :py:class:`Cluster <asteca.cluster.Cluster>` object
+            :py:class:`Cluster <asteca.Cluster>` object
         :raises ValueError: If the ``N_runs`` parameter is less than 10, or if the
-            :py:class:`Cluster <asteca.cluster.Cluster>` object contains no data
+            :py:class:`Cluster <asteca.Cluster>` object contains no data
             dimension beyond ``(ra, dec)`` (photometry, parallax or proper motions)
         """
         self._print("\nRunning Bayesian DA")
@@ -181,7 +181,7 @@ class Membership:
         ``(RA, DEC)``, as well as ``(pmRA, pmDE)`` and ``plx`` are required.
 
         :param fixed_centers: If ``True`` the center values (radec_c, pms_c, plx_c)
-            stored in the :py:class:`Cluster <asteca.cluster.Cluster>` object will be
+            stored in the :py:class:`Cluster <asteca.Cluster>` object will be
             kept fixed throughout the process
         :type fixed_centers: bool
         :param N_runs: Maximum number of resamples
@@ -197,7 +197,7 @@ class Membership:
             with no error resampling. Requires the ``mag`` attribute
         :type mag_correct: bool
 
-        :raises AttributeError: If the :py:class:`Cluster <asteca.cluster.Cluster>`
+        :raises AttributeError: If the :py:class:`Cluster <asteca.Cluster>`
             object is missing a required attribute
         :raises ValueError: If the ``N_runs`` parameter is less than 10
         """
@@ -303,9 +303,10 @@ class Membership:
         self, prob_min: float | None = None, N_prob_max: int | None = None
     ) -> Cluster:
         """Select members based on membership probabilities. This method returns a new
-        :py:class:`Cluster <asteca.cluster.Cluster>` object that contains only the stars
-        that meet the selection criteria. The original object (the observed field) is
-        not modified.
+        :py:class:`Cluster <asteca.Cluster>` object that contains only the stars
+        that meet the selection criteria, with its ``N_cluster`` attribute set to the
+        number of selected stars. The original object (the observed field) is not
+        modified.
 
         :param prob_min: Minimum probability threshold for membership selection. Stars with
             probabilities equal to or above this threshold will be selected as members.
@@ -327,7 +328,7 @@ class Membership:
             - ``N_prob_max`` is not a positive integer, or is greater than the total
               number of stars
 
-        :return: A new :py:class:`Cluster <asteca.cluster.Cluster>` object containing
+        :return: A new :py:class:`Cluster <asteca.Cluster>` object containing
             only the selected members
         :rtype: Cluster
         """

@@ -16,7 +16,7 @@ class Cluster:
     This object contains the basic data required to load a group of observed stars
     that could represent a cluster or an entire field.
 
-    The object holds a :py:class:`Membership <asteca.membership.Membership>` object
+    The object holds a :py:class:`Membership <asteca.Membership>` object
     tied to it in its ``membership`` attribute, so the membership methods can be
     called directly from it, e.g.: ``my_field.membership.fastmp()`` (equivalent to
     ``asteca.Membership(my_field).fastmp()``).
@@ -67,12 +67,12 @@ class Cluster:
     :param e_pmde: Array that contains the DEC proper motion's uncertainty
     :type e_pmde: np.ndarray | None
     :param probs: Array that contains the membership probabilities for each star. The
-        :py:meth:`Membership.fastmp <asteca.membership.Membership.fastmp>` and
-        :py:meth:`Membership.bayesian <asteca.membership.Membership.bayesian>`
+        :py:meth:`Membership.fastmp <asteca.Membership.fastmp>` and
+        :py:meth:`Membership.bayesian <asteca.Membership.bayesian>`
         methods store here the estimated probabilities, but this attribute can be used
         to store membership probabilities estimated in other ways. The
         :py:meth:`Membership.select_members
-        <asteca.membership.Membership.select_members>` method uses these values to
+        <asteca.Membership.select_members>` method uses these values to
         select stars with probabilities above a given threshold.
     :type probs: np.ndarray | None
     :param N_clust_min: Lower limit for the number of members estimated by
@@ -437,7 +437,7 @@ class Cluster:
         :type plx_c: float | None
 
         :raises ValueError: If required data is missing from the
-            :py:class:`Cluster <asteca.cluster.Cluster>` object
+            :py:class:`Cluster <asteca.Cluster>` object
         """
         from .modules import structure as st
 
@@ -538,7 +538,7 @@ class Cluster:
         :type rt_bounds: tuple[float, float] | None
 
         :raises AttributeError: If required attributes are  missing from the
-            :py:class:`Cluster <asteca.cluster.Cluster>` object
+            :py:class:`Cluster <asteca.Cluster>` object
         :raises ValueError: If required attributes are missing or if ``algo``
             argument is not recognized
         """
@@ -634,7 +634,7 @@ class Cluster:
 
         :raises ValueError: If ``algo`` argument is not recognized
         :raises AttributeError: If required attributes are  missing from the
-            :py:class:`Cluster <asteca.cluster.Cluster>` object
+            :py:class:`Cluster <asteca.Cluster>` object
         """
         from .modules import nmembers as nm
         from .modules import structure as st
