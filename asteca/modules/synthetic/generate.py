@@ -460,6 +460,10 @@ Q_LOST_MAX = 0.9
 # the fraction Q_LOST_DEFAULT is used (an initial pool of 1.5x the stars required, +10)
 POOL_ESTIMATE_MIN_STARS = 1000
 Q_LOST_DEFAULT = 0.3
+# Largest number of values in one bucket of the bucket sort used to order the
+# synthetic stars by magnitude (see _faint_first_order_nb()); above it a stable
+# np.argsort() is used. Synthetic clusters have ~10-30 at most
+BUCKET_SORT_MAX = 64
 
 
 def initial_pool_size(N_synth_stars: int, q_lost: float) -> int:
@@ -1643,6 +1647,63 @@ if _HAS_NUMBA:
         for j in range(order.size):
             row[order[j]] += sigma[j]
 
+    @njit(cache=True)
+    def _faint_first_order_nb(mag: np.ndarray) -> np.ndarray:
+        """Compiled equivalent of ``np.argsort(-mag, kind="stable")``, used by
+        :py:func:`add_errors`: indexes that sort the stars from the largest to the
+        smallest magnitude (stars with equal magnitudes keep their order).
+
+        A bucket sort, several times faster than ``np.argsort()`` for the sizes of
+        the synthetic clusters: the values are distributed in ``N`` buckets of equal
+        width (counting sort, which keeps their order) and each bucket is sorted by
+        insertion (also stable). If too many values fall in the same bucket (values
+        concentrated in a small part of their range), the quadratic cost of the
+        insertion sort is avoided by using a stable ``np.argsort()`` instead.
+        """
+        N = mag.size
+        x = -mag
+        if N < 2:
+            return np.arange(N)
+        lo, hi = x.min(), x.max()
+        scale = N / (hi - lo) if hi > lo else 0.0
+        if not (scale > 0.0 and np.isfinite(scale)):
+            return np.argsort(x, kind="mergesort")
+
+        # Bucket of each value (non-decreasing with the value), and the number of
+        # values in each bucket
+        bucket = np.empty(N, dtype=np.intp)
+        start = np.zeros(N + 1, dtype=np.intp)
+        for i in range(N):
+            b = min(int((x[i] - lo) * scale), N - 1)
+            bucket[i] = b
+            start[b + 1] += 1
+        largest = 0
+        for b in range(N):
+            largest = max(largest, start[b + 1])
+            start[b + 1] += start[b]
+        if largest > BUCKET_SORT_MAX:
+            return np.argsort(x, kind="mergesort")
+
+        # Counting sort of the buckets
+        order = np.empty(N, dtype=np.intp)
+        pos = start[:N].copy()
+        for i in range(N):
+            b = bucket[i]
+            order[pos[b]] = i
+            pos[b] += 1
+        # Insertion sort of each bucket (strict comparison: stable)
+        for b in range(N):
+            s, e = start[b], start[b + 1]
+            for j in range(s + 1, e):
+                v = order[j]
+                xv = x[v]
+                k = j - 1
+                while k >= s and x[order[k]] > xv:
+                    order[k + 1] = order[k]
+                    k -= 1
+                order[k + 1] = v
+        return order
+
 
 if _HAS_NUMBA:
 
@@ -1768,8 +1829,10 @@ def add_errors(isoch_binar: np.ndarray, err_dist: np.ndarray) -> np.ndarray:
 
     N = isoch_binar.shape[1]
     # Indexes that sort the stars from the largest to the smallest magnitude, the
-    # same order used by the error distributions (see error_distribution())
-    mag_sort = np.argsort(-isoch_binar[0])
+    # same order used by the error distributions (see error_distribution()). Stars
+    # with equal magnitudes keep their order (stable sort), as in the compiled
+    # version (_faint_first_order_nb()), so that both give identical results
+    mag_sort = np.argsort(-isoch_binar[0], kind="stable")
 
     for i, sigma in enumerate(err_dist):
         # Index the row first: fancy indexing a 1D view is noticeably faster

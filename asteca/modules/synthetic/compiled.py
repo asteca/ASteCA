@@ -125,6 +125,7 @@ if _HAS_NUMBA:
         _apply_extinction_gaiadr3_nb,
         _assign_binaries_nb,
         _draw_candidates_nb,
+        _faint_first_order_nb,
         _isochrone_at_met_age_nb,
         _scatter_add_nb,
         initial_pool_size,
@@ -364,7 +365,7 @@ if _HAS_NUMBA:
 
         # add_errors()
         if err.shape[0] > 0:
-            mag_sort = np.argsort(-isoch_binar[0])
+            mag_sort = _faint_first_order_nb(isoch_binar[0])
             for i in range(err.shape[0]):
                 _scatter_add_nb(isoch_binar[i], mag_sort, err[i])
 
