@@ -9,7 +9,10 @@ ty
 pyrefly
 pydoclint
 pyinstrument
+corner
 jupyterlab
 jupyterlab-spellchecker
 pyright[nodejs]
 scipy-stubs[scipy]
+pyabc
+emcee
