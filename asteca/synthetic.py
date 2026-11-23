@@ -744,6 +744,7 @@ class Synthetic:
 
         :raises ValueError:
             - If the `calibrate()` method was not previously called
+            - If ``color_idx`` is not ``0``, or ``1`` with a second color defined
             - If ``turn_off`` does not contain four values or has negative STDDEVs,
               or ``galaxy_potential`` or ``disruption`` contain unknown keys
             - If ``rho_amb`` is not a finite value larger than zero
@@ -765,6 +766,7 @@ class Synthetic:
         from .modules.synthetic import stellar_stats as sst
 
         # Check the arguments before generating the synthetic clusters
+        self._check_color_idx(color_idx)
         if turn_off is not None:
             if len(turn_off) != 4:
                 raise ValueError(
@@ -974,7 +976,8 @@ class Synthetic:
         and the full isochrone is returned with a warning.
 
         A ``ValueError`` is raised in the same cases as :py:meth:`generate` (e.g.:
-        parameters outside of their valid ranges).
+        parameters outside of their valid ranges), and if ``color_idx`` is not ``0``,
+        or ``1`` with a second color defined.
 
         See :ref:`ref_get_isochrone` for more details.
 
@@ -1000,6 +1003,8 @@ class Synthetic:
             the selected color (second row) of the isochrone
         :rtype: np.ndarray
         """
+        self._check_color_idx(color_idx)
+
         # Generate displaced isochrone and full synthetic CMD array
         isochrone, full_arr = self._synth_one(fit_params, N_stars, isoch_flag=True)
 
@@ -1126,6 +1131,29 @@ class Synthetic:
                 + "with an observed 'Cluster' object"
             )
         return self._obs
+
+    def _check_color_idx(self, color_idx: int) -> None:
+        """Check that ``color_idx`` selects one of the defined colors: ``0``, or
+        ``1`` if a second color is defined. Otherwise it would select a row of the
+        synthetic clusters that is not a color (e.g.: the initial mass)
+
+        :param color_idx: Index of the color
+        :type color_idx: int
+
+        :raises ValueError: If ``color_idx`` is not ``0``, or ``1`` with a second
+            color defined
+        """
+        # Rows before the initial mass: magnitude and colors
+        N_colors = self._engine.m_ini_idx - 1
+        valid = isinstance(color_idx, (int, np.integer)) and not isinstance(
+            color_idx, bool
+        )
+        if not valid or not 0 <= color_idx < N_colors:
+            if N_colors == 1:
+                mssg = "only '0' is valid, no second color is defined"
+            else:
+                mssg = "should be '0' (first color) or '1' (second color)"
+            raise ValueError(f"'color_idx={color_idx!r}' not valid: {mssg}")
 
     def _synth_one(
         self,
