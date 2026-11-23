@@ -18,7 +18,6 @@ def main():
         isochs_path="../isochrones/parsec",
         mag="Gmag",
         color=("G_BPmag", "G_RPmag"),
-        N_points=5000,
         verbose=3,
     )
 

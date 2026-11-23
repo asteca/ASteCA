@@ -116,8 +116,7 @@ Extra arguments
 
 There are a few more arguments that can be modified when loading the
 :py:class:`asteca.Isochrones` class. These are:
-``color2, color2_effl, z_to_FeH, N_points, mass_interpolation, parsec_rm_stages,
-column_names``.
+``color2, color2_effl, z_to_FeH, parsec_rm_stages, column_names``.
 
 The ``color2`` argument defines an optional second color, with the same format as
 ``color`` (two filter names, in the order used to compute the color). Its effective
@@ -163,25 +162,13 @@ you would load your isochrones as:
 If this argument is not changed from its default then the ``z`` parameter will be used
 to generate synthetic clusters, as shown in the section :ref:`ref_generating`.
 
-The ``N_points`` argument controls the resolution of the isochrones interpolation, set
-to ``2000`` by default. A smaller value can be used to lower the amount of memory
-used by this class, but it comes at the expense of more coarse synthetic clusters being
-generated later on (since the isochrones will be interpolated with fewer points and will
-thus contain less resolution). This argument does not apply to MIST isochrones, which include
-Equivalent Evolutionary Points (EEPs): these are interpolated on their own EEP grid,
-with one point per EEP (e.g.: ~1700 points). The number of points actually used is
-shown in the ``N_points`` line of the output.
-
-The ``mass_interpolation`` argument selects how the interpolation points are
-distributed along the isochrones that do not include EEPs (PARSEC and BASTI):
-
-- ``mass_skewed`` (default): the points are distributed in initial mass, more densely
-  towards the largest masses. This samples the evolved stages (turn-off, giants),
-  where the photometry changes quickly with mass, more finely than the lower main
-  sequence
-- ``mass_uniform``: the points are distributed uniformly in initial mass
-
-MIST isochrones are always interpolated on their EEP grid.
+All isochrones are interpolated to the same number of points, shown in the
+``N_points`` line of the output. Isochrones that do not include Equivalent
+Evolutionary Points (EEPs), i.e. PARSEC and BASTI, are interpolated on 2000 points
+distributed in initial mass, more densely towards the largest masses. This samples
+the evolved stages (turn-off, giants), where the photometry changes quickly with mass,
+more finely than the lower main sequence. MIST isochrones are interpolated on their own
+EEP grid, with one point per EEP (e.g.: ~1700 points).
 
 The ``parsec_rm_stages`` affects PARSEC isochrones only. Is set to ``9.0`` by default
 and it indicates that the `post_AGB` stage (``label=9``) should be removed. This is
