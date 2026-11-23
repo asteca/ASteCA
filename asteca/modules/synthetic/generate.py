@@ -1552,13 +1552,26 @@ def assign_binaries(
         isoch_mass[m_ini_idx + 1] = np.nan
         return isoch_mass[: m_ini_idx + 2]
 
+    q_pre, log_u, e_tab, e_m_lo, e_inv_step, flux_tab, flux_inv_step = binar_tables
+
     if _HAS_NUMBA:
         _assign_binaries_nb(
-            alpha, beta, m_ini_idx, rand_unif_vals, *binar_tables, isochrone, isoch_mass
+            alpha,
+            beta,
+            m_ini_idx,
+            rand_unif_vals,
+            q_pre,
+            log_u,
+            e_tab,
+            e_m_lo,
+            e_inv_step,
+            flux_tab,
+            flux_inv_step,
+            isochrone,
+            isoch_mass,
         )
         return isoch_mass[: m_ini_idx + 2]
 
-    q_pre, log_u, e_tab, e_m_lo, e_inv_step, flux_tab, flux_inv_step = binar_tables
     Ns = isoch_mass.shape[-1]
     m1 = isoch_mass[m_ini_idx]
 
