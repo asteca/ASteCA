@@ -67,9 +67,8 @@ class Cluster:
     :param e_pmde: Array that contains the DEC proper motion's uncertainty
     :type e_pmde: np.ndarray | None
     :param probs: Array that contains the membership probabilities for each star. The
-        :py:meth:`Membership.fastmp <asteca.Membership.fastmp>` and
-        :py:meth:`Membership.bayesian <asteca.Membership.bayesian>`
-        methods store here the estimated probabilities, but this attribute can be used
+        :py:meth:`Membership.fastmp <asteca.Membership.fastmp>`
+        method stores here the estimated probabilities, but this attribute can be used
         to store membership probabilities estimated in other ways. The
         :py:meth:`Membership.select_members
         <asteca.Membership.select_members>` method uses these values to

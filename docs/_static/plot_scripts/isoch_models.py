@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 
 # Import local version
@@ -15,7 +14,7 @@ MET = {"parsec": 0.0152, "basti": 0.01258, "mist": 0.0127212}
 
 def main(seed=142):
     """
-    Plot isochrones of three ages from the three supported isochrone services
+    Plot isochrones from the three supported isochrone services, one panel per age
     """
     # Same style as the plots in the tutorials
     plt.style.use("../asteca.mplstyle")
@@ -40,6 +39,7 @@ def main(seed=142):
                 model="parsec",
                 isochs_path="../isochrones/parsec",
                 mag="Gmag",
+                parsec_rm_stages=8,
                 color=("G_BPmag", "G_RPmag"),
                 verbose=3,
             )
@@ -70,49 +70,43 @@ def main(seed=142):
         synthcl.calibrate(my_cluster)
         synthcl_dict[isoch_model] = synthcl
 
-    xmin, xmax = np.inf, -np.inf
-    ymin, ymax = -np.inf, np.inf
+    # Same color for each model in all the panels
+    labels = {"parsec": "PARSEC", "basti": "BaSTI", "mist": "MIST"}
+    dm, Av = 0, 0
+    xmin, xmax = -1, 5
+    ymin, ymax = 16, -7
 
     fig, axes = plt.subplots(1, 3, figsize=(14, 6), sharex=True, sharey=True)
 
-    for i, (isoch_model, synthcl) in enumerate(synthcl_dict.items()):
+    # ls = {"parsec": "--", "basti": ":", "mist": "-."}
+    for i, loga in enumerate((7.5, 8.5, 9.5)):
         ax = axes[i]
-        dm, Av = 0, 0
-
-        met = MET[isoch_model]
-        for loga in (7.5, 8.5, 9.5):
+        for isoch_model, synthcl in synthcl_dict.items():
             model = {
-                "met": met,
+                "met": MET[isoch_model],
                 "loga": loga,
                 "dm": dm,
                 "Av": Av,
             }
             isoch_arr = synthcl.get_isochrone(model, full_track=True)
-            xmin, xmax = min(xmin, min(isoch_arr[1])), max(xmax, max(isoch_arr[1]))
-            ymin, ymax = max(ymin, max(isoch_arr[0])), min(ymax, min(isoch_arr[0]))
-            # plot_synthetic(synthcl, ax, model, isoch_arr, title=isoch_model)
-            ax.plot(isoch_arr[1], isoch_arr[0], lw=2, label=f"log(age)={loga:.1f}")
+            ax.plot(
+                isoch_arr[1],
+                isoch_arr[0],
+                lw=3,
+                ls="--",  # ls[isoch_model],
+                alpha=0.75,
+                label=labels[isoch_model],
+            )
 
-            ax.set_title(str(isoch_model).upper())
-            ax.set_xlabel("$G_{BP}-G_{RP}$")
-            if i == 1:
-                ax.legend()  # loc="upper left")
+        ax.set_title(f"log(age)={loga:.1f}")
+        ax.set_xlabel("$G_{BP}-G_{RP}$")
+        # Color range of the main sequence and giant branches (the PARSEC isochrones
+        # extend to much redder colors in the TP-AGB phase)
+        ax.set_xlim(xmin, xmax)
+        ax.set_ylim(ymin, ymax)
 
-    xmin, xmax = xmin - xmax * 0.1, xmax + xmax * 0.02
-    ymin, ymax = ymin + ymin * 0.02, ymax - (ymin - ymax) * 0.05
-    ax = axes[0]
-    ax.set_ylabel("$M_G$")
-    # Color range of the main sequence and giant branches (the PARSEC isochrones
-    # extend to much redder colors in the TP-AGB phase)
-    ax.set_xlim(-0.5, 5)
-    # ax.set_xlim(xmin, xmax)
-    ax.set_ylim(ymin, ymax)
-    ax = axes[1]
-    # ax.set_xlim(xmin, xmax)
-    ax.set_ylim(ymin, ymax)
-    ax = axes[2]
-    # ax.set_xlim(xmin, xmax)
-    ax.set_ylim(ymin, ymax)
+    axes[0].set_ylabel("$M_G$")
+    axes[1].legend()
 
     fig.tight_layout()
     plt.savefig("../isoch_models.webp", dpi=300, bbox_inches="tight")

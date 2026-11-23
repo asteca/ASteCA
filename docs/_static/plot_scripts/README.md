@@ -14,7 +14,7 @@ and isochrones in `docs/_static/`, use the same style as the tutorials
 | `ext_law.webp`                                                 | `ext_law.py`     |
 | `IMFs.webp`                                                    | `IMFs.py`        |
 | `isoch_models.webp`                                            | `isoch_models.py` |
-| `mag_correct.webp`                                             | `mag_correct.py` |
+| `mag_correct.webp`                                             | `mag_correct.py` (uses `../kronberger31_field.csv`) |
 | `qdist_mass.webp`, `qdist_unif.webp`                           | `qdist.py`       |
 | `synthplot.webp`                                               | `synthplot.py`   |
 

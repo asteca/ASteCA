@@ -12,14 +12,7 @@ class Membership:
     """Define a :py:class:`Membership` object.
 
     This object is used as a container for membership probabilities methods. Currently
-    two methods are included:
-
-    :py:meth:`bayesian` : The algorithm was described in detail in
-    the `article <https://doi.org/10.1051/0004-6361/201424946>`__
-    where we originally introduced ``ASteCA``. The method requires ``(RA, DEC)``
-    data and will use any extra data dimensions stored in the
-    :py:class:`Cluster <asteca.Cluster>` object, i.e.: photometry,
-    proper motions, and parallax.
+    one method is included:
 
     :py:meth:`fastmp` : The algorithm was described in detail in
     the `article <https://academic.oup.com/mnras/article/526/3/4107/7276628>`__
@@ -51,118 +44,6 @@ class Membership:
         """Verbose print method"""
         if self.my_field.verbose > level:
             print(mssg)
-
-    def bayesian(
-        self,
-        N_runs: int = 1000,
-        eq_to_gal: bool = True,
-        seed: int | None = None,
-    ) -> None:
-        """Assign membership probabilities.
-
-        Estimate the probability of being a true cluster member for all observed
-        stars, using a Bayesian algorithm. The ``N_cluster``, ``radec_c`` and
-        ``radius`` attributes are required to be present in the
-        :py:class:`Cluster <asteca.Cluster>` object.
-
-        :param N_runs: Maximum number of runs
-        :type N_runs: int
-        :param eq_to_gal: Convert ``(RA, DEC)`` to ``(lon, lat)``. Useful for clusters
-            with large ``DEC`` values to reduce the frame's distortion
-        :type eq_to_gal: bool
-        :param seed: Random seed. If ``None`` a random integer will be generated and used
-        :type seed: int | None
-
-        :raises AttributeError: If any of the required attributes (``ra, dec,
-            N_cluster, radec_c, radius``) are missing from the
-            :py:class:`Cluster <asteca.Cluster>` object
-        :raises ValueError: If the ``N_runs`` parameter is less than 10, or if the
-            :py:class:`Cluster <asteca.Cluster>` object contains no data
-            dimension beyond ``(ra, dec)`` (photometry, parallax or proper motions)
-        """
-        self._print("\nRunning Bayesian DA")
-
-        # These two are checked separately to avoid type checking issues
-        if self.my_field.ra is None or self.my_field.dec is None:
-            raise AttributeError("Missing required 'cluster' attributes: (ra, dec)")
-        required_attrs = ("N_cluster", "radec_c", "radius")
-        missing = [attr for attr in required_attrs if not hasattr(self.my_field, attr)]
-        if missing:
-            raise AttributeError(
-                f"Missing required 'cluster' attributes: {', '.join(missing)}"
-            )
-
-        if N_runs < 10:
-            raise ValueError("Parameter 'N_runs' should be >= 10")
-
-        # Set seed
-        self.rng = np.random.default_rng(seed)
-
-        from .modules import structure as st
-        from .modules.bayesian_da import bayesian_mp
-
-        xv, yv = self.my_field.ra, self.my_field.dec
-        xy_center = self.my_field.radec_c
-        cent_str = "radec_c "
-        # Convert (RA, DEC) to (lon, lat)
-        if eq_to_gal is True:
-            # Add center as last element
-            xv_t = np.array(list(xv) + [xy_center[0]])
-            yv_t = np.array(list(yv) + [xy_center[1]])
-            # Convert
-            xv_t, yv_t = st.radec2lonlat(xv_t, yv_t)
-            # Extract center value
-            xv, yv = xv_t[:-1], yv_t[:-1]
-            xy_center = (xv_t[-1], yv_t[-1])
-            cent_str = "lonlat_c"
-
-        # Generate input data array
-        X = [xv, yv]
-        e_X = []
-        if self.my_field.mag is not None:
-            X.append(self.my_field.mag)
-            e_X.append(self.my_field.e_mag)
-        if self.my_field.color is not None:
-            X.append(self.my_field.color)
-            e_X.append(self.my_field.e_color)
-        if self.my_field.color2 is not None:
-            X.append(self.my_field.color2)
-            e_X.append(self.my_field.e_color2)
-        if self.my_field.plx is not None:
-            X.append(self.my_field.plx)
-            e_X.append(self.my_field.e_plx)
-        if self.my_field.pmra is not None:
-            X.append(self.my_field.pmra)
-            e_X.append(self.my_field.e_pmra)
-        if self.my_field.pmde is not None:
-            X.append(self.my_field.pmde)
-            e_X.append(self.my_field.e_pmde)
-        X = np.array(X)
-        e_X = np.array(e_X)
-
-        if X.shape[0] < 3:
-            raise ValueError(
-                "At least one data dimension beyond (RA, DEC) is required"
-                + " for the Bayesian DA method"
-            )
-
-        self._print("{}       : ({:.4f}, {:.4f})".format(cent_str, *xy_center), 1)
-        self._print(f"radius         : {self.my_field.radius:.4f} [deg]", 1)
-        self._print(f"N_cluster      : {self.my_field.N_cluster}", 1)
-        self._print(f"N_runs         : {N_runs}", 1)
-
-        out_mssg, probs = bayesian_mp(
-            self.my_field.N_cluster,
-            X,
-            e_X,
-            xy_center,
-            self.my_field.radius,
-            N_runs,
-            self.rng,
-        )
-        self._print(out_mssg, 1)
-        self.my_field.probs = probs
-        self._print("Probabilities stored in 'probs' attribute", 1)
 
     def fastmp(
         self,

@@ -26,11 +26,10 @@ currently require manual input or external estimation.
 
 
 The :ref:`membership_ntbk` notebook serves as a practical guide to applying the
-:py:meth:`asteca.Membership.fastmp` and :py:meth:`asteca.Membership.bayesian` membership
-probability estimation methods. It highlights the different data requirements (5D for
-:py:meth:`fastmp <asteca.Membership.fastmp>`, photometric for :py:meth:`bayesian <asteca.Membership.bayesian>`) and necessary preliminary parameter
-estimations (center, ``N_cluster``, radius for :py:meth:`bayesian <asteca.Membership.bayesian>`) for each method,
-concluding with a visual comparison of their results.
+:py:meth:`asteca.Membership.fastmp` membership probability estimation method. It
+highlights its data requirements (proper motions and parallax) and the necessary
+preliminary parameter estimations (center and ``N_cluster``), concluding with the
+selection of the most likely members and a plot of their membership probabilities.
 
 
 The :ref:`synth_ntbk` notebook demonstrates the process of generating synthetic star

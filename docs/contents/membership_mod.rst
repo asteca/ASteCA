@@ -4,18 +4,8 @@ Membership module
 #################
 
 The :py:class:`asteca.Membership` class allows estimating the membership probabilities
-for all the stars in a given observed field. There are currently two methods included in
-this class: :py:meth:`asteca.Membership.bayesian` and
-:py:meth:`asteca.Membership.fastmp`.
-
-The :py:meth:`bayesian <asteca.Membership.bayesian>` method was described in detail in the `article`_ where **ASteCA**
-was originally introduced. The method requires ``(ra, dec)``  data and will use any extra
-data dimensions stored in the :py:class:`Cluster <asteca.Cluster>` object, i.e.:
-photometry, proper motions, and parallax. At least one extra data dimension beyond
-``(ra, dec)`` is required (three dimensions total minimum). This method can produce
-membership probabilities on photometric data alone. It also requires the ``(ra, dec)``
-center (``radec_c``) and the ``radius`` of the cluster, in degrees, to be stored in the
-:py:class:`Cluster <asteca.Cluster>` object (see :ref:`structure`).
+for all the stars in a given observed field, using the
+:py:meth:`asteca.Membership.fastmp` method.
 
 The :py:meth:`fastmp <asteca.Membership.fastmp>` method was described in detail in the
 `article <https://academic.oup.com/mnras/article/526/3/4107/7276628>`__
@@ -23,39 +13,17 @@ where the `Unified Cluster Catalogue (UCC) <https://ucc.ar/>`__ was introduced. 
 method requires proper motions, and parallax data dimensions stored in the
 :py:class:`Cluster <asteca.Cluster>` object, along with the center values
 ``radec_c, pms_c, plx_c`` (see :ref:`structure`). Photometric data is not employed to
-estimate the probabilities, but the magnitude can be used to correct them: since the
-method resamples the data using their uncertainties, it favors stars with small
-uncertainties (i.e.: brighter stars). With ``mag_correct=True`` the probabilities are
-adjusted so that a ``P>=0.5`` selection follows the magnitude distribution of the
-members selected with no resampling. This requires the ``mag`` attribute.
+estimate the probabilities, but the magnitude can be used to correct them (see
+:ref:`mag_correct`).
 
-The figure below shows the effect of ``mag_correct=True`` on the field used in the
-:ref:`membership_ntbk` tutorial. Left: probabilities with no correction (grey) and the
-stars whose probabilities are moved across ``P=0.5`` by the correction (promoted or
-demoted). Right: magnitude distribution of the ``P>=0.5`` members with and without the
-correction, compared to the members selected with no resampling (reference). Without
-the correction, the faintest magnitudes are under-represented in the ``P>=0.5``
-selection. The correction changes only a few stars in this example, but it can have
-a larger effect in fields with a wider range of uncertainties.
-
-.. figure:: ../_static/mag_correct.webp
-    :align: center
-
-.. important::
-    The only advantage of the :py:meth:`bayesian <asteca.Membership.bayesian>` method over the :py:meth:`fastmp <asteca.Membership.fastmp>`
-    method is that the former works with photometric data. Hence it should only be used
-    in cases where only photometric data is available, as :py:meth:`fastmp <asteca.Membership.fastmp>` is not only
-    much faster but also more precise in those cases where proper motions and/or
-    parallax data is available.
-
-To use these methods we need to estimate the cluster's number of members as described in
+To use this method we need to estimate the cluster's number of members as described in
 the :ref:`nmembers` section, which is done by calling the
 :py:meth:`asteca.Cluster.get_nmembers` method.
 
 With the ``N_cluster`` attribute in place in a
 :py:class:`Cluster <asteca.Cluster>` object, here called ``my_field``, you can
-apply either the :py:meth:`bayesian <asteca.Membership.bayesian>` or the :py:meth:`fastmp <asteca.Membership.fastmp>` method (both part
-of the :py:class:`Membership <asteca.Membership>` class) as follows:
+apply the :py:meth:`fastmp <asteca.Membership.fastmp>` method (part of the
+:py:class:`Membership <asteca.Membership>` class) as follows:
 
 
 .. code-block:: python
@@ -63,15 +31,11 @@ of the :py:class:`Membership <asteca.Membership>` class) as follows:
     # Run `fastmp` method
     my_field.membership.fastmp()
 
-    # Run `bayesian` method
-    my_field.membership.bayesian()
-
 Here ``my_field.membership`` is a :py:class:`Membership <asteca.Membership>`
 object tied to ``my_field``, created along with it, so there is no need to create one.
-The calls above are equivalent to ``asteca.Membership(my_field).fastmp()`` and
-``asteca.Membership(my_field).bayesian()``.
+The call above is equivalent to ``asteca.Membership(my_field).fastmp()``.
 
-The per-star membership probabilities arrays are stored in the ``probs`` attribute
+The per-star membership probabilities array is stored in the ``probs`` attribute
 of the ``my_field`` object.
 
 Following the obtention of the membership probabilities, the next step is to apply a
@@ -99,4 +63,33 @@ can be given).
 A step-by-step example is shown in the :ref:`membership_ntbk` tutorial.
 
 
-.. _article: https://doi.org/10.1051/0004-6361/201424946
+
+.. _mag_correct:
+
+Magnitude correction
+====================
+
+Since the :py:meth:`fastmp <asteca.Membership.fastmp>` method resamples the data using
+their uncertainties, it favors stars with small uncertainties (i.e.: brighter stars).
+With ``mag_correct=True`` the probabilities are adjusted so that a ``P>=0.5`` selection
+follows the magnitude distribution of the members selected with no resampling. This
+requires the ``mag`` attribute:
+
+.. code-block:: python
+
+    # Run `fastmp` method with the magnitude correction
+    my_field.membership.fastmp(mag_correct=True)
+
+The figure below shows the effect of ``mag_correct=True`` on the Gaia DR3 field
+(``G<20``) around `Kronberger 31 <https://ucc.ar/_clusters/kronberger31/>`__, a distant
+cluster with not many members in the UCC.
+The CMDs show the ``P>=0.5`` members colored by their probabilities
+over the field stars (grey), without (left) and with (right) the correction. Without
+the correction fewer stars reach ``P>=0.5``, and almost none of them are fainter than
+``G=18.5``, where the uncertainties are largest. With the correction more stars
+reach ``P>=0.5`` with many faint stars promoted (just above ``P=0.5``) and a few
+brighter ones are demoted, recovering the magnitude distribution of the members
+selected with no uncertainties resampling.
+
+.. figure:: ../_static/mag_correct.webp
+    :align: center
