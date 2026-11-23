@@ -75,14 +75,6 @@ class Cluster:
         <asteca.Membership.select_members>` method uses these values to
         select stars with probabilities above a given threshold.
     :type probs: np.ndarray | None
-    :param N_clust_min: Lower limit for the number of members estimated by
-        :py:meth:`get_nmembers`: smaller estimates are replaced by this value (with a
-        warning). Also used by its ``ripley`` algorithm
-    :type N_clust_min: int
-    :param N_clust_max: Upper limit for the number of members estimated by
-        :py:meth:`get_nmembers`: larger estimates are replaced by this value (with a
-        warning). Also used by its ``ripley`` algorithm
-    :type N_clust_max: int
     :param verbose: Verbose level. A value of ``0`` hides all output
     :type verbose: int
 
@@ -121,8 +113,6 @@ class Cluster:
         pmde: np.ndarray | None = None,
         e_pmde: np.ndarray | None = None,
         probs: np.ndarray | None = None,
-        N_clust_min: int = 25,
-        N_clust_max: int = 2000,
         verbose: int = 1,
     ) -> None:
         self.cluster_name = cluster_name
@@ -145,8 +135,6 @@ class Cluster:
         self.e_pmra = e_pmra
         self.e_pmde = e_pmde
         self.probs = probs
-        self.N_clust_min = N_clust_min
-        self.N_clust_max = N_clust_max
         self.verbose = verbose
 
         # Detect generation of empty Cluster object
@@ -210,8 +198,6 @@ class Cluster:
         self._print(f"N_stars        : {self.N_stars}", 1)
         if nan_phot > 0:
             self._print(f"N_nan_phot     : {self.N_nan_phot}", 1)
-        self._print(f"N_clust_min    : {self.N_clust_min}", 1)
-        self._print(f"N_clust_max    : {self.N_clust_max}", 1)
 
         # Initialize membership object
         from .membership import Membership
@@ -608,7 +594,13 @@ class Cluster:
             self.r_tidal_k = r_tidal_k
             # self.field_density_k = field_density_k
 
-    def get_nmembers(self, algo: str = "ripley", eq_to_gal: bool = True) -> None:
+    def get_nmembers(
+        self,
+        algo: str = "ripley",
+        eq_to_gal: bool = True,
+        N_clust_min: int = 25,
+        N_clust_max: int = 2000,
+    ) -> None:
         """Estimate the number of members for the cluster. Algorithms:
 
         - ``ripley``: Originally introduced with the ``fastMP`` membership method
@@ -621,9 +613,9 @@ class Cluster:
           stars within that region. Requires the ``(ra, dec)`` center and the radius of
           the cluster to be defined.
 
-        The estimate is limited to the ``[N_clust_min, N_clust_max]`` range given when
-        the object was created: a value outside of it is replaced by the closest limit
-        and a warning is shown. The result is stored in the ``N_cluster`` attribute.
+        The estimate is limited to the ``[N_clust_min, N_clust_max]`` range: a value
+        outside of it is replaced by the closest limit and a warning is shown. The
+        result is stored in the ``N_cluster`` attribute.
 
         :param algo: Algorithm used to estimate the number of members, one of
             (``ripley, density``)
@@ -631,8 +623,17 @@ class Cluster:
         :param eq_to_gal: Convert ``(ra, dec)`` to ``(lon, lat)``. Useful for clusters
             with large ``dec`` values to reduce the frame's distortion
         :type eq_to_gal: bool
+        :param N_clust_min: Lower limit for the number of members: smaller estimates
+            are replaced by this value (with a warning). Also used by the ``ripley``
+            algorithm
+        :type N_clust_min: int
+        :param N_clust_max: Upper limit for the number of members: larger estimates
+            are replaced by this value (with a warning). Also used by the ``ripley``
+            algorithm
+        :type N_clust_max: int
 
-        :raises ValueError: If ``algo`` argument is not recognized
+        :raises ValueError: If ``algo`` argument is not recognized, or if
+            ``N_clust_min, N_clust_max`` are not ``1 <= N_clust_min <= N_clust_max``
         :raises AttributeError: If required attributes are  missing from the
             :py:class:`Cluster <asteca.Cluster>` object
         """
@@ -641,6 +642,11 @@ class Cluster:
 
         if algo not in ("ripley", "density"):
             raise ValueError(f"Selected method '{algo}' not recognized")
+        if not 1 <= N_clust_min <= N_clust_max:
+            raise ValueError(
+                "Arguments must satisfy 1 <= N_clust_min <= N_clust_max, got "
+                + f"N_clust_min={N_clust_min}, N_clust_max={N_clust_max}"
+            )
 
         # Both methods require these
         if self.ra is None or self.dec is None:
@@ -688,8 +694,8 @@ class Cluster:
                 xy_center,
                 self.pms_c,
                 self.plx_c,
-                self.N_clust_min,
-                self.N_clust_max,
+                N_clust_min,
+                N_clust_max,
             )
             # Stored for eventual use
             self.ripley_idx_selected = idx_selected
@@ -703,12 +709,12 @@ class Cluster:
                 )
             N_cluster = nm.density_nmembs(xv, yv, xy_center, self.radius)
 
-        if N_cluster < self.N_clust_min:
-            warn("The estimated number of cluster members is " + f"<{self.N_clust_min}")
-            N_cluster = self.N_clust_min
-        if N_cluster > self.N_clust_max:
-            warn("The estimated number of cluster members is " + f">{self.N_clust_max}")
-            N_cluster = self.N_clust_max
+        if N_cluster < N_clust_min:
+            warn(f"The estimated number of cluster members is <{N_clust_min}")
+            N_cluster = N_clust_min
+        if N_cluster > N_clust_max:
+            warn(f"The estimated number of cluster members is >{N_clust_max}")
+            N_cluster = N_clust_max
 
         self.N_cluster = N_cluster
         self._print("\nNumber of members estimated")

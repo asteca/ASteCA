@@ -8,7 +8,7 @@ data for either an observed cluster (i.e.: a data file that contains only true
 cluster members) or an observed field (i.e.: a data file that contains not just the
 cluster members but also the surrounding field stars).
 
-Given a data file *my_data_file.csv* containing either a cluster or field data, the user
+Given a data file ``my_data_file.csv`` containing either a cluster or field data, the user
 can generate a :py:class:`asteca.Cluster` object as follows:
 
 .. code-block:: python
@@ -37,8 +37,7 @@ can generate a :py:class:`asteca.Cluster` object as follows:
 
 All the data arguments are optional, but the ones given must have the same length.
 Every data dimension except ``(ra, dec)``, ``star_id`` and ``probs`` requires its
-uncertainty (``e_mag, e_color, e_color2, e_plx, e_pmra, e_pmde``), and all the uncertainty values
-must be larger than ``0`` (a ``ValueError`` is raised otherwise). Other arguments that
+uncertainty (``e_mag, e_color, e_color2, e_plx, e_pmra, e_pmde``). Other arguments that
 can be passed when creating the object are:
 
 - ``color2, e_color2``: a second color and its uncertainty (requires ``color``)
@@ -51,9 +50,6 @@ can be passed when creating the object are:
   magnitude, or than the given percentile of the magnitude distribution, are removed
   when the object is created. Stars with no magnitude value (``nan``) are also removed
   when this cut is applied
-- ``N_clust_min, N_clust_max``: lower and upper limits for the number of members
-  estimated by :py:meth:`asteca.Cluster.get_nmembers` (see :ref:`nmembers`), set to
-  ``25`` and ``2000`` by default
 
 The resulting ``my_field`` object, assumed here to be an observed field containing a
 cluster, can be processed to extract a given cluster's structural properties such as
@@ -63,9 +59,26 @@ The :py:class:`asteca.Cluster` class also contains methods to obtain the estimat
 number of members (see :ref:`nmembers`), as well as their membership probabilities
 (see :ref:`membership_module`).
 
-Alternatively, the user can also generate a :py:class:`asteca.Cluster` object directly
-from the `UCC's members data file`_. This is done by passing the cluster's name along
-with the loaded ``UCC_members.parquet`` file to the class, as follows:
+.. _pandas.DataFrame: https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html
+
+
+
+
+Loading UCC members data
+========================
+
+.. note::
+    The UCC is the `Unified Cluster Catalog`_, the largest open clusters catalogue in
+    the literature.
+
+
+The user can also generate an :py:class:`asteca.Cluster` object directly
+from the UCC's members data file. This file is called ``UCC_members.parquet``
+and can be downloaded from the UCC's `Zenodo repository`_.
+
+Once the file with the UCC members is downloaded, the user can pass
+the cluster's name along with the already loaded ``UCC_members.parquet`` file to
+:py:class:`asteca.Cluster`, as follows:
 
 .. code-block:: python
 
@@ -81,18 +94,13 @@ with the loaded ``UCC_members.parquet`` file to the class, as follows:
         UCC_members_file=UCC_members
     )
 
-
-.. note::
-    The UCC is the `Unified Cluster Catalog`_, the largest open clusters catalogue in
-    the literature.
-
 Loading a cluster's data from the UCC's members data file stores as attributes of
 the resulting :py:class:`asteca.Cluster` object all the available data for that
 cluster. This includes the six dimensions of its phase space vector:
-`(RA, DEC, Plx, e_Plx, pmRA, e_pmRA, pmDE, e_pmDE, RV, e_RV)` as well as its photometry
-in the Gaia bands `(Gmag, e_Gmag, BP-RP, e_BP-RP)`, along with their associated
-errors, and the membership probability values for each star `(probs)`. These attributes
-can be accessed as:
+``(RA_ICRS, DE_ICRS, Plx, e_Plx, pmRA, e_pmRA, pmDE, e_pmDE, RV, e_RV)``
+as well as its photometry in the Gaia bands ``(Gmag, e_Gmag, BP-RP, e_BP-RP)`` 
+(along with their associated errors), and the membership probability values for each
+star ``(probs)``. These attributes can be accessed as:
 
 .. code-block:: python
 
@@ -104,20 +112,16 @@ can be accessed as:
     my_field.probs   # Membership probabilities
 
 The radial velocities ``(RV, e_RV)`` are stored as the ``Rad_v`` and ``eRad_v``
-attributes (to avoid confusion with the extinction parameter ``Rv``),
+attributes to avoid confusion with the extinction parameter ``Rv``,
 and the star identifiers (``Source`` column of the file) as the ``star_id`` attribute.
 
 At any point, the user can employ the :py:meth:`asteca.Cluster.to_csv` method to save
 the data stored in the :py:class:`asteca.Cluster` object to a CSV file. This is
 helpful, for example, to access the probabilities estimated by the methods in the
-:py:class:`asteca.Membership` class. The file contains the columns
-``star_id, ra, dec, mag, e_mag, color, e_color, color2, e_color2, plx, e_plx, pmra,
-e_pmra, pmde, e_pmde, Rad_v, eRad_v, probs`` that are defined in the object (the numeric
-ones rounded to 5 decimals), plus an ``index`` column with the position of each star.
+:py:class:`asteca.Membership` class.
 
 
-.. _pandas.DataFrame: https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html
-.. _UCC's members data file : https://doi.org/10.5281/zenodo.8250523
+.. _Zenodo repository : https://doi.org/10.5281/zenodo.8250523
 .. _Unified Cluster Catalog: https://ucc.ar
 
 
@@ -215,6 +219,14 @@ Again, the methods can be accessed from the ``my_field`` object as:
     # attribute to be set in the `my_field` object
     my_field.radius = 0.1
     my_field.get_nmembers('density')
+
+The estimate is limited to the range given by the ``N_clust_min, N_clust_max``
+arguments (``25`` and ``2000`` by default): a value outside of it is replaced by the
+closest limit, with a warning. E.g.: for a very rich cluster
+
+.. code-block:: python
+
+    my_field.get_nmembers(N_clust_max=5000)
 
 The estimated value will be stored as an attribute of the ``my_field`` object which can
 be accessed as:

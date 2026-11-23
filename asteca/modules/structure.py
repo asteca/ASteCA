@@ -367,7 +367,7 @@ def get_pms_center(
     vpd_c: tuple[float, float] | None,
     pmRA: np.ndarray,
     pmDE: np.ndarray,
-    N_clust_min: int,
+    N_min: int,
     N_bins: int = 50,
     zoom_f: int = 4,
     N_zoom: int = 10,
@@ -380,8 +380,8 @@ def get_pms_center(
     :type pmRA: np.ndarray
     :param pmDE: Proper motion in Declination.
     :type pmDE: np.ndarray
-    :param N_clust_min: Minimum number of stars in the cluster.
-    :type N_clust_min: int
+    :param N_min: Minimum number of stars in the cluster.
+    :type N_min: int
     :param N_bins: Number of bins for the 2D histogram, defaults to 50
     :type N_bins: int
     :param zoom_f: Zoom factor for the iterative center estimation, defaults to 4
@@ -400,7 +400,7 @@ def get_pms_center(
     cxym = None
     for _ in range(N_zoom):
         N_stars = vpd.shape[0]
-        if N_stars < N_clust_min:
+        if N_stars < N_min:
             break
 
         # Find center coordinates as max density
@@ -499,14 +499,14 @@ def get_stars_close_center(
 
 
 def get_kNN_center(
-    data: np.ndarray, N_clust_min: int
+    data: np.ndarray, N_min: int
 ) -> tuple[float, float, float, float, float]:
     """Estimate 5D center with kNN.
 
     :param data: Array of data.
     :type data: np.ndarray
-    :param N_clust_min: Minimum number of stars in the cluster.
-    :type N_clust_min: int
+    :param N_min: Minimum number of stars in the cluster.
+    :type N_min: int
 
     :return: Center coordinates in (lon, lat, pmRA, pmDE, plx).
     :rtype: tuple[float, float, float, float, float]
@@ -515,7 +515,7 @@ def get_kNN_center(
     data_noplx = data[:, :4]  # <-- HARDCODED, TODO
 
     tree = spatial.KDTree(data_noplx)
-    inx = tree.query(data_noplx, k=N_clust_min + 1)
+    inx = tree.query(data_noplx, k=N_min + 1)
     NN_dist = np.max(inx[0], axis=1)
     # Convert to densities
     dens = 1.0 / NN_dist
@@ -525,8 +525,8 @@ def get_kNN_center(
     # # Use the single star with the largest density
     # cent = np.array([data[idxs[0]]])[0]
 
-    # Use median of 'N_clust_min' stars with largest densities
-    x_c, y_c, pmra_c, pmde_c, plx_c = np.median(data[idxs[:N_clust_min]], 0)
+    # Use median of 'N_min' stars with largest densities
+    x_c, y_c, pmra_c, pmde_c, plx_c = np.median(data[idxs[:N_min]], 0)
 
     return x_c, y_c, pmra_c, pmde_c, plx_c
 
