@@ -11,6 +11,13 @@ from .synthetic import Synthetic
 # the fit of small clusters, while for larger clusters it accounts for the mismatch
 # between the model and the data (and for the random sampling of the synthetic
 # clusters), which otherwise produces too narrow posteriors.
+# With two colors these values are multiplied by 2 (the number of colors): the
+# likelihood adds one Hess diagram per color, all of them sharing the magnitude, so its
+# range doubles. Tested on mocks with a redundant (G-RP added to BP-RP) and an
+# independent (U-B added to B-V) second color: the factor 2 restores the coverage of the
+# fits with one color (and gives the same results for the redundant color), while
+# keeping the gain in accuracy of the independent color. Without it the posteriors are
+# too narrow (coverage ~0.5 for N<=400)
 AUTO_TEMPERATURES = ((150, 1.0), (400, 2.0), (np.inf, 4.0))
 
 
@@ -56,7 +63,8 @@ class Sampler:
         this value. Values larger than ``1`` widen the posterior (by a factor of about
         ``sqrt(temperature)``). If ``"auto"``, it is selected from the number ``N``
         of stars in the observed cluster: ``1`` for ``N<=150``, ``2`` for
-        ``N<=400``, and ``4`` above
+        ``N<=400``, and ``4`` above. These values are multiplied by the number of
+        colors (i.e.: doubled if a second color is defined)
     :type temperature: float | str
     :param n_effective: Target effective sample size used to select the next
         inverse temperature in each iteration. It is adjusted during the run based
@@ -183,7 +191,9 @@ class Sampler:
                 )
             # Number of observed stars, as in the calibration of AUTO_TEMPERATURES
             N = len(obs.mag)
-            temperature = next(t for n, t in AUTO_TEMPERATURES if N <= n)
+            # One Hess diagram per color in the likelihood, see AUTO_TEMPERATURES
+            N_colors = sum(c is not None for c in obs.colors)
+            temperature = N_colors * next(t for n, t in AUTO_TEMPERATURES if N <= n)
         self.temperature = float(temperature)
         if not self.temperature > 0.0:
             raise ValueError("'temperature' must be larger than 0")

@@ -87,6 +87,13 @@ the observed cluster:
 :math:`N > 400`               4
 ============================  ===============
 
+If a second color is defined these values are doubled. The likelihood adds one Hess
+diagram per color, and since both diagrams share the magnitude its range doubles: with
+the values above the posteriors would be too narrow. With the doubled values the fits
+of simulated clusters recover the coverage obtained with a single color, while an
+independent second color (e.g.: ``U-B`` added to ``B-V``) still reduces the errors in
+``loga, dm, met`` by about half.
+
 This is a **heuristic rule**, not derived from first principles: it was calibrated on
 simulated clusters (so that the 16th-84th percentile range contains the true values
 for close to 68% of them) and checked on a set of real clusters.
