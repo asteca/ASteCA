@@ -72,23 +72,22 @@ class Sampler:
     :type n_effective: int
     :param n_active: Number of particles moved with MCMC in each iteration
     :type n_active: int
-    :param parallel: Evaluate the models of each batch in parallel threads (requires
-        numba). Without numba it is ignored
-    :type parallel: bool
-    :param n_threads: Number of threads used if ``parallel=True``, for the
-        duration of each batch (numba's previous setting is restored afterwards). If
-        ``None``, numba's current setting is used: by default one thread per CPU
-        core, which can be changed with the ``NUMBA_NUM_THREADS`` environment variable
-        (before importing ``asteca``) or with ``numba.set_num_threads()``. It can not
-        be larger than ``NUMBA_NUM_THREADS``
+    :param n_threads: Number of threads used to evaluate the models of each batch
+        (requires numba, without numba it is ignored). If ``1``, the models are
+        evaluated serially. If larger than ``1``, they are distributed among that
+        number of threads for the duration of each batch (numba's previous setting is
+        restored afterwards). If ``None``, numba's current setting is used: by default
+        one thread per CPU core, which can be changed with the ``NUMBA_NUM_THREADS``
+        environment variable (before importing ``asteca``) or with
+        ``numba.set_num_threads()``. It can not be larger than ``NUMBA_NUM_THREADS``
     :type n_threads: int | None
     :param verbose: Verbose level. A value of ``0`` hides all output
     :type verbose: int
 
     :raises ValueError: If any of the attributes is not recognized as a valid
-        option, if ``synthcl`` was not calibrated, or if ``n_threads`` is used
-        (``parallel=True`` with numba installed) and it is not an integer between
-        ``1`` and ``NUMBA_NUM_THREADS``.
+        option, if ``synthcl`` was not calibrated, or if ``n_threads`` is not
+        ``None`` or an integer between ``1`` and ``NUMBA_NUM_THREADS`` (only checked
+        with numba installed).
     """
 
     def __init__(  # noqa: DOC502, RUF100
@@ -98,7 +97,6 @@ class Sampler:
         temperature: float | str = 1.0,
         n_effective: int = 256,
         n_active: int = 128,
-        parallel: bool = False,
         n_threads: int | None = None,
         verbose: int = 1,
     ) -> None:
@@ -108,7 +106,6 @@ class Sampler:
         self.DR_distribution: str | None = None
         self.n_effective = int(n_effective)
         self.n_active = int(n_active)
-        self.parallel = parallel
         self.n_threads = n_threads
         # The seed is inherited from the Synthetic object
         self.seed = int(synthcl.seed)
@@ -148,9 +145,18 @@ class Sampler:
         self._print(f"Temperature    : {self.temperature:g}", 1)
         self._print(f"n_effective    : {self.n_effective}", 1)
         self._print(f"n_active       : {self.n_active}", 1)
-        if self.parallel:
-            self._print(f"Parallel       : True (n_threads={self.n_threads})", 1)
+        self._print(f"Threads        : {self._n_threads_str()}", 1)
         self._print(f"Random seed    : {self.seed}", 1)
+
+    def _n_threads_str(self) -> str:
+        """Number of threads used to evaluate each batch, for the verbose output"""
+        if not HAS_NUMBA:
+            return "1 (numba not installed)"
+        if self.n_threads is not None:
+            return str(self.n_threads)
+        import numba
+
+        return f"{numba.get_num_threads()} (numba's setting)"
 
     def _print(self, mssg: str, level: int = 0) -> None:
         """Verbose print method"""
@@ -200,10 +206,10 @@ class Sampler:
         if self.n_active < 2 or self.n_effective < self.n_active:
             raise ValueError("Must have 'n_effective' >= 'n_active' >= 2")
 
-        # 'n_threads' is only used with parallel=True and numba installed. It is
-        # validated here, so that an invalid value is reported before the run starts
+        # 'n_threads' is only used with numba installed. It is validated here, so
+        # that an invalid value is reported before the run starts
         n_threads = self.n_threads
-        if HAS_NUMBA and self.parallel and n_threads is not None:
+        if HAS_NUMBA and n_threads is not None:
             import numba
 
             if (
@@ -237,7 +243,6 @@ class Sampler:
             self.DR_distribution,
             self._obs.lkl,
             self.temperature,
-            self.parallel,
             self.n_threads,
         )
         lnl = np.asarray(lnl, dtype=float)

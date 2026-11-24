@@ -112,24 +112,26 @@ largest for clusters with few stars). The results are identical in all cases.
     **Without numba there is no speedup**: the synthetic clusters are generated and
     evaluated one at a time. The code works the same in both cases.
 
-With ``parallel=True`` the models of each batch are distributed among numba's
-threads: each thread generates the synthetic clusters of its models and evaluates
-their log-likelihoods, which also speeds up clusters with many stars, where the cost
-of each model is dominated by the actual computation. The ``parallel`` argument is
-ignored if numba is not installed.
+The models of each batch are also distributed among numba's threads: each thread
+generates the synthetic clusters of its models and evaluates their log-likelihoods,
+which also speeds up clusters with many stars, where the cost of each model is
+dominated by the actual computation. The number of threads is set with the
+``n_threads`` argument (ignored if numba is not installed). By default
+(``n_threads=None``) numba's own setting is used, which is one thread per CPU core
+unless changed with the ``NUMBA_NUM_THREADS`` environment variable (set before
+importing ``asteca``) or with ``numba.set_num_threads()``; ``n_threads`` can not be
+larger than ``NUMBA_NUM_THREADS``. With ``n_threads=1`` the models are evaluated
+serially.
 
 .. code-block:: python
 
-    # Evaluate the models in parallel threads, four threads
-    sampler = asteca.Sampler(synthcl, priors, parallel=True, n_threads=4)
+    # Evaluate the models in four threads
+    sampler = asteca.Sampler(synthcl, priors, n_threads=4)
 
-By default (``n_threads=None``) numba's own setting is used, which is one thread per
-CPU core unless changed with the ``NUMBA_NUM_THREADS`` environment variable (set
-before importing ``asteca``) or with ``numba.set_num_threads()``; ``n_threads`` can
-not be larger than ``NUMBA_NUM_THREADS``. If several fits are run at the same time,
-give each one a fraction of the CPU cores so that they do not compete for them. Each
-thread needs several models per batch to be used efficiently, so ``n_active`` (the
-size of the batches) should be larger than the number of threads.
+If several fits are run at the same time, give each one a fraction of the CPU cores
+so that they do not compete for them. Each thread needs several models per batch to
+be used efficiently, so ``n_active`` (the size of the batches) should be larger than
+the number of threads.
 
 
 Results

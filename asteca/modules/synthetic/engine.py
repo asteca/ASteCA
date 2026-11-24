@@ -288,8 +288,7 @@ class SynthEngine:
         dr_model: str,
         lkl: "Tremmel",
         temperature: float,
-        parallel: bool = False,
-        n_threads: int | None = None,
+        n_threads: int | None = 1,
     ) -> np.ndarray:
         """Log-likelihoods of a batch of models, identical to
         ``lkl.log_lkl(generate.synth_one(self, p, dr_model)[1], temperature)`` for
@@ -308,11 +307,9 @@ class SynthEngine:
         :param temperature: Likelihood temperature, assumed positive (validated by
             :py:class:`asteca.Sampler`)
         :type temperature: float
-        :param parallel: Evaluate the models in parallel threads (only used if the
-            compiled functions are available)
-        :type parallel: bool
-        :param n_threads: Number of threads used if ``parallel=True``, assumed valid
-            (validated by :py:class:`asteca.Sampler`). If ``None``, numba's current
+        :param n_threads: Number of threads (only used if the compiled functions are
+            available), assumed valid (validated by :py:class:`asteca.Sampler`). If
+            ``1`` the models are evaluated serially, if ``None`` numba's current
             setting is used
         :type n_threads: int | None
 
@@ -333,7 +330,7 @@ class SynthEngine:
             lkl.kernel_args,
             float(temperature),
         )
-        if not parallel:
+        if n_threads == 1:
             return compiled.log_lkl_batch_nb(*args)
         if n_threads is None:
             return compiled.log_lkl_batch_parallel_nb(*args)
