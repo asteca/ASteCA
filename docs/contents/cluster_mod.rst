@@ -198,7 +198,11 @@ There are currently two algorithms available for the estimation of the true numb
 of members associated to a given cluster. The default algorithm is called ``ripley``. It was originally introduced along with the ``fastMP`` membership method
 in `Perren et al. (2023) <https://academic.oup.com/mnras/article/526/3/4107/7276628>`__.
 It requires ``(ra, dec, pmra, pmde, plx)`` data and their center estimates
-(``radec_c, pms_c, plx_c``).
+(``radec_c, pms_c, plx_c``). Ripley's K-function assumes a rectangular frame: if the
+frame is not rectangular (e.g.: circular), the stars outside of the largest rectangle
+inscribed in it are dropped by this algorithm (~36% for a circular frame), and a
+warning is shown if more than 25% of the stars are dropped. Dropped stars can not be
+counted as members.
 
 The other algorithm is called ``density`` and it is a simple algorithm that counts the
 number of stars within the cluster region (center+radius) and subtracts the expected

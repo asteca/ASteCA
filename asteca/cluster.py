@@ -606,7 +606,10 @@ class Cluster:
           in `Perren et al.
           (2023) <https://academic.oup.com/mnras/article/526/3/4107/7276628>`__.
           Requires ``(ra, dec, pmra, pmde, plx)`` and their center estimates
-          (``radec_c, pms_c, plx_c``).
+          (``radec_c, pms_c, plx_c``). For non-rectangular (e.g.: circular) frames,
+          the stars outside of the largest rectangle inscribed in the frame are
+          dropped, as required by Ripley's K-function (with a warning if more than
+          25% of the stars are dropped).
         - ``density``: Simple algorithm that counts the number of stars within the
           cluster region (center+radius) and subtracts the expected number of field
           stars within that region. Requires the ``(ra, dec)`` center and the radius of

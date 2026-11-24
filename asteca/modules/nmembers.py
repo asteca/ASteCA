@@ -3,9 +3,10 @@ from typing import Literal
 
 import numpy as np
 from astropy.stats import RipleysKEstimator
-from scipy.spatial import KDTree
+from scipy.spatial import ConvexHull, KDTree, QhullError
 
 from . import structure as st
+from .warn import warn
 
 
 def density_nmembs(
@@ -81,8 +82,13 @@ def ripley_nmembs(
     N_close: int = 10,
     X_stars_max: float = 5,
     N_stars_max: int = 10_000,
+    max_drop_frac: float = 0.25,
 ) -> np.ndarray:
     """Estimate the number of cluster members using Ripley's K-function.
+
+    Ripley's K-function estimator assumes a rectangular frame. If the frame is not
+    rectangular, the stars outside of the largest rectangle inscribed in it are
+    dropped (see :py:func:`rect_frame_mask`).
 
     :param x: Array of x-coordinates.
     :type x: np.ndarray
@@ -118,6 +124,9 @@ def ripley_nmembs(
     :type X_stars_max: float
     :param N_stars_max: Absolute maximum number of stars that should pass the first filter
     :type N_stars_max: int
+    :param max_drop_frac: A warning is shown if the fraction of stars dropped for
+        being outside of the inscribed rectangle is larger than this value
+    :type max_drop_frac: float
 
     :return: Indexes of the estimated cluster members.
     :rtype: np.ndarray
@@ -133,6 +142,26 @@ def ripley_nmembs(
         ]
     )
     idx_clean, X_no_nan = st.reject_nans(X)
+
+    # Ripley's K-function estimator requires a rectangular frame. If the frame is
+    # not rectangular (e.g.: circular), drop the stars outside of the largest
+    # rectangle inscribed in it
+    msk_in = rect_frame_mask(X_no_nan[0], X_no_nan[1])
+    N_drop = int((~msk_in).sum())
+    if N_drop > 0:
+        f_drop = N_drop / len(msk_in)
+        if f_drop > max_drop_frac:
+            warn(
+                f"The frame is not rectangular: {N_drop} stars ({100 * f_drop:.0f}%) "
+                + "outside of the largest rectangle inscribed in it were dropped by "
+                + "the 'ripley' algorithm, which requires a rectangular frame (a "
+                + "non-rectangular frame makes field stars look clustered and the "
+                + "number of members is overestimated). Dropped stars can not be "
+                + "counted as members: if the cluster extends beyond the rectangle, "
+                + "the number of members will be underestimated"
+            )
+        idx_clean, X_no_nan = idx_clean[msk_in], X_no_nan[:, msk_in]
+
     # Unpack input data with no 'nans'
     lon, lat, pmRA, pmDE, plx = X_no_nan
     # These arrays are not used, fill with dummy values
@@ -197,6 +226,90 @@ def ripley_nmembs(
     idx_survived = apply_density_clean(idx_survived, dist_to_cent, local_density, fdens)
 
     return idx_clean[idx_survived]
+
+
+def rect_frame_mask(
+    x: np.ndarray,
+    y: np.ndarray,
+    rect_frac: float = 0.83,
+    N_bisect: int = 30,
+    N_min: int = 100,
+) -> np.ndarray:
+    """Mask of the stars inside the largest rectangle inscribed in the frame.
+
+    The frame is the convex hull of the stars. If the hull covers at least
+    ``rect_frac`` of the area of the bounding box, the frame is considered
+    rectangular and all the stars are kept. The default value sits between the
+    ratios of a circle (pi/4 ~ 0.785, which the hull of a sample approaches from
+    below) and a rectangle (1, but ~0.92 for the hull of 100 uniform stars and ~0.85
+    for 1% of the samples); smaller samples can not be reliably classified. Otherwise,
+    the bounding box is shrunk
+    around its center (keeping its aspect ratio) until its four corners are inside the
+    hull. Since the hull is convex, this means that the whole rectangle is inside it.
+    For a circular frame this is the inscribed square, which keeps ~64% (2/pi) of a
+    uniform distribution of stars.
+
+    :param x: Array of x-coordinates.
+    :type x: np.ndarray
+    :param y: Array of y-coordinates.
+    :type y: np.ndarray
+    :param rect_frac: Minimum ratio of the hull's area to the bounding box's area
+        for the frame to be considered rectangular
+    :type rect_frac: float
+    :param N_bisect: Number of bisection steps used to find the shrinking factor
+    :type N_bisect: int
+    :param N_min: Minimum number of stars to classify the frame. With fewer stars
+        the frame is not checked (~20% of rectangular frames with 50 stars would be
+        classified as non-rectangular)
+    :type N_min: int
+
+    :return: Mask of the stars inside the rectangle (all ``True`` if the frame is
+        rectangular, has less than ``N_min`` stars, or if the hull can not be
+        estimated).
+    :rtype: np.ndarray
+    """
+    msk_all = np.ones(len(x), dtype=bool)
+    if len(x) < N_min:
+        return msk_all
+
+    xmin, xmax = x.min(), x.max()
+    ymin, ymax = y.min(), y.max()
+    box_area = (xmax - xmin) * (ymax - ymin)
+    try:
+        hull = ConvexHull(np.array([x, y]).T)
+    except QhullError:
+        # Too few (or collinear) stars
+        return msk_all
+    # In 2D 'volume' is the area of the hull
+    if hull.volume >= rect_frac * box_area:
+        return msk_all
+
+    # Each row of 'hull.equations' is a (a, b, c) facet with a*x + b*y + c <= 0 for
+    # points inside the hull
+    eqs = hull.equations
+    tol = 1e-12 * max(xmax - xmin, ymax - ymin)
+    x_c, y_c = 0.5 * (xmin + xmax), 0.5 * (ymin + ymax)
+    hw, hh = 0.5 * (xmax - xmin), 0.5 * (ymax - ymin)
+    signs = np.array([[-1, -1], [-1, 1], [1, -1], [1, 1]])
+
+    def corners_in(s: float) -> bool:
+        corners = np.array([x_c, y_c]) + s * signs * np.array([hw, hh])
+        return bool((corners @ eqs[:, :2].T + eqs[:, 2] <= tol).all())
+
+    if not corners_in(0.0):
+        # The center of the bounding box is outside of the hull
+        return msk_all
+
+    # Bisection for the largest shrinking factor 's' with all corners in the hull
+    s_lo, s_hi = 0.0, 1.0
+    for _ in range(N_bisect):
+        s_mid = 0.5 * (s_lo + s_hi)
+        if corners_in(s_mid):
+            s_lo = s_mid
+        else:
+            s_hi = s_mid
+
+    return (abs(x - x_c) <= s_lo * hw) & (abs(y - y_c) <= s_lo * hh)
 
 
 def init_ripley(
