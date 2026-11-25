@@ -164,7 +164,10 @@ you would load your isochrones as:
     )
 
 If this argument is not changed from its default then the ``z`` parameter will be used
-to generate synthetic clusters, as shown in the section :ref:`ref_generating`.
+to generate synthetic clusters, as shown in the section :ref:`ref_generating`. When it
+is set, the ``met`` values given to :py:class:`asteca.Synthetic` (and the metallicity
+priors of :py:class:`asteca.Sampler`) are ``[Fe/H]`` values, and the default
+metallicity of :py:class:`asteca.Synthetic` is ``met=0.0`` (solar).
 
 The ``parsec_rm_stages`` affects PARSEC isochrones only. Is set to ``9.0`` by default
 and it indicates that the `post_AGB` stage (``label=9``) should be removed. This is

@@ -20,6 +20,9 @@ DEFAULT_PARAMS = {
     "Av": 0.2,
     "dm": 9.0,
 }
+# Default metallicity if the isochrones were loaded as [Fe/H] (see the 'z_to_FeH'
+# argument of Isochrones), instead of DEFAULT_PARAMS["met"] (a z value)
+DEFAULT_FEH = 0.0
 
 # Number of synthetic stars requested by generate() (object not calibrated) above which
 # a warning about the memory required is shown
@@ -66,6 +69,9 @@ class Synthetic:
                 "dm": 9.0,
             }
 
+        If the isochrones were loaded with metallicities as ``[Fe/H]`` (see the
+        ``z_to_FeH`` argument of :py:class:`Isochrones <asteca.Isochrones>`), the
+        default metallicity is ``"met": 0.0`` (solar) instead.
         A warning is shown if a default value is not valid (e.g.: a metallicity or age
         outside the range of the isochrones); the parameter must then be given each
         time a synthetic cluster is generated
@@ -122,7 +128,11 @@ class Synthetic:
     ) -> None:
 
         self.isochs = isochs
-        self.def_params = {**DEFAULT_PARAMS, **(def_params or {})}
+        defaults = dict(DEFAULT_PARAMS)
+        # With the metallicities loaded as [Fe/H] the default is the solar value
+        if isochs.z_to_FeH is not None:
+            defaults["met"] = DEFAULT_FEH
+        self.def_params = {**defaults, **(def_params or {})}
         unknown = self.def_params.keys() - DEFAULT_PARAMS.keys()
         if unknown:
             raise ValueError(
