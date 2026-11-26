@@ -20,6 +20,14 @@ from .synthetic import Synthetic
 # too narrow (coverage ~0.5 for N<=400)
 AUTO_TEMPERATURES = ((150, 1.0), (400, 2.0), (np.inf, 4.0))
 
+# summary() warns about the parameters whose 1D posterior density at the median is
+# below this fraction of the density at the main mode: the median falls between modes
+# (or on a flat tail far from a peak at a prior limit). Unimodal shapes (normal,
+# half-normal, exponential, lognormal) sampled with 300-800 weighted samples gave
+# ratios >= 0.5 in tests; the 500-cluster UCC batch flagged 44 of 2280 marginals,
+# mostly bimodal posteriors
+MODE_GAP = 0.4
+
 
 class Sampler:
     """Define a :py:class:`Sampler` object.
@@ -54,11 +62,15 @@ class Sampler:
     :param synthcl: :py:class:`asteca.Synthetic` object, calibrated with the observed
         cluster via :py:meth:`asteca.Synthetic.calibrate`
     :type synthcl: Synthetic
-    :param priors: Dictionary with the ``(min, max)`` limits of the uniform priors of
-        the fitted parameters, e.g.: ``{"loga": (7.0, 9.5), "dm": (8.0, 10.5)}``. The
-        keys must be parameters of the ``synthcl`` object (``met, loga, alpha, beta,
-        Av, DR, Rv, dm``)
-    :type priors: dict[str, tuple[float, float]]
+    :param priors: Dictionary with the priors of the fitted parameters. The keys must
+        be parameters of the ``synthcl`` object (``met, loga, alpha, beta, Av, DR, Rv,
+        dm``), and each value is either the ``(min, max)`` limits of a uniform prior,
+        or ``(dist, min, max)``: a frozen ``scipy.stats`` continuous distribution
+        truncated to ``[min, max]`` (and renormalized), e.g.:
+        ``{"loga": (7.0, 9.5), "met": (stats.norm(0.0, 0.15), -1.0, 0.5)}``. The
+        limits must be finite and valid values of the parameters (see
+        :ref:`sampler_priors`)
+    :type priors: dict[str, tuple]
     :param temperature: Likelihood temperature, the log-likelihood is divided by
         this value. Values larger than ``1`` widen the posterior (by a factor of about
         ``sqrt(temperature)``). If ``"auto"``, it is selected from the number ``N``
@@ -85,7 +97,9 @@ class Sampler:
     :type verbose: int
 
     :raises ValueError: If any of the attributes is not recognized as a valid
-        option, if ``synthcl`` was not calibrated, or if ``n_threads`` is not
+        option (including a prior that is not one of the two forms above, or a
+        distribution with no probability mass within its limits), if ``synthcl`` was
+        not calibrated, or if ``n_threads`` is not
         ``None`` or an integer between ``1`` and ``NUMBA_NUM_THREADS`` (only checked
         with numba installed).
     """
@@ -93,7 +107,7 @@ class Sampler:
     def __init__(  # noqa: DOC502, RUF100
         self,
         synthcl: Synthetic,
-        priors: dict[str, tuple[float, float]],
+        priors: dict[str, tuple],
         temperature: float | str = 1.0,
         n_effective: int = 256,
         n_active: int = 128,
@@ -111,8 +125,14 @@ class Sampler:
         self.seed = int(synthcl.seed)
         self.verbose = verbose
 
+        from .modules.prior import Prior
+        from .modules.smc import PersistentSMC
+
         self.names = list(priors)
-        self.bounds = np.array([priors[k] for k in self.names], dtype=float)
+        # Priors, and their (min, max) limits (for the truncated distributions,
+        # intersected with their support)
+        self._prior = Prior(self.names, [priors[k] for k in self.names])
+        self.bounds = self._prior.bounds
         # Generates the synthetic clusters and evaluates their log-likelihoods
         self._engine = synthcl._engine
         self._check_args(temperature)
@@ -129,11 +149,9 @@ class Sampler:
         self._n_lnl = 0
         self._n_lnl_no_overlap = 0
 
-        from .modules.smc import PersistentSMC
-
         self._smc = PersistentSMC(
             self._log_lkl_batch,
-            self.bounds,
+            self._prior,
             self.n_effective,
             self.n_active,
             self.rng,
@@ -178,8 +196,8 @@ class Sampler:
                 raise ValueError(f"Prior of '{k}' must be finite and with min < max")
         # The limits of the priors must be valid values of the parameters: they are
         # checked as those of the synthetic clusters (unknown names, isochrones'
-        # ranges, negative values, Rv > 0). As the priors are uniform, this makes
-        # all the values that the sampler can propose valid
+        # ranges, negative values, Rv > 0). As all the priors are bounded by these
+        # limits, this makes all the values that the sampler can propose valid
         try:
             corners = self._engine.validate_params(dict(zip(self.names, self.bounds)))
         except ValueError as err:
@@ -360,15 +378,26 @@ class Sampler:
 
         - ``median, mean, std, p16, p84``: median, mean, standard deviation, and
           16th and 84th percentiles.
+        - ``mode``: main mode of the 1D posterior, the maximum of its weighted
+          kernel density estimate (with the density reflected at the limits of the
+          prior, so a posterior that piles up against a limit has its mode there).
+          A warning is issued for each parameter whose posterior density at the
+          median is less than ``40%`` of that at the mode: the median falls between
+          separate modes, or on a flat tail far from the peak, and the median, mean
+          and percentiles do not describe a single solution (inspect the posterior,
+          e.g. with a corner plot). For skewed posteriors the mode, median and mean
+          differ without that being a problem.
         - ``edge_low, edge_high``: fraction of the posterior (sum of the weights)
           within ``1%`` of the width of the prior from its lower and upper limits.
           A flat posterior gives ``~0.01``. Much larger values mean that the
           posterior piles up against that limit: the prior is too narrow (or the
           fit is stuck at its limit), and the statistics of that parameter are
           truncated. This is expected for limits that are physical (e.g.: ``Av=0``
-          or ``DR=0``) or that are those of the isochrones (``met, loga``).
+          or ``DR=0``) or that are those of the isochrones (``met, loga``), and for
+          the limit of a prior distribution that peaks at it (e.g.: a half-normal
+          ``DR`` prior, ``(stats.norm(0, 1), 0, 5)``).
 
-        Mean extinction (``A_mean`` key): ``median, mean, std, p16, p84`` of the
+        Mean extinction (``A_mean`` key): ``median, mean, mode, std, p16, p84`` of the
         mean extinction of the cluster stars, ``Av + f_mean * DR``, where ``f_mean``
         is the mean fraction of ``DR`` received by the stars (``0.5`` for the
         ``foreground`` differential reddening model, ``0.375`` for ``internal``; the
@@ -411,34 +440,47 @@ class Sampler:
 
         :raises ValueError: If the sampler has not been run
 
-        :return: Dictionary with the keys ``median, mean, std, p16, p84, edge_low,
-            edge_high``, each one a dictionary with the value of that statistic for
-            each fitted parameter, the key ``A_mean``, a dictionary with the keys
-            ``median, mean, std, p16, p84`` of the mean extinction, and the key
+        :return: Dictionary with the keys ``median, mean, mode, std, p16, p84,
+            edge_low, edge_high``, each one a dictionary with the value of that
+            statistic for each fitted parameter, the key ``A_mean``, a dictionary with
+            the keys ``median, mean, mode, std, p16, p84`` of the mean extinction, and
+            the key
             ``diagnostics``, a dictionary with the keys ``ess, ess_unique, accept,
             steps, no_overlap_frac``
         :rtype: dict[str, dict[str, float]]
         """
         from .modules.smc import effective_sample_size
         from .modules.synthetic.precompute import DR_MEAN_FRAC
+        from .modules.warn import warn
 
         samples, weights = self.posterior()
         w_sum = np.sum(weights)
 
-        def weighted_stats(x: np.ndarray) -> dict[str, np.ndarray]:
-            """Weighted median, mean, STDDEV, and 16th and 84th percentiles of each
-            column of ``x``"""
+        def weighted_stats(x: np.ndarray, bounds: np.ndarray) -> dict[str, np.ndarray]:
+            """Weighted median, mean, main mode, STDDEV, and 16th and 84th percentiles
+            of each column of ``x``, and the density at the median relative to that at
+            the mode (``gap``). ``bounds`` are the limits of each column"""
             mean = np.sum(weights[:, None] * x, axis=0) / w_sum
             var = np.sum(weights[:, None] * (x - mean) ** 2, axis=0) / w_sum
             p16, p50, p84 = np.percentile(
                 x, (16, 50, 84), axis=0, weights=weights, method="inverted_cdf"
             )
+            mode, gap = np.array(p50, dtype=float), np.ones(x.shape[1])
+            for j, (lo, hi) in enumerate(bounds):
+                kde = _weighted_kde(x[:, j], weights, lo, hi)
+                if kde is None:  # no spread: the mode is the median
+                    continue
+                grid, dens = kde
+                mode[j] = grid[np.argmax(dens)]
+                gap[j] = np.interp(p50[j], grid, dens) / dens.max()
             return {
                 "median": p50,
                 "mean": mean,
+                "mode": mode,
                 "std": np.sqrt(var),
                 "p16": p16,
                 "p84": p84,
+                "gap": gap,
             }
 
         # Posterior mass close to the limits of the priors
@@ -447,11 +489,24 @@ class Sampler:
         edge_low = np.sum(weights[:, None] * (samples <= low + edge), axis=0) / w_sum
         edge_high = np.sum(weights[:, None] * (samples >= high - edge), axis=0) / w_sum
 
-        stats = weighted_stats(samples) | {"edge_low": edge_low, "edge_high": edge_high}
+        stats = weighted_stats(samples, self.bounds)
+        gap = stats.pop("gap")
+        stats |= {"edge_low": edge_low, "edge_high": edge_high}
         summ = {
             stat: dict(zip(self.names, map(float, vals)))
             for stat, vals in stats.items()
         }
+
+        # Median between separate modes (or far from the main one)
+        for par, g in zip(self.names, gap):
+            if g < MODE_GAP:
+                warn(
+                    f"The posterior of '{par}' is multimodal or strongly skewed: its "
+                    + f"density at the median ({summ['median'][par]:.4g}) is "
+                    + f"{100 * g:.0f}% of that at its main mode "
+                    + f"({summ['mode'][par]:.4g}). The median, mean and percentiles "
+                    + "do not describe a single solution: inspect the posterior"
+                )
 
         def par_samples(par: str) -> np.ndarray:
             """Posterior samples of a parameter, or its fixed value if not fitted"""
@@ -465,10 +520,9 @@ class Sampler:
         assert self.DR_distribution is not None
         f_mean = DR_MEAN_FRAC[self.DR_distribution]
         A_mean = par_samples("Av") + f_mean * par_samples("DR")
-        summ["A_mean"] = {
-            stat: float(vals[0])
-            for stat, vals in weighted_stats(A_mean[:, None]).items()
-        }
+        A_stats = weighted_stats(A_mean[:, None], np.array([[-np.inf, np.inf]]))
+        A_stats.pop("gap")
+        summ["A_mean"] = {stat: float(vals[0]) for stat, vals in A_stats.items()}
 
         # ESS of the distinct samples: the weights of identical samples are summed
         _, inv = np.unique(samples, axis=0, return_inverse=True)
@@ -482,3 +536,66 @@ class Sampler:
             "no_overlap_frac": self._n_lnl_no_overlap / max(self._n_lnl, 1),
         }
         return summ
+
+
+def _weighted_kde(
+    x: np.ndarray, weights: np.ndarray, lo: float = -np.inf, hi: float = np.inf
+) -> tuple[np.ndarray, np.ndarray] | None:
+    """Gaussian kernel density estimate of the 1D samples ``x`` with (unnormalized)
+    importance ``weights``, evaluated on a regular grid.
+
+    The bandwidth follows Silverman's rule, ``0.9 * min(std, IQR / 1.349) *
+    ESS**(-1/5)``, with the weighted ``std`` and interquartile range, and the
+    effective sample size of the weights. The robust ``IQR`` term keeps the
+    bandwidth from merging separate modes. The weighted samples are binned on a grid
+    with a spacing of ``1/5`` of the bandwidth (between 64 and 4096 points) that
+    spans the samples (plus 3 bandwidths, within ``[lo, hi]``), and convolved with
+    the kernel. The density is reflected at the limits ``lo, hi`` reached by the
+    grid (e.g. those of the prior), so that a posterior that piles up against a
+    limit keeps its maximum there.
+
+    :param x: Samples
+    :type x: np.ndarray
+    :param weights: Importance weights of the samples
+    :type weights: np.ndarray
+    :param lo: Lower limit of the samples
+    :type lo: float
+    :param hi: Upper limit of the samples
+    :type hi: float
+
+    :return: ``(grid, density)`` (density not normalized), or ``None`` if the
+        samples have no spread
+    :rtype: tuple[np.ndarray, np.ndarray] | None
+    """
+    from .modules.smc import effective_sample_size
+
+    w = weights / np.sum(weights)
+    mean = np.sum(w * x)
+    std = float(np.sqrt(np.sum(w * (x - mean) ** 2)))
+    q25, q75 = np.percentile(x, (25, 75), weights=w, method="inverted_cdf")
+    iqr = float(q75 - q25) / 1.349
+    spread = min(std, iqr) if iqr > 0 else std
+    # No spread (up to the rounding errors of the weighted mean, e.g. all samples are
+    # copies of the same point)
+    if not spread > 1e-10 * max(abs(float(mean)), 1.0):
+        return None
+    bw = 0.9 * spread * effective_sample_size(w) ** (-0.2)
+
+    a, b = max(lo, float(x.min()) - 3 * bw), min(hi, float(x.max()) + 3 * bw)
+    n_grid = int(np.clip((b - a) / (bw / 5), 64, 4096))
+    dx = (b - a) / n_grid
+    hist, edges = np.histogram(x, bins=n_grid, range=(a, b), weights=w)
+    n_k = int(np.ceil(4 * bw / dx))
+    kernel = np.exp(-0.5 * (np.arange(-n_k, n_k + 1) * dx / bw) ** 2)
+
+    def first_bins(h: np.ndarray) -> np.ndarray:
+        """First n_k values of h, zero padded"""
+        out = np.zeros(n_k)
+        out[: min(n_k, len(h))] = h[:n_k]
+        return out
+
+    # Mirror the histogram at the limits reached by the grid, zeros elsewhere
+    left = first_bins(hist)[::-1] if a == lo else np.zeros(n_k)
+    right = first_bins(hist[::-1]) if b == hi else np.zeros(n_k)
+    dens = np.convolve(np.concatenate([left, hist, right]), kernel, mode="same")
+    return 0.5 * (edges[1:] + edges[:-1]), dens[n_k : n_k + n_grid]

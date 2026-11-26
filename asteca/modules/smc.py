@@ -5,11 +5,13 @@ This module is adapted from pocoMC v1.2.6 (https://github.com/minaskar/pocomc),
 Copyright 2022-Now Minas Karamanis (https://github.com/minaskar) and contributors,
 distributed under the GNU General Public License v3 (GPL-3.0).
 
-Only the parts of pocoMC used by ASteCA are kept: bounded (uniform) priors mapped to
-an unbounded space with a probit transform and a diagonal affine scaling, persistent
-sampling (importance weights that combine the particles of all the iterations), the
-choice of the next inverse temperature by bisection on the effective sample size
-(ESS) with the dynamic adjustment of the target ESS, multinomial resampling, and
+Only the parts of pocoMC used by ASteCA are kept: bounded priors (uniform, or
+``scipy.stats`` distributions truncated to finite limits, see
+:py:class:`asteca.modules.prior.Prior`) mapped to an unbounded space with a probit
+transform and a diagonal affine scaling, persistent sampling (importance weights that
+combine the particles of all the iterations), the choice of the next inverse
+temperature by bisection on the effective sample size (ESS) with the dynamic
+adjustment of the target ESS, multinomial resampling, and
 t-preconditioned Crank-Nicolson (t-pCN) MCMC moves, whose proposals use a Student-t
 fitted to the particles in each iteration. The normalizing flow (and thus PyTorch),
 i.e.: the preconditioning that gives Preconditioned Monte Carlo (PMC) its name, the
@@ -43,9 +45,13 @@ References:
 """
 
 from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 import numpy as np
 from scipy import optimize, special
+
+if TYPE_CHECKING:
+    from .prior import Prior
 
 SQRTEPS = float(np.sqrt(np.finfo(np.float64).eps))
 
@@ -57,11 +63,10 @@ class PersistentSMC:
     :param log_like: Vectorized log-likelihood, takes an array of shape
         ``(n_particles, n_dim)`` and returns an array of shape ``(n_particles,)``
     :type log_like: Callable[[np.ndarray], np.ndarray]
-    :param bounds: Array of shape ``(n_dim, 2)`` with the ``[min, max]`` limits of the
-        uniform priors, assumed finite and with ``min < max`` (validated by
-        :py:class:`asteca.Sampler`). ``log_like`` is only called with points inside
-        these limits
-    :type bounds: np.ndarray
+    :param prior: Priors of the parameters (see :py:class:`Prior`), with finite
+        limits (validated by :py:class:`asteca.Sampler`). ``log_like`` is only called
+        with points inside these limits
+    :type prior: Prior
     :param n_effective: Target ESS used to select the next inverse temperature
     :type n_effective: int
     :param n_active: Number of particles moved with MCMC in each iteration
@@ -79,7 +84,7 @@ class PersistentSMC:
     def __init__(
         self,
         log_like: Callable[[np.ndarray], np.ndarray],
-        bounds: np.ndarray,
+        prior: "Prior",
         n_effective: int,
         n_active: int,
         rng: np.random.RandomState,
@@ -90,8 +95,9 @@ class PersistentSMC:
         self.rng = rng
         self.callback = callback
 
-        # Uniform priors
-        self.bounds = np.asarray(bounds, dtype=float)
+        # Priors, and their limits
+        self.prior = prior
+        self.bounds = prior.bounds
         self.low, self.high = self.bounds.T
         self.n_dim = len(self.bounds)
 
@@ -131,20 +137,12 @@ class PersistentSMC:
     # Prior
     # ---------------------------------------------------------------------------
     def log_prior(self, x: np.ndarray) -> np.ndarray:
-        """Log-density of the uniform priors (``-inf`` outside the limits)"""
-        logp = np.zeros(len(x))
-        for i in range(self.n_dim):
-            inside = (x[:, i] >= self.low[i]) & (x[:, i] <= self.high[i])
-            logp += np.where(inside, -np.log(self.high[i] - self.low[i]), -np.inf)
-        return logp
+        """Log-density of the priors (``-inf`` outside the limits)"""
+        return self.prior.logpdf(x)
 
     def sample_prior(self, size: int) -> np.ndarray:
-        """Samples of the uniform priors, of shape ``(size, n_dim)``"""
-        samples = [
-            self.rng.uniform(0.0, 1.0, size) * (hi - lo) + lo
-            for lo, hi in zip(self.low, self.high)
-        ]
-        return np.transpose(samples)
+        """Samples of the priors, of shape ``(size, n_dim)``"""
+        return self.prior.rvs(size, self.rng)
 
     # ---------------------------------------------------------------------------
     # Main loop
