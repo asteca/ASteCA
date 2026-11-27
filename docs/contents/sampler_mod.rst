@@ -7,14 +7,15 @@ The :py:class:`asteca.Sampler` class estimates the fundamental parameters of an
 observed cluster. It takes a calibrated :py:class:`asteca.Synthetic` object, which
 generates the synthetic clusters, compares them to the observed cluster with the
 :ref:`plr` (see :ref:`sampler_lkl`), and samples the posterior distribution of the
-parameters given uniform priors.
+parameters given their priors (uniform, or truncated ``scipy.stats`` distributions;
+see :ref:`sampler_priors`).
 
 The method is Sequential Monte Carlo (SMC), which moves a set of particles from the
 prior to the posterior by slowly increasing the weight given to the likelihood, with
 persistent sampling (`Karamanis & Seljak 2025`_): the particles of all the iterations
 are combined with importance weights. The implementation is adapted from the
 `pocoMC`_ package (`Karamanis et al. 2022a`_, `2022b`_), keeping only the parts used
-here: uniform priors, persistent sampling, and t-preconditioned Crank-Nicolson
+here: bounded priors, persistent sampling, and t-preconditioned Crank-Nicolson
 (t-pCN) MCMC moves, whose proposals use a Student-t distribution fitted to the
 particles in each iteration. The normalizing flow of pocoMC, i.e.: the
 preconditioning of Preconditioned Monte Carlo, is not included (on a CPU it is slow to
@@ -31,9 +32,9 @@ different sampler, see :ref:`own_lkl_sampler`.
 Defining and running the sampler
 ================================
 
-The fitted parameters and their uniform priors are given as a dictionary of
-``(min, max)`` values. The parameters not included keep the default values of the
-``synthcl`` object:
+The fitted parameters and their priors are given as a dictionary. A ``(min, max)``
+value is a uniform prior (see :ref:`sampler_priors` for other distributions). The
+parameters not included keep the default values of the ``synthcl`` object:
 
 .. code-block:: python
 
@@ -46,27 +47,77 @@ The fitted parameters and their uniform priors are given as a dictionary of
         "dm": (8.0, 10.5),
         "Av": (0.0, 2.0),
     }
-    sampler = asteca.Sampler(synthcl, priors, temperature="auto")
-    sampler.run(n_total=512)
+    sampler = asteca.Sampler(synthcl, priors)
+    sampler.run()
 
-The run ends when the particles sample the posterior and the effective sample size of
-the posterior samples is at least ``n_total``. Calling :py:meth:`asteca.Sampler.run`
-again with a larger ``n_total`` continues the run. The ``n_effective`` and
-``n_active`` arguments set the number of particles (``256`` and ``128`` by default).
-In our tests, these values and ``n_total=512`` took about half the time of twice as
-many particles, with the same accuracy and uncertainties, while halving them again
-made the uncertainties too small.
+The run ends when the particles sample the posterior and the posterior samples
+contain the equivalent of at least ``n_total`` independent distinct points (``256``
+if not given, see :ref:`sampler_stop`). Calling :py:meth:`asteca.Sampler.run` again
+with a larger ``n_total`` continues the run. The ``n_effective`` and ``n_active``
+arguments set the number of particles (``256`` and ``128`` by default). In our tests,
+these values took about half the time of twice as many particles, with the same
+accuracy and uncertainties, while halving them again made the uncertainties too small.
+
+The defaults of the ``binning``, ``move`` and ``stop`` arguments (``"smooth"``,
+``"plateau_min"`` and ``"distinct"``, see :ref:`ref_binning`, :ref:`sampler_moves`
+and :ref:`sampler_stop`) were selected with fits of 50 random UCC clusters with all
+their combinations: compared to the previous defaults (``"hard"``, ``"plateau"`` and
+``"ess"``), they take about 1.25 times the total run time, and every run has at least
+~250 distinct posterior points, against a median of ~120 (and as few as 8) before.
+Use ``binning="hard", move="plateau", stop="ess"`` to reproduce the results of
+previous versions.
 
 The sampler inherits the ``seed`` of the ``synthcl`` object, which also fixes the
 random sampling of its synthetic clusters, so setting that seed is enough to make the
 results reproducible.
 
 
+.. _sampler_priors:
+
+Priors
+------
+
+Each prior is either the ``(min, max)`` limits of a uniform distribution, or
+``(dist, min, max)``: a frozen continuous distribution of `scipy.stats`_ truncated to
+``[min, max]``. The truncated distribution is renormalized to its probability mass in
+that range, so that the evidence (``logz``) is correct, and the initial particles are
+drawn from it with its inverse CDF. Both forms can be mixed:
+
+.. code-block:: python
+
+    from scipy import stats
+
+    priors = {
+        "loga": (6.0, 10.1),
+        "dm": (11.2, 11.6),
+        "Av": (0.0, 5.0),
+        # [Fe/H] (isochrones loaded with 'z_to_FeH') from a radial gradient
+        "met": (stats.norm(loc=-0.06 * (R_GC - 8.2), scale=0.15), -1.0, 0.5),
+        # Half-normal prior that favors small differential reddening values
+        "DR": (stats.norm(loc=0.0, scale=1.0), 0.0, 5.0),
+    }
+    sampler = asteca.Sampler(synthcl, priors)
+
+The limits are always required, also for distributions with an unbounded support
+(e.g.: ``stats.norm``): they must be finite and valid values of the parameter (within
+the isochrones' ranges for ``met`` and ``loga``, non negative for ``Av`` and ``DR``,
+etc.), exactly as for the uniform priors, since every value proposed by the sampler
+must be a valid synthetic cluster. If the support of the distribution is narrower
+than ``[min, max]`` (e.g.: ``stats.beta``), its support is used. A distribution with
+no probability mass in ``[min, max]`` raises an error.
+
+Results are identical for the same seed with a ``(min, max)`` prior and with
+``(stats.uniform(min, max - min), min, max)``. The density of each distribution is
+evaluated in every MCMC step: in our tests a normal prior on ``met`` and ``DR``
+took ~2-5% of the run time (~1% for uniform priors), more than compensated by the
+narrower posteriors, which needed fewer likelihood evaluations.
+
+
 Temperature
 -----------
 
 The log-likelihood (see :ref:`sampler_lkl`) is divided by the ``temperature``. A value
-of ``1`` (the default) gives the posterior of the Poisson likelihood ratio, while
+of ``1`` gives the posterior of the Poisson likelihood ratio, while
 values larger than ``1`` widen the posterior by a factor of about
 ``sqrt(temperature)``. The synthetic clusters are only an approximation of a real
 cluster, and for clusters with many members a ``temperature`` of ``1`` gives
@@ -76,8 +127,8 @@ between the models and the observed data, dominate in this case. For clusters wi
 few members, on the other hand, values larger than ``1`` give uncertainties that are
 too large and worse fits.
 
-With ``temperature="auto"`` the value is selected from the number :math:`N` of stars in
-the observed cluster:
+With ``temperature="auto"`` (the default) the value is selected from the number
+:math:`N` of stars in the observed cluster:
 
 ============================  ===============
 :math:`N`                     ``temperature``
@@ -105,7 +156,12 @@ Faster runs
 The particles are evaluated in batches. With `numba <https://numba.pydata.org/>`__
 installed, the synthetic clusters of a batch and their log-likelihoods are obtained in
 a single compiled call, which removes the Python overhead of each model (the gain is
-largest for clusters with few stars). The results are identical in all cases.
+largest for clusters with few stars). The results are identical in all cases, except
+with the default ``binning="smooth"`` (see :ref:`ref_binning`), whose log-likelihoods
+differ by
+about ``1e-13`` without numba (the lnGamma function is evaluated with scipy instead of
+the C library): the samples are in practice the same, and their weights equal to that
+precision.
 
 .. important::
 
@@ -134,22 +190,126 @@ be used efficiently, so ``n_active`` (the size of the batches) should be larger 
 the number of threads.
 
 
+.. _sampler_moves:
+
+MCMC move
+---------
+
+In each iteration the sampler resamples ``n_active`` particles and moves them with
+t-preconditioned Crank-Nicolson MCMC steps. The ``move`` argument selects how many
+steps are taken and with which step size:
+
+- ``"plateau"`` (as in pocoMC): the particles are moved until their mean
+  log-posterior stops increasing, adapting the step size towards an acceptance rate
+  of 0.234 along the way.
+- ``"plateau_min"`` (default): the same, but the move does not end before a minimum
+  number of
+  steps, set from the mean acceptance rate of the steps so far so that a particle with
+  that rate has a 5% probability of never being moved.
+- ``"pilot"``: the step size and the number of steps (with the same minimum) are tuned
+  on a separate set of particles, drawn from the weighted particles and then
+  discarded. All the particles are then moved with that fixed kernel.
+
+.. code-block:: python
+
+    sampler = asteca.Sampler(synthcl, priors, move="pilot")
+
+A particle whose steps are all rejected stays at its starting point, which is then
+stored again as a new posterior sample. The likelihood is rough (see
+:ref:`ref_binning`), so the acceptance rate is low (about 0.25), and the plateau of
+the ``"plateau"`` move is often reached after only 3-7 steps: a quarter to a third of
+the particles are never moved. The posterior then contains many exact copies of a few
+points, and its effective sample size (which counts each copy as an independent
+sample) overstates the number of distinct points. The ``ess_unique`` diagnostic of
+:py:meth:`asteca.Sampler.summary` counts them only once. The two other moves take more
+steps, and leave about twice as many distinct points.
+
+Like the ``"plateau"`` rule and the adaptation of the step size, the minimum number of
+steps of ``"plateau_min"`` is set from averages over all the moved particles (each of
+them contributes ``1/n_active`` of the average), and the same number of steps is
+applied to all of them. This is the usual adaptive SMC approach, which converges as
+the number of particles grows. The ``"pilot"`` move does not depend at all on the
+particles that it moves, so each move leaves the posterior exactly invariant, at the
+cost of more likelihood calls (those of the pilot particles) and smaller, less
+parallel batches.
+
+
+.. _sampler_stop:
+
+Stopping rule
+-------------
+
+The run ends once the particles sample the posterior (the inverse temperature of the
+likelihood reaches ``1``) and the posterior samples are equivalent to at least
+``n_total`` independent samples. The ``stop`` argument selects how they are counted:
+
+- ``"ess"`` (as in pocoMC): the effective sample size (ESS) of the importance
+  weights. Copies of the same point (particles that were not moved, see
+  :ref:`sampler_moves`) count as independent samples. ``n_total`` defaults to ``512``.
+- ``"distinct"`` (default): the ESS of the distinct points, i.e.: after summing the
+  weights of identical samples (the ``ess_unique`` diagnostic, before the samples with
+  negligible weights are discarded). More iterations are run until it reaches ``n_total``, at
+  most ``40`` per call to :py:meth:`asteca.Sampler.run` (a warning is issued if that
+  limit is reached first). ``n_total`` defaults to ``256``.
+
+.. code-block:: python
+
+    sampler = asteca.Sampler(synthcl, priors, stop="ess")
+    sampler.run()  # n_total=512
+
+Only the time at which the run ends changes: the moves and the weights of the samples
+are the same, and the iterations shared by two runs that differ only in ``stop`` are
+identical. Like the ``"ess"`` rule, it depends on the samples obtained so far, which is
+the usual way of ending an SMC or MCMC run and does not bias the results beyond the
+noise of a finite sample.
+
+With the ``"ess"`` rule and ``n_total=512``, a test with 20 UCC clusters gave
+about 140 distinct points in the median run (as few as 15 with the ``"hard"`` binning
+and the ``"plateau"`` move, and 26 with ``"smooth"`` and ``"pilot"``), so ``256``
+distinct points are more than those runs usually have. With ``binning="smooth"`` and
+``move="pilot"``, ``"distinct"`` and ``n_total=256`` gave at least ~260 distinct
+points in every run, at about 1.1 times the total run time of ``"ess"``: most runs
+end at the same iteration, and the extra iterations go to the few runs whose posterior
+rests on a few points (up to ~4 times their run time). Medians, intervals and their
+coverage of the true values of mock clusters were the same as with ``n_total=512``.
+With the ``"plateau"`` move many particles are never moved, and copies of the same
+points keep accumulating weight as new points are added, so the distinct ESS can grow
+very slowly (in the test, 5 of 60 runs of the smallest clusters reached the limit of
+iterations with ``n_total=512``).
+
+In a second test with 50 random UCC clusters (N=22-4191) and all the combinations of
+``binning``, ``move`` and ``stop``, the ``"distinct"`` rule removed the posterior
+points with more than 10% of the weight in every combination (up to 9 of the 50
+clusters had one with ``"ess"``), without changing the medians (by at most ~0.02 of
+the half-width of the 68% interval) or the widths of the intervals. With the
+``"smooth"`` binning every run reached ~250 distinct points; with ``"hard"`` one small
+cluster (N=65) reached the limit of iterations with every move. The cheapest
+combination with this guarantee was the default one (``"smooth"``, ``"plateau_min"``,
+``"distinct"``): about 1.25 times the total run time of ``"hard"``, ``"plateau"``,
+``"ess"`` (1.06 times for the median cluster, at most 3.6 times), against 1.9 times
+with the ``"pilot"`` move.
+
+
 Results
 =======
 
-The :py:meth:`asteca.Sampler.summary` method returns the median, mean, standard
-deviation, and 16th and 84th percentiles of each fitted parameter, as dictionaries
-that can be passed directly to other methods. It also returns, for each parameter,
+The :py:meth:`asteca.Sampler.summary` method returns the median, mean, main mode,
+standard deviation, and 16th and 84th percentiles of each fitted parameter, as
+dictionaries that can be passed directly to other methods. It also returns, for each
+parameter,
 the fraction of the posterior close to the lower and upper limits of its prior
 (``edge_low, edge_high``), the same statistics for the mean extinction of the cluster
 stars (``A_mean``, see :ref:`mean_extinction`), and a ``diagnostics`` dictionary for
 the run:
 
 - ``ess``: effective sample size (ESS) of the importance weighted posterior samples,
-  i.e.: the number of independent samples they are equivalent to. It should not be
-  much smaller than the ``n_total`` value passed to :py:meth:`asteca.Sampler.run`
+  i.e.: the number of independent samples they are equivalent to. With
+  ``stop="ess"`` it should not be much smaller than the ``n_total`` value passed to
+  :py:meth:`asteca.Sampler.run`
 - ``ess_unique``: the ESS after merging identical samples. Resampling and rejected
-  MCMC moves produce copies of the same point, which ``ess`` counts as independent
+  MCMC moves produce copies of the same point, which ``ess`` counts as independent.
+  With ``stop="distinct"`` the run continues until it reaches ``n_total`` (see
+  :ref:`sampler_stop`)
 - ``accept, steps``: acceptance rate and number of steps of the MCMC moves of the
   last iteration
 - ``no_overlap_frac``: fraction of the likelihood evaluations whose synthetic cluster
@@ -158,6 +318,15 @@ the run:
 A posterior piled up against a prior limit (large ``edge_low`` or ``edge_high``) that
 is not a physical one (e.g.: ``Av=0``) means that the prior is too narrow. See
 :py:meth:`asteca.Sampler.summary` for the interpretation of each value.
+
+The ``mode`` is the maximum of a kernel density estimate of the 1D posterior (reflected
+at the prior limits). A warning is issued for each parameter whose posterior density
+at the median is less than ``40%`` of that at the mode: the median then falls between
+separate modes (e.g.: a young and an old solution), or on a flat tail far from the
+peak, and the median, mean and percentiles do not describe a single solution. Inspect
+the posterior of that parameter (e.g.: with a corner plot of
+:py:meth:`asteca.Sampler.posterior`) before using them. A skewed posterior, where the
+mode, median and mean differ, does not trigger it.
 
 .. code-block:: python
 
@@ -211,8 +380,8 @@ for ``internal`` (see the table in :ref:`dr_models`). When ``DR`` is fitted, thi
 a more robust value to report than ``Av``.
 
 Its statistics are returned by :py:meth:`asteca.Sampler.summary` in the ``A_mean``
-key (``median, mean, std, p16, p84``), using the differential reddening model of the
-run:
+key (``median, mean, mode, std, p16, p84``), using the differential reddening model
+of the run:
 
 .. code-block:: python
 
@@ -251,6 +420,30 @@ calibrated. The number of bins in magnitude and in each color is set with Knuth'
 documentation), and the bins have equal widths and span the observed range of each
 dimension.
 
+The ``binning`` argument of :py:class:`asteca.Sampler` sets how the stars are counted
+in the cells, for both the observed and the synthetic clusters:
+
+- ``"hard"``: each star adds ``1`` to the cell that contains it. As the parameters
+  change, the synthetic stars cross the edges of the cells and the likelihood changes
+  in steps.
+- ``"smooth"`` (default): cloud-in-cell binning. Each star is split among the four cells whose
+  centers surround it, with bilinear weights (the fraction of a cell-sized square
+  centered on the star that falls on each cell). The counts are real numbers that
+  change continuously with the positions of the stars, so the likelihood has no steps
+  from the binning. The same weights are applied to the observed cluster: smoothing
+  only the synthetic clusters would compare two diagrams with different resolutions,
+  which biases the differential reddening.
+
+.. code-block:: python
+
+    sampler = asteca.Sampler(synthcl, priors, binning="hard")
+
+A smoother likelihood is easier to sample (see :ref:`sampler_moves`): the fits need
+fewer likelihood calls, and the results change less with the random seed. The
+posteriors are about 10-20% wider. Other sources of steps in the likelihood remain:
+the age and metallicity nodes of the isochrones, and the stars that cross the
+maximum magnitude.
+
 
 .. _plr:
 
@@ -266,7 +459,9 @@ from Eq 10 with :math:`v_{i,j}=1` (i.e.: equal volumes for all cells), we have:
     {2^{n_i+m_i+\frac{1}{2}} n_i!\Gamma(m_i+\frac{1}{2})}
 
 where :math:`n_i` and :math:`m_i` are the number of observed and synthetic stars in
-bin :math:`i`, respectively, and :math:`B` is the total number of bins.
+bin :math:`i`, respectively, and :math:`B` is the total number of bins. With the
+``"smooth"`` binning these are the (real valued) cloud-in-cell counts, and only the
+terms that depend on :math:`m_i` (below) are used, which are defined for real values.
 Applying the logarithm:
 
 .. math::
@@ -375,6 +570,7 @@ observed one this is simply :math:`(\log(p) - \log(p)_{max})/T`.
 
 
 .. _pocoMC: https://pocomc.readthedocs.io/
+.. _scipy.stats: https://docs.scipy.org/doc/scipy/reference/stats.html
 .. _Karamanis et al. 2022a: https://ui.adsabs.harvard.edu/abs/2022MNRAS.516.1644K
 .. _2022b: https://arxiv.org/abs/2207.05660
 .. _Karamanis & Seljak 2025: https://arxiv.org/abs/2407.20722

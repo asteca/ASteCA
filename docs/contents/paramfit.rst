@@ -60,8 +60,8 @@ reached, and is reproducible through the ``seed`` argument of the
 pyABC occasionally got stuck. On the other hand the width of the posterior depends on
 the chosen ``temperature``: with ``temperature=1`` the uncertainties can be too small
 for clusters with many members, while large values give too wide uncertainties for
-clusters with few members. With ``temperature="auto"`` it is set with a heuristic rule
-that depends on the number of members (see :ref:`sampler_module`).
+clusters with few members. With ``temperature="auto"`` (the default) it is set with a
+heuristic rule that depends on the number of members (see :ref:`sampler_module`).
 
 
 .. _MCMC and ABC packages: https://gabriel-p.github.io/pythonMCMC/

@@ -20,6 +20,37 @@ multiprocessing pools are not included. Hence this is not PMC but the Sequential
 Monte Carlo sampler that pocoMC runs with ``precondition=False``: with these settings
 the results are those of pocoMC for the same random seed.
 
+The MCMC move of each iteration can be selected (``move`` argument of
+:py:class:`PersistentSMC`, see :py:data:`MCMC_MOVES`). The default (``"plateau"``) is
+pocoMC's; the other two are additions of this module:
+
+- ``"plateau"``: all the walkers are moved until the mean log-posterior stops
+  increasing, with the step size adapted along the way (pocoMC).
+- ``"plateau_min"``: as ``"plateau"``, but the move does not end before a minimum
+  number of steps, after which a walker with the mean acceptance rate of the steps
+  so far would have stayed at its starting point with probability
+  :py:data:`UNMOVED_TARGET`. With a rough likelihood the plateau is reached after a
+  few steps, and a large fraction of the walkers is never moved: their starting
+  points are stored again (duplicated samples). Like the plateau rule and the step
+  size adaptation, this condition depends on all the walkers through an average.
+- ``"pilot"``: the step size and the number of steps are tuned on a separate set of
+  walkers drawn from the weighted particles (moved with ``"plateau_min"`` and then
+  discarded). The walkers are then moved with that fixed kernel. As the kernel does
+  not depend on the walkers that it moves, the move leaves the tempered posterior
+  exactly invariant (given the weighted particles). It costs more likelihood calls.
+
+The rule that ends the run can also be selected (``stop`` argument, see
+:py:data:`STOP_RULES`). Both require the inverse temperature to reach ``1``, and then
+an effective sample size (ESS) of the importance weighted particles of all the
+iterations of at least ``n_total``:
+
+- ``"ess"``: the ESS of the weights (pocoMC). Copies of the same point (walkers that
+  were not moved) count as independent samples.
+- ``"distinct"``: the ESS of the weights summed over identical points, i.e.: of the
+  distinct points. More iterations are run at ``beta=1`` until it is reached, at most
+  :py:data:`DISTINCT_MAX_ITERS` per call to :py:meth:`PersistentSMC.run`. Only the
+  stopping time changes: the moves and the weights are the same.
+
 Changes with respect to pocoMC's code, which do not change the results:
 
 - :py:func:`trim_weights` (discards the samples with negligible importance weights,
@@ -55,6 +86,24 @@ if TYPE_CHECKING:
 
 SQRTEPS = float(np.sqrt(np.finfo(np.float64).eps))
 
+# MCMC moves of PersistentSMC (see the module's docstring). The first one is the default
+MCMC_MOVES = ("plateau", "plateau_min", "pilot")
+# Target probability that a walker with the mean acceptance rate is never moved, used
+# by the "plateau_min" and "pilot" moves to set the minimum number of steps
+UNMOVED_TARGET = 0.05
+# Number of pilot walkers of the "pilot" move: max(PILOT_MIN, n_active // PILOT_FRAC)
+PILOT_MIN = 32
+PILOT_FRAC = 4
+# The "pilot" move estimates the acceptance rate of its final step size from the mean
+# acceptance of this number of last pilot steps
+PILOT_LAST_STEPS = 3
+# Rules that end the run (see the module's docstring). The first one is the default
+STOP_RULES = ("ess", "distinct")
+# Maximum number of iterations at beta=1 per call to run() with the "distinct" rule
+DISTINCT_MAX_ITERS = 40
+# Keys of the arrays of the moved walkers
+_STATE_KEYS = ("u", "x", "logdetj", "logl", "logp")
+
 
 class PersistentSMC:
     """Sequential Monte Carlo sampler with adaptive tempering, persistent sampling,
@@ -79,6 +128,15 @@ class PersistentSMC:
     :param callback: Function called at the end of each iteration with the dictionary
         of the current particles (used to print the progress)
     :type callback: Callable[[dict], None] | None
+    :param move: MCMC move of each iteration, one of :py:data:`MCMC_MOVES` (see the
+        module's docstring)
+    :type move: str
+    :param stop: Rule that ends the run, one of :py:data:`STOP_RULES` (see the
+        module's docstring)
+    :type stop: str
+
+    :raises ValueError: If ``move`` is not one of :py:data:`MCMC_MOVES`, or ``stop``
+        is not one of :py:data:`STOP_RULES`
     """
 
     def __init__(
@@ -90,7 +148,19 @@ class PersistentSMC:
         rng: np.random.RandomState,
         dynamic: bool = True,
         callback: Callable[[dict], None] | None = None,
+        move: str = "plateau",
+        stop: str = "ess",
     ) -> None:
+        if move not in MCMC_MOVES:
+            raise ValueError(f"'move' must be one of {MCMC_MOVES}, got '{move}'")
+        if stop not in STOP_RULES:
+            raise ValueError(f"'stop' must be one of {STOP_RULES}, got '{stop}'")
+        self.move = move
+        self.stop = stop
+        # "distinct" stop: number of iterations at beta=1 before the current call to
+        # run(), and whether that call ended at DISTINCT_MAX_ITERS
+        self._n_b1_start = 0
+        self.capped = False
         self.log_like = log_like
         self.rng = rng
         self.callback = callback
@@ -106,6 +176,11 @@ class PersistentSMC:
         # Number of MCMC steps after the logP plateau, and maximum number of steps
         self.n_steps = int(self.n_dim // 2)
         self.n_max_steps = 10 * self.n_steps
+        # Hard limit on the number of steps of the "plateau_min" and "pilot" moves,
+        # whose minimum number of steps can exceed n_max_steps
+        self.n_cap_steps = 3 * self.n_max_steps
+        # Pilot walkers of the "pilot" move, drawn by _resample()
+        self._pilot: dict = {}
         # Number of prior samples drawn in the warm-up
         self.n_prior = int(
             2 * max(self.n_effective // self.n_active, 1) * self.n_active
@@ -149,10 +224,13 @@ class PersistentSMC:
     # ---------------------------------------------------------------------------
     def run(self, n_total: int) -> None:
         """Run the sampler until the inverse temperature reaches ``1`` and the
-        ESS of the persistent (importance weighted) samples is at least ``n_total``.
-        Calling it again with a larger ``n_total`` continues the run.
+        ESS of the persistent (importance weighted) samples is at least ``n_total``
+        (the ESS of the weights, or of the distinct points, see ``stop``). Calling it
+        again with a larger ``n_total`` continues the run.
         """
         self.n_total = int(n_total)
+        self._n_b1_start = self._n_iters_beta1()
+        self.capped = False
 
         if self.warmup:
             self._warmup()
@@ -219,9 +297,32 @@ class PersistentSMC:
 
     def _should_continue(self) -> bool:
         """True while the termination criterion is not satisfied"""
+        if self.stop == "distinct":
+            if 1.0 - self.current["beta"] >= 1e-4:
+                return True
+            if self._n_iters_beta1() - self._n_b1_start >= DISTINCT_MAX_ITERS:
+                self.capped = True
+                return False
+            return self.distinct_ess() < self.n_total
+
         logw, _ = self.particles.compute_logw_and_logz(1.0)
         ess = effective_sample_size(np.exp(logw - np.max(logw)))
         return 1.0 - self.current["beta"] >= 1e-4 or ess < self.n_total
+
+    def _n_iters_beta1(self) -> int:
+        """Number of stored iterations at inverse temperature 1"""
+        beta = self.particles.get("beta")
+        return int(np.sum(beta >= 1.0 - 1e-4)) if len(beta) else 0
+
+    def distinct_ess(self) -> float:
+        """ESS of the importance weights (at ``beta=1``) of the particles of all the
+        iterations, after summing the weights of identical points"""
+        logw, _ = self.particles.compute_logw_and_logz(1.0)
+        weights = np.exp(logw - np.max(logw))
+        _, inv = np.unique(
+            self.particles.get("x", flat=True), axis=0, return_inverse=True
+        )
+        return effective_sample_size(np.bincount(inv.ravel(), weights))
 
     def _reweight(self) -> None:
         """Select the next inverse temperature (bisection on the ESS of the
@@ -290,8 +391,15 @@ class PersistentSMC:
         self.geometry.fit(self.current["u"], weights=self.current["weights"])
 
     def _resample(self) -> None:
-        """Multinomial resampling of ``n_active`` particles"""
+        """Multinomial resampling of ``n_active`` particles. The ``"pilot"`` move
+        first draws its pilot walkers from the same weighted particles"""
         weights = self.current["weights"]
+        if self.move == "pilot":
+            n_pilot = max(PILOT_MIN, self.n_active // PILOT_FRAC)
+            idx = self.rng.choice(
+                np.arange(len(weights)), size=n_pilot, replace=True, p=weights
+            )
+            self._pilot = {k: self.current[k][idx].copy() for k in _STATE_KEYS}
         idx = self.rng.choice(
             np.arange(len(weights)), size=self.n_active, replace=True, p=weights
         )
@@ -311,78 +419,73 @@ class PersistentSMC:
         self.proposal_scale = results["proposal_scale"]
 
     def _tpcn(self) -> dict:
-        """t-preconditioned Crank-Nicolson moves in the unbounded space"""
+        """t-preconditioned Crank-Nicolson moves in the unbounded space, with the
+        selected ``move`` (see the module's docstring)"""
         cur = self.current
-        u, x = cur["u"].copy(), cur["x"].copy()
-        logdetj, logl, logp = (
-            cur["logdetj"].copy(),
-            cur["logl"].copy(),
-            cur["logp"].copy(),
-        )
         beta = cur["beta"]
-
-        n_calls = 0
-        sigma = min(self.proposal_scale, 0.99)
-        n_walkers, n_dim = x.shape
         mu, cov, nu = self.geometry.t_mean, self.geometry.t_cov, self.geometry.t_nu
-        inv_cov = np.linalg.inv(cov)
-        chol_cov = np.linalg.cholesky(cov)
+        kernel = (beta, mu, np.linalg.inv(cov), np.linalg.cholesky(cov), nu)
+        sigma = min(self.proposal_scale, 0.99)
+        # Walkers that are moved
+        state = {k: cur[k].copy() for k in _STATE_KEYS}
 
-        logp2_val = np.mean(logl + logp)
-        cnt, i = 0, 0
+        if self.move != "pilot":
+            n_steps, sigma, alpha, _, n_calls = self._tpcn_adaptive(
+                state, kernel, sigma, self.move == "plateau_min"
+            )
+            accept = np.mean(alpha)
+        else:
+            # Tune the step size and the number of steps on the pilot walkers (their
+            # positions are discarded), then move all the walkers with that kernel
+            n_pilot_steps, sigma, _, alpha_means, n_calls = self._tpcn_adaptive(
+                self._pilot, kernel, sigma, True
+            )
+            acc = float(np.mean(alpha_means[-PILOT_LAST_STEPS:]))
+            n_steps = min(
+                max(n_pilot_steps, _min_steps(acc, UNMOVED_TARGET)),
+                self.n_cap_steps,
+            )
+            accept = 0.0
+            for _ in range(n_steps):
+                alpha, calls = self._tpcn_step(state, kernel, sigma)
+                n_calls += calls
+                accept += np.mean(alpha)
+            accept /= n_steps
+
+        return {
+            **state,
+            "efficiency": sigma,
+            "accept": accept,
+            "steps": n_steps,
+            "calls": n_calls,
+            "proposal_scale": sigma,
+        }
+
+    def _tpcn_adaptive(
+        self, state: dict, kernel: tuple, sigma: float, min_steps: bool
+    ) -> tuple[int, float, np.ndarray, list[float], int]:
+        """Adaptive t-pCN move of the walkers in ``state`` (updated in place): the
+        step size is adapted towards an acceptance rate of 0.234, and the move ends
+        once the mean log-posterior has not increased for long enough, or after
+        ``n_max_steps`` steps (pocoMC). If ``min_steps``, the move does not end before
+        the minimum number of steps of :py:func:`_min_steps` for the mean acceptance
+        rate of the steps so far (up to ``n_cap_steps`` steps).
+
+        :return: Number of steps, final step size, acceptance probabilities of the
+            last step, mean acceptance probability of each step, and number of
+            likelihood calls
+        :rtype: tuple[int, float, np.ndarray, list[float], int]
+        """
+        n_dim = state["x"].shape[1]
+        n_calls = 0
+        alpha_means = []
+        logp2_val = np.mean(state["logl"] + state["logp"])
+        cnt, i, plateau = 0, 0, False
         while True:
             i += 1
-            diff = u - mu
-            # Mahalanobis distances of the current points
-            maha = np.einsum("ij,jk,ik->i", diff, inv_cov, diff)
-            # Scale mixture variables (one per walker)
-            s = 1.0 / self.rng.gamma((n_dim + nu) / 2, 2.0 / (nu + maha))
-            # Propose new points in the unbounded space
-            z = self.rng.randn(n_walkers, n_dim) @ chol_cov.T
-            u_prime = (
-                mu + (1.0 - sigma**2) ** 0.5 * diff + sigma * np.sqrt(s)[:, None] * z
-            )
-
-            # Transform to the parameter space
-            x_prime, logdetj_prime = self.scaler.inverse(u_prime)
-
-            finite_msk = np.isfinite(logdetj_prime) & np.isfinite(x_prime).all(axis=1)
-            logp_prime = np.full(n_walkers, -np.inf)
-            logp_prime[finite_msk] = self.log_prior(x_prime[finite_msk])
-            finite_msk &= np.isfinite(logp_prime)
-
-            logl_prime = np.full(n_walkers, -np.inf)
-            if finite_msk.any():
-                logl_prime[finite_msk] = self.log_like(x_prime[finite_msk])
-            n_calls += int(np.sum(finite_msk))
-
-            # Metropolis-Hastings acceptance
-            diff_prime = u_prime - mu
-            maha_prime = np.einsum("ij,jk,ik->i", diff_prime, inv_cov, diff_prime)
-            A = -(n_dim + nu) / 2 * np.log(1 + maha_prime / nu)
-            B = -(n_dim + nu) / 2 * np.log(1 + maha / nu)
-            with np.errstate(invalid="ignore", over="ignore"):
-                alpha = np.minimum(
-                    1.0,
-                    np.exp(
-                        logl_prime * beta
-                        - logl * beta
-                        + logp_prime
-                        - logp
-                        + logdetj_prime
-                        - logdetj
-                        - A
-                        + B
-                    ),
-                )
-            alpha[np.isnan(alpha)] = 0.0
-
-            msk = self.rng.rand(n_walkers) < alpha
-            u[msk] = u_prime[msk]
-            x[msk] = x_prime[msk]
-            logdetj[msk] = logdetj_prime[msk]
-            logl[msk] = logl_prime[msk]
-            logp[msk] = logp_prime[msk]
+            alpha, calls = self._tpcn_step(state, kernel, sigma)
+            n_calls += calls
+            alpha_means.append(float(np.mean(alpha)))
 
             # Adapt the scale towards an acceptance rate of 0.234 (diminishing
             # adaptation)
@@ -394,29 +497,95 @@ class PersistentSMC:
             )
 
             # Stop once the mean logP has not increased for long enough
-            logp2_val_new = np.mean(logl + logp)
+            logp2_val_new = np.mean(state["logl"] + state["logp"])
             if logp2_val_new > logp2_val:
                 cnt = 0
                 logp2_val = logp2_val_new
             else:
                 cnt += 1
                 if cnt >= self.n_steps * ((2.38 / n_dim**0.5) / sigma) ** 2.0:
+                    if not min_steps:
+                        break
+                    plateau = True
+
+            if not min_steps:
+                if i >= self.n_max_steps:
                     break
-            if i >= self.n_max_steps:
+                continue
+            # Minimum number of steps for the mean acceptance rate so far
+            if (plateau or i >= self.n_max_steps) and i >= _min_steps(
+                float(np.mean(alpha_means)), UNMOVED_TARGET
+            ):
+                break
+            if i >= self.n_cap_steps:
                 break
 
-        return {
-            "u": u,
-            "x": x,
-            "logdetj": logdetj,
-            "logl": logl,
-            "logp": logp,
-            "efficiency": sigma,
-            "accept": np.mean(alpha),
-            "steps": i,
-            "calls": n_calls,
-            "proposal_scale": sigma,
-        }
+        return i, float(sigma), alpha, alpha_means, n_calls
+
+    def _tpcn_step(
+        self, state: dict, kernel: tuple, sigma: float
+    ) -> tuple[np.ndarray, int]:
+        """One t-pCN Metropolis-Hastings step of all the walkers in ``state``
+        (updated in place). ``kernel`` is ``(beta, mu, inv_cov, chol_cov, nu)``.
+
+        :return: Acceptance probabilities, and number of likelihood calls
+        :rtype: tuple[np.ndarray, int]
+        """
+        beta, mu, inv_cov, chol_cov, nu = kernel
+        u, x = state["u"], state["x"]
+        logdetj, logl, logp = state["logdetj"], state["logl"], state["logp"]
+        n_walkers, n_dim = x.shape
+
+        diff = u - mu
+        # Mahalanobis distances of the current points
+        maha = np.einsum("ij,jk,ik->i", diff, inv_cov, diff)
+        # Scale mixture variables (one per walker)
+        s = 1.0 / self.rng.gamma((n_dim + nu) / 2, 2.0 / (nu + maha))
+        # Propose new points in the unbounded space
+        z = self.rng.randn(n_walkers, n_dim) @ chol_cov.T
+        u_prime = mu + (1.0 - sigma**2) ** 0.5 * diff + sigma * np.sqrt(s)[:, None] * z
+
+        # Transform to the parameter space
+        x_prime, logdetj_prime = self.scaler.inverse(u_prime)
+
+        finite_msk = np.isfinite(logdetj_prime) & np.isfinite(x_prime).all(axis=1)
+        logp_prime = np.full(n_walkers, -np.inf)
+        logp_prime[finite_msk] = self.log_prior(x_prime[finite_msk])
+        finite_msk &= np.isfinite(logp_prime)
+
+        logl_prime = np.full(n_walkers, -np.inf)
+        if finite_msk.any():
+            logl_prime[finite_msk] = self.log_like(x_prime[finite_msk])
+        n_calls = int(np.sum(finite_msk))
+
+        # Metropolis-Hastings acceptance
+        diff_prime = u_prime - mu
+        maha_prime = np.einsum("ij,jk,ik->i", diff_prime, inv_cov, diff_prime)
+        A = -(n_dim + nu) / 2 * np.log(1 + maha_prime / nu)
+        B = -(n_dim + nu) / 2 * np.log(1 + maha / nu)
+        with np.errstate(invalid="ignore", over="ignore"):
+            alpha = np.minimum(
+                1.0,
+                np.exp(
+                    logl_prime * beta
+                    - logl * beta
+                    + logp_prime
+                    - logp
+                    + logdetj_prime
+                    - logdetj
+                    - A
+                    + B
+                ),
+            )
+        alpha[np.isnan(alpha)] = 0.0
+
+        msk = self.rng.rand(n_walkers) < alpha
+        u[msk] = u_prime[msk]
+        x[msk] = x_prime[msk]
+        logdetj[msk] = logdetj_prime[msk]
+        logl[msk] = logl_prime[msk]
+        logp[msk] = logp_prime[msk]
+        return alpha, n_calls
 
     # ---------------------------------------------------------------------------
     # Results
@@ -606,6 +775,15 @@ def fit_mvstud(
         mu = np.array([mu]).T
 
     return mu.T[0], Sigma, nu
+
+
+def _min_steps(accept: float, target: float) -> int:
+    """Number of steps after which a walker with acceptance probability ``accept``
+    per step has stayed at its starting point with probability ``target``:
+    ``ceil(log(target) / log(1 - accept))``, with ``accept`` clipped to
+    ``[0.001, 0.999]``"""
+    a = min(max(accept, 1e-3), 0.999)
+    return int(np.ceil(np.log(target) / np.log(1.0 - a)))
 
 
 def trim_weights(
