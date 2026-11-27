@@ -18,18 +18,12 @@ from .synthetic import Synthetic
 # fits with one color (and gives the same results for the redundant color), while
 # keeping the gain in accuracy of the independent color. Without it the posteriors are
 # too narrow (coverage ~0.5 for N<=400)
-# The calibration used the "hard" binning. With the "smooth" binning (the default) the
-# same values give somewhat wider intervals (68% coverage ~0.9 instead of ~0.83 on mock
-# clusters with N>150); halving them for N>150 matched the coverage of "hard" on two of
-# three sets of mocks but fell to ~0.7 on the third, so they are kept
+# The calibration used the integer (one bin per star) binning of the previous versions
+# of the likelihood. With the cloud-in-cell binning the same values give somewhat wider
+# intervals (68% coverage ~0.9 instead of ~0.83 on mock clusters with N>150); halving
+# them for N>150 matched the previous coverage on two of three sets of mocks but fell
+# to ~0.7 on the third, so they are kept
 AUTO_TEMPERATURES = ((150, 1.0), (400, 2.0), (np.inf, 4.0))
-
-# Default 'n_total' of run() for each 'stop' rule. With "ess" the copies of the same
-# point count as independent samples: the default 512 gave ~140 distinct samples
-# (median; as few as ~15) in a test with 20 UCC clusters. With "distinct" only the
-# distinct points count, and 256 gave at least ~260 of them in every run, with the same
-# medians, intervals and coverage of mock clusters as 512 in 1.5x less time
-N_TOTAL_DEFAULT = {"ess": 512, "distinct": 256}
 
 # summary() warns about the parameters whose 1D posterior density at the median is
 # below this fraction of the density at the main mode: the median falls between modes
@@ -96,32 +90,6 @@ class Sampler:
     :type n_effective: int
     :param n_active: Number of particles moved with MCMC in each iteration
     :type n_active: int
-    :param binning: Binning of the observed and synthetic Hess diagrams compared by
-        the likelihood (see :ref:`sampler_module`). ``"hard"``: each star is counted
-        in the bin that contains it, the likelihood changes in steps as the stars
-        cross the edges of the bins. ``"smooth"`` (default): cloud-in-cell binning,
-        each star is split among the four nearest bins (bilinear weights), and the
-        likelihood changes continuously with the parameters
-    :type binning: str
-    :param move: MCMC move applied to the particles in each iteration (see
-        :ref:`sampler_module`). ``"plateau"``: the particles are moved until their
-        mean log-posterior stops increasing, adapting the step size along the way
-        (pocoMC). ``"plateau_min"`` (default): the same, with a minimum number of
-        steps set from the acceptance rate, so that few particles remain at their
-        starting point.
-        ``"pilot"``: the step size and the number of steps are tuned on a separate,
-        discarded set of particles, and all the particles are then moved with that
-        fixed kernel (exactly invariant, more likelihood calls)
-    :type move: str
-    :param stop: Rule that ends the run, once the particles sample the posterior
-        (see :py:meth:`run`). ``"ess"``: the effective sample size (ESS) of the
-        importance weighted samples reaches ``n_total``, counting the copies of the
-        same point as independent samples (pocoMC). ``"distinct"`` (default): the ESS
-        of the distinct points (the weights of identical samples summed) reaches
-        ``n_total``; more iterations are run until it does, which guarantees that
-        the posterior does not rest on a few points (e.g.: copies of a particle that
-        was never moved). It also sets the default ``n_total`` (see :py:meth:`run`)
-    :type stop: str
     :param n_threads: Number of threads used to evaluate the models of each batch
         (requires numba, without numba it is ignored). If ``1``, the models are
         evaluated serially. If larger than ``1``, they are distributed among that
@@ -136,11 +104,9 @@ class Sampler:
 
     :raises ValueError: If any of the attributes is not recognized as a valid
         option (including a prior that is not one of the two forms above, a
-        distribution with no probability mass within its limits, or an unknown
-        ``binning``, ``move`` or ``stop``), if ``synthcl`` was not calibrated, or if
-        ``n_threads`` is not
-        ``None`` or an integer between ``1`` and ``NUMBA_NUM_THREADS`` (only checked
-        with numba installed).
+        distribution with no probability mass within its limits), if ``synthcl`` was
+        not calibrated, or if ``n_threads`` is not ``None`` or an integer between
+        ``1`` and ``NUMBA_NUM_THREADS`` (only checked with numba installed).
     """
 
     def __init__(  # noqa: DOC502, RUF100
@@ -150,9 +116,6 @@ class Sampler:
         temperature: float | str = "auto",
         n_effective: int = 256,
         n_active: int = 128,
-        binning: str = "smooth",
-        move: str = "plateau_min",
-        stop: str = "distinct",
         n_threads: int | None = None,
         verbose: int = 1,
     ) -> None:
@@ -162,9 +125,6 @@ class Sampler:
         self.DR_distribution: str | None = None
         self.n_effective = int(n_effective)
         self.n_active = int(n_active)
-        self.binning = binning
-        self.move = move
-        self.stop = stop
         self.n_threads = n_threads
         # The seed is inherited from the Synthetic object
         self.seed = int(synthcl.seed)
@@ -201,8 +161,6 @@ class Sampler:
             self.n_active,
             self.rng,
             callback=self._progress if self.verbose > 1 else None,
-            move=self.move,
-            stop=self.stop,
         )
 
         self._print("\nSampler object generated")
@@ -210,9 +168,6 @@ class Sampler:
         self._print(f"Temperature    : {self.temperature:g}", 1)
         self._print(f"n_effective    : {self.n_effective}", 1)
         self._print(f"n_active       : {self.n_active}", 1)
-        self._print(f"Binning        : {self.binning}", 1)
-        self._print(f"MCMC move      : {self.move}", 1)
-        self._print(f"Stop rule      : {self.stop}", 1)
         self._print(f"Threads        : {self._n_threads_str()}", 1)
         self._print(f"Random seed    : {self.seed}", 1)
 
@@ -234,30 +189,11 @@ class Sampler:
     def _check_args(self, temperature: float | str) -> None:
         """Validate the input arguments, and set the ``temperature``, ``_obs``,
         ``_lkl``, ``_P_default`` and ``_P_cols`` attributes"""
-        from .modules.smc import MCMC_MOVES, STOP_RULES
-        from .modules.synthetic.likelihood import LKL_BINNINGS, Tremmel
-
         obs = self.synthcl._require_calibrated()
-        # Observed cluster used by the likelihood. A later call to
-        # 'synthcl.calibrate()' does not affect this object
+        # Observed cluster and its likelihood. A later call to 'synthcl.calibrate()'
+        # does not affect these objects
         self._obs = obs
-
-        if self.binning not in LKL_BINNINGS:
-            raise ValueError(
-                f"'binning' must be one of {LKL_BINNINGS}, got '{self.binning}'"
-            )
-        if self.move not in MCMC_MOVES:
-            raise ValueError(f"'move' must be one of {MCMC_MOVES}, got '{self.move}'")
-        if self.stop not in STOP_RULES:
-            raise ValueError(f"'stop' must be one of {STOP_RULES}, got '{self.stop}'")
-        # Likelihood: the one of the calibration ("hard" binning), or the observed
-        # cluster binned with the "smooth" binning
-        if self.binning == "hard":
-            self._lkl = obs.lkl
-        else:
-            self._lkl = Tremmel(
-                obs.mag, [c for c in obs.colors if c is not None], binning="smooth"
-            )
+        self._lkl = obs.lkl
 
         if len(self.names) == 0:
             raise ValueError("At least one parameter must be included in 'priors'")
@@ -357,26 +293,24 @@ class Sampler:
             + f"accept {particles['accept']:.3f} | steps {particles['steps']:>3d}"
         )
 
-    def run(self, n_total: int | None = None) -> None:
+    def run(self, n_total: int = 256) -> None:
         """Run the sampler.
 
         The run ends when the inverse temperature of the likelihood reaches ``1``
         (i.e.: the particles sample the posterior) and the effective sample size of
-        the importance weighted samples of all the iterations is at least
-        ``n_total``. With ``stop="distinct"`` this is the effective sample size of the
-        distinct points (the weights of identical samples summed), and at most ``40``
-        more iterations are run once the particles sample the posterior; a warning is
-        issued if that limit is reached first. Calling this method again with a larger
-        ``n_total`` continues the run.
+        the distinct points of the importance weighted samples of all the iterations
+        (the weights of identical samples summed) is at least ``n_total``. At most
+        ``40`` more iterations are run once the particles sample the posterior; a
+        warning is issued if that limit is reached first. Calling this method again
+        with a larger ``n_total`` continues the run.
 
         The synthetic clusters are generated with the differential reddening model of
         the ``synthcl`` object (see :py:attr:`asteca.Synthetic.DR_distribution`) at
         the time of the first call, stored in the ``DR_distribution`` attribute.
 
-        :param n_total: Effective sample size of the posterior samples required to
-            stop the run. If ``None``, ``512`` with ``stop="ess"`` and ``256`` with
-            ``stop="distinct"`` (which only counts distinct points)
-        :type n_total: int | None
+        :param n_total: Effective sample size of the distinct posterior samples
+            required to stop the run
+        :type n_total: int
 
         :raises ValueError: If the run is continued after changing the differential
             reddening model of the ``synthcl`` object
@@ -395,8 +329,6 @@ class Sampler:
 
         self._print("\nRunning sampler...", 1)
         self._print(f"Diff reddening : {self.DR_distribution}", 1)
-        if n_total is None:
-            n_total = N_TOTAL_DEFAULT[self.stop]
         self._smc.run(n_total)
 
         self.n_calls = int(self._smc.calls)
@@ -499,28 +431,24 @@ class Sampler:
 
         - ``ess``: effective sample size of the posterior samples, ``sum(w)**2 /
           sum(w**2)`` for the weights ``w``, i.e.: the number of independent
-          samples they are equivalent to. It indicates how precise the statistics
-          are, and it should not be much smaller than the ``n_total`` value passed
-          to :py:meth:`run` (with ``stop="ess"``).
+          samples they are equivalent to, counting copies of the same point as
+          independent samples.
         - ``ess_unique``: the ESS after merging the samples with identical values
           (summing their weights). The samples of all the iterations are kept, and
           resampling and rejected MCMC moves produce copies of the same point,
-          which ``ess`` counts as independent. If ``ess_unique`` is much smaller
-          than ``ess``, the posterior rests on few distinct points and the
-          statistics are noisier than ``ess`` suggests: run longer (larger
-          ``n_total``), with more particles (``n_effective, n_active``), or with
-          ``stop="distinct"``, which runs until ``ess_unique`` reaches ``n_total``
-          (it can end slightly below it: the posterior samples discard those with
-          negligible weights).
+          which ``ess`` counts as independent. The run continues until this value
+          reaches the ``n_total`` value passed to :py:meth:`run` (it can end slightly
+          below it: the posterior samples discard those with negligible weights). A
+          value well below ``n_total`` means that the run reached the limit of
+          iterations (with a warning): the posterior rests on few distinct points.
         - ``accept``: mean acceptance rate of the MCMC moves of the last iteration
           (the sampler adapts the moves towards ``~0.23``). Values close to ``0``
           mean that the particles barely moved in the posterior.
         - ``steps``: number of MCMC steps of the last iteration. The MCMC stops
           when the mean log-posterior of the particles no longer increases, or
-          after ``10 * (N // 2)`` steps for ``N`` fitted parameters (with
-          ``move="plateau"``; the other moves also take a minimum number of steps
-          set from the acceptance rate, up to three times that limit). Reaching the
-          limit means that the particles had not settled.
+          after ``10 * (N // 2)`` steps for ``N`` fitted parameters, but not before
+          a minimum number of steps set from the acceptance rate (up to three times
+          that limit). Reaching the limit means that the particles had not settled.
         - ``no_overlap_frac``: fraction of the log-likelihood evaluations of the run
           whose synthetic cluster does not overlap the observed one: no synthetic
           star falls in any bin of the observed Hess diagram, or the synthetic

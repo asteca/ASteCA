@@ -17,39 +17,26 @@ fitted to the particles in each iteration. The normalizing flow (and thus PyTorc
 i.e.: the preconditioning that gives Preconditioned Monte Carlo (PMC) its name, the
 evidence estimation with the flow, the blobs, the checkpointing and the
 multiprocessing pools are not included. Hence this is not PMC but the Sequential
-Monte Carlo sampler that pocoMC runs with ``precondition=False``: with these settings
-the results are those of pocoMC for the same random seed.
+Monte Carlo sampler that pocoMC runs with ``precondition=False``, with the two changes
+below (and the same results otherwise).
 
-The MCMC move of each iteration can be selected (``move`` argument of
-:py:class:`PersistentSMC`, see :py:data:`MCMC_MOVES`). The default (``"plateau"``) is
-pocoMC's; the other two are additions of this module:
+Changes with respect to pocoMC's algorithm:
 
-- ``"plateau"``: all the walkers are moved until the mean log-posterior stops
-  increasing, with the step size adapted along the way (pocoMC).
-- ``"plateau_min"``: as ``"plateau"``, but the move does not end before a minimum
-  number of steps, after which a walker with the mean acceptance rate of the steps
-  so far would have stayed at its starting point with probability
+- MCMC move: as in pocoMC, all the walkers are moved until the mean log-posterior stops
+  increasing, with the step size adapted along the way, but the move does not end
+  before a minimum number of steps, after which a walker with the mean acceptance rate
+  of the steps so far would have stayed at its starting point with probability
   :py:data:`UNMOVED_TARGET`. With a rough likelihood the plateau is reached after a
-  few steps, and a large fraction of the walkers is never moved: their starting
-  points are stored again (duplicated samples). Like the plateau rule and the step
-  size adaptation, this condition depends on all the walkers through an average.
-- ``"pilot"``: the step size and the number of steps are tuned on a separate set of
-  walkers drawn from the weighted particles (moved with ``"plateau_min"`` and then
-  discarded). The walkers are then moved with that fixed kernel. As the kernel does
-  not depend on the walkers that it moves, the move leaves the tempered posterior
-  exactly invariant (given the weighted particles). It costs more likelihood calls.
-
-The rule that ends the run can also be selected (``stop`` argument, see
-:py:data:`STOP_RULES`). Both require the inverse temperature to reach ``1``, and then
-an effective sample size (ESS) of the importance weighted particles of all the
-iterations of at least ``n_total``:
-
-- ``"ess"``: the ESS of the weights (pocoMC). Copies of the same point (walkers that
-  were not moved) count as independent samples.
-- ``"distinct"``: the ESS of the weights summed over identical points, i.e.: of the
-  distinct points. More iterations are run at ``beta=1`` until it is reached, at most
-  :py:data:`DISTINCT_MAX_ITERS` per call to :py:meth:`PersistentSMC.run`. Only the
-  stopping time changes: the moves and the weights are the same.
+  few steps, and without this minimum a large fraction of the walkers is never moved:
+  their starting points are stored again (duplicated samples). Like the plateau rule
+  and the step size adaptation, this condition depends on all the walkers through an
+  average (population-adaptive SMC, consistent as the number of walkers grows).
+- Stopping rule: once the inverse temperature reaches ``1``, the run continues until
+  the ESS of the importance weighted particles of all the iterations, after summing
+  the weights of identical points (i.e.: of the distinct points), is at least
+  ``n_total``, with at most :py:data:`DISTINCT_MAX_ITERS` iterations at ``beta=1``
+  per call to :py:meth:`PersistentSMC.run`. pocoMC uses the ESS of the weights, which
+  counts copies of the same point as independent samples.
 
 Changes with respect to pocoMC's code, which do not change the results:
 
@@ -86,20 +73,11 @@ if TYPE_CHECKING:
 
 SQRTEPS = float(np.sqrt(np.finfo(np.float64).eps))
 
-# MCMC moves of PersistentSMC (see the module's docstring). The first one is the default
-MCMC_MOVES = ("plateau", "plateau_min", "pilot")
 # Target probability that a walker with the mean acceptance rate is never moved, used
-# by the "plateau_min" and "pilot" moves to set the minimum number of steps
+# to set the minimum number of steps of the MCMC moves (see the module's docstring)
 UNMOVED_TARGET = 0.05
-# Number of pilot walkers of the "pilot" move: max(PILOT_MIN, n_active // PILOT_FRAC)
-PILOT_MIN = 32
-PILOT_FRAC = 4
-# The "pilot" move estimates the acceptance rate of its final step size from the mean
-# acceptance of this number of last pilot steps
-PILOT_LAST_STEPS = 3
-# Rules that end the run (see the module's docstring). The first one is the default
-STOP_RULES = ("ess", "distinct")
-# Maximum number of iterations at beta=1 per call to run() with the "distinct" rule
+# Maximum number of iterations at beta=1 per call to run(), while the ESS of the
+# distinct points is below n_total
 DISTINCT_MAX_ITERS = 40
 # Keys of the arrays of the moved walkers
 _STATE_KEYS = ("u", "x", "logdetj", "logl", "logp")
@@ -128,15 +106,6 @@ class PersistentSMC:
     :param callback: Function called at the end of each iteration with the dictionary
         of the current particles (used to print the progress)
     :type callback: Callable[[dict], None] | None
-    :param move: MCMC move of each iteration, one of :py:data:`MCMC_MOVES` (see the
-        module's docstring)
-    :type move: str
-    :param stop: Rule that ends the run, one of :py:data:`STOP_RULES` (see the
-        module's docstring)
-    :type stop: str
-
-    :raises ValueError: If ``move`` is not one of :py:data:`MCMC_MOVES`, or ``stop``
-        is not one of :py:data:`STOP_RULES`
     """
 
     def __init__(
@@ -148,17 +117,9 @@ class PersistentSMC:
         rng: np.random.RandomState,
         dynamic: bool = True,
         callback: Callable[[dict], None] | None = None,
-        move: str = "plateau",
-        stop: str = "ess",
     ) -> None:
-        if move not in MCMC_MOVES:
-            raise ValueError(f"'move' must be one of {MCMC_MOVES}, got '{move}'")
-        if stop not in STOP_RULES:
-            raise ValueError(f"'stop' must be one of {STOP_RULES}, got '{stop}'")
-        self.move = move
-        self.stop = stop
-        # "distinct" stop: number of iterations at beta=1 before the current call to
-        # run(), and whether that call ended at DISTINCT_MAX_ITERS
+        # Number of iterations at beta=1 before the current call to run(), and whether
+        # that call ended at DISTINCT_MAX_ITERS
         self._n_b1_start = 0
         self.capped = False
         self.log_like = log_like
@@ -176,11 +137,9 @@ class PersistentSMC:
         # Number of MCMC steps after the logP plateau, and maximum number of steps
         self.n_steps = int(self.n_dim // 2)
         self.n_max_steps = 10 * self.n_steps
-        # Hard limit on the number of steps of the "plateau_min" and "pilot" moves,
-        # whose minimum number of steps can exceed n_max_steps
+        # Hard limit on the number of steps of the moves, whose minimum number of steps
+        # can exceed n_max_steps
         self.n_cap_steps = 3 * self.n_max_steps
-        # Pilot walkers of the "pilot" move, drawn by _resample()
-        self._pilot: dict = {}
         # Number of prior samples drawn in the warm-up
         self.n_prior = int(
             2 * max(self.n_effective // self.n_active, 1) * self.n_active
@@ -224,9 +183,9 @@ class PersistentSMC:
     # ---------------------------------------------------------------------------
     def run(self, n_total: int) -> None:
         """Run the sampler until the inverse temperature reaches ``1`` and the
-        ESS of the persistent (importance weighted) samples is at least ``n_total``
-        (the ESS of the weights, or of the distinct points, see ``stop``). Calling it
-        again with a larger ``n_total`` continues the run.
+        ESS of the distinct points of the persistent (importance weighted) samples is
+        at least ``n_total`` (see the module's docstring). Calling it again with a
+        larger ``n_total`` continues the run.
         """
         self.n_total = int(n_total)
         self._n_b1_start = self._n_iters_beta1()
@@ -297,17 +256,12 @@ class PersistentSMC:
 
     def _should_continue(self) -> bool:
         """True while the termination criterion is not satisfied"""
-        if self.stop == "distinct":
-            if 1.0 - self.current["beta"] >= 1e-4:
-                return True
-            if self._n_iters_beta1() - self._n_b1_start >= DISTINCT_MAX_ITERS:
-                self.capped = True
-                return False
-            return self.distinct_ess() < self.n_total
-
-        logw, _ = self.particles.compute_logw_and_logz(1.0)
-        ess = effective_sample_size(np.exp(logw - np.max(logw)))
-        return 1.0 - self.current["beta"] >= 1e-4 or ess < self.n_total
+        if 1.0 - self.current["beta"] >= 1e-4:
+            return True
+        if self._n_iters_beta1() - self._n_b1_start >= DISTINCT_MAX_ITERS:
+            self.capped = True
+            return False
+        return self.distinct_ess() < self.n_total
 
     def _n_iters_beta1(self) -> int:
         """Number of stored iterations at inverse temperature 1"""
@@ -391,15 +345,8 @@ class PersistentSMC:
         self.geometry.fit(self.current["u"], weights=self.current["weights"])
 
     def _resample(self) -> None:
-        """Multinomial resampling of ``n_active`` particles. The ``"pilot"`` move
-        first draws its pilot walkers from the same weighted particles"""
+        """Multinomial resampling of ``n_active`` particles"""
         weights = self.current["weights"]
-        if self.move == "pilot":
-            n_pilot = max(PILOT_MIN, self.n_active // PILOT_FRAC)
-            idx = self.rng.choice(
-                np.arange(len(weights)), size=n_pilot, replace=True, p=weights
-            )
-            self._pilot = {k: self.current[k][idx].copy() for k in _STATE_KEYS}
         idx = self.rng.choice(
             np.arange(len(weights)), size=self.n_active, replace=True, p=weights
         )
@@ -419,8 +366,8 @@ class PersistentSMC:
         self.proposal_scale = results["proposal_scale"]
 
     def _tpcn(self) -> dict:
-        """t-preconditioned Crank-Nicolson moves in the unbounded space, with the
-        selected ``move`` (see the module's docstring)"""
+        """t-preconditioned Crank-Nicolson moves in the unbounded space (see the
+        module's docstring)"""
         cur = self.current
         beta = cur["beta"]
         mu, cov, nu = self.geometry.t_mean, self.geometry.t_cov, self.geometry.t_nu
@@ -429,28 +376,8 @@ class PersistentSMC:
         # Walkers that are moved
         state = {k: cur[k].copy() for k in _STATE_KEYS}
 
-        if self.move != "pilot":
-            n_steps, sigma, alpha, _, n_calls = self._tpcn_adaptive(
-                state, kernel, sigma, self.move == "plateau_min"
-            )
-            accept = np.mean(alpha)
-        else:
-            # Tune the step size and the number of steps on the pilot walkers (their
-            # positions are discarded), then move all the walkers with that kernel
-            n_pilot_steps, sigma, _, alpha_means, n_calls = self._tpcn_adaptive(
-                self._pilot, kernel, sigma, True
-            )
-            acc = float(np.mean(alpha_means[-PILOT_LAST_STEPS:]))
-            n_steps = min(
-                max(n_pilot_steps, _min_steps(acc, UNMOVED_TARGET)),
-                self.n_cap_steps,
-            )
-            accept = 0.0
-            for _ in range(n_steps):
-                alpha, calls = self._tpcn_step(state, kernel, sigma)
-                n_calls += calls
-                accept += np.mean(alpha)
-            accept /= n_steps
+        n_steps, sigma, alpha, n_calls = self._tpcn_adaptive(state, kernel, sigma)
+        accept = np.mean(alpha)
 
         return {
             **state,
@@ -462,19 +389,18 @@ class PersistentSMC:
         }
 
     def _tpcn_adaptive(
-        self, state: dict, kernel: tuple, sigma: float, min_steps: bool
-    ) -> tuple[int, float, np.ndarray, list[float], int]:
+        self, state: dict, kernel: tuple, sigma: float
+    ) -> tuple[int, float, np.ndarray, int]:
         """Adaptive t-pCN move of the walkers in ``state`` (updated in place): the
         step size is adapted towards an acceptance rate of 0.234, and the move ends
         once the mean log-posterior has not increased for long enough, or after
-        ``n_max_steps`` steps (pocoMC). If ``min_steps``, the move does not end before
-        the minimum number of steps of :py:func:`_min_steps` for the mean acceptance
-        rate of the steps so far (up to ``n_cap_steps`` steps).
+        ``n_max_steps`` steps (pocoMC), but not before the minimum number of steps of
+        :py:func:`_min_steps` for the mean acceptance rate of the steps so far (up to
+        ``n_cap_steps`` steps).
 
         :return: Number of steps, final step size, acceptance probabilities of the
-            last step, mean acceptance probability of each step, and number of
-            likelihood calls
-        :rtype: tuple[int, float, np.ndarray, list[float], int]
+            last step, and number of likelihood calls
+        :rtype: tuple[int, float, np.ndarray, int]
         """
         n_dim = state["x"].shape[1]
         n_calls = 0
@@ -504,14 +430,8 @@ class PersistentSMC:
             else:
                 cnt += 1
                 if cnt >= self.n_steps * ((2.38 / n_dim**0.5) / sigma) ** 2.0:
-                    if not min_steps:
-                        break
                     plateau = True
 
-            if not min_steps:
-                if i >= self.n_max_steps:
-                    break
-                continue
             # Minimum number of steps for the mean acceptance rate so far
             if (plateau or i >= self.n_max_steps) and i >= _min_steps(
                 float(np.mean(alpha_means)), UNMOVED_TARGET
@@ -520,7 +440,7 @@ class PersistentSMC:
             if i >= self.n_cap_steps:
                 break
 
-        return i, float(sigma), alpha, alpha_means, n_calls
+        return i, float(sigma), alpha, n_calls
 
     def _tpcn_step(
         self, state: dict, kernel: tuple, sigma: float

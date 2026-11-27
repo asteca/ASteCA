@@ -132,7 +132,7 @@ if _HAS_NUMBA:
         lost_fraction,
         next_pool_size,
     )
-    from .likelihood import _cic_sum_nb, _tremmel_sum_nb
+    from .likelihood import _cic_sum_nb
 
     _initial_pool_size_nb = njit(cache=True)(initial_pool_size)
     _next_pool_size_nb = njit(cache=True)(next_pool_size)
@@ -382,11 +382,7 @@ if _HAS_NUMBA:
             n_phot,
             hist_args,
             nz_pos,
-            row_off,
-            table_flat,
-            m_max,
             n_obs,
-            smooth,
             min_lkl,
             max_lkl,
             lkl_range,
@@ -399,12 +395,7 @@ if _HAS_NUMBA:
             lnl = max_lkl - 10.0 * lkl_range
         else:
             mag = synth[0]
-            if smooth:
-                lnl = _cic_sum_nb(mag, synth[1:n_phot], hist_args, nz_pos, n_obs)
-            else:
-                lnl = _tremmel_sum_nb(
-                    mag, synth[1:n_phot], hist_args, nz_pos, row_off, table_flat, m_max
-                )
+            lnl = _cic_sum_nb(mag, synth[1:n_phot], hist_args, nz_pos, n_obs)
             if lnl <= min_lkl:
                 # likelihood.no_overlap_dist()
                 d_mag = (obs_mag_med - np.median(mag)) / w_mag

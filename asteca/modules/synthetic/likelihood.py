@@ -2,16 +2,11 @@ import math
 
 import numpy as np
 from astropy.stats import calculate_bin_edges
-from fast_histogram import histogram2d
 from scipy.ndimage import convolve1d
 from scipy.special import gammaln
 
 from .. import HAS_NUMBA as _HAS_NUMBA
 from .. import njit
-
-# Binning of the Hess diagrams of the likelihood (see Tremmel). The first one is the
-# default
-LKL_BINNINGS = ("hard", "smooth")
 
 # cmd_overlap(): the kernel sums are computed on a grid (see _k_sums_grid) if the
 # number of observed-synthetic pairs is at least _GRID_MIN_PAIRS (below it the exact
@@ -23,15 +18,6 @@ _GRID_MAX_CELLS = 1_000_000
 _GRID_STEP = 0.2
 # The kernel exp(-d^2/4) is truncated at d=7 in each dimension (k<5e-6)
 _GRID_KERNEL_CUT = 7.0
-
-try:
-    # C core of fast_histogram, skips the (costly) argument validation performed by
-    # the public histogram2d() wrapper
-    from fast_histogram._histogram_core import _histogram2d
-except ImportError:  # private module, fall back to the public function
-
-    def _histogram2d(x, y, nx, xmin, xmax, ny, ymin, ymax):
-        return histogram2d(x, y, bins=[nx, ny], range=[[xmin, xmax], [ymin, ymax]])
 
 
 def hess_bin_edges(mag: np.ndarray, colors: list[np.ndarray]) -> tuple[list, list]:
@@ -54,7 +40,7 @@ def hess_bin_edges(mag: np.ndarray, colors: list[np.ndarray]) -> tuple[list, lis
         bin_edges.append(calculate_bin_edges(col[~np.isnan(col)], bins="knuth"))
 
     # Extract ranges and number of bins for each dimension (magnitude and colors),
-    # used by histogram2d
+    # used by the Hess diagrams
     ranges, Nbins = [], []
     for be in bin_edges:
         # Add a small buffer to the edges to rejecting stars on the edges when
@@ -63,153 +49,6 @@ def hess_bin_edges(mag: np.ndarray, colors: list[np.ndarray]) -> tuple[list, lis
         Nbins.append(len(be))
 
     return ranges, Nbins
-
-
-def tremmel_tables(
-    mag_v: np.ndarray, colors_v: list[np.ndarray], ranges: list, Nbins: list
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Prepare data for likelihood calculation.
-
-    This function calculates the Hess diagram of the observed cluster and
-    prepares the data for the likelihood calculation.
-
-    :param mag_v: Array of magnitudes.
-    :type mag_v: np.ndarray
-    :param colors_v: List of arrays of colors.
-    :type colors_v: list[np.ndarray]
-    :param ranges: Per-dimension ranges.
-    :type ranges: list
-    :param Nbins: Per-dimension total number of bins.
-    :type Nbins: list
-
-    :return: Indexes of bins with stars, flattened histogram, and pre-computed table
-        for likelihood calculation.
-    :rtype: tuple[np.ndarray, np.ndarray, np.ndarray]
-    """
-
-    # Obtain histogram for observed cluster.
-    hess_diag = []
-    for i, col in enumerate(colors_v):
-        # Fast 2D histogram
-        hess_diag.append(
-            histogram2d(
-                mag_v,
-                col,
-                range=[
-                    [ranges[0][0], ranges[0][1]],
-                    [ranges[i + 1][0], ranges[i + 1][1]],
-                ],
-                bins=[Nbins[0], Nbins[i + 1]],
-            )
-        )
-
-    # Flatten array
-    cl_histo_f = []
-    for i, diag in enumerate(hess_diag):
-        cl_histo_f += list(np.array(diag).ravel())
-    cl_histo_f = np.array(cl_histo_f)
-
-    # Index of bins where stars were observed
-    cl_z_idx = cl_histo_f != 0
-
-    # Remove all bins where n_i=0 (no observed stars)
-    cl_histo_f_z = cl_histo_f[cl_z_idx].astype(int)
-
-    # table2d[n, m]: pre-computed table for likelihood calculation, where n is the
-    # number of observed stars in a bin and m is the number of synthetic stars in that
-    # bin. This table is used to speed up the likelihood calculation, as it avoids the
-    # need to compute the gammaln function for each bin and each synthetic cluster.
-    # The table is computed for all possible values of n and m up to a certain maximum,
-    # which is determined based on the observed histogram.
-
-    # The maximum number of synthetic stars in a bin should be large enough to cover
-    # the range of possible values given the number of observed stars, but not too
-    # large to avoid unnecessary computation. The following heuristic is used to
-    # determine the maximum number of synthetic stars:
-    N_obs = len(mag_v)
-    if N_obs < 50:
-        N_st_max = N_obs * 5
-    elif N_obs < 500:
-        N_st_max = N_obs * 2
-    elif N_obs < 1000:
-        N_st_max = N_obs * 1
-    else:
-        N_st_max = N_obs * 0.5
-    # Create a 2D table for all combinations of n and m, where n is the number of
-    # observed stars in a bin and m is the number of synthetic stars in that bin.
-    # The table is computed using the gammaln function, which is used in the
-    # likelihood calculation.
-    n_idx, m_idx = np.arange(cl_histo_f_z.max() + 1), np.arange(N_st_max)
-    N2, M2 = np.meshgrid(n_idx, m_idx, indexing="ij")
-    table2d = gammaln(N2 + M2 + 0.5) - gammaln(M2 + 0.5)
-
-    # These variables are used by the likelihood functions called by the get() method
-    return cl_z_idx, cl_histo_f_z, table2d
-
-
-def tremmel_sum(
-    hist_args: np.ndarray,
-    nz_pos: np.ndarray,
-    row_off: np.ndarray,
-    table_flat: np.ndarray,
-    m_max: int,
-    synth_clust: np.ndarray,
-) -> float:
-    r"""Poisson likelihood ratio as defined in Tremmel et al (2013), Eq 10 with
-    v_{i,j}=1 (see documentation). This is the core of :py:meth:`Tremmel.log_lkl`.
-
-    :param hist_args: Per-color ``(nx, xmin, xmax, ny, ymin, ymax)`` arguments for
-        the 2D histogram, shape ``(N_colors, 6)``
-    :type hist_args: np.ndarray
-    :param nz_pos: Positions in the flattened Hess diagram of the bins where the
-        number of observed stars is not 0
-    :type nz_pos: np.ndarray
-    :param row_off: Offset in ``table_flat`` of the row associated to the number of
-        observed stars in each non-empty bin
-    :type row_off: np.ndarray
-    :param table_flat: Flattened pre-computed table for likelihood calculation
-    :type table_flat: np.ndarray
-    :param m_max: Largest number of synthetic stars per bin covered by the table
-        (number of columns minus 1). Larger counts are clipped to this value
-    :type m_max: int
-    :param synth_clust: Synthetic cluster data, ``[magnitude, color1, (color2)]``.
-        Must not be empty
-    :type synth_clust: np.ndarray
-
-    :return: Log likelihood value (up to the constant terms that only depend on the
-        observed cluster)
-    :rtype: float
-    """
-    mag = synth_clust[0]
-    # The 1/2 term arises from using a Jeffreys prior (Eq 8 in Tremmel et al). Using a
-    # flat prior instead, that 1/2 term becomes a 1
-    # Equivalent to table2d[cl_histo_f_z, syn_histo_f_z].sum()
-    if _HAS_NUMBA:
-        return _tremmel_sum_nb(
-            mag, synth_clust[1:], hist_args, nz_pos, row_off, table_flat, m_max
-        )
-
-    # Obtain histogram for the synthetic cluster.
-    syn_histo_f = np.concatenate(
-        [
-            _histogram2d(
-                mag,
-                synth_clust[i + 1],
-                int(h[0]),
-                h[1],
-                h[2],
-                int(h[3]),
-                h[4],
-                h[5],
-            ).ravel()
-            for i, h in enumerate(hist_args)
-        ]
-    )
-    # Remove all bins where n_i = 0 (no observed stars). Counts beyond the
-    # table's last column are clipped, otherwise they would read the next row
-    syn_histo_f_z = np.minimum(syn_histo_f.take(nz_pos).astype(np.intp), m_max)
-    # Added in order, as in _tremmel_sum_nb(), so that the result is identical
-    return _sequential_sum(0.0, table_flat.take(row_off + syn_histo_f_z))
 
 
 def _sequential_sum(start: float, v: np.ndarray) -> float:
@@ -237,7 +76,7 @@ def cic_counts(
     fraction of the star that falls in each bin if it were a square of the size of a
     bin). The counts change continuously with the position of the stars. The parts
     that fall outside the diagram, and the stars with ``nan`` photometry, are dropped.
-    Used by the ``"smooth"`` binning of :py:class:`Tremmel`.
+    Used by :py:class:`Tremmel` for the observed and the synthetic clusters.
 
     :param mag: Magnitudes
     :type mag: np.ndarray
@@ -283,10 +122,13 @@ def cic_sum(
     n_obs: np.ndarray,
     synth_clust: np.ndarray,
 ) -> float:
-    """Likelihood sum of :py:func:`tremmel_sum` for the ``"smooth"`` binning of
-    :py:class:`Tremmel`: the numbers of observed (``n``) and synthetic (``m``) stars
-    of each bin are the (real valued) cloud-in-cell counts of :py:func:`cic_counts`,
-    and ``lnG(n + m + 1/2) - lnG(m + 1/2)`` is summed over the bins with ``n > 0``.
+    r"""Poisson likelihood ratio of Tremmel et al (2013), Eq 10 with v_{i,j}=1 (see
+    the documentation), up to the terms that only depend on the observed cluster.
+    This is the core of :py:meth:`Tremmel.log_lkl`. The numbers of observed (``n``)
+    and synthetic (``m``) stars of each bin are the (real valued) cloud-in-cell counts
+    of :py:func:`cic_counts`, and ``lnG(n + m + 1/2) - lnG(m + 1/2)`` is summed over
+    the bins with ``n > 0`` (the ``1/2`` comes from the Jeffreys prior of Eq 8 in
+    Tremmel et al).
 
     :param hist_args: Per-color ``(nx, xmin, xmax, ny, ymin, ymax)`` arguments of the
         Hess diagrams, shape ``(N_colors, 6)``
@@ -373,54 +215,6 @@ def _median(x: np.ndarray) -> float:
 
 
 if _HAS_NUMBA:
-
-    @njit(cache=True)
-    def _tremmel_sum_nb(
-        mag: np.ndarray,
-        colors: np.ndarray,
-        hist_args: np.ndarray,
-        nz_pos: np.ndarray,
-        row_off: np.ndarray,
-        table_flat: np.ndarray,
-        m_max: int,
-    ) -> float:
-        """Compiled (numba) version of the likelihood sum in :py:func:`tremmel_sum`.
-        A single pass bins the synthetic stars into one flattened Hess diagram
-        (same binning as ``fast_histogram``: values outside ``[min, max)`` or NaN
-        are dropped), then the table values of the non-empty observed bins are
-        added, without the temporary arrays of the NumPy version.
-        """
-        N_col = hist_args.shape[0]
-        nx = int(hist_args[0, 0])
-        xmin, xmax = hist_args[0, 1], hist_args[0, 2]
-        fx = nx / (xmax - xmin)
-
-        # Offset of each color's Hess diagram in the flattened array
-        offs = np.empty(N_col + 1, dtype=np.int64)
-        offs[0] = 0
-        for c in range(N_col):
-            offs[c + 1] = offs[c] + nx * int(hist_args[c, 3])
-        counts = np.zeros(offs[N_col], dtype=np.int64)
-
-        for c in range(N_col):
-            ny = int(hist_args[c, 3])
-            ymin, ymax = hist_args[c, 4], hist_args[c, 5]
-            fy = ny / (ymax - ymin)
-            col = colors[c]
-            for k in range(mag.shape[0]):
-                x = mag[k]
-                y = col[k]
-                if x >= xmin and x < xmax and y >= ymin and y < ymax:
-                    i = min(int((x - xmin) * fx), nx - 1)
-                    j = min(int((y - ymin) * fy), ny - 1)
-                    counts[offs[c] + i * ny + j] += 1
-
-        lkl = 0.0
-        for p in range(nz_pos.shape[0]):
-            # Clip counts beyond the table's last column (see tremmel_sum())
-            m = min(counts[nz_pos[p]], m_max)
-            lkl += table_flat[row_off[p] + m]
-        return float(lkl)
 
     @njit(cache=True)
     def _cic_counts_nb(
@@ -797,41 +591,23 @@ class Tremmel:
     """Poisson likelihood ratio (Tremmel et al. 2013) of synthetic clusters given an
     observed cluster.
 
-    Internal class, created by :py:meth:`asteca.Synthetic.calibrate` (stored in its
-    ``_lkl`` attribute, with the ``"hard"`` binning) and by :py:class:`asteca.Sampler`
-    (``"smooth"`` binning), and used by :py:class:`asteca.Sampler`. It holds the
-    binned observed cluster and the pre-computed data used to evaluate the synthetic
-    clusters (see :py:meth:`log_lkl`).
+    Internal class, created by :py:meth:`asteca.Synthetic.calibrate` (stored in the
+    ``lkl`` attribute of its observed data) and used by :py:class:`asteca.Sampler`. It
+    holds the binned observed cluster and the pre-computed data used to evaluate the
+    synthetic clusters (see :py:meth:`log_lkl`).
 
-    Binning of the observed and synthetic Hess diagrams (one of :py:data:`LKL_BINNINGS`):
-
-    - ``"hard"``: each star adds ``1`` to the bin that contains it (integer counts).
-      The likelihood changes in steps as the stars cross the edges of the bins.
-    - ``"smooth"``: cloud-in-cell binning (see :py:func:`cic_counts`), each star is
-      split among the four nearest bins. The counts, and thus the likelihood, change
-      continuously with the position of the stars.
+    The observed and synthetic Hess diagrams are binned with cloud-in-cell weights
+    (see :py:func:`cic_counts`): each star is split among the four nearest bins, so
+    the counts, and thus the likelihood, change continuously with the position of the
+    stars.
 
     :param mag: Observed magnitudes
     :type mag: np.ndarray
     :param colors: List with the observed color(s)
     :type colors: list[np.ndarray]
-    :param binning: Binning of the Hess diagrams, one of :py:data:`LKL_BINNINGS`
-    :type binning: str
-
-    :raises ValueError: If ``binning`` is not one of :py:data:`LKL_BINNINGS`
     """
 
-    def __init__(
-        self,
-        mag: np.ndarray,
-        colors: list[np.ndarray],
-        binning: str = "hard",
-    ) -> None:
-        if binning not in LKL_BINNINGS:
-            raise ValueError(
-                f"'binning' must be one of {LKL_BINNINGS}, got '{binning}'"
-            )
-        self.binning = binning
+    def __init__(self, mag: np.ndarray, colors: list[np.ndarray]) -> None:
         # Index of the initial mass column (the photometry is the rows before it),
         # used by `log_lkl()` to drop the extra columns of the synthetic clusters
         # (0->mag, 1->color, (2->color2), 2|3->mass_ini)
@@ -848,8 +624,7 @@ class Tremmel:
             float(self.ranges[1][1] - self.ranges[1][0]),
         )
 
-        # Pre-compute the parameters of tremmel_sum()
-        # Per-color histogram2d arguments: (nx, xmin, xmax, ny, ymin, ymax)
+        # Per-color Hess diagram arguments: (nx, xmin, xmax, ny, ymin, ymax)
         self.hist_args = np.array(
             [
                 (
@@ -864,36 +639,15 @@ class Tremmel:
             ],
             dtype=float,
         )
-        if binning == "hard":
-            # Binned observed cluster
-            self.cl_z_idx, self.cl_histo_f_z, self.table2d = tremmel_tables(
-                mag, colors, self.ranges, self.Nbins
-            )
-            # Positions of the non-empty observed bins in the flattened Hess diagram
-            self.nz_pos = np.flatnonzero(self.cl_z_idx)
-            # Flattened table and row offsets, so that table2d[n, m] becomes
-            # table_flat[row_off + m]
-            self.table_flat = self.table2d.ravel()
-            self.row_off = self.cl_histo_f_z.astype(np.intp) * self.table2d.shape[1]
-            # Largest number of synthetic stars per bin covered by the table
-            self.m_max = int(self.table2d.shape[1] - 1)
-            # Not used by this binning
-            self.n_obs = np.empty(0)
-        else:
-            # Cloud-in-cell observed counts, and the positions of the bins with
-            # n > 0 in the flattened Hess diagram
-            counts = cic_counts(mag, np.array(colors), self.hist_args)
-            self.nz_pos = np.flatnonzero(counts > 0.0)
-            self.n_obs = counts[self.nz_pos]
-            # Not used by this binning
-            self.table_flat = np.empty(0)
-            self.row_off = np.empty(0, dtype=np.intp)
-            self.m_max = 0
+        # Cloud-in-cell observed counts, and the positions of the bins with n > 0 in
+        # the flattened Hess diagram
+        counts = cic_counts(mag, np.array(colors), self.hist_args)
+        self.nz_pos = np.flatnonzero(counts > 0.0)
+        self.n_obs = counts[self.nz_pos]
 
         # Minimum likelihood, obtained when no synthetic star falls in any observed
         # bin (all m_i=0). Used to normalize the distance so that 1 means no match.
-        # With the "hard" binning this is equal to 'table_flat.take(row_off).sum()'
-        # but it is obtained with the same core that evaluates the synthetic clusters
+        # It is obtained with the same core that evaluates the synthetic clusters
         # (a single star below the lower limit of every range), so that the sum is
         # performed in the same order and the 'lkl <= min_lkl' check in log_lkl() is
         # not affected by rounding
@@ -918,11 +672,7 @@ class Tremmel:
             self.m_ini_idx,
             self.hist_args,
             self.nz_pos,
-            self.row_off,
-            self.table_flat,
-            self.m_max,
             self.n_obs,
-            binning == "smooth",
             self.min_lkl,
             self.max_lkl,
             self.lkl_range,
@@ -933,19 +683,7 @@ class Tremmel:
         )
 
     def _lkl_sum(self, synth_clust: np.ndarray) -> float:
-        """Likelihood sum of a (non empty) synthetic cluster with the selected
-        binning: :py:func:`tremmel_sum` or :py:func:`cic_sum`"""
-        if self.binning == "hard":
-            return float(
-                tremmel_sum(
-                    self.hist_args,
-                    self.nz_pos,
-                    self.row_off,
-                    self.table_flat,
-                    self.m_max,
-                    synth_clust,
-                )
-            )
+        """Likelihood sum of a (non empty) synthetic cluster, see :py:func:`cic_sum`"""
         return float(cic_sum(self.hist_args, self.nz_pos, self.n_obs, synth_clust))
 
     def log_lkl(self, synth_clust: np.ndarray, temperature: float = 1.0) -> float:
@@ -956,9 +694,8 @@ class Tremmel:
         ``d = (max_lkl - lkl) / (max_lkl - min_lkl)`` is the normalized distance
         (``0`` for an exact match, ``1`` when no synthetic star falls in any of the
         observed bins, see the documentation). Since each bin's term
-        ``lnG(n + m + 1/2) - lnG(m + 1/2)`` grows with ``m`` for ``n>0`` (with both
-        binnings), ``d <= 1`` for synthetic clusters that overlap the
-        observed one. Otherwise the raw value would be ``min_lkl`` for every such
+        ``lnG(n + m + 1/2) - lnG(m + 1/2)`` grows with ``m`` for ``n>0``, ``d <= 1``
+        for synthetic clusters that overlap the observed one. Otherwise the raw value would be ``min_lkl`` for every such
         model, so a 'no match' distance ``d >= 1`` is assigned instead: ``10`` for an
         empty synthetic cluster, or ``1`` plus a penalty that grows with its
         photometric distance to the observed cluster.
